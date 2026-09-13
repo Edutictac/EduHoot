@@ -118,14 +118,28 @@ form{
     transform: none;
 }
 
+.join-name-hint{
+    margin: 6px 0 0;
+    font-size: 13px;
+    color: var(--muted);
+}
+
 .student-auth{
     border-top: 1px solid var(--card-stroke);
-    margin-top: 12px;
-    padding-top: 14px;
+    margin-top: 28px;
+    padding-top: 18px;
 }
 
 .student-auth.hidden{
     display: none;
+}
+
+.student-auth__intro{
+    margin: 0 0 14px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--muted);
+    text-align: center;
 }
 
 .student-auth__status{

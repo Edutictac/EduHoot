@@ -76,15 +76,17 @@
                 <div class="form-field">
                     <label id = "label" data-i18n="join_name">Display Name</label>
                     <input id = "name" class="name-three" type = "text" name="name" autocomplete="name" maxlength="3" pattern="[A-Za-z0-9]{1,3}" />
+                    <p class="join-name-hint" data-i18n="join_name_hint">Juega sin PIN, elige tú el nombre</p>
                 </div>
                 <div id="student-auth-fields" class="student-auth hidden">
+                    <p class="student-auth__intro" data-i18n="join_student_intro">O entra con tu identidad EduTicTac</p>
                     <div class="form-field">
                         <label id="label" for="student-code" data-i18n="join_student_code">Codi EduTicTac</label>
                         <input id="student-code" class="name-three" type="text" autocomplete="username" maxlength="3" pattern="[A-Za-z0-9]{3}" />
                     </div>
                     <div class="form-field">
                         <label id="label" for="student-pin" data-i18n="join_student_pin">PIN personal</label>
-                        <input id="student-pin" type="password" inputmode="numeric" autocomplete="current-password" maxlength="6" pattern="[0-9]{4,6}" />
+                        <input id="student-pin" class="name-three" type="password" inputmode="numeric" autocomplete="current-password" maxlength="6" pattern="[0-9]{4,6}" />
                     </div>
                     <p id="student-auth-status" class="student-auth__status" aria-live="assertive"></p>
                 </div>

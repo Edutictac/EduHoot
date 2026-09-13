@@ -81,6 +81,7 @@ const GOOGLE_OAUTH_STATE_TTL_MS = 10 * 60 * 1000;
 const EDUTICTAC_ID_API_URL = (process.env.EDUTICTAC_ID_API_URL || '').replace(/\/+$/, '');
 const EDUTICTAC_ID_AUTH_REQUIRED = /^(1|true|yes)$/i.test(process.env.EDUTICTAC_ID_AUTH_REQUIRED || '');
 const STUDENT_JOIN_TOKEN_TTL_MS = 10 * 60 * 1000;
+const PUBLIC_IMPORT_SOURCE_URL = (process.env.PUBLIC_IMPORT_SOURCE_URL || '').trim().replace(/\/+$/, '');
 
 function extractKahootId(raw = '') {
   if (!raw) return '';
@@ -2635,7 +2636,7 @@ app.get('/api/live-games/:pin/report.csv', async (req, res) => {
   const fileName = `informe-partida-${safePin}.csv`;
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
   res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
-  return res.send(csv);
+  return res.send('﻿' + csv);
 });
 
 // Rename quiz
@@ -4343,6 +4344,74 @@ app.post('/api/admin/mirror-external-images', requireRole('admin'), async (req, 
       externalMirrorJobRunning = false;
     }
   })();
+});
+
+app.get('/api/admin/import-public-activities/config', (req, res) => {
+  res.json({ enabled: !!PUBLIC_IMPORT_SOURCE_URL, sourceUrl: PUBLIC_IMPORT_SOURCE_URL });
+});
+
+app.post('/api/admin/import-public-activities', requireRole('admin'), async (req, res) => {
+  if (!PUBLIC_IMPORT_SOURCE_URL) {
+    return res.status(400).json({ error: 'PUBLIC_IMPORT_SOURCE_URL no está configurado.' });
+  }
+  try {
+    const listResponse = await fetch(`${PUBLIC_IMPORT_SOURCE_URL}/api/public-quizzes`, { signal: AbortSignal.timeout(20000) });
+    if (!listResponse.ok) {
+      return res.status(502).json({ error: 'No se pudo obtener la lista de actividades públicas.' });
+    }
+    const list = await listResponse.json();
+    const collection = await getGamesCollection();
+    let imported = 0;
+    let skipped = 0;
+    let failed = 0;
+    const errors = [];
+
+    for (const item of Array.isArray(list) ? list : []) {
+      const remoteId = item && item.id;
+      if (remoteId === undefined || remoteId === null) continue;
+      try {
+        const existing = await collection.findOne({ importedFrom: PUBLIC_IMPORT_SOURCE_URL, sourceQuizId: String(remoteId) });
+        if (existing) {
+          skipped++;
+          continue;
+        }
+        const detailResponse = await fetch(`${PUBLIC_IMPORT_SOURCE_URL}/api/quizzes/${encodeURIComponent(remoteId)}`, { signal: AbortSignal.timeout(20000) });
+        if (!detailResponse.ok) {
+          failed++;
+          errors.push(`#${remoteId}: HTTP ${detailResponse.status}`);
+          continue;
+        }
+        const detail = await detailResponse.json();
+        const { quiz } = await buildQuizDoc({
+          name: detail.name,
+          tags: detail.tags,
+          questions: detail.questions,
+          visibility: 'public',
+          allowClone: true,
+          user: null,
+          ownerToken: '',
+          language: detail.language,
+          license: detail.license,
+          description: detail.description
+        });
+        await collection.updateOne({ id: quiz.id }, { $set: {
+          sourceQuizId: String(remoteId),
+          sourceQuizName: (detail.name || '').toString(),
+          importedFrom: PUBLIC_IMPORT_SOURCE_URL
+        } });
+        imported++;
+      } catch (err) {
+        failed++;
+        errors.push(`#${remoteId}: ${err.message || err}`);
+      }
+    }
+
+    console.log(`[import-public-activities] total=${Array.isArray(list) ? list.length : 0} imported=${imported} skipped=${skipped} failed=${failed}`);
+    return res.json({ ok: true, total: Array.isArray(list) ? list.length : 0, imported, skipped, failed, errors: errors.slice(0, 20) });
+  } catch (err) {
+    console.error('[import-public-activities] Error:', err);
+    return res.status(500).json({ error: 'No se pudo importar las actividades públicas.' });
+  }
 });
 
 app.get('/api/admin/stats', requireRole('admin'), async (req, res) => {

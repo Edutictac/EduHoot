@@ -258,6 +258,13 @@ var i18n = {
         mirrorExternalWorking: 'Migrando imágenes externas... (puede tardar varios minutos)',
         mirrorExternalOk: 'Migración iniciada. Revisa los logs del servidor.',
         mirrorExternalError: 'No se pudo iniciar la migración.',
+        adminImportPublicTitle: 'Importar actividades públicas (demo)',
+        adminImportPublicDesc: 'Descarga todas las actividades públicas de eduhoot.edutictac.es para tener contenido de prueba en esta instancia.',
+        btnImportPublic: 'Importar actividades públicas',
+        importPublicWorking: 'Importando actividades públicas...',
+        importPublicOk: 'Importación completada',
+        importPublicSkipped: 'ya existían',
+        importPublicError: 'No se pudo importar las actividades públicas.',
         createUser: 'Crea un usuario nuevo',
         roleEditor: 'Editor',
         roleAdmin: 'Admin',
@@ -509,6 +516,13 @@ var i18n = {
         mirrorExternalWorking: 'Migrating external images... (may take several minutes)',
         mirrorExternalOk: 'Migration started. Check server logs.',
         mirrorExternalError: 'Could not start the migration.',
+        adminImportPublicTitle: 'Import public activities (demo)',
+        adminImportPublicDesc: 'Download all public activities from eduhoot.edutictac.es to have sample content on this instance.',
+        btnImportPublic: 'Import public activities',
+        importPublicWorking: 'Importing public activities...',
+        importPublicOk: 'Import complete',
+        importPublicSkipped: 'already existed',
+        importPublicError: 'Could not import the public activities.',
         createUser: 'Create a new user',
         roleEditor: 'Editor',
         roleAdmin: 'Admin',
@@ -760,6 +774,13 @@ var i18n = {
         mirrorExternalWorking: 'Migrant imatges externes... (pot trigar uns minuts)',
         mirrorExternalOk: 'Migració iniciada. Comprova els logs del servidor.',
         mirrorExternalError: 'No s\'ha pogut iniciar la migració.',
+        adminImportPublicTitle: 'Importar activitats públiques (demo)',
+        adminImportPublicDesc: 'Descarrega totes les activitats públiques d\'eduhoot.edutictac.es per tenir contingut de prova en aquesta instància.',
+        btnImportPublic: 'Importar activitats públiques',
+        importPublicWorking: 'Important activitats públiques...',
+        importPublicOk: 'Importació completada',
+        importPublicSkipped: 'ja existien',
+        importPublicError: 'No s\'ha pogut importar les activitats públiques.',
         createUser: 'Crea un usuari nou',
         roleEditor: 'Editor',
         roleAdmin: 'Admin',
@@ -3050,6 +3071,9 @@ var adminMirrorKahootBtn = document.getElementById('admin-mirror-kahoot-images')
 var adminMirrorKahootStatus = document.getElementById('admin-mirror-kahoot-status');
 var adminMirrorExternalBtn = document.getElementById('admin-mirror-external-images');
 var adminMirrorExternalStatus = document.getElementById('admin-mirror-external-status');
+var adminImportPublicWrap = document.getElementById('admin-import-public-wrap');
+var adminImportPublicBtn = document.getElementById('admin-import-public-btn');
+var adminImportPublicStatus = document.getElementById('admin-import-public-status');
 var toggleResetBtn = document.getElementById('toggle-reset');
 var resetPanel = document.getElementById('reset-panel');
 var resetEmail = document.getElementById('reset-email');
@@ -3455,6 +3479,24 @@ if(adminMirrorExternalBtn){
         }
     });
 }
+if(adminImportPublicBtn){
+    adminImportPublicBtn.addEventListener('click', async function(){
+        if(adminImportPublicStatus) adminImportPublicStatus.textContent = t('importPublicWorking');
+        adminImportPublicBtn.disabled = true;
+        try{
+            var res = await fetch('/api/admin/import-public-activities', { method: 'POST', credentials: 'include' });
+            var data = await res.json();
+            if(!res.ok) throw new Error(data.error || '');
+            if(adminImportPublicStatus) adminImportPublicStatus.textContent =
+                t('importPublicOk') + ': ' + data.imported + ' / ' + data.total + ' (' + data.skipped + ' ' + t('importPublicSkipped') + ')';
+            socket.emit('requestDbNames');
+        }catch(e){
+            if(adminImportPublicStatus) adminImportPublicStatus.textContent = t('importPublicError') + (e.message ? ' ' + e.message : '');
+        }finally{
+            adminImportPublicBtn.disabled = false;
+        }
+    });
+}
 if(toggleResetBtn && resetPanel){
     toggleResetBtn.addEventListener('click', function(){
         resetPanel.classList.toggle('hidden');
@@ -3532,6 +3574,13 @@ fetch('/api/auth/google/config', { credentials: 'include' })
     .then(function(cfg){
         googleAuthEnabled = !!cfg.enabled;
         updateAuthUI();
+    })
+    .catch(function(){});
+
+fetch('/api/admin/import-public-activities/config', { credentials: 'include' })
+    .then(function(res){ return res.ok ? res.json() : { enabled: false }; })
+    .then(function(cfg){
+        if(adminImportPublicWrap) adminImportPublicWrap.classList.toggle('hidden', !cfg.enabled);
     })
     .catch(function(){});
 
