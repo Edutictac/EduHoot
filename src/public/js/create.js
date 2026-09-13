@@ -3059,10 +3059,11 @@ var resetRequestBtn = document.getElementById('reset-request');
 var resetConfirmBtn = document.getElementById('reset-confirm');
 var resetStatus = document.getElementById('reset-status');
 var authState = { user: null };
+var googleAuthEnabled = false;
 
 function updateAuthUI(){
     if(newUserSignin){
-        newUserSignin.classList.toggle('hidden', !!(authState && authState.user));
+        newUserSignin.classList.toggle('hidden', !googleAuthEnabled || !!(authState && authState.user));
     }
 
     if(authStatus){
@@ -3529,9 +3530,8 @@ fetchTags();
 fetch('/api/auth/google/config', { credentials: 'include' })
     .then(function(res){ return res.ok ? res.json() : { enabled: false }; })
     .then(function(cfg){
-        if(!cfg.enabled && newUserSignin){
-            newUserSignin.classList.add('hidden');
-        }
+        googleAuthEnabled = !!cfg.enabled;
+        updateAuthUI();
     })
     .catch(function(){});
 

@@ -1968,6 +1968,18 @@ app.get('/manifest.webmanifest', (req, res) => {
   res.set('Expires', '0');
   res.sendFile(path.join(publicPath, 'manifest.webmanifest'));
 });
+app.get(['/create', '/create/', '/create/index.html'], (req, res) => {
+  const config = googleOAuthConfig(req);
+  const googleEnabled = !!(config.clientId && config.clientSecret);
+  fs.readFile(path.join(publicPath, 'create', 'index.html'), 'utf8', (err, html) => {
+    if (err) return res.status(500).send('Internal error');
+    const out = googleEnabled
+      ? html.replace('id="new-user-signin" class="signin-callout hidden"', 'id="new-user-signin" class="signin-callout"')
+      : html;
+    res.set('Cache-Control', 'no-cache, must-revalidate, max-age=0');
+    res.type('html').send(out);
+  });
+});
 app.use(express.static(publicPath, {
   etag: true,
   lastModified: true,
