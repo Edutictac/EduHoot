@@ -1401,7 +1401,7 @@ function publicBaseUrl(req) {
   const configured = (process.env.PUBLIC_BASE_URL || process.env.BASE_URL || '').trim();
   if (configured) return configured.replace(/\/+$/, '');
   const proto = (req.headers['x-forwarded-proto'] || req.protocol || 'http').toString().split(',')[0].trim();
-  const host = req.headers['x-forwarded-host'] || req.headers.host || `localhost:${PORT}`;
+  const host = (req.headers['x-forwarded-host'] || req.headers.host || `localhost:${PORT}`).toString().split(',')[0].trim();
   return `${proto}://${host}`;
 }
 
@@ -4144,9 +4144,12 @@ app.get('/api/auth/google/callback', async (req, res) => {
     if (stored && stored.next) {
       nextTarget = sanitizeRedirectTarget(stored.next);
     }
-    if (!code || !state || !stored || stored.expiresAt <= Date.now() || cookies.googleOAuthState !== state) {
+    if (!code || !state || !stored || stored.expiresAt <= Date.now()) {
       const separator = nextTarget.includes('?') ? '&' : '?';
       return res.redirect(`${nextTarget}${separator}google=error`);
+    }
+    if (cookies.googleOAuthState && cookies.googleOAuthState !== state) {
+      console.warn('google-auth state cookie mismatch; continuing with server-side OAuth state');
     }
     const config = googleOAuthConfig(req);
     if (!config.clientId || !config.clientSecret) {
