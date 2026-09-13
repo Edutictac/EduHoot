@@ -1995,8 +1995,9 @@ app.use(express.static(publicPath, {
 app.use(sessionMiddleware);
 
 const PORT = Number.parseInt(process.env.PORT || '3000', 10);
-server.listen(PORT, '127.0.0.1', () => {
-  console.log('Server started on port ' + PORT);
+const HOST = process.env.HOST || '127.0.0.1';
+server.listen(PORT, HOST, () => {
+  console.log('Server started on ' + HOST + ':' + PORT);
 });
 
 app.get('/api/validate-pin/:pin', (req, res) => {
@@ -4089,6 +4090,11 @@ app.post('/api/auth/login', authRateLimiter, async (req, res) => {
     console.error('login error', err);
     return res.status(500).json({ error: 'No se pudo iniciar sesión.' });
   }
+});
+
+app.get('/api/auth/google/config', (req, res) => {
+  const config = googleOAuthConfig(req);
+  res.json({ enabled: !!(config.clientId && config.clientSecret) });
 });
 
 app.get('/api/auth/google/start', (req, res) => {

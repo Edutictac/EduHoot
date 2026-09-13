@@ -3526,6 +3526,15 @@ try{
 fetchMe();
 fetchTags();
 
+fetch('/api/auth/google/config', { credentials: 'include' })
+    .then(function(res){ return res.ok ? res.json() : { enabled: false }; })
+    .then(function(cfg){
+        if(!cfg.enabled && newUserSignin){
+            newUserSignin.classList.add('hidden');
+        }
+    })
+    .catch(function(){});
+
 if (iaIdioma) {
     iaIdioma.addEventListener('change', function(){
         if (iaIdioma.value === 'otro') {

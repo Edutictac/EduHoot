@@ -1,0 +1,11 @@
+.git
+.gitignore
+node_modules
+src/node_modules
+logs
+src/public/uploads
+.env
+.env.*
+Screenshots
+install-files
+STAGE_SETUP.md
