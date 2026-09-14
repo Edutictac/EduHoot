@@ -79,6 +79,7 @@ const GOOGLE_OAUTH_TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const GOOGLE_OAUTH_USERINFO_URL = 'https://openidconnect.googleapis.com/v1/userinfo';
 const GOOGLE_OAUTH_STATE_TTL_MS = 10 * 60 * 1000;
 const EDUTICTAC_ID_API_URL = (process.env.EDUTICTAC_ID_API_URL || '').replace(/\/+$/, '');
+const EDUTICTAC_ID_APP_TOKEN = process.env.EDUTICTAC_ID_APP_TOKEN || '';
 const EDUTICTAC_ID_AUTH_REQUIRED = /^(1|true|yes)$/i.test(process.env.EDUTICTAC_ID_AUTH_REQUIRED || '');
 const STUDENT_JOIN_TOKEN_TTL_MS = 10 * 60 * 1000;
 const PUBLIC_IMPORT_SOURCE_URL = (process.env.PUBLIC_IMPORT_SOURCE_URL || '').trim().replace(/\/+$/, '');
@@ -427,7 +428,7 @@ function consumeStudentJoinToken(token) {
   return entry.identity;
 }
 
-function postJson(url, payload, timeoutMs = 5000) {
+function postJson(url, payload, timeoutMs = 5000, extraHeaders = {}) {
   return new Promise((resolve, reject) => {
     let parsed;
     try {
@@ -448,7 +449,8 @@ function postJson(url, payload, timeoutMs = 5000) {
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'Content-Length': Buffer.byteLength(body)
+        'Content-Length': Buffer.byteLength(body),
+        ...extraHeaders
       }
     }, (resp) => {
       const chunks = [];
@@ -481,6 +483,45 @@ async function authenticateStudentIdentity(publicCode, pin) {
     throw err;
   }
   return result.data.identity;
+}
+
+async function reportCommonsScores(game, playersInGame) {
+  if (!EDUTICTAC_ID_API_URL || !EDUTICTAC_ID_APP_TOKEN || !game || !game.gameData) return;
+  const activityId = game.gameData.gameid ? String(game.gameData.gameid) : '';
+  if (!activityId) return;
+  const totalQuestions = Number(game.gameData.totalQuestions) || 0;
+  const quizName = game.gameData.quizName || '';
+  const reports = (Array.isArray(playersInGame) ? playersInGame : [])
+    .filter((player) => player && player.gameData && player.gameData.identity && player.gameData.identity.id)
+    .map((player) => {
+      const correctCount = Number(player.gameData.correctCount) || 0;
+      const wrongCount = Number(player.gameData.wrongCount) || 0;
+      const rawScore = Number(player.gameData.score) || 0;
+      return postJson(
+        `${EDUTICTAC_ID_API_URL}/api/apps/eduhoot/scores`,
+        {
+          identity_id: player.gameData.identity.id,
+          activity_id: activityId,
+          score: Math.max(0, Math.round(rawScore)),
+          metadata: {
+            pin: String(game.pin || ''),
+            quiz_name: quizName,
+            correct: correctCount,
+            wrong: wrongCount,
+            total_questions: totalQuestions
+          }
+        },
+        5000,
+        { Authorization: `Bearer ${EDUTICTAC_ID_APP_TOKEN}` }
+      ).then((result) => {
+        if (result.statusCode < 200 || result.statusCode >= 300) {
+          console.error('[commons-score] failed', result.statusCode, result.text || result.data);
+        }
+      }).catch((err) => {
+        console.error('[commons-score] error', err);
+      });
+    });
+  await Promise.all(reports);
 }
 
 function socketIp(socket) {
@@ -3488,9 +3529,10 @@ io.on('connection', (socket) => {
         });
         const uniquePlayers = Array.isArray(playersInGame) ? playersInGame.length : 0;
         await incrementQuizStats(game.gameData.gameid, uniquePlayers);
+        await reportCommonsScores(game, playersInGame);
         game.gameLive = false;
         game.gameOver = true;
-          cacheFinishedSessionReport(game);
+        cacheFinishedSessionReport(game);
         scheduleGameCleanup(socket.id);
       }
     } catch (err) {
