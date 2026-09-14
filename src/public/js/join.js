@@ -130,7 +130,7 @@
             if(nameField){
                 nameField.classList.toggle('hidden', studentAuthRequired);
             }
-            nameInput.required = !studentAuthRequired;
+            nameInput.required = false;
         }
         if(studentCodeInput) studentCodeInput.required = studentAuthRequired;
         if(studentPinInput) studentPinInput.required = studentAuthRequired;
