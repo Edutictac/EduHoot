@@ -146,11 +146,11 @@
     }
 
     function authenticateStudent(){
-        if(!studentAuthEnabled){
-            return Promise.resolve('');
-        }
         var code = normalizeStudentCode(studentCodeInput && studentCodeInput.value);
         var pin = normalizeStudentPin(studentPinInput && studentPinInput.value);
+        if(!studentAuthEnabled && !code && !pin){
+            return Promise.resolve('');
+        }
         if(!studentAuthRequired && !code && !pin){
             return Promise.resolve('');
         }
@@ -268,7 +268,11 @@
             }
             ev.preventDefault();
             var name = (nameInput.value || '').replace(/[^0-9a-zA-Z]/g, '').toUpperCase().slice(0, 3);
-            if(!name && !studentAuthRequired){
+            var hasStudentCredentials = Boolean(
+                normalizeStudentCode(studentCodeInput && studentCodeInput.value) &&
+                normalizeStudentPin(studentPinInput && studentPinInput.value)
+            );
+            if(!name && !studentAuthRequired && !hasStudentCredentials){
                 nameInput.focus();
                 return;
             }
