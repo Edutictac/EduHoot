@@ -89,6 +89,20 @@ El primer usuario que entra con Google se crea como `admin`; los siguientes entr
 
 En la pantalla de create, el bloque de alta rápida muestra solo el botón de Google. El botón `Entrar/Cuenta` sigue abriendo el modal de acceso con email para usuarios antiguos.
 
+### Integración con EduTicTac Commons
+
+EduHoot puede validar al alumnado contra el servicio de identidad pseudónima de EduTicTac Commons y registrar la puntuación final en Commons.
+
+Variables principales:
+
+- `EDUTICTAC_ID_API_URL`: URL interna de `id-api`, por ejemplo `http://id-api:8005`.
+- `EDUTICTAC_ID_AUTH_REQUIRED`: `0` permite entrar con nombre corto o con código + PIN Commons; `1` obliga a usar código + PIN Commons.
+- `EDUTICTAC_ID_APP_TOKEN`: token interno compartido con Commons para enviar resultados.
+
+En modo mixto (`EDUTICTAC_ID_AUTH_REQUIRED=0`), si el alumno rellena código + PIN Commons, EduHoot no debe pedir también nombre: usa el código público como alias corto. Si deja esos campos vacíos, puede jugar con nombre corto como antes.
+
+Al terminar una partida, EduHoot envía resumen de puntuación a `/api/apps/eduhoot/scores` cuando `EDUTICTAC_ID_API_URL` y `EDUTICTAC_ID_APP_TOKEN` están configurados.
+
 ### Deploy simple al VPS
 
 - Plantilla segura versionable: `scripts/deploy.example.sh`
