@@ -192,7 +192,11 @@
             pinDisplayValue.textContent = pin;
         }
         hideModal();
-        if(nameInput) nameInput.focus();
+        if(studentAuthRequired && studentCodeInput){
+            studentCodeInput.focus();
+        }else if(nameInput){
+            nameInput.focus();
+        }
     }
 
     function validatePin(pin){
@@ -265,7 +269,6 @@
             ev.preventDefault();
             var name = (nameInput.value || '').replace(/[^0-9a-zA-Z]/g, '').toUpperCase().slice(0, 3);
             if(!name && !studentAuthRequired){
-                ev.preventDefault();
                 nameInput.focus();
                 return;
             }
