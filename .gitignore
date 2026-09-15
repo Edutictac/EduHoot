@@ -4,3 +4,6 @@ scripts/deploy-stage.sh
 .vscode/settings.json
 .codex/
 scripts/.codex
+
+# Dependencias (se instalan con npm ci / npm install)
+node_modules/

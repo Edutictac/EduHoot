@@ -2086,9 +2086,11 @@ app.use(sessionMiddleware);
 
 const PORT = Number.parseInt(process.env.PORT || '3000', 10);
 const HOST = process.env.HOST || '127.0.0.1';
-server.listen(PORT, HOST, () => {
-  console.log('Server started on ' + HOST + ':' + PORT);
-});
+if (require.main === module) {
+  server.listen(PORT, HOST, () => {
+    console.log('Server started on ' + HOST + ':' + PORT);
+  });
+}
 
 app.get('/api/validate-pin/:pin', (req, res) => {
   const rawPin = (req.params.pin || '').trim();
@@ -4669,3 +4671,26 @@ app.use((err, req, res, next) => {
   if (res.headersSent) return next(err);
   return res.status(500).json({ error: 'Error interno. Inténtalo de nuevo.' });
 });
+
+// Exportaciones para tests (no alteran el arranque en producción).
+module.exports = {
+  app,
+  server,
+  io,
+  mongoClient,
+  extractKahootId,
+  isEphemeralExpired,
+  normalizeEphemeralQuiz,
+  calculateQuestionScore,
+  normalizeSoloName,
+  normalizePlayerName,
+  cleanMetaText,
+  sanitizeRedirectTarget,
+  hashPassword,
+  hashResetToken,
+  setPasswordFields,
+  normalizeQuizId,
+  buildQuizDoc,
+  sessions,
+  oauthStates
+};

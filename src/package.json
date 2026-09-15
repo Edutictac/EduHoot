@@ -6,7 +6,9 @@
   "scripts": {
     "lint": "node scripts/lint.js",
     "normalize-tags": "node scripts/normalize-tags.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --test \"test/**/*.test.js\"",
+    "test:unit": "node --test \"test/unit/*.test.js\"",
+    "test:integration": "node --test \"test/integration/*.test.js\""
   },
   "author": "",
   "license": "ISC",
@@ -19,6 +21,7 @@
     "socket.io": "^4.8.3"
   },
   "devDependencies": {
-    "expect": "^23.0.1"
+    "expect": "^23.0.1",
+    "mongodb-memory-server": "^11.2.0"
   }
 }
