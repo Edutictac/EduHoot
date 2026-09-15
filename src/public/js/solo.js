@@ -25,6 +25,8 @@ var state = {
         timerLeft: 20,
         locked: false,
         playerName: 'Anónimo',
+        studentJoinToken: '',
+        commonsPublicCode: '',
         awaitingConfirm: false,
         lastWrong: null,
         multiSelections: [],
@@ -1850,6 +1852,7 @@ function startQuiz(){
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 name: nameToUse || state.playerName,
+                studentJoinToken: state.studentJoinToken || '',
                 score: state.score,
                 totalQuestions: getQuestions().length
             })
@@ -1964,6 +1967,10 @@ function startQuiz(){
     }
 
     function prepareScoreSubmission(){
+        if(state.studentJoinToken){
+            submitScore(state.playerName || state.commonsPublicCode || t('namePlaceholder'));
+            return;
+        }
         var score = state.score;
         fetch('/api/quizzes/' + encodeURIComponent(state.currentQuiz) + '/solo-ranking')
             .then(function(res){ return res.json().then(function(body){ return { ok: res.ok, body: body }; }); })
@@ -1977,6 +1984,45 @@ function startQuiz(){
             })
             .catch(function(){
                 submitScore(state.playerName || t('namePlaceholder'));
+            });
+    }
+
+    function removeLaunchTokenFromUrl(){
+        try{
+            var url = new URL(window.location.href);
+            if(!url.searchParams.has('commonsLaunchToken')) return;
+            url.searchParams.delete('commonsLaunchToken');
+            window.history.replaceState({}, document.title, url.pathname + url.search + url.hash);
+        }catch(e){}
+    }
+
+    function initCommonsLaunch(){
+        var launchToken = '';
+        try{
+            var params = new URLSearchParams(window.location.search || '');
+            launchToken = (params.get('commonsLaunchToken') || '').trim();
+        }catch(e){}
+        if(!launchToken) return Promise.resolve();
+        removeLaunchTokenFromUrl();
+        return fetch('/api/player-auth/launch-token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ launch_token: launchToken })
+        })
+            .then(function(res){ return res.json().then(function(body){ return { ok: res.ok, body: body }; }); })
+            .then(function(payload){
+                if(!payload.ok || !payload.body || !payload.body.join_token){
+                    throw new Error(payload.body && payload.body.error ? payload.body.error : 'Commons login error');
+                }
+                state.studentJoinToken = payload.body.join_token;
+                state.commonsPublicCode = normalizeName(payload.body.public_code || payload.body.display_name || '');
+                state.playerName = state.commonsPublicCode || t('namePlaceholder');
+                return payload.body;
+            })
+            .catch(function(err){
+                console.error('commons launch error', err);
+                state.studentJoinToken = '';
+                state.commonsPublicCode = '';
             });
     }
 
@@ -2216,6 +2262,7 @@ function startQuiz(){
     // Asegura que el selector quede consistente al cargar.
     syncQuestionCountControls();
     fetchPublicQuizzes();
+    initCommonsLaunch();
 
     // Permite abrir directamente un quiz desde Create: /solo/?id=<quizId>
     (function(){
