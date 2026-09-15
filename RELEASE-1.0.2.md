@@ -13,7 +13,7 @@ Versió integrada amb EduTicTac Commons 0.1.1-alpha.
 
 ## Comprovacions
 
-Des de `src/`, amb Node 20 o posterior i Python 3:
+Des de `src/`, amb Node 24 i Python 3:
 
 ```bash
 npm ci
@@ -27,6 +27,7 @@ npm audit
 Les proves de navegador servixen els fitxers locals amb un servidor temporal
 i simulen les API i Socket.IO; no es connecten a la producció ni creen
 comptes. La integració real amb Commons es comprova en el repo del stack.
+GitHub Actions executa estes comprovacions en cada push a `main` i pull request.
 
 ## Imatge
 
