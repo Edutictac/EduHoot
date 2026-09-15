@@ -50,7 +50,8 @@
       host_error: 'No s\'ha pogut iniciar la partida. Torna a triar el qüestionari i prova-ho de nou.',
       host_error_missing_id: 'Falta el qüestionari per generar la partida. Torna a triar-lo.',
       host_error_timeout: 'No hem pogut obtenir el PIN. Comprova la connexió i torna a triar el qüestionari.'
-    }
+    },
+    va: {}
   };
 
   function detectLang(){
@@ -65,7 +66,12 @@
   var lang = detectLang();
 
   function t(key){
-    return (translations[lang] && translations[lang][key]) || translations.en[key] || key;
+    var chain = lang === 'va' ? ['va', 'ca', 'en'] : [lang, 'en'];
+    for (var i = 0; i < chain.length; i++) {
+      var d = translations[chain[i]];
+      if (d && d[key]) return d[key];
+    }
+    return key;
   }
 
   function apply(){

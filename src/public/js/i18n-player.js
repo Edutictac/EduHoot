@@ -119,6 +119,7 @@
       footerSource: 'Codi font',
       footerPrivacy: 'Privacitat'
     },
+    va: {},
     en: {
       join_title: 'Join a Game',
       join_name: 'Display Name',
@@ -198,10 +199,14 @@
   if (document && document.documentElement) {
     document.documentElement.setAttribute('lang', lang);
   }
-  const dict = translations[lang] || translations.en;
 
   function t(key) {
-    return dict[key] || translations.en[key] || key;
+    const chain = lang === 'va' ? ['va', 'ca', 'en'] : [lang, 'en'];
+    for (const l of chain) {
+      const d = translations[l];
+      if (d && d[key]) return d[key];
+    }
+    return key;
   }
 
   function applyTranslations() {
