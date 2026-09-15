@@ -183,8 +183,40 @@
   var roundRankingOpen = false;
   var roundRankingDelayMs = 1100;
 
-  var browserLang = (navigator.language || 'es').slice(0, 2);
-  var lang = localStorage.getItem('lang') || (['es','en','ca'].includes(browserLang) ? browserLang : 'es');
+  var LANG_KEYS = ['lang', 'lang-player', 'lang-host', 'edutictac-portal-lang', 'edutictac-lang'];
+  function normalizeLang(raw){
+    var value = String(raw || '').toLowerCase();
+    if(value.indexOf('valencia') !== -1) return 'va';
+    var base = value.split('-')[0];
+    return ['ca','va','es','en'].indexOf(base) !== -1 ? base : '';
+  }
+  function getQueryLang(){
+    try{ return normalizeLang(new URLSearchParams(window.location.search).get('lang')); }catch(e){ return ''; }
+  }
+  function getStoredLang(){
+    for(var i = 0; i < LANG_KEYS.length; i++){
+      try{
+        var value = normalizeLang(localStorage.getItem(LANG_KEYS[i]));
+        if(value) return value;
+      }catch(e){}
+    }
+    return '';
+  }
+  function persistLang(value){
+      try {
+          var url = new URL(window.location.href);
+          if (url.searchParams.has('lang')) {
+              url.searchParams.set('lang', value);
+              window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
+          }
+      } catch (e) {}
+    for(var i = 0; i < LANG_KEYS.length; i++){
+      try{ localStorage.setItem(LANG_KEYS[i], value); }catch(e){}
+    }
+  }
+  var browserLang = normalizeLang(navigator.language || 'es');
+  var lang = getQueryLang() || getStoredLang() || browserLang || 'es';
+  persistLang(lang);
 
   var i18n = {
     es: {
@@ -396,6 +428,11 @@
       pickAnother: 'Triar un altre quiz',
       submitAnswers: 'Enviar respostes',
       iconLabel: 'Icona'
+    },
+    va: {
+      favoriteAdd: 'Guardar en favorits',
+      favoriteRemove: 'Llevar de favorits',
+      playSame: 'Repetir les mateixes preguntes'
     }
   };
 
@@ -404,7 +441,12 @@
   deviceId = getDeviceId();
 
   function t(key){
-    return (i18n[lang] && i18n[lang][key]) || (i18n.es && i18n.es[key]) || key;
+    var chain = lang === 'va' ? ['va', 'ca', 'es'] : [lang, 'es'];
+    for(var i = 0; i < chain.length; i++){
+      var dict = i18n[chain[i]];
+      if(dict && dict[key]) return dict[key];
+    }
+    return key;
   }
 
   function getPlayerPanel(playerId){
@@ -709,20 +751,18 @@
   function applyStaticText(){
     document.querySelectorAll('[data-i18n]').forEach(function(el){
       var key = el.getAttribute('data-i18n');
-      if(i18n[lang] && i18n[lang][key]){
-        if(el.classList && el.classList.contains('is-icon')){
-          var label = t(key);
-          el.setAttribute('aria-label', label);
-          var sr = el.querySelector('.sr-only');
-          if(sr) sr.textContent = label;
-        }else{
-          el.textContent = t(key);
-        }
+      if(el.classList && el.classList.contains('is-icon')){
+        var label = t(key);
+        el.setAttribute('aria-label', label);
+        var sr = el.querySelector('.sr-only');
+        if(sr) sr.textContent = label;
+      }else{
+        el.textContent = t(key);
       }
     });
     document.querySelectorAll('[data-i18n-placeholder]').forEach(function(el){
       var key = el.getAttribute('data-i18n-placeholder');
-      if(i18n[lang] && i18n[lang][key]) el.placeholder = t(key);
+      el.placeholder = t(key);
     });
     var langSelect = document.getElementById('lang-select');
     if(langSelect) langSelect.value = lang;
@@ -863,7 +903,7 @@
 
   function setLang(newLang){
     lang = newLang;
-    localStorage.setItem('lang', lang);
+    persistLang(lang);
     applyStaticText();
     updateTagFilterOptions();
     renderList();

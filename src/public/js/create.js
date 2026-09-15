@@ -200,8 +200,40 @@ function ownsLocal(id){
     }
 }
 
-var browserLang = (navigator.language || 'es').slice(0,2);
-var lang = localStorage.getItem('lang') || (['es','en','ca'].includes(browserLang) ? browserLang : 'es');
+var LANG_KEYS = ['lang', 'lang-player', 'lang-host', 'edutictac-portal-lang', 'edutictac-lang'];
+function normalizeLang(raw){
+    var value = String(raw || '').toLowerCase();
+    if(value.indexOf('valencia') !== -1) return 'va';
+    var base = value.split('-')[0];
+    return ['ca','va','es','en'].indexOf(base) !== -1 ? base : '';
+}
+function getQueryLang(){
+    try{ return normalizeLang(new URLSearchParams(window.location.search).get('lang')); }catch(e){ return ''; }
+}
+function getStoredLang(){
+    for(var i = 0; i < LANG_KEYS.length; i++){
+        try{
+            var value = normalizeLang(localStorage.getItem(LANG_KEYS[i]));
+            if(value) return value;
+        }catch(e){}
+    }
+    return '';
+}
+function persistLang(value){
+    try {
+        var url = new URL(window.location.href);
+        if (url.searchParams.has('lang')) {
+            url.searchParams.set('lang', value);
+            window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
+        }
+    } catch (e) {}
+    for(var i = 0; i < LANG_KEYS.length; i++){
+        try{ localStorage.setItem(LANG_KEYS[i], value); }catch(e){}
+    }
+}
+var browserLang = normalizeLang(navigator.language || 'es');
+var lang = getQueryLang() || getStoredLang() || browserLang || 'es';
+persistLang(lang);
 var i18n = {
     es: {
         back: 'Volver',
@@ -972,15 +1004,31 @@ var i18n = {
         langEs: 'Espanyol',
         langEn: 'Anglès',
         langCa: 'Català',
+        langVa: 'Valencià',
         optSpanish: 'Espanyol',
         optCatalan: 'Català',
         optEnglish: 'Anglès',
         optOther: 'Un altre'
+    },
+    va: {
+        iaDocsHint: 'Quan executes este prompt en la IA, et demanarà adjuntar els documents. No puges res ací: adjunta els fitxers allí i les preguntes es generaran exclusivament a partir d\'estos documents.',
+        importDesc: 'Puja un fitxer CSV amb les teues preguntes per desar-lo a la biblioteca.',
+        confirmDelete: 'Eliminar este quiz?',
+        noGamesHint: 'Puja un CSV o crea\'n un per vore\'l ací.',
+        cloneOk: 'Còpia creada a la teua biblioteca.',
+        loginToSave: 'Inicia sessió amb Google per desar este qüestionari al teu compte.',
+        iaCsvPlaceholder: 'Enganxa ací el CSV retornat per la IA',
+        visibilityHelp: '<strong>Només jo:</strong> si no inicies sessió, el quiz es desa només a la teua sessió i caduca en 24h.<br><strong>Per enllaç / Públic:</strong> encara que no tingues compte, es desa globalment al servidor i sobreviu a reinicis. Si inicies sessió, queda lligat al teu usuari. Pots permetre o no les còpies.'
     }
 };
 
 function t(key){
-    return (i18n[lang] && i18n[lang][key]) || i18n.es[key] || key;
+    var chain = lang === 'va' ? ['va', 'ca', 'es'] : [lang, 'es'];
+    for(var i = 0; i < chain.length; i++){
+        var dict = i18n[chain[i]];
+        if(dict && dict[key]) return dict[key];
+    }
+    return key;
 }
 
 function getJsPdf(){
@@ -1386,12 +1434,12 @@ function applyStaticTranslations(){
     var langSelect = document.getElementById('lang-select');
     if(langSelect) langSelect.value = lang;
     var libSearch = document.getElementById('library-search');
-    if(libSearch && i18n[lang] && i18n[lang].searchPlaceholder) libSearch.placeholder = t('searchPlaceholder');
+    if(libSearch) libSearch.placeholder = t('searchPlaceholder');
 }
 
 function setLang(newLang){
     lang = newLang;
-    localStorage.setItem('lang', lang);
+    persistLang(lang);
     applyStaticTranslations();
     renderTagSuggestions();
     socket.emit('requestDbNames');
@@ -1766,7 +1814,7 @@ function renderGames(data){
         var creatorText = quiz.ownerNickname ? quiz.ownerNickname : t('creatorUnknown');
         meta.textContent = creatorText + ' · ' + visibilityLabel;
         if(quiz.sourceQuizId){
-            var basedOnLabel = (lang === 'en' ? 'Based on ' : (lang === 'ca' ? 'Basat en ' : 'Basado en '));
+            var basedOnLabel = (lang === 'en' ? 'Based on ' : (lang === 'ca' || lang === 'va' ? 'Basat en ' : 'Basado en '));
             var fromName = (quiz.sourceQuizName || '').trim();
             var sourceText = fromName ? ('"' + fromName + '"') : ('ID ' + quiz.sourceQuizId);
             if(fromName && quiz.sourceQuizId){

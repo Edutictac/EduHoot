@@ -9,7 +9,8 @@ ENV NODE_ENV=production
 WORKDIR /app
 
 COPY src/package.json src/package-lock.json ./
-RUN npm ci --omit=dev
+RUN npm install -g npm@10.9.3 \
+    && npm ci --omit=dev
 
 COPY src/ ./
 COPY entrypoint.sh /entrypoint.sh

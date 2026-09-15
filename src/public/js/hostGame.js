@@ -31,8 +31,40 @@ var timer;
 
 var time = 20;
 var defaultTime = 20;
-var browserLang = (navigator.language || 'es').slice(0,2);
-var lang = localStorage.getItem('lang') || (['es','en','ca'].includes(browserLang) ? browserLang : 'es');
+var LANG_KEYS = ['lang', 'lang-host', 'lang-player', 'edutictac-portal-lang', 'edutictac-lang'];
+function normalizeLang(raw){
+    var value = String(raw || '').toLowerCase();
+    if(value.indexOf('valencia') !== -1) return 'va';
+    var base = value.split('-')[0];
+    return ['ca','va','es','en'].indexOf(base) !== -1 ? base : '';
+}
+function getQueryLang(){
+    try{ return normalizeLang(new URLSearchParams(window.location.search).get('lang')); }catch(e){ return ''; }
+}
+function getStoredLang(){
+    for(var i = 0; i < LANG_KEYS.length; i++){
+        try{
+            var value = normalizeLang(localStorage.getItem(LANG_KEYS[i]));
+            if(value) return value;
+        }catch(e){}
+    }
+    return '';
+}
+function persistLang(value){
+    try {
+        var url = new URL(window.location.href);
+        if (url.searchParams.has('lang')) {
+            url.searchParams.set('lang', value);
+            window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
+        }
+    } catch (e) {}
+    for(var i = 0; i < LANG_KEYS.length; i++){
+        try{ localStorage.setItem(LANG_KEYS[i], value); }catch(e){}
+    }
+}
+var browserLang = normalizeLang(navigator.language || 'es');
+var lang = getQueryLang() || getStoredLang() || browserLang || 'es';
+persistLang(lang);
 var hostMusicPlayerInstance = null;
 var HOST_AUTOPLAY_MUSIC_KEY = 'eduhoot_host_autoplay_music';
 var HOST_MUSIC_SHOULD_PLAY_KEY = 'eduhoot_host_music_should_play';
@@ -149,11 +181,19 @@ var i18n = {
         questionCountdownHint: 'La següent comença en',
         downloadReport: 'Descarregar informe (CSV)',
         downloadReportError: 'No s\'ha pogut descarregar l\'informe de la sessió.'
+    },
+    va: {
+        resultsNextToRanking: 'Vore classificació'
     }
 };
 
 function t(key){
-    return (i18n[lang] && i18n[lang][key]) || i18n.es[key];
+    var chain = lang === 'va' ? ['va', 'ca', 'es'] : [lang, 'es'];
+    for(var i = 0; i < chain.length; i++){
+        var dict = i18n[chain[i]];
+        if(dict && dict[key]) return dict[key];
+    }
+    return key;
 }
 
 function decodeBasicEntities(value){
@@ -377,7 +417,7 @@ function renderResultsChart(answerCounts, totalPlayers, correctAnswers){
 
 function setLang(newLang){
     lang = newLang;
-    localStorage.setItem('lang', lang);
+    persistLang(lang);
     applyStaticText();
     updateHostMusicLabels();
 }
@@ -780,7 +820,7 @@ function showQuestionCountdown(data){
     if(playersEl) playersEl.textContent = t('questionCountdown');
     if(timerEl) timerEl.style.display = 'none';
     if(data && data.questionNumber && data.totalQuestions){
-        document.getElementById('questionNum').textContent = i18n[lang].questionXofY(data.questionNumber, data.totalQuestions);
+        document.getElementById('questionNum').textContent = t('questionXofY')(data.questionNumber, data.totalQuestions);
     }
     function render(){
         if(seconds <= 0){
@@ -824,16 +864,16 @@ socket.on('gameQuestions', function(data){
     defaultTime = data.time || defaultTime || 20;
     window.hostShowScores = data.showScores !== false;
     setMedia(data.image, data.video);
-    document.getElementById('playersAnswered').textContent = i18n[lang].playersAnswered(0, data.playersInGame);
+    document.getElementById('playersAnswered').textContent = t('playersAnswered')(0, data.playersInGame);
     document.getElementById('timerText').style.display = "block";
     if (data.questionNumber && data.totalQuestions) {
-        document.getElementById('questionNum').textContent = i18n[lang].questionXofY(data.questionNumber, data.totalQuestions);
+        document.getElementById('questionNum').textContent = t('questionXofY')(data.questionNumber, data.totalQuestions);
     }
     updateTimer();
 });
 
 socket.on('updatePlayersAnswered', function(data){
-    document.getElementById('playersAnswered').textContent = i18n[lang].playersAnswered(data.playersAnswered, data.playersInGame);
+    document.getElementById('playersAnswered').textContent = t('playersAnswered')(data.playersAnswered, data.playersInGame);
 });
 
 socket.on('gamePin', function(data){

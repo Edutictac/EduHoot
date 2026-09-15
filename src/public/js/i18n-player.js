@@ -71,7 +71,7 @@
       join_continue: 'Continua',
       join_pin_error: 'PIN incorrecte. Torna-ho a provar.',
       join_name_hint: 'Juga sense PIN, tria tu el nom',
-      join_student_intro: 'O entra amb la teua identitat EduTicTac',
+      join_student_intro: 'O entra amb la teva identitat EduTicTac',
       join_student_code: 'Codi EduTicTac',
       join_student_pin: 'PIN personal',
       join_student_missing: 'Introdueix el codi i el PIN.',
@@ -84,8 +84,8 @@
       player_ranking_title: 'Top 10',
       player_ranking_close: 'Continua',
       player_ranking_you: 'Tu',
-      join_host: 'Fes clic ací per crear una partida',
-      lobby_wait: 'Esperant que l\'amfitrió inicie la partida',
+      join_host: 'Fes clic aquí per crear una partida',
+      lobby_wait: 'Esperant que l\'amfitrió iniciï la partida',
       lobby_check: 'Veus el teu nom en pantalla?',
       correct: 'Correcte!',
       incorrect: 'Incorrecte!',
@@ -103,7 +103,7 @@
       game_over: 'PARTIDA ACABADA',
       reconnecting_saved_spot: 'Reconnectant... t\'hem guardat el lloc durant {seconds} s',
       reconnecting_waiting_network: 'Sense connexió - esperant xarxa... ({seconds} s)',
-      reconnecting_kicked: 'Has eixit de la partida',
+      reconnecting_kicked: 'Has sortit de la partida',
       rank_top: 'Top 10 - Posició',
       rank_out: 'Fora del Top 10',
       reconnecting: 'Reconnectant...',
@@ -119,7 +119,12 @@
       footerSource: 'Codi font',
       footerPrivacy: 'Privacitat'
     },
-    va: {},
+    va: {
+      join_student_intro: 'O entra amb la teua identitat EduTicTac',
+      join_host: 'Fes clic ací per crear una partida',
+      lobby_wait: 'Esperant que l\'amfitrió inicie la partida',
+      reconnecting_kicked: 'Has eixit de la partida'
+    },
     en: {
       join_title: 'Join a Game',
       join_name: 'Display Name',
@@ -181,21 +186,57 @@
     }
   };
 
+  const LANG_KEYS = ['lang-player', 'lang', 'lang-host', 'edutictac-portal-lang', 'edutictac-lang'];
+
+  function normalizeLang(raw) {
+    const value = String(raw || '').toLowerCase();
+    if (value.indexOf('valencia') !== -1) return 'va';
+    const base = value.split('-')[0];
+    return translations[base] ? base : '';
+  }
+
+  function queryLang() {
+    try {
+      return normalizeLang(new URLSearchParams(window.location.search).get('lang'));
+    } catch (e) {
+      return '';
+    }
+  }
+
+  function storedLang() {
+    for (const key of LANG_KEYS) {
+      const value = normalizeLang(window.localStorage.getItem(key));
+      if (value) return value;
+    }
+    return '';
+  }
+
+  function persistLang(value) {
+      try {
+          var url = new URL(window.location.href);
+          if (url.searchParams.has('lang')) {
+              url.searchParams.set('lang', value);
+              window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
+          }
+      } catch (e) {}
+    for (const key of LANG_KEYS) {
+      try { window.localStorage.setItem(key, value); } catch (e) {}
+    }
+  }
+
   function detectLang() {
-    const stored = window.localStorage.getItem('lang-player');
-    if (stored && translations[stored]) return stored;
+    const fromQuery = queryLang();
+    if (fromQuery) return fromQuery;
+    const stored = storedLang();
+    if (stored) return stored;
     const nav = (navigator.language || navigator.userLanguage || 'es').toLowerCase();
-    if (nav.startsWith('ca')) return 'ca';
-    if (nav.startsWith('es')) return 'es';
+    const browserLang = normalizeLang(nav);
+    if (browserLang) return browserLang;
     return 'en';
   }
 
   const lang = detectLang();
-  try {
-    if (!window.localStorage.getItem('lang-player')) {
-      window.localStorage.setItem('lang-player', lang);
-    }
-  } catch (e) {}
+  persistLang(lang);
   if (document && document.documentElement) {
     document.documentElement.setAttribute('lang', lang);
   }
@@ -225,7 +266,7 @@
 
   function setLang(newLang) {
     if (translations[newLang]) {
-      window.localStorage.setItem('lang-player', newLang);
+      persistLang(newLang);
       window.location.reload();
     }
   }

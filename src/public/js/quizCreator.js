@@ -8,8 +8,40 @@ try{
 }
 var questionNum = 0; // Se incrementa cuando se añaden tarjetas
 var editingId = null;
-var browserLang = (navigator.language || 'es').slice(0,2);
-var lang = localStorage.getItem('lang') || (['es','en','ca'].includes(browserLang) ? browserLang : 'es');
+var LANG_KEYS = ['lang', 'lang-player', 'lang-host', 'edutictac-portal-lang', 'edutictac-lang'];
+function normalizeLang(raw){
+    var value = String(raw || '').toLowerCase();
+    if(value.indexOf('valencia') !== -1) return 'va';
+    var base = value.split('-')[0];
+    return ['ca','va','es','en'].indexOf(base) !== -1 ? base : '';
+}
+function getQueryLang(){
+    try{ return normalizeLang(new URLSearchParams(window.location.search).get('lang')); }catch(e){ return ''; }
+}
+function getStoredLang(){
+    for(var i = 0; i < LANG_KEYS.length; i++){
+        try{
+            var value = normalizeLang(localStorage.getItem(LANG_KEYS[i]));
+            if(value) return value;
+        }catch(e){}
+    }
+    return '';
+}
+function persistLang(value){
+    try {
+        var url = new URL(window.location.href);
+        if (url.searchParams.has('lang')) {
+            url.searchParams.set('lang', value);
+            window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
+        }
+    } catch (e) {}
+    for(var i = 0; i < LANG_KEYS.length; i++){
+        try{ localStorage.setItem(LANG_KEYS[i], value); }catch(e){}
+    }
+}
+var browserLang = normalizeLang(navigator.language || 'es');
+var lang = getQueryLang() || getStoredLang() || browserLang || 'es';
+persistLang(lang);
 var knownTags = [];
 var isUserAuthenticated = false;
 var moodleExportPendingQuiz = null;
@@ -250,6 +282,14 @@ var i18n = {
         pdfImage: 'Imatge',
         pdfVideo: 'Vídeo',
         pdfMissingLib: 'No s\'ha pogut generar el PDF (llibreria no disponible).'
+    },
+    va: {
+        subtitle: 'Dissenya les preguntes i guarda el joc per llançar-lo quan vulgues.',
+        btnSave: 'Guardar quiz',
+        btnPlayLocal: 'Jugar sense guardar',
+        localInfo: 'Sense sessió: “Guardar” o “Jugar sense guardar” creen un quiz anònim. "Només jo" caduca en 24h; "Per enllaç/Públic" es guarda globalment. Amb sessió, queda al teu usuari.',
+        confirmCancel: 'Segur que vols eixir? Es perdran els canvis.',
+        moodleModalStep3: 'Carrega este fitxer i segueix l\'assistència per revisar les preguntes.'
     }
 };
 
@@ -464,7 +504,12 @@ function pdfAddImage(doc, image, x, y, maxWidth, opts){
 }
 
 function t(key){
-    return (i18n[lang] && i18n[lang][key]) || i18n.es[key] || key;
+    var chain = lang === 'va' ? ['va', 'ca', 'es'] : [lang, 'es'];
+    for(var i = 0; i < chain.length; i++){
+        var dict = i18n[chain[i]];
+        if(dict && dict[key]) return dict[key];
+    }
+    return key;
 }
 
 function applyI18n(){
@@ -860,7 +905,7 @@ function getNonEmptyAnswersForExport(question, maxCount){
 }
 
 function getTfFallbackAnswers(){
-    if(lang === 'ca') return ['Cert', 'Fals'];
+    if(lang === 'ca' || lang === 'va') return ['Cert', 'Fals'];
     if(lang === 'en') return ['True', 'False'];
     return ['Verdadero', 'Falso'];
 }
@@ -1241,7 +1286,7 @@ function buildQuestionCard(num, data){
     removeBtn.textContent = '✕';
     removeBtn.title = 'Eliminar';
     removeBtn.onclick = function(){
-        var confirmMsg = lang === 'en' ? 'Delete this question?' : (lang === 'ca' ? 'Eliminar aquesta pregunta?' : '¿Eliminar esta pregunta?');
+        var confirmMsg = lang === 'en' ? 'Delete this question?' : (lang === 'va' ? 'Eliminar esta pregunta?' : (lang === 'ca' ? 'Eliminar aquesta pregunta?' : '¿Eliminar esta pregunta?'));
         if(window.confirm(confirmMsg)){
             card.remove();
             renumberQuestions();
@@ -1759,7 +1804,7 @@ if(langSelector){
     langSelector.value = lang;
     langSelector.addEventListener('change', function(){
         lang = langSelector.value;
-        localStorage.setItem('lang', lang);
+        persistLang(lang);
         applyI18n();
     });
 }

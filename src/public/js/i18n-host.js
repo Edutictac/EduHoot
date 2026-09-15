@@ -51,19 +51,62 @@
       host_error_missing_id: 'Falta el qüestionari per generar la partida. Torna a triar-lo.',
       host_error_timeout: 'No hem pogut obtenir el PIN. Comprova la connexió i torna a triar el qüestionari.'
     },
-    va: {}
+    va: {
+      opt_time_help: 'Deixa-ho buit per usar el temps definit en cada pregunta del qüestionari.'
+    }
   };
 
+  var LANG_KEYS = ['lang-host', 'lang', 'lang-player', 'edutictac-portal-lang', 'edutictac-lang'];
+
+  function normalizeLang(raw){
+    var value = String(raw || '').toLowerCase();
+    if(value.indexOf('valencia') !== -1) return 'va';
+    var base = value.split('-')[0];
+    return translations[base] ? base : '';
+  }
+
+  function queryLang(){
+    try{
+      return normalizeLang(new URLSearchParams(window.location.search).get('lang'));
+    }catch(e){
+      return '';
+    }
+  }
+
+  function storedLang(){
+    for(var i = 0; i < LANG_KEYS.length; i++){
+      var value = normalizeLang(localStorage.getItem(LANG_KEYS[i]));
+      if(value) return value;
+    }
+    return '';
+  }
+
+  function persistLang(value){
+      try {
+          var url = new URL(window.location.href);
+          if (url.searchParams.has('lang')) {
+              url.searchParams.set('lang', value);
+              window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
+          }
+      } catch (e) {}
+    for(var i = 0; i < LANG_KEYS.length; i++){
+      try{ localStorage.setItem(LANG_KEYS[i], value); }catch(e){}
+    }
+  }
+
   function detectLang(){
-    var stored = localStorage.getItem('lang-host');
-    if(stored && translations[stored]) return stored;
+    var fromQuery = queryLang();
+    if(fromQuery) return fromQuery;
+    var stored = storedLang();
+    if(stored) return stored;
     var nav = (navigator.language || 'es').toLowerCase();
-    if(nav.startsWith('ca')) return 'ca';
-    if(nav.startsWith('es')) return 'es';
+    var browserLang = normalizeLang(nav);
+    if(browserLang) return browserLang;
     return 'en';
   }
 
   var lang = detectLang();
+  persistLang(lang);
 
   function t(key){
     var chain = lang === 'va' ? ['va', 'ca', 'en'] : [lang, 'en'];
@@ -104,8 +147,7 @@
   function setLang(newLang){
     if(translations[newLang]){
       lang = newLang;
-      localStorage.setItem('lang-host', newLang);
-      try{ localStorage.setItem('lang', newLang); }catch(e){}
+      persistLang(newLang);
       apply();
     }
   }

@@ -169,12 +169,21 @@ var hostLobbyMusicI18n = {
         bgMusicPrev: 'Anterior',
         bgMusicNext: 'Següent',
         bgMusicVolume: 'Volum'
+    },
+    va: {
+        bgMusicTitle: 'Música de fons',
+        bgMusicChoose: 'Tria un tema',
+        bgMusicPlay: 'Reprodueix música',
+        bgMusicPause: 'Atura la música',
+        bgMusicPrev: 'Anterior',
+        bgMusicNext: 'Següent',
+        bgMusicVolume: 'Volum'
     }
 };
 
 function getHostLobbyLang(){
     var l = null;
-    try{ l = localStorage.getItem('lang-host') || localStorage.getItem('lang'); }catch(e){}
+    try{ l = localStorage.getItem('lang-host') || localStorage.getItem('lang') || localStorage.getItem('edutictac-portal-lang') || localStorage.getItem('edutictac-lang'); }catch(e){}
     if(l && hostLobbyMusicI18n[l]) return l;
     return 'es';
 }
@@ -217,10 +226,15 @@ function initHostLobbyMusicPlayer(){
 }
 
 function buildJoinUrl(pin){
+    var l = getHostLobbyLang();
+    var qs = [];
     if(pin){
-        return baseJoinUrl + '?pin=' + encodeURIComponent(pin);
+        qs.push('pin=' + encodeURIComponent(pin));
     }
-    return baseJoinUrl;
+    if(l){
+        qs.push('lang=' + encodeURIComponent(l));
+    }
+    return qs.length ? baseJoinUrl + '?' + qs.join('&') : baseJoinUrl;
 }
 
 function updateJoinQr(pin){
@@ -261,6 +275,9 @@ function syncLangStorage(val){
     try{
         localStorage.setItem('lang-host', val);
         localStorage.setItem('lang', val); // reutiliza la misma clave que usa la vista de juego
+        localStorage.setItem('lang-player', val);
+        localStorage.setItem('edutictac-portal-lang', val);
+        localStorage.setItem('edutictac-lang', val);
     }catch(e){}
 }
 
@@ -275,7 +292,7 @@ try{
         updateJoinQr();
     }
     // inicializar selector de idioma con preferencia previa
-    var storedLang = localStorage.getItem('lang-host') || localStorage.getItem('lang');
+    var storedLang = localStorage.getItem('lang-host') || localStorage.getItem('lang') || localStorage.getItem('edutictac-portal-lang') || localStorage.getItem('edutictac-lang');
     if(hostLangSelect && storedLang){
         hostLangSelect.value = storedLang;
         syncLangStorage(storedLang);
@@ -288,6 +305,7 @@ if(hostLangSelect){
         if(window.applyHostTranslations){
             window.applyHostTranslations(hostLangSelect.value);
         }
+        updateJoinQr(params.pin || '');
         updateHostLobbyMusicLabels();
     });
 }
