@@ -7,3 +7,5 @@ scripts/.codex
 
 # Dependencias (se instalan con npm ci / npm install)
 node_modules/
+src/test-results/
+src/playwright-report/

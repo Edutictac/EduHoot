@@ -1,9 +1,10 @@
 {
   "name": "kahootclone",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A kahoot website clone",
   "main": "index.js",
   "scripts": {
+    "test:i18n": "playwright test",
     "lint": "node scripts/lint.js",
     "normalize-tags": "node scripts/normalize-tags.js",
     "test": "node --test \"test/**/*.test.js\"",
@@ -21,7 +22,7 @@
     "socket.io": "^4.8.3"
   },
   "devDependencies": {
-    "expect": "^23.0.1",
+    "@playwright/test": "1.63.0",
     "mongodb-memory-server": "^11.2.0"
   }
 }

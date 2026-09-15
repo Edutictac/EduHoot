@@ -9,3 +9,5 @@ src/public/uploads
 Screenshots
 install-files
 STAGE_SETUP.md
+src/test-results
+src/playwright-report
