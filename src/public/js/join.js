@@ -177,6 +177,13 @@
             .then(function(body){
                 if(studentJoinTokenInput) studentJoinTokenInput.value = body.join_token;
                 if(nameInput) nameInput.value = normalizeStudentCode(body.display_name || body.public_code || code);
+                if(body.avatar_icon && picker){
+                    Array.prototype.some.call(picker.querySelectorAll('button[data-icon]'), function(btn){
+                        if(btn.getAttribute('data-icon') !== body.avatar_icon) return false;
+                        selectIcon(btn);
+                        return true;
+                    });
+                }
                 if(studentPinInput) studentPinInput.value = '';
                 setStudentAuthStatus('');
                 return body.join_token;

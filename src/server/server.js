@@ -415,6 +415,7 @@ function createStudentJoinToken(identity, ttlMs = STUDENT_JOIN_TOKEN_TTL_MS) {
     identity: {
       id: identity && identity.id ? String(identity.id) : '',
       public_code: publicCode,
+      avatar_icon: identity && identity.avatar_icon ? String(identity.avatar_icon) : '',
       assignment_id: identity && identity.assignment_id ? String(identity.assignment_id) : '',
       activity_id: identity && identity.activity_id ? String(identity.activity_id) : ''
     },
@@ -2118,6 +2119,7 @@ app.post('/api/player-auth/student', authRateLimiter, async (req, res) => {
       ok: true,
       public_code: join.publicCode,
       display_name: join.publicCode,
+      avatar_icon: identity && identity.avatar_icon ? String(identity.avatar_icon) : '',
       join_token: join.token
     });
   } catch (err) {
@@ -2147,6 +2149,7 @@ app.post('/api/player-auth/launch-token', authRateLimiter, async (req, res) => {
       ok: true,
       public_code: join.publicCode,
       display_name: join.publicCode,
+      avatar_icon: identity.avatar_icon || '',
       join_token: join.token,
       assignment
     });
@@ -3213,7 +3216,7 @@ io.on('connection', (socket) => {
       wrongCount: 0,
       answerHistory: [],
       identity: studentIdentity || null
-    }, params.icon || '', token);
+    }, studentIdentity && studentIdentity.avatar_icon ? studentIdentity.avatar_icon : (params.icon || ''), token);
     socket.join(game.pin);
 
     const playersInGame = players.getPlayers(hostId);
