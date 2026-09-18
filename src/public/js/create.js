@@ -3641,6 +3641,7 @@ fetch('/api/auth/google/config', { credentials: 'include' })
     .then(function(res){ return res.ok ? res.json() : { enabled: false }; })
     .then(function(cfg){
         googleAuthEnabled = !!cfg.enabled;
+        if(authGoogleHeroBtn) authGoogleHeroBtn.classList.toggle('hidden', !googleAuthEnabled);
         updateAuthUI();
     })
     .catch(function(){});
