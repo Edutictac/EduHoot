@@ -95,6 +95,7 @@ const AUTHENTIK_TOKEN_URL = (process.env.AUTHENTIK_TOKEN_URL || '').trim();
 const AUTHENTIK_USERINFO_URL = (process.env.AUTHENTIK_USERINFO_URL || '').trim();
 const AUTHENTIK_SCOPE = (process.env.AUTHENTIK_SCOPE || 'openid profile email groups').trim();
 const AUTHENTIK_ONLY = /^(1|true|yes)$/i.test(process.env.AUTHENTIK_ONLY || '');
+const EDUHOOT_RESOURCES_TOKEN = process.env.EDUHOOT_RESOURCES_TOKEN || '';
 const EDUTICTAC_ID_API_URL = (process.env.EDUTICTAC_ID_API_URL || '').replace(/\/+$/, '');
 const EDUTICTAC_ID_APP_TOKEN = process.env.EDUTICTAC_ID_APP_TOKEN || '';
 const EDUTICTAC_ID_AUTH_REQUIRED = /^(1|true|yes)$/i.test(process.env.EDUTICTAC_ID_AUTH_REQUIRED || '');
@@ -1847,6 +1848,24 @@ function canCloneQuiz(quiz, user) {
     return canUseQuiz(quiz, user);
   }
   return canManageQuiz(quiz, user);
+}
+
+function requireResourcesIntegration(req, res) {
+  if (!EDUHOOT_RESOURCES_TOKEN) {
+    res.status(503).json({ error: 'Integración con Recursos no configurada.' });
+    return false;
+  }
+  const authorization = (req.headers.authorization || '').toString();
+  const token = authorization.toLowerCase().startsWith('bearer ')
+    ? authorization.slice(7).trim()
+    : '';
+  const valid = token.length === EDUHOOT_RESOURCES_TOKEN.length
+    && crypto.timingSafeEqual(Buffer.from(token), Buffer.from(EDUHOOT_RESOURCES_TOKEN));
+  if (!valid) {
+    res.status(401).json({ error: 'Integración con Recursos no autorizada.' });
+    return false;
+  }
+  return true;
 }
 
 function selectQuizzesForUser(quizzes, user, opts = {}) {
@@ -3993,6 +4012,45 @@ app.get('/api/public-quizzes', async (req, res) => {
   } catch (err) {
     console.error('list-public-quizzes error', err);
     return res.status(500).json({ error: 'No se pudo obtener la lista.' });
+  }
+});
+
+// Catálogo interno para Recursos: público para cualquiera y privado solo para
+// el docente Authentik propietario identificado por X-Teacher-Sub.
+app.get('/api/integrations/recursos/quizzes', async (req, res) => {
+  if (!requireResourcesIntegration(req, res)) return;
+  try {
+    const teacherSub = (req.headers['x-teacher-sub'] || '').toString().trim();
+    const collection = await getGamesCollection();
+    const visibilityQuery = [{ visibility: 'public' }, { visibility: { $exists: false } }];
+    if (teacherSub) {
+      const users = await getUsersCollection();
+      const teacher = await users.findOne({ authentikId: teacherSub }, { projection: { _id: 1 } });
+      if (teacher) {
+        visibilityQuery.push({ visibility: { $in: ['private', 'unlisted'] }, ownerId: teacher._id.toString() });
+      }
+    }
+    const quizzes = await collection.find({ $or: visibilityQuery }).project({
+      id: 1, name: 1, tags: 1, language: 1, license: 1, description: 1,
+      visibility: 1, ownerNickname: 1, ownerId: 1, createdAt: 1, updatedAt: 1, questions: 1
+    }).toArray();
+    return res.json(quizzes.map((quiz) => ({
+      id: quiz.id,
+      name: cleanImportedText(quiz.name || ''),
+      tags: normalizeTags(quiz.tags || []),
+      language: quiz.language || '',
+      license: quiz.license || '',
+      description: quiz.description || '',
+      visibility: currentVisibility(quiz),
+      ownerNickname: quiz.ownerNickname || '',
+      ownerId: quiz.ownerId || '',
+      createdAt: quiz.createdAt || quiz.updatedAt || new Date(0),
+      updatedAt: quiz.updatedAt || quiz.createdAt || new Date(0),
+      questions: Array.isArray(quiz.questions) ? quiz.questions : []
+    })));
+  } catch (err) {
+    console.error('recursos-quizzes error', err);
+    return res.status(500).json({ error: 'No se pudo obtener el catálogo para Recursos.' });
   }
 });
 
