@@ -11,6 +11,8 @@ let mongoClient;
 before(async () => {
   mongod = await MongoMemoryServer.create();
   process.env.MONGO_URL = mongod.getUri();
+  process.env.EDUHOOT_RESOURCES_TOKEN = 'test-catalogue-token';
+  process.env.PUBLIC_IMPORT_SOURCE_URL = 'https://catalogue.example';
   ({ app, mongoClient } = require('../../server/server.js'));
   httpServer = app.listen(0);
   await new Promise((resolve) => httpServer.on('listening', resolve));
@@ -36,6 +38,29 @@ function cookieHeader(res) {
 }
 
 const ADMIN = { email: 'admin@test.local', password: 'secret123', nickname: 'Admin Test' };
+
+test('Commons imports playable local quizzes once and rejects unauthorised/invalid catalogues', async () => {
+  const path = '/api/integrations/recursos/import-catalog';
+  const items = [{ id: 789, name: 'Catálogo de prueba', tags: ['musica'], questions: [
+    { question: 'Nota musical', answers: ['Do', 'Azul'], correct: 1, image: '/uploads/quiz-images/note.png' }
+  ] }];
+  const options = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items }) };
+  assert.equal((await request(path, options)).status, 401);
+  options.headers.Authorization = 'Bearer test-catalogue-token';
+  const first = await request(path, options);
+  assert.equal(first.status, 200);
+  assert.equal((await first.json()).imported, 1);
+  const again = await request(path, options);
+  assert.equal((await again.json()).skipped, 1);
+  const quizzes = await (await request('/api/public-quizzes')).json();
+  const local = quizzes.filter(q => q.name === 'Catálogo de prueba');
+  assert.equal(local.length, 1);
+  const detail = await (await request(`/api/quizzes/${local[0].id}`)).json();
+  assert.equal(detail.questions.length, 1);
+  assert.equal(detail.questions[0].image, 'https://catalogue.example/uploads/quiz-images/note.png');
+  options.body = JSON.stringify({ items: [{ id: 99, name: 'Incomplete' }] });
+  assert.equal((await request(path, options)).status, 400);
+});
 
 test('sirve la portada estática', async () => {
   const res = await request('/');

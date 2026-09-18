@@ -2565,7 +2565,7 @@ app.post('/api/admin/quizzes/import', requireRole('admin'), bulkUpload.single('f
   }
 });
 
-async function buildQuizDoc({ name, tags, questions, visibility, allowClone, user, ownerToken, language = '', license = '', description = '' }) {
+async function buildQuizDoc({ name, tags, questions, visibility, allowClone, user, ownerToken, language = '', license = '', description = '', importSource = null }) {
   const collection = await getGamesCollection();
   const newId = await nextGameId(collection);
   const ownerTokenClean = (ownerToken || '').toString().trim();
@@ -2592,6 +2592,7 @@ async function buildQuizDoc({ name, tags, questions, visibility, allowClone, use
   } else {
     quiz.ownerToken = ownerTokenClean;
   }
+  if (importSource) Object.assign(quiz, importSource);
   await collection.insertOne(quiz);
   return { quiz, collection };
 }
@@ -4720,6 +4721,56 @@ app.post('/api/admin/mirror-external-images', requireRole('admin'), async (req, 
       externalMirrorJobRunning = false;
     }
   })();
+});
+
+// Commons sends the downloaded, checksum-verified catalogue over the internal API.
+// Serialise imports so retries/concurrent clicks cannot duplicate source IDs.
+let catalogueImportRunning = false;
+app.post('/api/integrations/recursos/import-catalog', async (req, res) => {
+  if (!requireResourcesIntegration(req, res)) return;
+  if (!PUBLIC_IMPORT_SOURCE_URL) return res.status(503).json({ error: 'Fuente de importación no configurada.' });
+  const items = req.body && req.body.items;
+  if (!Array.isArray(items) || items.length > 1000 || items.some(item =>
+    !item || !['string', 'number'].includes(typeof item.id) || !String(item.id).trim() ||
+    typeof item.name !== 'string' || !item.name.trim() ||
+    !Array.isArray(item.questions) || !item.questions.length ||
+    item.questions.some(q => !q || typeof q.question !== 'string')
+  )) return res.status(400).json({ error: 'Catálogo de cuestionarios no válido.' });
+  if (catalogueImportRunning) return res.status(409).json({ error: 'Ya hay una importación en curso.' });
+  catalogueImportRunning = true;
+  let imported = 0;
+  let skipped = 0;
+  try {
+    const collection = await getGamesCollection();
+    for (const item of items) {
+      const source = { importedFrom: PUBLIC_IMPORT_SOURCE_URL, sourceQuizId: String(item.id) };
+      if (await collection.findOne(source)) {
+        skipped++;
+        continue;
+      }
+      const questions = item.questions.map(q => {
+        const result = { ...q };
+        for (const field of ['image', 'video']) {
+          if (typeof result[field] === 'string' && result[field].startsWith('/uploads/')) {
+            result[field] = new URL(result[field], PUBLIC_IMPORT_SOURCE_URL).href;
+          }
+        }
+        return result;
+      });
+      const { quiz } = await buildQuizDoc({
+        name: item.name, tags: normalizeTags(item.tags || []), questions,
+        visibility: 'public', allowClone: true, user: null, ownerToken: '',
+        language: item.language, license: item.license, description: item.description,
+        importSource: source
+      });
+      if (quiz) imported++;
+    }
+    return res.json({ ok: true, total: items.length, imported, skipped, failed: 0 });
+  } catch (err) {
+    return res.status(500).json({ error: 'Importación incompleta. Puedes reintentar.', imported, skipped });
+  } finally {
+    catalogueImportRunning = false;
+  }
 });
 
 app.get('/api/admin/import-public-activities/config', (req, res) => {
