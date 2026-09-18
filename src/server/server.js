@@ -34,6 +34,7 @@ const games = new LiveGames();
 const players = new Players();
 const sessions = new Map();
 const oauthStates = new Map();
+const authentikOauthStates = new Map();
 const studentJoinTokens = new Map();
 const soloScoreBuffer = [];
 const SOLO_SCORE_BUFFER_DELAY = 150;
@@ -78,6 +79,22 @@ const GOOGLE_OAUTH_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
 const GOOGLE_OAUTH_TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const GOOGLE_OAUTH_USERINFO_URL = 'https://openidconnect.googleapis.com/v1/userinfo';
 const GOOGLE_OAUTH_STATE_TTL_MS = 10 * 60 * 1000;
+const AUTHENTIK_OAUTH_STATE_TTL_MS = 10 * 60 * 1000;
+const AUTHENTIK_TEACHER_ROLES = new Set(
+  (process.env.AUTHENTIK_TEACHER_ROLES || 'profesor,teacher,docente,administrador,admin')
+    .split(',').map((value) => value.trim().toLowerCase()).filter(Boolean)
+);
+const AUTHENTIK_ROLE_CLAIM = (process.env.AUTHENTIK_ROLE_CLAIM || 'groups').trim();
+const AUTHENTIK_ISSUER = (process.env.AUTHENTIK_ISSUER || '').trim().replace(/\/+$/, '');
+const AUTHENTIK_CLIENT_ID = (process.env.AUTHENTIK_CLIENT_ID || '').trim();
+const AUTHENTIK_CLIENT_SECRET = process.env.AUTHENTIK_CLIENT_SECRET || '';
+const AUTHENTIK_REDIRECT_URI = (process.env.AUTHENTIK_REDIRECT_URI || '').trim();
+const AUTHENTIK_DISCOVERY_URL = (process.env.AUTHENTIK_DISCOVERY_URL || '').trim();
+const AUTHENTIK_AUTHORIZATION_URL = (process.env.AUTHENTIK_AUTHORIZATION_URL || '').trim();
+const AUTHENTIK_TOKEN_URL = (process.env.AUTHENTIK_TOKEN_URL || '').trim();
+const AUTHENTIK_USERINFO_URL = (process.env.AUTHENTIK_USERINFO_URL || '').trim();
+const AUTHENTIK_SCOPE = (process.env.AUTHENTIK_SCOPE || 'openid profile email groups').trim();
+const AUTHENTIK_ONLY = /^(1|true|yes)$/i.test(process.env.AUTHENTIK_ONLY || '');
 const EDUTICTAC_ID_API_URL = (process.env.EDUTICTAC_ID_API_URL || '').replace(/\/+$/, '');
 const EDUTICTAC_ID_APP_TOKEN = process.env.EDUTICTAC_ID_APP_TOKEN || '';
 const EDUTICTAC_ID_AUTH_REQUIRED = /^(1|true|yes)$/i.test(process.env.EDUTICTAC_ID_AUTH_REQUIRED || '');
@@ -1497,6 +1514,28 @@ function googleOAuthConfig(req) {
   };
 }
 
+function authentikCallbackUrl(req) {
+  return AUTHENTIK_REDIRECT_URI || `${publicBaseUrl(req)}/api/auth/authentik/callback`;
+}
+
+function authentikDiscoveryUrl() {
+  return AUTHENTIK_DISCOVERY_URL || (AUTHENTIK_ISSUER ? `${AUTHENTIK_ISSUER}/.well-known/openid-configuration` : '');
+}
+
+function authentikConfigured() {
+  return !!(AUTHENTIK_ISSUER && AUTHENTIK_CLIENT_ID && AUTHENTIK_CLIENT_SECRET);
+}
+
+function base64Url(value) {
+  return Buffer.from(value).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}
+
+function authentikTeacher(profile) {
+  const raw = profile && profile[AUTHENTIK_ROLE_CLAIM];
+  const values = Array.isArray(raw) ? raw : (raw ? [raw] : []);
+  return values.some((value) => AUTHENTIK_TEACHER_ROLES.has(String(value).trim().toLowerCase()));
+}
+
 function sanitizeRedirectTarget(raw) {
   const target = (raw || '').toString().trim();
   if (!target || !target.startsWith('/') || target.startsWith('//')) return '/create/';
@@ -1511,15 +1550,20 @@ function cleanupOauthStates() {
   for (const [state, data] of oauthStates.entries()) {
     if (!data || data.expiresAt <= now) oauthStates.delete(state);
   }
+  for (const [state, data] of authentikOauthStates.entries()) {
+    if (!data || data.expiresAt <= now) authentikOauthStates.delete(state);
+  }
 }
 
 function httpsJsonRequest(url, options = {}) {
   return new Promise((resolve, reject) => {
     const target = new URL(url);
+    const transport = target.protocol === 'http:' ? http : require('https');
     const body = options.body || '';
-    const req = require('https').request({
+    const req = transport.request({
       method: options.method || 'GET',
       hostname: target.hostname,
+      port: target.port || undefined,
       path: `${target.pathname}${target.search}`,
       headers: {
         Accept: 'application/json',
@@ -1568,6 +1612,73 @@ async function fetchGoogleProfile(accessToken) {
   return httpsJsonRequest(GOOGLE_OAUTH_USERINFO_URL, {
     headers: { Authorization: `Bearer ${accessToken}` }
   });
+}
+
+async function authentikEndpoints() {
+  const configured = {
+    authorization_endpoint: AUTHENTIK_AUTHORIZATION_URL,
+    token_endpoint: AUTHENTIK_TOKEN_URL,
+    userinfo_endpoint: AUTHENTIK_USERINFO_URL
+  };
+  if (configured.authorization_endpoint && configured.token_endpoint && configured.userinfo_endpoint) return configured;
+  const discoveryUrl = authentikDiscoveryUrl();
+  if (!discoveryUrl) throw new Error('Authentik OIDC no está configurado.');
+  const discovery = await httpsJsonRequest(discoveryUrl);
+  return {
+    authorization_endpoint: configured.authorization_endpoint || discovery.authorization_endpoint,
+    token_endpoint: configured.token_endpoint || discovery.token_endpoint,
+    userinfo_endpoint: configured.userinfo_endpoint || discovery.userinfo_endpoint
+  };
+}
+
+async function exchangeAuthentikCode(code, config, verifier, endpoints) {
+  const body = new URLSearchParams({
+    code,
+    client_id: config.clientId,
+    client_secret: config.clientSecret,
+    redirect_uri: config.redirectUri,
+    grant_type: 'authorization_code',
+    code_verifier: verifier
+  }).toString();
+  return httpsJsonRequest(endpoints.token_endpoint, { method: 'POST', body });
+}
+
+async function fetchAuthentikProfile(accessToken, endpoint) {
+  return httpsJsonRequest(endpoint, { headers: { Authorization: `Bearer ${accessToken}` } });
+}
+
+async function findOrCreateAuthentikUser(profile) {
+  const email = (profile.email || '').toLowerCase().trim();
+  if (!email) throw new Error('Authentik no devolvió email.');
+  if (!authentikTeacher(profile)) throw new Error('La cuenta de Authentik no tiene rol docente.');
+  const users = await getUsersCollection();
+  const now = new Date();
+  const existing = await users.findOne({ email });
+  if (existing) {
+    const providers = Array.isArray(existing.authProviders) ? existing.authProviders : [];
+    const update = {
+      authentikId: profile.sub,
+      authentikVerifiedEmail: profile.email_verified !== false,
+      lastLoginAt: now,
+      updatedAt: now
+    };
+    if (!existing.nickname && (profile.name || profile.preferred_username)) update.nickname = profile.name || profile.preferred_username;
+    if (!providers.includes('authentik')) update.authProviders = [...providers, 'authentik'];
+    await users.updateOne({ _id: existing._id }, { $set: update });
+    return { ...existing, ...update };
+  }
+  const user = {
+    email,
+    authentikId: profile.sub,
+    authentikVerifiedEmail: profile.email_verified !== false,
+    authProviders: ['authentik'],
+    role: 'editor',
+    nickname: profile.name || profile.preferred_username || '',
+    createdAt: now,
+    lastLoginAt: now
+  };
+  const result = await users.insertOne(user);
+  return { ...user, _id: result.insertedId };
 }
 
 async function findOrCreateGoogleUser(profile) {
@@ -4244,10 +4355,80 @@ app.post('/api/auth/login', authRateLimiter, async (req, res) => {
 
 app.get('/api/auth/google/config', (req, res) => {
   const config = googleOAuthConfig(req);
-  res.json({ enabled: !!(config.clientId && config.clientSecret) });
+  res.json({ enabled: !AUTHENTIK_ONLY && !!(config.clientId && config.clientSecret) });
+});
+
+app.get('/api/auth/authentik/config', (req, res) => {
+  res.json({ enabled: authentikConfigured(), teacherOnly: true });
+});
+
+app.get('/api/auth/authentik/start', async (req, res) => {
+  if (!authentikConfigured()) return res.status(503).json({ error: 'Authentik OIDC no está configurado.' });
+  try {
+    const endpoints = await authentikEndpoints();
+    if (!endpoints.authorization_endpoint || !endpoints.token_endpoint || !endpoints.userinfo_endpoint) {
+      throw new Error('El descubrimiento OIDC de Authentik está incompleto.');
+    }
+    cleanupOauthStates();
+    const state = base64Url(crypto.randomBytes(24));
+    const verifier = base64Url(crypto.randomBytes(48));
+    const challenge = base64Url(crypto.createHash('sha256').update(verifier).digest());
+    const next = sanitizeRedirectTarget(req.query.next);
+    authentikOauthStates.set(state, { next, verifier, endpoints, expiresAt: Date.now() + AUTHENTIK_OAUTH_STATE_TTL_MS });
+    res.cookie('authentikOAuthState', state, getCookieOptions(req, { maxAge: AUTHENTIK_OAUTH_STATE_TTL_MS }));
+    const params = new URLSearchParams({
+      client_id: AUTHENTIK_CLIENT_ID,
+      redirect_uri: authentikCallbackUrl(req),
+      response_type: 'code',
+      scope: AUTHENTIK_SCOPE,
+      state,
+      code_challenge: challenge,
+      code_challenge_method: 'S256',
+      prompt: 'login'
+    });
+    return res.redirect(`${endpoints.authorization_endpoint}?${params.toString()}`);
+  } catch (err) {
+    console.error('authentik-discovery error', err.message);
+    return res.status(503).json({ error: 'No se ha podido conectar con Authentik.' });
+  }
+});
+
+app.get('/api/auth/authentik/callback', async (req, res) => {
+  let nextTarget = '/create/';
+  try {
+    const code = (req.query.code || '').toString();
+    const state = (req.query.state || '').toString();
+    const cookies = parseCookies(req.headers.cookie || '');
+    const stored = authentikOauthStates.get(state);
+    authentikOauthStates.delete(state);
+    res.cookie('authentikOAuthState', '', getCookieOptions(req, { expires: new Date(0) }));
+    if (stored && stored.next) nextTarget = sanitizeRedirectTarget(stored.next);
+    if (!code || !state || !stored || stored.expiresAt <= Date.now()) throw new Error('Estado OIDC inválido o caducado.');
+    if (cookies.authentikOAuthState && cookies.authentikOAuthState !== state) throw new Error('La cookie de estado OIDC no coincide.');
+    const config = {
+      clientId: AUTHENTIK_CLIENT_ID,
+      clientSecret: AUTHENTIK_CLIENT_SECRET,
+      redirectUri: authentikCallbackUrl(req)
+    };
+    const tokenData = await exchangeAuthentikCode(code, config, stored.verifier, stored.endpoints);
+    if (!tokenData.access_token) throw new Error('Authentik no devolvió access_token.');
+    const profile = await fetchAuthentikProfile(tokenData.access_token, stored.endpoints.userinfo_endpoint);
+    const user = await findOrCreateAuthentikUser(profile);
+    const sid = createSession(user);
+    res.cookie('sessionId', sid, getCookieOptions(req));
+    const separator = nextTarget.includes('?') ? '&' : '?';
+    return res.redirect(`${nextTarget}${separator}authentik=ok`);
+  } catch (err) {
+    console.error('authentik-auth error', err.message);
+    const separator = nextTarget.includes('?') ? '&' : '?';
+    return res.redirect(`${nextTarget}${separator}authentik=error`);
+  }
 });
 
 app.get('/api/auth/google/start', (req, res) => {
+  if (AUTHENTIK_ONLY) {
+    return res.status(404).json({ error: 'Google está desactivado en el modo Authentik.' });
+  }
   const config = googleOAuthConfig(req);
   if (!config.clientId || !config.clientSecret) {
     return res.status(503).json({ error: 'Google OAuth no está configurado.' });

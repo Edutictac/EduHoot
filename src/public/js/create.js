@@ -254,6 +254,7 @@ var i18n = {
         btnSaveNick: 'Guardar nombre visible',
         btnLogin: 'Entrar',
         btnGoogleLogin: 'Entrar con Google',
+        btnAuthentikLogin: 'Entrar con EduTicTac',
         btnUseEmail: 'Usar email',
         panelExpand: 'Desplegar',
         panelCollapse: 'Ocultar',
@@ -512,6 +513,7 @@ var i18n = {
         btnSaveNick: 'Save display name',
         btnLogin: 'Log in',
         btnGoogleLogin: 'Log in with Google',
+        btnAuthentikLogin: 'Log in with EduTicTac',
         btnUseEmail: 'Use email',
         panelExpand: 'Expand',
         panelCollapse: 'Hide',
@@ -770,6 +772,7 @@ var i18n = {
         btnSaveNick: 'Desar nom visible',
         btnLogin: 'Entrar',
         btnGoogleLogin: 'Entrar amb Google',
+        btnAuthentikLogin: 'Entrar amb EduTicTac',
         btnUseEmail: 'Usar email',
         panelExpand: 'Desplegar',
         panelCollapse: 'Amagar',
@@ -3034,6 +3037,7 @@ var authModal = document.getElementById('auth-modal');
 var openAuthBtn = document.getElementById('open-auth');
 var newUserSignin = document.getElementById('new-user-signin');
 var authGoogleHeroBtn = document.getElementById('auth-google-hero');
+var authAuthentikHeroBtn = document.getElementById('auth-authentik-hero');
 
 function openAuthModal(){
     if(!authModal) return;
@@ -3132,10 +3136,11 @@ var resetConfirmBtn = document.getElementById('reset-confirm');
 var resetStatus = document.getElementById('reset-status');
 var authState = { user: null };
 var googleAuthEnabled = false;
+var authentikAuthEnabled = false;
 
 function updateAuthUI(){
     if(newUserSignin){
-        newUserSignin.classList.toggle('hidden', !googleAuthEnabled || !!(authState && authState.user));
+        newUserSignin.classList.toggle('hidden', !(googleAuthEnabled || authentikAuthEnabled) || !!(authState && authState.user));
     }
 
     if(authStatus){
@@ -3247,6 +3252,11 @@ function logout(){
 function loginWithGoogle(){
     var next = window.location.pathname + window.location.search;
     window.location.href = '/api/auth/google/start?next=' + encodeURIComponent(next || '/create/');
+}
+
+function loginWithAuthentik(){
+    var next = window.location.pathname + window.location.search;
+    window.location.href = '/api/auth/authentik/start?next=' + encodeURIComponent(next || '/create/');
 }
 
 function removeLocalQuizId(id){
@@ -3480,6 +3490,9 @@ if(authLogoutBtn){
 if(authGoogleHeroBtn){
     authGoogleHeroBtn.addEventListener('click', loginWithGoogle);
 }
+if(authAuthentikHeroBtn){
+    authAuthentikHeroBtn.addEventListener('click', loginWithAuthentik);
+}
 if(createUserBtn){
     createUserBtn.addEventListener('click', createUser);
 }
@@ -3607,9 +3620,16 @@ if(resetConfirmBtn){
 try{
     var authParams = new URLSearchParams(window.location.search);
     var googleResult = authParams.get('google');
+    var authentikResult = authParams.get('authentik');
     if(googleResult && authMsg){
         authMsg.textContent = googleResult === 'ok' ? t('loginOk') : t('googleLoginError');
         authParams.delete('google');
+    }
+    if(authentikResult && authMsg){
+        authMsg.textContent = authentikResult === 'ok' ? t('loginOk') : t('loginError');
+        authParams.delete('authentik');
+    }
+    if(googleResult || authentikResult){
         var cleanUrl = window.location.pathname + (authParams.toString() ? '?' + authParams.toString() : '') + window.location.hash;
         window.history.replaceState({}, '', cleanUrl);
     }
@@ -3621,6 +3641,15 @@ fetch('/api/auth/google/config', { credentials: 'include' })
     .then(function(res){ return res.ok ? res.json() : { enabled: false }; })
     .then(function(cfg){
         googleAuthEnabled = !!cfg.enabled;
+        updateAuthUI();
+    })
+    .catch(function(){});
+
+fetch('/api/auth/authentik/config', { credentials: 'include' })
+    .then(function(res){ return res.ok ? res.json() : { enabled: false }; })
+    .then(function(cfg){
+        authentikAuthEnabled = !!cfg.enabled;
+        if(authAuthentikHeroBtn) authAuthentikHeroBtn.classList.toggle('hidden', !authentikAuthEnabled);
         updateAuthUI();
     })
     .catch(function(){});

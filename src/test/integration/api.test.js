@@ -56,6 +56,12 @@ test('GET /api/auth/google/config reporta Google desactivado', async () => {
   assert.deepEqual(await res.json(), { enabled: false });
 });
 
+test('GET /api/auth/authentik/config exige configuración y limita a docentes', async () => {
+  const res = await request('/api/auth/authentik/config');
+  assert.equal(res.status, 200);
+  assert.deepEqual(await res.json(), { enabled: false, teacherOnly: true });
+});
+
 test('flujo de auth: bootstrap, login, me y logout', async () => {
   const bootstrap = await request('/api/auth/bootstrap', {
     method: 'POST',

@@ -92,6 +92,17 @@ El primer usuario que entra con Google se crea como `admin`; los siguientes entr
 
 En la pantalla de create, el bloque de alta rápida muestra solo el botón de Google. El botón `Entrar/Cuenta` sigue abriendo el modal de acceso con email para usuarios antiguos.
 
+### Acceso docente con Authentik
+
+EduHoot admite login OIDC con Authentik. Solo las identidades que incluyen un
+rol docente en la claim configurada pueden iniciar sesión; el alumnado no puede
+usar este login para crear o gestionar cuestionarios. Configura
+`AUTHENTIK_ISSUER`, `AUTHENTIK_CLIENT_ID`, `AUTHENTIK_CLIENT_SECRET` y
+`AUTHENTIK_REDIRECT_URI` (por defecto `/api/auth/authentik/callback`), y registra
+esa URL en Authentik. La claim de roles/grupos es `groups` por defecto y se
+puede cambiar con `AUTHENTIK_ROLE_CLAIM`; los roles aceptados se configuran con
+`AUTHENTIK_TEACHER_ROLES`.
+
 ### Integración con EduTicTac Commons
 
 EduHoot puede validar al alumnado contra el servicio de identidad pseudónima de EduTicTac Commons y registrar la puntuación final en Commons.
