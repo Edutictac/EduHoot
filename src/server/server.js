@@ -4442,8 +4442,7 @@ app.get('/api/auth/authentik/start', async (req, res) => {
       scope: AUTHENTIK_SCOPE,
       state,
       code_challenge: challenge,
-      code_challenge_method: 'S256',
-      prompt: 'login'
+      code_challenge_method: 'S256'
     });
     return res.redirect(`${endpoints.authorization_endpoint}?${params.toString()}`);
   } catch (err) {
