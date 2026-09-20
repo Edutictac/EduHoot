@@ -1160,7 +1160,7 @@
     if(!data) return '';
     var yt = parseYouTubeId(data);
     if(yt) return 'https://img.youtube.com/vi/' + yt + '/hqdefault.jpg';
-    return data;
+    return normalizeSvgDataUrlForImg(data);
   }
 
   function parseYouTubeId(url){

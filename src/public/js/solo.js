@@ -831,7 +831,7 @@ function renderSelectedMeta(){
         if(yt){
             return 'https://img.youtube.com/vi/' + yt + '/hqdefault.jpg';
         }
-        return data;
+        return normalizeSvgDataUrlForImg(data);
     }
 
     function shuffleArray(arr){
