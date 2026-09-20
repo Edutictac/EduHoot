@@ -2930,6 +2930,7 @@ function buildPrompt(params){
         instrucciones: params.extra || '',
         notas: [
             "Usa el punto y coma ';' como separador.",
+            "Cada fila debe contener exactamente las 13 columnas de la cabecera, incluidos los campos vacíos. No omitas separadores: 'imagen', 'video' y 'texto' son columnas distintas.",
             "Si algún campo contiene ';' o comillas o saltos de línea, envuélvelo en comillas dobles y escapa comillas internas como \"\" (CSV estándar).",
             "Columna 'tipo': usa uno de: quiz | multiple | true-false | short-answer | numeric.",
             "Tipos quiz/multiple/true-false: usa r1..r4 y 'correcta' (quiz/tf: índice; multiple: lista 1,3).",
@@ -2938,7 +2939,7 @@ function buildPrompt(params){
             "Si 'usar_documentos' es true, genera las preguntas SOLO a partir de los documentos adjuntos en la IA (no inventes contenido fuera de ellos).",
             "Imágenes: PROHIBIDO usar URLs externas (http/https) y PROHIBIDO Wikimedia. Si no puedes generar una imagen embebida, deja 'imagen' vacío.",
             (genSvg
-                ? "Columna 'imagen': genera SVG como data URL con el SVG URL-encoded (muy importante para que '#' en colores no rompa la URL). Ejemplo: \"data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2010%2010%22%3E%3Crect%20width%3D%2210%22%20height%3D%2210%22%20fill%3D%22%2523ff0000%22%2F%3E%3C%2Fsvg%3E\". Si contiene ';', pon el campo entrecomillado."
+                ? "Columna 'imagen': genera SVG como data URL con el SVG URL-encoded una sola vez ('#' se convierte en '%23', nunca en '%2523'). Ejemplo: \"data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2010%2010%22%3E%3Crect%20width%3D%2210%22%20height%3D%2210%22%20fill%3D%22%23ff0000%22%2F%3E%3C%2Fsvg%3E\". Si contiene ';', pon el campo entrecomillado."
                 : "Columna 'imagen': déjala VACÍA (no uses URLs externas)."),
             "Columna 'video': URLs de vídeo (YouTube/Vimeo/MP4). Si hay vídeo, deja 'imagen' vacía.",
             "Tiempo: en segons (ex: 20)."
