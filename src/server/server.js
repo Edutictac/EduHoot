@@ -1289,6 +1289,18 @@ function cleanImportedText(value) {
   return text.replace(/\s+/g, ' ').trim();
 }
 
+function normalizeVideoUrl(value) {
+  const raw = (value || '').toString().trim();
+  if (!raw) return '';
+  if (raw.startsWith('/uploads/')) return raw;
+  try {
+    const parsed = new URL(raw);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:' ? raw : '';
+  } catch (err) {
+    return '';
+  }
+}
+
 // Texto opcional de metadatos (idioma, licencia, descripción) con límite de tamaño.
 function cleanMetaText(value, maxLength = 500) {
   if (value === undefined || value === null) return '';
@@ -1317,6 +1329,10 @@ function normalizeQuestions(list = []) {
         correct: Array.isArray(item.correct) ? item.correct : cleanImportedText(item.correct || ''),
         correctText: cleanImportedText(item.correctText || '')
       });
+      const video = normalizeVideoUrl(item.video);
+      const recoveredAnswers = meta.type === 'short-answer' && !meta.acceptedAnswers.length && !video
+        ? splitAcceptedAnswers(item.video)
+        : [];
       const base = {
         question: cleanImportedText(item.question || ''),
         answers: safeAnswers,
@@ -1326,13 +1342,16 @@ function normalizeQuestions(list = []) {
         time: Number(item.time) || 20,
         pointsMultiplier: Number(item.pointsMultiplier) > 1 ? 2 : 1,
         image: item.image || '',
-        video: item.video || ''
+        video
       };
 
       if (meta.type === 'short-answer') {
         return {
           ...base,
-          acceptedAnswers: Array.isArray(meta.acceptedAnswers) ? meta.acceptedAnswers.map(cleanImportedText) : []
+          acceptedAnswers: [
+            ...(Array.isArray(meta.acceptedAnswers) ? meta.acceptedAnswers : []),
+            ...recoveredAnswers
+          ].map(cleanImportedText)
         };
       }
 
