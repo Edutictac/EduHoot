@@ -1526,7 +1526,10 @@ function updateImagePreview(inputEl, imgEl){
         imgEl.src = '';
         return;
     }
-    imgEl.src = url;
+    // Usar la misma normalización que en la exportación y el juego. Los SVG
+    // introducidos como data URL pueden contener #, comillas o markup sin
+    // codificar, lo que rompe el atributo src si se asignan directamente.
+    imgEl.src = normalizeSvgDataUrlForImg(url);
     imgEl.onload = function(){ imgEl.classList.remove('hidden'); };
     imgEl.onerror = function(){ imgEl.classList.add('hidden'); };
 }
