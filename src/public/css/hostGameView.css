@@ -118,6 +118,27 @@ body{
     text-align: center;
     box-shadow: var(--shadow);
 }
+.fullscreen-toggle{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    background: rgba(255,255,255,0.08);
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.14);
+    color: var(--text-main);
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    transition: transform 0.18s ease, filter 0.18s ease;
+}
+.fullscreen-toggle:hover{ transform: translateY(-1px); filter: brightness(1.1); }
+.fullscreen-toggle[aria-pressed="true"]{
+    background: rgba(16,185,129,0.28);
+    border-color: rgba(16,185,129,0.55);
+}
 .lang-switch{
     display: inline-flex;
     align-items: center;

@@ -116,7 +116,9 @@ var i18n = {
         questionCountdown: 'Prepara la siguiente pregunta...',
         questionCountdownHint: 'La siguiente empieza en',
         downloadReport: 'Descargar informe (CSV)',
-        downloadReportError: 'No se pudo descargar el informe de la sesión.'
+        downloadReportError: 'No se pudo descargar el informe de la sesión.',
+        fullscreenEnter: 'Pantalla completa',
+        fullscreenExit: 'Salir de pantalla completa'
     },
     en: {
         questionXofY: function(n, t){ return 'Question ' + n + ' / ' + t; },
@@ -148,7 +150,9 @@ var i18n = {
         questionCountdown: 'Get ready for the next question...',
         questionCountdownHint: 'Next question starts in',
         downloadReport: 'Download report (CSV)',
-        downloadReportError: 'Could not download the session report.'
+        downloadReportError: 'Could not download the session report.',
+        fullscreenEnter: 'Fullscreen',
+        fullscreenExit: 'Exit fullscreen'
     },
     ca: {
         questionXofY: function(n, t){ return 'Pregunta ' + n + ' / ' + t; },
@@ -180,7 +184,9 @@ var i18n = {
         questionCountdown: 'Prepara la pregunta següent...',
         questionCountdownHint: 'La següent comença en',
         downloadReport: 'Descarregar informe (CSV)',
-        downloadReportError: 'No s\'ha pogut descarregar l\'informe de la sessió.'
+        downloadReportError: 'No s\'ha pogut descarregar l\'informe de la sessió.',
+        fullscreenEnter: 'Pantalla completa',
+        fullscreenExit: 'Eixir de pantalla completa'
     },
     va: {
         resultsNextToRanking: 'Vore classificació'
@@ -266,7 +272,36 @@ function applyStaticText(){
     if(reportBtn) reportBtn.textContent = t('downloadReport');
 
     updateModalNextButtonLabel();
+    updateFullscreenToggleUI();
 }
+
+function isHostFullscreen(){
+    return !!(document.fullscreenElement || document.webkitFullscreenElement);
+}
+
+function updateFullscreenToggleUI(){
+    var btn = document.getElementById('fullscreenToggle');
+    if(!btn) return;
+    var active = isHostFullscreen();
+    btn.textContent = active ? '⤢' : '⛶';
+    btn.title = active ? t('fullscreenExit') : t('fullscreenEnter');
+    btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+}
+
+function toggleHostFullscreen(){
+    var el = document.documentElement;
+    if(isHostFullscreen()){
+        if(document.exitFullscreen) document.exitFullscreen();
+        else if(document.webkitExitFullscreen) document.webkitExitFullscreen();
+    }else if(el.requestFullscreen){
+        el.requestFullscreen();
+    }else if(el.webkitRequestFullscreen){
+        el.webkitRequestFullscreen();
+    }
+}
+
+document.addEventListener('fullscreenchange', updateFullscreenToggleUI);
+document.addEventListener('webkitfullscreenchange', updateFullscreenToggleUI);
 
 function updateModalNextButtonLabel(){
     if(!rankingNextBtn) return;
