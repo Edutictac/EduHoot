@@ -1,6 +1,6 @@
 # EduHoot
 
-Versió actual del paquet: [1.0.2](RELEASE-1.0.2.md), amb proves automàtiques
+Versió actual del paquet: [1.0.5](RELEASE-1.0.5.md), amb proves automàtiques
 d'idiomes (`cd src` i `npm run test:i18n`; preparació en les notes de versió).
 
 ## Valencià
@@ -51,6 +51,13 @@ En la pantalla de create, el bloc d'alta ràpida mostra només el botó de Googl
 
 ### Actualitzacions recents
 
+- Pantalla neta a l’instant entre preguntes, sense restes de la pregunta anterior.
+- Noms de jugador de fins a 40 caràcters en multijugador.
+- Icones de forma (triangle, rombe, cercle, quadrat) a cada resposta, dibuixades amb CSS pur, a més del color, per a distingir-les millor i per accessibilitat davant el daltonisme.
+- Botó de pantalla completa a la vista del professor.
+- Celebració quan tota la classe encerta una pregunta, i avís quan la falla tota.
+- Animació a la insígnia de punts dobles i animació de moviments al rànquing entre preguntes.
+- Informe de partida (`report.csv`) més segur: només el host real el pot descarregar, amb neteja automàtica dels fitxers en disc encara que el servidor es reinicie.
 - Landing principal redissenyada amb accessos separats, selector d’idioma i footer comú amb el logo d’EduTicTac.
 - Biblioteca amb ordenació per data i alfabètica, tags rellevants i estadístiques de partides.
 - El mode Solo ara registra partides i mostra estadístiques visibles al ranking i un feedback més clar.
@@ -150,6 +157,13 @@ Flujo recomendado:
 
 ### Actualizaciones recientes
 
+- Pantalla limpia al instante entre preguntas, sin restos de la pregunta anterior.
+- Nombres de jugador de hasta 40 caracteres en multijugador.
+- Iconos de forma (triángulo, rombo, círculo, cuadrado) en cada respuesta, dibujados con CSS puro, además del color, para distinguirlas mejor y por accesibilidad ante el daltonismo.
+- Botón de pantalla completa en la vista del profesorado.
+- Celebración cuando toda la clase acierta una pregunta, y aviso cuando la falla toda.
+- Animación en la insignia de puntos dobles y animación de movimientos en el ranking entre preguntas.
+- Informe de partida (`report.csv`) más seguro: solo el host real puede descargarlo, con limpieza automática de los ficheros en disco aunque el servidor se reinicie.
 - Landing principal renovada con accesos diferenciados, selector de idioma y footer compartido con el logo de EduTicTac.
 - Biblioteca con orden por fecha y alfabético, etiquetas relevantes y estadísticas visibles en cada ficha.
 - Modo Solo registra partidas y mejora el ranking/feedback, además de mostrar estadísticas de partidas jugadas.
@@ -222,6 +236,13 @@ Recommended flow:
 
 ### Recent updates
 
+- Instant clean screen between questions, with no leftovers from the previous one.
+- Player names up to 40 characters in multiplayer.
+- Shape icons (triangle, diamond, circle, square) on each answer, drawn with pure CSS, on top of the color, for clearer matching and color-blindness accessibility.
+- Fullscreen toggle button on the teacher's view.
+- Celebration when the whole class gets a question right, and a warning when everyone misses it.
+- Small animation on the double-points badge and a ranking movement animation between questions.
+- More secure game report (`report.csv`): only the real host can download it, with automatic cleanup of the files on disk even if the server restarts.
 - Redesigned landing with separate entry points, language selector, and shared footer pointing to EduTicTac.
 - Library now supports ordering by date/alpha, shows only related tags, and surfaces quiz stats.
 - Solo mode logs plays so the ranking/counts include solo sessions, plus brighter feedback and stats.
