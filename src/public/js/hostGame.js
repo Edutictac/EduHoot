@@ -1141,20 +1141,25 @@ function nextQuestion(){
     document.getElementById('nextQButton').style.display = "none";
     document.getElementById('skipQButton').style.display = "inline-block";
     document.getElementById('skipQButton').disabled = false;
-    document.getElementById('square1').style.display = "none";
-    document.getElementById('square2').style.display = "none";
-    document.getElementById('square3').style.display = "none";
-    document.getElementById('square4').style.display = "none";
-    
-    document.getElementById('answer1').style.filter = "none";
-    document.getElementById('answer2').style.filter = "none";
-    document.getElementById('answer3').style.filter = "none";
-    document.getElementById('answer4').style.filter = "none";
-    
-    document.getElementById('playersAnswered').style.display = "block";
-    document.getElementById('timerText').style.display = "block";
-    document.getElementById('num').textContent = " " + defaultTime;
+
+    // Activamos la pantalla de espera de forma optimista, sin esperar al evento
+    // 'questionCountdown' del servidor: el modal de ranking es semitransparente
+    // (se ve la pregunta anterior de fondo) y al cerrarlo de golpe aquí, si
+    // esperásemos la ida y vuelta de red, la pregunta anterior reaparecería un
+    // instante a pantalla completa (ya sin el difuminado del modal) antes de que
+    // llegue el aviso de "preparando siguiente pregunta". showQuestionCountdown()
+    // repetirá este mismo estado en cuanto llegue el evento real, sin parpadeo.
+    clearQuestionCountdown();
+    hideAnswerSquares();
     setMedia(null, null);
+    currentQuestionType = 'quiz';
+    currentPointsMultiplier = 1;
+    updateQuestionPointsBadge(1);
+    setCurrentAnswerTexts(['', '', '', '']);
+    document.body.classList.add('is-question-countdown');
+    document.getElementById('question').textContent = '';
+    document.getElementById('playersAnswered').textContent = t('questionCountdown');
+    document.getElementById('timerText').style.display = 'none';
 
     // Gesto del usuario: si la música debe sonar, este es el momento más fiable para (re)arrancarla.
     if(hostAutoMusicEnabled && hostAutoMusicShouldPlay){
