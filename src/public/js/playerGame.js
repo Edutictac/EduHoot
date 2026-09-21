@@ -369,10 +369,14 @@ function updatePlayerPointsBadge(multiplier){
     if(!Number.isFinite(m) || m <= 1){
         badge.style.display = 'none';
         badge.textContent = '';
+        badge.classList.remove('points-badge-pop');
         return;
     }
     badge.textContent = 'x' + m + ' · ' + tPlayer('points_double', 'Double points');
     badge.style.display = 'inline-flex';
+    badge.classList.remove('points-badge-pop');
+    void badge.offsetWidth; // reinicia la animación aunque el badge ya estuviera visible
+    badge.classList.add('points-badge-pop');
 }
 
 function setupFreeAnswerControls(){

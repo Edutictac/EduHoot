@@ -226,6 +226,14 @@ body{
     font-weight: 800;
     box-shadow: var(--shadow);
 }
+.question-points-badge.points-badge-pop{
+    animation: pointsBadgePop 0.5s ease;
+}
+@keyframes pointsBadgePop{
+    0%{ transform: scale(0.5); opacity: 0; }
+    60%{ transform: scale(1.18); opacity: 1; }
+    100%{ transform: scale(1); opacity: 1; }
+}
 #num{
     font-size: 36px;
     font-weight: 700;
