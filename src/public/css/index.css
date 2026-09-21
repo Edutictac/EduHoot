@@ -96,6 +96,11 @@ form{
     letter-spacing: 0.12em;
     text-transform: uppercase;
 }
+.name-field{
+    max-width: 260px;
+    text-align: center;
+    font-weight: 700;
+}
 
 #joinButton{
     width: 100%;
@@ -309,6 +314,7 @@ body.modal-open{
     #label{ font-size: 15px; }
     #name, #pin{ font-size: 16px; padding: 12px; }
     .name-three{ max-width: 100%; }
+    .name-field{ max-width: 100%; }
     #icon-picker{ grid-template-columns: repeat(auto-fit, minmax(44px, 1fr)); }
     #icon-picker button{ font-size: 22px; padding: 9px; }
     #lang-switcher{ top: 8px; right: 8px; }

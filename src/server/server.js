@@ -3316,7 +3316,7 @@ io.on('connection', (socket) => {
   socket.on('player-join', (params) => {
     console.log('[player-join] params:', {
       pin: params && params.pin ? String(params.pin) : '',
-      name: params && params.name ? normalizePlayerName(params.name) : '',
+      name: params && params.name ? normalizeSoloName(params.name) : '',
       hasToken: !!(params && params.token),
       hasStudentJoinToken: !!(params && params.studentJoinToken)
     });
@@ -3362,7 +3362,7 @@ io.on('connection', (socket) => {
       }
     }
 
-    const safeName = studentIdentity ? normalizePlayerName(studentIdentity.public_code) : normalizePlayerName(params.name);
+    const safeName = studentIdentity ? normalizePlayerName(studentIdentity.public_code) : normalizeSoloName(params.name);
     players.addPlayer(hostId, socket.id, safeName, {
       score: 0,
       answer: 0,

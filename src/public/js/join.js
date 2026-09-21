@@ -119,6 +119,17 @@
         return (value || '').replace(/[^0-9]/g, '').slice(0, 6);
     }
 
+    function normalizeGuestName(value){
+        return (value || '').toString().replace(/\s+/g, ' ').trim().slice(0, 20);
+    }
+
+    // Versión "en vivo" para el listener de input: no recorta los espacios del
+    // final mientras se escribe (si no, sería imposible teclear un nombre con
+    // varias palabras, p.ej. "Ana Maria", porque cada espacio se borraría solo).
+    function normalizeGuestNameLive(value){
+        return (value || '').toString().replace(/\s{2,}/g, ' ').slice(0, 20);
+    }
+
     function configureStudentAuth(config){
         studentAuthEnabled = !!(config && config.enabled);
         studentAuthRequired = !!(config && config.required);
@@ -243,7 +254,7 @@
 
     if(joinForm && pinInput && nameInput && tokenInput){
         nameInput.addEventListener('input', function(){
-            var filtered = (nameInput.value || '').replace(/[^0-9a-zA-Z]/g, '').toUpperCase().slice(0, 3);
+            var filtered = normalizeGuestNameLive(nameInput.value);
             if(nameInput.value !== filtered){
                 nameInput.value = filtered;
             }
@@ -274,7 +285,7 @@
                 return;
             }
             ev.preventDefault();
-            var name = (nameInput.value || '').replace(/[^0-9a-zA-Z]/g, '').toUpperCase().slice(0, 3);
+            var name = normalizeGuestName(nameInput.value);
             var hasStudentCredentials = Boolean(
                 normalizeStudentCode(studentCodeInput && studentCodeInput.value) &&
                 normalizeStudentPin(studentPinInput && studentPinInput.value)
@@ -285,7 +296,7 @@
             }
             authenticateStudent()
                 .then(function(){
-                    name = (nameInput.value || name || '').replace(/[^0-9a-zA-Z]/g, '').toUpperCase().slice(0, 3);
+                    name = normalizeGuestName(nameInput.value || name);
                     nameInput.value = name;
                     if(!name){
                         if(nameInput) nameInput.focus();
