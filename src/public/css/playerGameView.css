@@ -326,21 +326,26 @@ body{
 /* Icono de forma sobre el color: el mando del alumno solo mostraba un
    bloque de color liso, difícil de emparejar con la respuesta del host
    y poco accesible para daltonismo. Misma pareja forma+color que en la
-   pantalla del profesor. */
+   pantalla del profesor. Formas dibujadas en CSS puro (clip-path) en vez
+   de caracteres Unicode: trazo nítido y consistente entre dispositivos,
+   en vez de depender de cómo cada sistema renderice ▲ ◆ ● ■. */
 #answer1, #answer2, #answer3, #answer4{
     display: flex;
     align-items: center;
     justify-content: center;
 }
 #answer1::before, #answer2::before, #answer3::before, #answer4::before{
-    font-size: 30px;
-    line-height: 1;
-    text-shadow: 0 3px 10px rgba(0,0,0,0.35);
+    content: "";
+    display: block;
+    width: 34px;
+    height: 34px;
+    background: #fff;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.35);
 }
-#answer1::before{ content: "▲"; }
-#answer2::before{ content: "◆"; }
-#answer3::before{ content: "●"; }
-#answer4::before{ content: "■"; }
+#answer1::before{ clip-path: polygon(50% 0%, 0% 100%, 100% 100%); }
+#answer2::before{ clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); }
+#answer3::before{ border-radius: 50%; }
+#answer4::before{ border-radius: 6px; }
 
 #buttons{
     text-align: center;

@@ -418,15 +418,24 @@ h3[id^="answer"]{
 
 /* Icono de forma junto al color: igual que en el mando del alumno, para que
    el color no sea la única pista (accesibilidad para daltonismo y para
-   identificar de un vistazo qué botón corresponde a cada respuesta). */
+   identificar de un vistazo qué botón corresponde a cada respuesta).
+   Formas dibujadas en CSS puro (clip-path) en vez de caracteres Unicode:
+   así el trazo es siempre nítido y consistente entre dispositivos/fuentes,
+   en vez de depender de cómo cada sistema renderice ▲ ◆ ● ■. */
 h3[id^="answer"]::before{
-    font-weight: 800;
-    margin-right: 6px;
+    content: "";
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+    vertical-align: -3px;
+    background: #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.35);
 }
-#answer1::before{ content: "▲"; }
-#answer2::before{ content: "◆"; }
-#answer3::before{ content: "●"; }
-#answer4::before{ content: "■"; }
+#answer1::before{ clip-path: polygon(50% 0%, 0% 100%, 100% 100%); }
+#answer2::before{ clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); }
+#answer3::before{ border-radius: 50%; }
+#answer4::before{ border-radius: 4px; }
 
 .square{
     border-radius: 12px 12px 6px 6px;
