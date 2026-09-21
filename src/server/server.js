@@ -954,6 +954,7 @@ function cacheFinishedSessionReport(game, playersOverride) {
     const pinKey = String(game.pin);
     const pinSafe = pinKey.replace(/[^a-z0-9-_]+/gi, '_');
     const reportPath = path.join(FINISHED_SESSION_REPORT_DIR, `${pinSafe}.csv`);
+    const metaPath = path.join(FINISHED_SESSION_REPORT_DIR, `${pinSafe}.json`);
     console.log('[cacheFinishedSessionReport] pin=' + pinKey + ', path=' + reportPath);
     const prev = finishedSessionReports.get(pinKey);
     if (prev && prev.cleanupTimer) {
@@ -961,11 +962,16 @@ function cacheFinishedSessionReport(game, playersOverride) {
     }
 
     const csv = liveSessionToCsv(game, playersOverride);
+    const hostIdAtFinish = String(game.hostId || '');
     console.log('[cacheFinishedSessionReport] csv length=' + csv.length);
 
     try {
       fs.mkdirSync(FINISHED_SESSION_REPORT_DIR, { recursive: true });
       fs.writeFileSync(reportPath, csv, 'utf8');
+      // Guardamos el hostId vigente en el momento del GameOver junto al CSV para poder
+      // verificar la autoría del informe también cuando se sirve desde disco (partida
+      // ya fuera de memoria), sin depender de que finishedSessionReports siga viva.
+      fs.writeFileSync(metaPath, JSON.stringify({ hostId: hostIdAtFinish }), 'utf8');
       console.log('[cacheFinishedSessionReport] file written successfully');
     } catch (diskErr) {
       console.error('[cacheFinishedSessionReport] write disk error', diskErr);
@@ -980,6 +986,13 @@ function cacheFinishedSessionReport(game, playersOverride) {
           console.error('cacheFinishedSessionReport cleanup disk error', unlinkErr);
         }
       }
+      try {
+        fs.unlinkSync(metaPath);
+      } catch (unlinkErr) {
+        if (!unlinkErr || unlinkErr.code !== 'ENOENT') {
+          console.error('cacheFinishedSessionReport cleanup meta error', unlinkErr);
+        }
+      }
     }, FINISHED_SESSION_REPORT_TTL_MS);
     if (cleanupTimer && typeof cleanupTimer.unref === 'function') {
       cleanupTimer.unref();
@@ -987,7 +1000,7 @@ function cacheFinishedSessionReport(game, playersOverride) {
 
     finishedSessionReports.set(pinKey, {
       csv,
-      hostId: String(game.hostId || ''),
+      hostId: hostIdAtFinish,
       createdAt: Date.now(),
       cleanupTimer
     });
@@ -995,6 +1008,46 @@ function cacheFinishedSessionReport(game, playersOverride) {
     console.error('cacheFinishedSessionReport error', err);
   }
 }
+
+// Al arrancar el proceso, reengancha la limpieza de los informes ya escritos en disco:
+// el temporizador que los borra vive solo en memoria, así que un reinicio del servidor
+// (despliegue, crash, restart de PM2) lo pierde y el CSV con nombres/puntuaciones del
+// alumnado se quedaría en disco para siempre. Recalculamos el tiempo restante a partir
+// de la fecha de modificación del fichero y, si ya ha caducado, lo borramos ya mismo.
+function resumeFinishedSessionReportCleanup() {
+  let entries;
+  try {
+    entries = fs.readdirSync(FINISHED_SESSION_REPORT_DIR);
+  } catch (err) {
+    return;
+  }
+  const now = Date.now();
+  entries
+    .filter((name) => name.endsWith('.csv'))
+    .forEach((csvName) => {
+      const pinSafe = csvName.slice(0, -4);
+      const csvPath = path.join(FINISHED_SESSION_REPORT_DIR, csvName);
+      const metaPath = path.join(FINISHED_SESSION_REPORT_DIR, `${pinSafe}.json`);
+      const removeFiles = () => {
+        try { fs.unlinkSync(csvPath); } catch (e) { if (!e || e.code !== 'ENOENT') console.error('resumeFinishedSessionReportCleanup unlink csv', e); }
+        try { fs.unlinkSync(metaPath); } catch (e) { if (!e || e.code !== 'ENOENT') console.error('resumeFinishedSessionReportCleanup unlink meta', e); }
+      };
+      let mtimeMs;
+      try {
+        mtimeMs = fs.statSync(csvPath).mtimeMs;
+      } catch (err) {
+        return;
+      }
+      const remaining = FINISHED_SESSION_REPORT_TTL_MS - (now - mtimeMs);
+      if (remaining <= 0) {
+        removeFiles();
+        return;
+      }
+      const timer = setTimeout(removeFiles, remaining);
+      if (timer && typeof timer.unref === 'function') timer.unref();
+    });
+}
+resumeFinishedSessionReportCleanup();
 
 function escapeHtmlText(value = '') {
   return String(value || '')
@@ -2890,7 +2943,16 @@ app.get('/api/live-games/:pin/report.csv', async (req, res) => {
     // Recalcular en vivo aquí volvería a consultar players.getPlayers(), que para entonces
     // puede haber perdido jugadores ya desconectados, dejando el informe con un solo "ganador".
     console.log('[report.csv] found in memory cache');
-    // Tras GameOver permitimos recuperar el informe aunque el hostId haya cambiado por reconexión.
+    // Tras GameOver el host puede reconectar con un socket (hostId) nuevo mientras el objeto
+    // de partida sigue vivo unos segundos más: aceptamos tanto el hostId congelado en el
+    // momento del GameOver como el hostId actual de esa partida en memoria. Cualquier otro
+    // valor se rechaza para no servir el informe (nombres y notas del alumnado) a quien solo
+    // conozca el PIN.
+    const matchesCachedHost = !!cached.hostId && hostId === cached.hostId;
+    const matchesLiveHost = !!(game && game.hostId === hostId);
+    if (!matchesCachedHost && !matchesLiveHost) {
+      return res.status(403).json({ error: 'No autorizado para descargar este informe.' });
+    }
     csv = cached.csv;
   } else if (game) {
     console.log('[report.csv] game found in memory, sin cache aun: generando en vivo');
@@ -2902,6 +2964,7 @@ app.get('/api/live-games/:pin/report.csv', async (req, res) => {
     console.log('[report.csv] game NOT in memory, checking disk');
     const pinSafe = String(pin).replace(/[^a-z0-9-_]+/gi, '_');
     const reportPath = path.join(FINISHED_SESSION_REPORT_DIR, `${pinSafe}.csv`);
+    const metaPath = path.join(FINISHED_SESSION_REPORT_DIR, `${pinSafe}.json`);
     console.log('[report.csv] trying to read from disk: ' + reportPath);
     try {
       csv = fs.readFileSync(reportPath, 'utf8');
@@ -2909,6 +2972,18 @@ app.get('/api/live-games/:pin/report.csv', async (req, res) => {
     } catch (err) {
       console.log('[report.csv] file not found: ' + err.message);
       return res.status(404).json({ error: 'Partida no encontrada o ya finalizada.' });
+    }
+    let storedHostId = '';
+    try {
+      const meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
+      storedHostId = String((meta && meta.hostId) || '');
+    } catch (metaErr) {
+      // Informe escrito antes de introducir el sidecar, o sidecar ya expirado: no podemos
+      // verificar la autoría, así que lo dejamos pasar como hasta ahora.
+      storedHostId = '';
+    }
+    if (storedHostId && storedHostId !== hostId) {
+      return res.status(403).json({ error: 'No autorizado para descargar este informe.' });
     }
   }
 
