@@ -33,6 +33,54 @@ body{
     justify-content: center;
 }
 
+/* Aviso breve de "pleno" (100% acierto) o "funeral" (0% acierto) del grupo al cerrar
+   una pregunta. pointer-events:none para no bloquear el modal de resultados que se
+   abre justo debajo; desaparece solo (ver showGroupCelebration en hostGame.js). */
+.group-celebration{
+    position: fixed;
+    inset: 0;
+    z-index: 500;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    pointer-events: none;
+    text-align: center;
+    padding: 18px;
+}
+.group-celebration[hidden]{ display: none; }
+.group-celebration__emoji{
+    font-size: 88px;
+    line-height: 1;
+    filter: drop-shadow(0 10px 24px rgba(0,0,0,0.45));
+}
+.group-celebration__text{
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--text-main);
+    text-shadow: 0 3px 12px rgba(0,0,0,0.55);
+    background: rgba(5,9,26,0.55);
+    padding: 8px 20px;
+    border-radius: 999px;
+}
+.group-celebration--good .group-celebration__emoji{
+    animation: groupCelebrationPop 0.6s ease;
+}
+.group-celebration--bad .group-celebration__emoji{
+    animation: groupCelebrationWilt 0.7s ease;
+    filter: grayscale(1) drop-shadow(0 10px 24px rgba(0,0,0,0.45));
+}
+@keyframes groupCelebrationPop{
+    0%{ transform: scale(0.3) rotate(-15deg); opacity: 0; }
+    60%{ transform: scale(1.15) rotate(6deg); opacity: 1; }
+    100%{ transform: scale(1) rotate(0deg); opacity: 1; }
+}
+@keyframes groupCelebrationWilt{
+    0%{ transform: translateY(-16px) rotate(0deg); opacity: 0; }
+    100%{ transform: translateY(0) rotate(0deg); opacity: 1; }
+}
+
 /* Popup mínimo para forzar gesto y permitir autoplay de audio en la 1ª pregunta */
 .music-activation-overlay{
     position: fixed;

@@ -2146,12 +2146,29 @@ function isSubmissionCorrect(meta, submission) {
   return Number(normalized) === meta.correctAnswers[0];
 }
 
+// 'allCorrect'/'allWrong' cuando el 100% del grupo acierta o falla la pregunta
+// (para la celebración/"funeral" del cliente); null si está mezclado o no hay jugadores.
+function getGroupAnswerResult(playerData, meta) {
+  const list = Array.isArray(playerData) ? playerData : [];
+  if (!list.length) return null;
+  let correctCount = 0;
+  list.forEach((player) => {
+    if (isSubmissionCorrect(meta, player && player.gameData ? player.gameData.answer : undefined)) {
+      correctCount += 1;
+    }
+  });
+  if (correctCount === list.length) return 'allCorrect';
+  if (correctCount === 0) return 'allWrong';
+  return null;
+}
+
 function emitQuestionOverPayload(game) {
   if (!game) return;
   const playerData = players.getPlayers(game.hostId);
   const questions = game.gameData.questions || [];
   const current = questions[game.gameData.question - 1];
   const meta = getQuestionMeta(current);
+  meta.groupResult = getGroupAnswerResult(playerData, meta);
   io.to(game.pin).emit('questionOver', playerData, meta);
 }
 

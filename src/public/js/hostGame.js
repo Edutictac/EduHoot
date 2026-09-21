@@ -118,7 +118,9 @@ var i18n = {
         downloadReport: 'Descargar informe (CSV)',
         downloadReportError: 'No se pudo descargar el informe de la sesión.',
         fullscreenEnter: 'Pantalla completa',
-        fullscreenExit: 'Salir de pantalla completa'
+        fullscreenExit: 'Salir de pantalla completa',
+        groupAllCorrect: '¡Pleno de aciertos!',
+        groupAllWrong: 'Nadie ha acertado esta vez'
     },
     en: {
         questionXofY: function(n, t){ return 'Question ' + n + ' / ' + t; },
@@ -152,7 +154,9 @@ var i18n = {
         downloadReport: 'Download report (CSV)',
         downloadReportError: 'Could not download the session report.',
         fullscreenEnter: 'Fullscreen',
-        fullscreenExit: 'Exit fullscreen'
+        fullscreenExit: 'Exit fullscreen',
+        groupAllCorrect: 'Everyone got it right!',
+        groupAllWrong: 'Nobody got it this time'
     },
     ca: {
         questionXofY: function(n, t){ return 'Pregunta ' + n + ' / ' + t; },
@@ -186,7 +190,9 @@ var i18n = {
         downloadReport: 'Descarregar informe (CSV)',
         downloadReportError: 'No s\'ha pogut descarregar l\'informe de la sessió.',
         fullscreenEnter: 'Pantalla completa',
-        fullscreenExit: 'Eixir de pantalla completa'
+        fullscreenExit: 'Eixir de pantalla completa',
+        groupAllCorrect: 'Ple d\'encerts!',
+        groupAllWrong: 'Ningú ha encertat esta vegada'
     },
     va: {
         resultsNextToRanking: 'Vore classificació'
@@ -302,6 +308,23 @@ function toggleHostFullscreen(){
 
 document.addEventListener('fullscreenchange', updateFullscreenToggleUI);
 document.addEventListener('webkitfullscreenchange', updateFullscreenToggleUI);
+
+// Aviso visual breve cuando el 100% del grupo acierta ("pleno") o falla ("funeral") una
+// pregunta. No toca puntuación ni ranking: solo se muestra sobre la pantalla y desaparece sola.
+var groupCelebrationHideTimer = null;
+function showGroupCelebration(kind){
+    var el = document.getElementById('groupCelebration');
+    if(!el) return;
+    var isGood = kind === 'allCorrect';
+    el.className = 'group-celebration ' + (isGood ? 'group-celebration--good' : 'group-celebration--bad');
+    document.getElementById('groupCelebrationEmoji').textContent = isGood ? '🎉' : '💀';
+    document.getElementById('groupCelebrationText').textContent = t(isGood ? 'groupAllCorrect' : 'groupAllWrong');
+    el.hidden = false;
+    if(groupCelebrationHideTimer) clearTimeout(groupCelebrationHideTimer);
+    groupCelebrationHideTimer = setTimeout(function(){
+        el.hidden = true;
+    }, 2600);
+}
 
 function updateModalNextButtonLabel(){
     if(!rankingNextBtn) return;
@@ -1033,7 +1056,11 @@ socket.on('questionOver', function(playerData, payload){
         hideAnswerSquares();
         renderResultsChart(answerCounts, totalPlayers, payload && payload.correctAnswers);
     }
-    
+
+    if(totalPlayers > 0 && payload && (payload.groupResult === 'allCorrect' || payload.groupResult === 'allWrong')){
+        showGroupCelebration(payload.groupResult);
+    }
+
     // El avance se hace desde el modal (Resultados -> Ranking -> Siguiente).
     document.getElementById('nextQButton').style.display = "none";
     document.getElementById('skipQButton').style.display = "none";
