@@ -767,8 +767,8 @@ function quizToCsv(quiz) {
   return [header].concat(lines).join('\n');
 }
 
-function liveSessionToCsv(game) {
-  const playersInGame = players.getPlayers(game.hostId) || [];
+function liveSessionToCsv(game, playersOverride) {
+  const playersInGame = Array.isArray(playersOverride) ? playersOverride : (players.getPlayers(game.hostId) || []);
   const totalQuestions = Math.max(0, Number(game && game.gameData && game.gameData.totalQuestions) || 0);
   const quizName = game && game.gameData && game.gameData.quizName ? game.gameData.quizName : '';
   const questions = (game && game.gameData && Array.isArray(game.gameData.questions)) ? game.gameData.questions : [];
@@ -948,7 +948,7 @@ function recordPlayerAnswerHistory(player, game, questionNumber, submission, isC
   }
 }
 
-function cacheFinishedSessionReport(game) {
+function cacheFinishedSessionReport(game, playersOverride) {
   if (!game || !game.pin) return;
   try {
     const pinKey = String(game.pin);
@@ -960,7 +960,7 @@ function cacheFinishedSessionReport(game) {
       clearTimeout(prev.cleanupTimer);
     }
 
-    const csv = liveSessionToCsv(game);
+    const csv = liveSessionToCsv(game, playersOverride);
     console.log('[cacheFinishedSessionReport] csv length=' + csv.length);
 
     try {
@@ -2866,30 +2866,32 @@ app.get('/api/live-games/:pin/report.csv', async (req, res) => {
 
   const game = games.getGameByPin(pin);
   let csv = '';
-  if (game) {
-    console.log('[report.csv] game found in memory');
+  const cached = finishedSessionReports.get(pin);
+  if (cached && cached.csv) {
+    // Partida ya finalizada: usamos siempre la foto congelada en cacheFinishedSessionReport,
+    // aunque el objeto de partida siga en memoria unos segundos más (scheduleGameCleanup).
+    // Recalcular en vivo aquí volvería a consultar players.getPlayers(), que para entonces
+    // puede haber perdido jugadores ya desconectados, dejando el informe con un solo "ganador".
+    console.log('[report.csv] found in memory cache');
+    // Tras GameOver permitimos recuperar el informe aunque el hostId haya cambiado por reconexión.
+    csv = cached.csv;
+  } else if (game) {
+    console.log('[report.csv] game found in memory, sin cache aun: generando en vivo');
     if (game.hostId !== hostId) {
       return res.status(403).json({ error: 'No autorizado para descargar este informe.' });
     }
     csv = liveSessionToCsv(game);
   } else {
-    console.log('[report.csv] game NOT in memory, checking cache/disk');
-    const cached = finishedSessionReports.get(pin);
-    if (cached && cached.csv) {
-      console.log('[report.csv] found in memory cache');
-      // Tras GameOver permitimos recuperar el informe aunque el hostId haya cambiado por reconexión.
-      csv = cached.csv;
-    } else {
-      const pinSafe = String(pin).replace(/[^a-z0-9-_]+/gi, '_');
-      const reportPath = path.join(FINISHED_SESSION_REPORT_DIR, `${pinSafe}.csv`);
-      console.log('[report.csv] trying to read from disk: ' + reportPath);
-      try {
-        csv = fs.readFileSync(reportPath, 'utf8');
-        console.log('[report.csv] file read from disk, length=' + csv.length);
-      } catch (err) {
-        console.log('[report.csv] file not found: ' + err.message);
-        return res.status(404).json({ error: 'Partida no encontrada o ya finalizada.' });
-      }
+    console.log('[report.csv] game NOT in memory, checking disk');
+    const pinSafe = String(pin).replace(/[^a-z0-9-_]+/gi, '_');
+    const reportPath = path.join(FINISHED_SESSION_REPORT_DIR, `${pinSafe}.csv`);
+    console.log('[report.csv] trying to read from disk: ' + reportPath);
+    try {
+      csv = fs.readFileSync(reportPath, 'utf8');
+      console.log('[report.csv] file read from disk, length=' + csv.length);
+    } catch (err) {
+      console.log('[report.csv] file not found: ' + err.message);
+      return res.status(404).json({ error: 'Partida no encontrada o ya finalizada.' });
     }
   }
 
@@ -3747,12 +3749,16 @@ io.on('connection', (socket) => {
           num4: fourth.name,
           num5: fifth.name
         });
+        game.gameLive = false;
+        game.gameOver = true;
+        // Congelamos el informe con la foto de jugadores de este instante: si esperamos a los
+        // await de abajo, los alumnos ya han recibido "GameOver" y sus dispositivos pueden
+        // desconectarse (bloqueo de pantalla, cierre de pestaña...), vaciando players.getPlayers()
+        // antes de generar el CSV y dejando solo a quien siga conectado como "ganador".
+        cacheFinishedSessionReport(game, playersInGame);
         const uniquePlayers = Array.isArray(playersInGame) ? playersInGame.length : 0;
         await incrementQuizStats(game.gameData.gameid, uniquePlayers);
         await reportCommonsScores(game, playersInGame);
-        game.gameLive = false;
-        game.gameOver = true;
-        cacheFinishedSessionReport(game);
         scheduleGameCleanup(socket.id);
       }
     } catch (err) {
@@ -5000,5 +5006,10 @@ module.exports = {
   normalizeQuizId,
   buildQuizDoc,
   sessions,
-  oauthStates
+  oauthStates,
+  games,
+  players,
+  finishedSessionReports,
+  liveSessionToCsv,
+  cacheFinishedSessionReport
 };

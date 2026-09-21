@@ -9,3 +9,4 @@ scripts/.codex
 node_modules/
 src/test-results/
 src/playwright-report/
+src/logs/
