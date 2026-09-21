@@ -339,6 +339,18 @@ h3[id^="answer"]{
 #answer3{ background: linear-gradient(135deg, #3b82f6, #2563eb); }
 #answer4{ background: linear-gradient(135deg, #f43f5e, #e11d48); }
 
+/* Icono de forma junto al color: igual que en el mando del alumno, para que
+   el color no sea la única pista (accesibilidad para daltonismo y para
+   identificar de un vistazo qué botón corresponde a cada respuesta). */
+h3[id^="answer"]::before{
+    font-weight: 800;
+    margin-right: 6px;
+}
+#answer1::before{ content: "▲"; }
+#answer2::before{ content: "◆"; }
+#answer3::before{ content: "●"; }
+#answer4::before{ content: "■"; }
+
 .square{
     border-radius: 12px 12px 6px 6px;
     display: none;
