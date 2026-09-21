@@ -85,6 +85,9 @@ var GONG_VOLUME_BOOST = 1.25;
 var hostModalStep = 'chart';
 var hostResultsHasRanking = true;
 var currentPointsMultiplier = 1;
+// playerId -> posición (0 = 1º) del último ranking mostrado, para pintar flechas
+// de avance/retroceso al estilo Kahoot. Se resetea al empezar cada partida.
+var previousRankingPositions = null;
 var i18n = {
     es: {
         questionXofY: function(n, t){ return 'Pregunta ' + n + ' / ' + t; },
@@ -903,6 +906,9 @@ socket.on('gameQuestions', function(data){
     hostQuestionEnded = false;
     hostRankingGongPlayed = false;
     closeRankingModal();
+    if(data && Number(data.questionNumber) === 1){
+        previousRankingPositions = null;
+    }
 
     // Si venimos de "Iniciar partida" intentamos que suene música en cada pregunta.
     // También reanudamos si la pausamos automáticamente al mostrar el ranking.
@@ -1078,12 +1084,47 @@ socket.on('questionOver', function(playerData, payload){
             return (b.gameData.score || 0) - (a.gameData.score || 0);
         });
         var top = sorted.slice(0, 10);
+        // ¿Es la primera vez que se muestra el ranking en esta partida? Si es así no
+        // pintamos flechas (todo el mundo "sube desde la nada", no aporta información).
+        var isFirstRanking = !previousRankingPositions;
+        var nextRankingPositions = {};
         for(var r = 0; r < top.length; r++){
             var li = document.createElement('li');
+            li.className = 'ranking-row';
+            li.style.animationDelay = (r * 60) + 'ms';
             var icon = top[r].icon ? top[r].icon + ' ' : '';
-            li.textContent = icon + top[r].name + ' - ' + (top[r].gameData.score || 0);
+
+            var moveEl = document.createElement('span');
+            moveEl.className = 'ranking-move';
+            if(!isFirstRanking && top[r].playerId){
+                var oldIndex = previousRankingPositions[top[r].playerId];
+                if(oldIndex !== undefined){
+                    var delta = oldIndex - r;
+                    if(delta > 0){
+                        moveEl.className = 'ranking-move ranking-move--up';
+                        moveEl.textContent = '▲' + delta;
+                    }else if(delta < 0){
+                        moveEl.className = 'ranking-move ranking-move--down';
+                        moveEl.textContent = '▼' + Math.abs(delta);
+                    }
+                }else{
+                    moveEl.className = 'ranking-move ranking-move--new';
+                    moveEl.textContent = '★';
+                }
+            }
+
+            var nameEl = document.createElement('span');
+            nameEl.className = 'ranking-name';
+            nameEl.textContent = icon + top[r].name + ' - ' + (top[r].gameData.score || 0);
+
+            li.appendChild(moveEl);
+            li.appendChild(nameEl);
             rankingList.appendChild(li);
+            if(top[r].playerId){
+                nextRankingPositions[top[r].playerId] = r;
+            }
         }
+        previousRankingPositions = nextRankingPositions;
     }
 
     // Abrimos el modal primero en el paso de resultados (gráfica)
