@@ -882,6 +882,11 @@ body.modal-open{
     color: rgba(255,255,255,0.65);
 }
 
+.site-footer__about a {
+    color: inherit;
+    text-decoration: underline;
+}
+
 /* ── Folder sidebar layout ─────────────────────────────────── */
 .library-body {
     display: flex;

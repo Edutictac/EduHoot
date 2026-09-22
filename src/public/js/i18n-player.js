@@ -58,7 +58,8 @@
       landing_prof_access: 'Acceso profesorado',
       footerLicense: 'EduHoot · Licencia GNU Affero General Public License v3.0 (AGPL-3.0)',
       footerSource: 'Código fuente',
-      footerPrivacy: 'Privacidad'
+      footerPrivacy: 'Privacidad',
+      footerContactLabel: 'Incidencias'
     },
     ca: {
       join_title: 'Uneix-te a una partida',
@@ -117,7 +118,8 @@
       landing_prof_access: 'Accés professorat',
       footerLicense: 'EduHoot · Llicència GNU Affero General Public License v3.0 (AGPL-3.0)',
       footerSource: 'Codi font',
-      footerPrivacy: 'Privacitat'
+      footerPrivacy: 'Privacitat',
+      footerContactLabel: 'Incidències'
     },
     va: {
       join_student_intro: 'O entra amb la teua identitat EduTicTac',
@@ -182,7 +184,8 @@
       landing_prof_access: 'Teacher access',
       footerLicense: 'EduHoot · GNU Affero General Public License v3.0 (AGPL-3.0)',
       footerSource: 'Source code',
-      footerPrivacy: 'Privacy'
+      footerPrivacy: 'Privacy',
+      footerContactLabel: 'Issues'
     }
   };
 

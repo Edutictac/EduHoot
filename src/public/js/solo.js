@@ -327,7 +327,8 @@ var browserLang = normalizeLang(navigator.language || 'es');
         freeNumberPlaceholder: 'Introduce un número',
         submitFreeAnswer: 'Enviar',
         footerLicense: 'EduHoot · Licencia GNU Affero General Public License v3.0 (AGPL-3.0)',
-        footerSource: 'Código fuente'
+        footerSource: 'Código fuente',
+        footerContactLabel: 'Incidencias'
     },
         en: {
             back: 'Back',
@@ -416,7 +417,8 @@ var browserLang = normalizeLang(navigator.language || 'es');
                 freeNumberPlaceholder: 'Enter a number',
                 submitFreeAnswer: 'Submit',
             footerLicense: 'EduHoot · GNU Affero General Public License v3.0 (AGPL-3.0)',
-            footerSource: 'Source code'
+            footerSource: 'Source code',
+            footerContactLabel: 'Issues'
     },
         ca: {
             back: 'Tornar',
@@ -505,7 +507,8 @@ var browserLang = normalizeLang(navigator.language || 'es');
             freeNumberPlaceholder: 'Introdueix un número',
             submitFreeAnswer: 'Enviar',
             footerLicense: 'EduHoot · Llicència GNU Affero General Public License v3.0 (AGPL-3.0)',
-            footerSource: 'Codi font'
+            footerSource: 'Codi font',
+            footerContactLabel: 'Incidències'
         },
         va: {
             freeTextPlaceholder: 'Escriu la teua resposta'

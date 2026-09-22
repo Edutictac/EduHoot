@@ -340,6 +340,11 @@ body.playing #public-pagination{
     color: rgba(255,255,255,0.65);
 }
 
+.site-footer__about a{
+    color: inherit;
+    text-decoration: underline;
+}
+
 .card{
     padding: 12px;
     border-radius: 14px;
