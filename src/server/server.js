@@ -1982,7 +1982,7 @@ function isMultiplayerFreeTypeQuestion(q) {
 }
 
 function buildQuestions(questions = [], opts = {}) {
-  const randomQ = opts.randomQuestions !== false;
+  const randomQ = opts.randomQuestions === true;
   const randomA = opts.randomAnswers !== false;
   const overrideTime = parseInt(opts.timePerQuestion, 10);
   const useOverrideTime = !Number.isNaN(overrideTime) && overrideTime > 0;
@@ -3318,7 +3318,7 @@ io.on('connection', (socket) => {
           originalQuestions: multiplayerQuestions,
           totalQuestions: multiplayerQuestions.length,
           options: {
-            randomQuestions: true,
+            randomQuestions: false,
             randomAnswers: true,
             sendToMobile: true,
             showScoresBetween: true
@@ -3903,7 +3903,7 @@ io.on('connection', (socket) => {
       return;
     }
     const options = Object.assign({
-      randomQuestions: true,
+      randomQuestions: false,
       randomAnswers: true,
       sendToMobile: true,
       showScoresBetween: true
