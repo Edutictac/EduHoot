@@ -191,6 +191,14 @@ function sortPublicQuizzes(list){
             var ndb = (b && b.name ? b.name : '').toLowerCase();
             return ndb.localeCompare(nda);
         }
+        if(state.sortOrder === 'rating'){
+            var ra = Number(a && a.ratingAvg) || 0;
+            var rb = Number(b && b.ratingAvg) || 0;
+            if(ra !== rb) return rb - ra;
+            var ca = Number(a && a.ratingCount) || 0;
+            var cb = Number(b && b.ratingCount) || 0;
+            if(ca !== cb) return cb - ca;
+        }
         var pa = a && typeof a.playsCount === 'number' ? a.playsCount : 0;
         var pb = b && typeof b.playsCount === 'number' ? b.playsCount : 0;
         if(state.sortOrder === 'least'){
@@ -262,6 +270,7 @@ var browserLang = normalizeLang(navigator.language || 'es');
             sortLabel: 'Ordenar por',
             sortPlays: 'Más jugados',
             sortLeastPlays: 'Menos jugados',
+            sortRating: 'Mejor valorados',
             sortNewest: 'Más recientes',
             sortAlphaAsc: 'A-Z',
             sortAlphaDesc: 'Z-A',
@@ -329,6 +338,7 @@ var browserLang = normalizeLang(navigator.language || 'es');
         freeNumberPlaceholder: 'Introduce un número',
         submitFreeAnswer: 'Enviar',
         footerLicense: 'EduHoot · Licencia GNU Affero General Public License v3.0 (AGPL-3.0)',
+        footerPrivacy: 'Privacidad',
         footerSource: 'Código fuente',
         footerContactLabel: 'Incidencias'
     },
@@ -354,6 +364,7 @@ var browserLang = normalizeLang(navigator.language || 'es');
             sortLabel: 'Sort by',
             sortPlays: 'Most played',
             sortLeastPlays: 'Least played',
+            sortRating: 'Top rated',
             sortNewest: 'Newest',
             sortAlphaAsc: 'A-Z',
             sortAlphaDesc: 'Z-A',
@@ -421,6 +432,7 @@ var browserLang = normalizeLang(navigator.language || 'es');
                 freeNumberPlaceholder: 'Enter a number',
                 submitFreeAnswer: 'Submit',
             footerLicense: 'EduHoot · GNU Affero General Public License v3.0 (AGPL-3.0)',
+            footerPrivacy: 'Privacy',
             footerSource: 'Source code',
             footerContactLabel: 'Issues'
     },
@@ -446,6 +458,7 @@ var browserLang = normalizeLang(navigator.language || 'es');
             sortLabel: 'Ordenar per',
             sortPlays: 'Més jugats',
             sortLeastPlays: 'Menys jugats',
+            sortRating: 'Més ben valorats',
             sortNewest: 'Més recents',
             sortAlphaAsc: 'A-Z',
             sortAlphaDesc: 'Z-A',
@@ -513,6 +526,7 @@ var browserLang = normalizeLang(navigator.language || 'es');
             freeNumberPlaceholder: 'Introdueix un número',
             submitFreeAnswer: 'Enviar',
             footerLicense: 'EduHoot · Llicència GNU Affero General Public License v3.0 (AGPL-3.0)',
+            footerPrivacy: 'Privacitat',
             footerSource: 'Codi font',
             footerContactLabel: 'Incidències'
         },
