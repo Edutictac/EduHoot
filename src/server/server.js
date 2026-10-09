@@ -2191,6 +2191,9 @@ function isSubmissionCorrect(meta, submission) {
       return false;
     }
     const submissionSet = new Set(submission);
+    if (submissionSet.size !== meta.correctAnswers.length) {
+      return false;
+    }
     return meta.correctAnswers.every((value) => submissionSet.has(value));
   }
   const normalized = Array.isArray(submission) ? submission[0] : submission;
@@ -2203,7 +2206,10 @@ function getSubmissionScoreRatio(meta, submission) {
   const selected = Array.isArray(submission) ? new Set(submission) : new Set();
   const correct = Array.isArray(meta.correctAnswers) ? meta.correctAnswers : [];
   if (!correct.length) return 0;
-  return correct.filter((answer) => selected.has(answer)).length / correct.length;
+  // Cada selecció errònia resta el mateix que suma una encertada; mínim 0.
+  const hits = correct.filter((answer) => selected.has(answer)).length;
+  const wrongs = selected.size - hits;
+  return Math.max(0, hits - wrongs) / correct.length;
 }
 
 // 'allCorrect'/'allWrong' cuando el 100% del grupo acierta o falla la pregunta
@@ -5104,6 +5110,8 @@ module.exports = {
   isEphemeralExpired,
   normalizeEphemeralQuiz,
   calculateQuestionScore,
+  isSubmissionCorrect,
+  getSubmissionScoreRatio,
   normalizeSoloName,
   normalizePlayerName,
   cleanMetaText,

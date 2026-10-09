@@ -513,7 +513,9 @@
     player.choice = null;
     player.multiSelections = normalizedSelections.slice();
     player.answered = true;
-    var ratio = meta.correctAnswers.length ? meta.correctAnswers.filter(function(answer){ return normalizedSelections.indexOf(answer) !== -1; }).length / meta.correctAnswers.length : 0;
+    var hits = meta.correctAnswers.filter(function(answer){ return normalizedSelections.indexOf(answer) !== -1; }).length;
+    var wrongs = normalizedSelections.length - hits;
+    var ratio = meta.correctAnswers.length ? Math.max(0, hits - wrongs) / meta.correctAnswers.length : 0;
     player.outcome = ratio === 1 ? 'ok' : (ratio > 0 ? 'partial' : 'bad');
     if(ratio > 0){
       player.correct += 1;

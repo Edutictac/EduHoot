@@ -1796,7 +1796,9 @@ function startQuiz(){
                 isCorrect = false;
             }else if(meta.type === 'multiple'){
                 isCorrect = areAnswerSetsEqual(selected, correctList);
-                scoreRatio = correctList.length ? correctList.filter(function(answer){ return selected.indexOf(answer) !== -1; }).length / correctList.length : 0;
+                var hits = correctList.filter(function(answer){ return selected.indexOf(answer) !== -1; }).length;
+                var wrongs = selected.length - hits;
+                scoreRatio = correctList.length ? Math.max(0, hits - wrongs) / correctList.length : 0;
             }else{
                 isCorrect = selected.length && selected[0] === (meta.correct || correctList[0] || 1);
                 scoreRatio = isCorrect ? 1 : 0;

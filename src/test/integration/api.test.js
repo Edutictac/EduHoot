@@ -197,3 +197,17 @@ test('CRUD de quiz: crear, leer y listar en público', async () => {
     'el quiz público debe aparecer en /api/public-quizzes'
   );
 });
+
+test('resposta múltiple: les seleccions errònies resten i marcar-ho tot no puntua', () => {
+  const { isSubmissionCorrect, getSubmissionScoreRatio } = require('../../server/server.js');
+  const meta = { type: 'multiple', correctAnswers: [1, 2] };
+  assert.equal(getSubmissionScoreRatio(meta, [1, 2]), 1);
+  assert.equal(getSubmissionScoreRatio(meta, [1]), 0.5);
+  assert.equal(getSubmissionScoreRatio(meta, [1, 2, 3]), 0.5);
+  assert.equal(getSubmissionScoreRatio(meta, [1, 2, 3, 4]), 0);
+  assert.equal(getSubmissionScoreRatio(meta, [1, 3]), 0);
+  assert.equal(getSubmissionScoreRatio(meta, [3]), 0);
+  assert.equal(isSubmissionCorrect(meta, [1, 2]), true);
+  assert.equal(isSubmissionCorrect(meta, [1, 2, 3, 4]), false);
+  assert.equal(getSubmissionScoreRatio({ type: 'poll', correctAnswers: [] }, [1]), 0);
+});
