@@ -1,4 +1,4 @@
-const VALID_TYPES = new Set(['quiz', 'multiple', 'true-false', 'short-answer', 'numeric']);
+const VALID_TYPES = new Set(['quiz', 'multiple', 'true-false', 'short-answer', 'numeric', 'poll']);
 
 function normalizeFreeText(value) {
   let str = (value || '').toString().trim().toLowerCase();
@@ -54,6 +54,7 @@ function normalizeQuestionType(rawType) {
   const key = ascii.replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim();
 
   if (key === 'quiz') return 'quiz';
+  if (['poll', 'survey', 'encuesta', 'enquesta'].includes(key)) return 'poll';
   if (key === 'multiple' || key.includes('multi')) return 'multiple';
 
   if (
@@ -149,7 +150,7 @@ function normalizeQuestionMeta(item = {}) {
     }
   }
   const correctCandidates = item.correctAnswers || item.correcta || item.correct;
-  let correctAnswers = normalizeCorrectAnswers(correctCandidates);
+  let correctAnswers = type === 'poll' ? [] : normalizeCorrectAnswers(correctCandidates);
 
   let acceptedAnswers = [];
   let numericAnswer = null;

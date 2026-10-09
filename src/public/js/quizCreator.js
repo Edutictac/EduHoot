@@ -89,7 +89,7 @@ var i18n = {
         suggestedTags: 'Etiquetas usadas (toca para añadir)',
         questionsEyebrow: 'Preguntas',
         questionsTitle: 'Construye las preguntas',
-        questionsDesc: 'Añade 4 posibles respuestas y marca la correcta (1-4).',
+        questionsDesc: 'Añade respuestas y elige el modo de cada pregunta.',
         addQuestion: '+ Añadir pregunta',
         btnSave: 'Guardar quiz',
         btnPlayLocal: 'Jugar sin guardar',
@@ -108,6 +108,7 @@ var i18n = {
         questionTypeTf: 'Verdadero / Falso',
         questionTypeShort: 'Respuesta corta',
         questionTypeNumeric: 'Numérica',
+        questionTypePoll: 'Encuesta (sin puntuación)',
         questionTypeMultiHint: 'Marca todas las respuestas correctas.',
         questionTimeLabel: 'Tiempo límite (segundos)',
         shortAnswersLabel: 'Respuestas válidas (separadas por |)',
@@ -160,7 +161,7 @@ var i18n = {
         suggestedTags: 'Suggested tags (tap to add)',
         questionsEyebrow: 'Questions',
         questionsTitle: 'Build the questions',
-        questionsDesc: 'Add 4 possible answers and mark the correct one (1-4).',
+        questionsDesc: 'Add answers and choose a mode for each question.',
         addQuestion: '+ Add question',
         btnSave: 'Save quiz',
         btnPlayLocal: 'Play without saving',
@@ -179,6 +180,7 @@ var i18n = {
         questionTypeTf: 'True / False',
         questionTypeShort: 'Short answer',
         questionTypeNumeric: 'Numeric',
+        questionTypePoll: 'Poll (unscored)',
         questionTypeMultiHint: 'Check every answer that counts.',
         questionTimeLabel: 'Time limit (seconds)',
         shortAnswersLabel: 'Accepted answers (separated by |)',
@@ -231,7 +233,7 @@ var i18n = {
         suggestedTags: 'Etiquetes usades (toca per afegir)',
         questionsEyebrow: 'Preguntes',
         questionsTitle: 'Construeix les preguntes',
-        questionsDesc: 'Afegeix 4 respostes i marca la correcta (1-4).',
+        questionsDesc: 'Afegeix respostes i tria el mode de cada pregunta.',
         addQuestion: '+ Afegir pregunta',
         btnSave: 'Desar quiz',
         btnPlayLocal: 'Jugar sense desar',
@@ -250,6 +252,7 @@ var i18n = {
         questionTypeTf: 'Cert / Fals',
         questionTypeShort: 'Resposta curta',
         questionTypeNumeric: 'Numèrica',
+        questionTypePoll: 'Enquesta (sense puntuació)',
         questionTypeMultiHint: 'Marca totes les respostes correctes.',
         questionTimeLabel: 'Temps límit (segons)',
         shortAnswersLabel: 'Respostes vàlides (separades per |)',
@@ -626,7 +629,7 @@ function buildQuizPayload(){
                 }
             });
         }
-        if(!correctValues.length){
+        if(!correctValues.length && questionType !== 'poll'){
             var single = parseInt(correct, 10);
             if(Number.isNaN(single) || single < 1 || single > 4){
                 single = 1;
@@ -676,6 +679,8 @@ function buildQuizPayload(){
             "image": image,
             "video": video
         };
+
+        if(questionType === 'poll') base.correctAnswers = [];
 
         if(questionType === 'short-answer'){
             base.answers = ['', '', '', ''];
@@ -1310,7 +1315,7 @@ function buildQuestionCard(num, data){
     var typeSelect = document.createElement('select');
     typeSelect.className = 'question-type';
     typeSelect.id = 'type' + String(num);
-    [['quiz', 'questionTypeSingle'], ['multiple', 'questionTypeMultiple'], ['true-false', 'questionTypeTf'], ['short-answer', 'questionTypeShort'], ['numeric', 'questionTypeNumeric']].forEach(function(pair){
+    [['quiz', 'questionTypeSingle'], ['multiple', 'questionTypeMultiple'], ['true-false', 'questionTypeTf'], ['short-answer', 'questionTypeShort'], ['numeric', 'questionTypeNumeric'], ['poll', 'questionTypePoll']].forEach(function(pair){
         var option = document.createElement('option');
         option.value = pair[0];
         option.textContent = t(pair[1]);
@@ -1426,9 +1431,10 @@ function buildQuestionCard(num, data){
         var showTf = currentType === 'true-false';
         var showShort = currentType === 'short-answer';
         var showNumeric = currentType === 'numeric';
+        var showPoll = currentType === 'poll';
         multiCorrect.classList.toggle('hidden', !showMultiple);
-        correctLabel.style.display = (showMultiple || showShort || showNumeric) ? 'none' : '';
-        correctField.style.display = (showMultiple || showShort || showNumeric) ? 'none' : '';
+        correctLabel.style.display = (showMultiple || showShort || showNumeric || showPoll) ? 'none' : '';
+        correctField.style.display = (showMultiple || showShort || showNumeric || showPoll) ? 'none' : '';
 
         answersWrap.style.display = (showShort || showNumeric) ? 'none' : '';
 

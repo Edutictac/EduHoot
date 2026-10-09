@@ -725,6 +725,7 @@ function quizToCsv(quiz) {
     let correctVals = Array.isArray(q && q.correctAnswers) && q.correctAnswers.length
       ? q.correctAnswers.join(',')
       : (q && q.correct ? q.correct : 1);
+    if (type === 'poll') correctVals = '';
 
     let texto = '';
     let numero = '';
@@ -2021,7 +2022,7 @@ function buildQuestions(questions = [], opts = {}) {
     const answerOrder = randomA ? shuffleArray(indexDomain) : indexDomain;
     const answers = answerOrder.map((idx) => domainAnswers[idx]);
 
-    const originalCorrects = type === 'true-false' ? meta.correctAnswers : normalizeCorrectAnswers(q.correctAnswers || q.correct);
+    const originalCorrects = type === 'poll' ? [] : (type === 'true-false' ? meta.correctAnswers : normalizeCorrectAnswers(q.correctAnswers || q.correct));
     const shuffledCorrects = [];
     originalCorrects.forEach((orig) => {
       const zeroBased = orig - 1;
@@ -2033,13 +2034,13 @@ function buildQuestions(questions = [], opts = {}) {
         }
       }
     });
-    if (!shuffledCorrects.length) {
+    if (!shuffledCorrects.length && type !== 'poll') {
       shuffledCorrects.push(1);
     }
     return {
       question: cleanImportedText(q.question),
       answers,
-      correct: shuffledCorrects[0],
+      correct: shuffledCorrects[0] || 1,
       correctAnswers: shuffledCorrects,
       type,
       time: useOverrideTime ? overrideTime : (q.time || 0),
@@ -2189,9 +2190,6 @@ function isSubmissionCorrect(meta, submission) {
     if (!Array.isArray(submission) || submission.length === 0) {
       return false;
     }
-    if (submission.length !== meta.correctAnswers.length) {
-      return false;
-    }
     const submissionSet = new Set(submission);
     return meta.correctAnswers.every((value) => submissionSet.has(value));
   }
@@ -2199,11 +2197,21 @@ function isSubmissionCorrect(meta, submission) {
   return Number(normalized) === meta.correctAnswers[0];
 }
 
+function getSubmissionScoreRatio(meta, submission) {
+  if (!meta || meta.type === 'poll') return 0;
+  if (meta.type !== 'multiple') return isSubmissionCorrect(meta, submission) ? 1 : 0;
+  const selected = Array.isArray(submission) ? new Set(submission) : new Set();
+  const correct = Array.isArray(meta.correctAnswers) ? meta.correctAnswers : [];
+  if (!correct.length) return 0;
+  return correct.filter((answer) => selected.has(answer)).length / correct.length;
+}
+
 // 'allCorrect'/'allWrong' cuando el 100% del grupo acierta o falla la pregunta
 // (para la celebración/"funeral" del cliente); null si está mezclado o no hay jugadores.
 function getGroupAnswerResult(playerData, meta) {
   const list = Array.isArray(playerData) ? playerData : [];
   if (!list.length) return null;
+  if (meta && meta.type === 'poll') return null;
   let correctCount = 0;
   list.forEach((player) => {
     if (isSubmissionCorrect(meta, player && player.gameData ? player.gameData.answer : undefined)) {
@@ -3656,14 +3664,22 @@ io.on('connection', (socket) => {
           }
           player.gameData.answer = normalizedSubmission;
 
-          const isCorrect = isSubmissionCorrect(meta, normalizedSubmission);
+          const isPoll = meta.type === 'poll';
+          const scoreRatio = getSubmissionScoreRatio(meta, normalizedSubmission);
+          const isCorrect = !isPoll && scoreRatio === 1;
+          if (scoreRatio > 0) {
+            player.gameData.score += Math.round(calculateQuestionScore(game) * scoreRatio);
+          }
           if (isCorrect) {
-            player.gameData.score += calculateQuestionScore(game);
             player.gameData.correctCount = (Number(player.gameData.correctCount) || 0) + 1;
-            socket.emit('answerResult', true);
+            socket.emit('answerResult', { outcome: 'correct' });
+          } else if (scoreRatio > 0) {
+            socket.emit('answerResult', { outcome: 'partial', ratio: scoreRatio });
+          } else if (isPoll) {
+            socket.emit('answerResult', { outcome: 'poll' });
           } else {
             player.gameData.wrongCount = (Number(player.gameData.wrongCount) || 0) + 1;
-            socket.emit('answerResult', false);
+            socket.emit('answerResult', { outcome: 'incorrect' });
           }
           recordPlayerAnswerHistory(player, game, gameQuestion, normalizedSubmission, isCorrect);
 

@@ -510,8 +510,10 @@ function answerSubmitted(num){
 
 //Get results on last question
 socket.on('answerResult', function(data){
-    if(data == true){
+    if(data === true || (data && data.outcome === 'correct')){
         correct = true;
+    }else if(data && data.outcome){
+        correct = data.outcome;
     }
 });
 
@@ -548,7 +550,17 @@ socket.on('questionOver', function(playerData, payload){
     if(multiRow) multiRow.style.display = 'none';
     var freeRow = document.getElementById('freeSubmitRow');
     if(freeRow) freeRow.style.display = 'none';
-    if(correct == true){
+    if(correct === 'poll' || (payload && payload.type === 'poll')){
+        document.body.style.backgroundColor = '#607d8b';
+        var pollMessage = document.getElementById('message');
+        pollMessage.style.display = 'block';
+        pollMessage.textContent = tPlayer('poll_thanks', '¡Gracias por responder!');
+    }else if(correct === 'partial'){
+        document.body.style.backgroundColor = '#ffb300';
+        var partialMessage = document.getElementById('message');
+        partialMessage.style.display = 'block';
+        partialMessage.textContent = tPlayer('partial', 'Respuesta parcialmente correcta: has sumado puntos.');
+    }else if(correct == true){
         document.body.style.backgroundColor = "#4CAF50";
         document.getElementById('message').style.display = "block";
         document.getElementById('message').textContent = window.i18nPlayer ? window.i18nPlayer.t('correct') : "Correct!";

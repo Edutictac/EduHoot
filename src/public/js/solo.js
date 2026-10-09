@@ -291,6 +291,8 @@ var browserLang = normalizeLang(navigator.language || 'es');
         timer: 'Tiempo',
         correctText: '¡Correcto!',
         wrongText: 'Respuesta incorrecta',
+        pollThanks: '¡Gracias por responder!',
+        partialText: 'Respuesta parcialmente correcta: has sumado puntos.',
         correctLabel: 'Respuesta correcta:',
         timeup: 'Tiempo agotado',
         finishTitle: 'Partida terminada',
@@ -381,6 +383,8 @@ var browserLang = normalizeLang(navigator.language || 'es');
             timer: 'Time',
             correctText: 'Correct!',
             wrongText: 'Wrong answer',
+            pollThanks: 'Thanks for responding!',
+            partialText: 'Partially correct: you earned points.',
             correctLabel: 'Correct answer:',
             timeup: 'Time is up',
             finishTitle: 'Game finished',
@@ -471,6 +475,8 @@ var browserLang = normalizeLang(navigator.language || 'es');
             timer: 'Temps',
             correctText: 'Correcte!',
             wrongText: 'Resposta incorrecta',
+            pollThanks: 'Gràcies per respondre!',
+            partialText: 'Resposta parcialment correcta: has sumat punts.',
             correctLabel: 'Resposta correcta:',
             timeup: 'Temps exhaurit',
             finishTitle: 'Partida acabada',
@@ -893,7 +899,7 @@ function renderSelectedMeta(){
 
     function normalizeQuestionMeta(q){
         var type = (q && q.type) ? String(q.type).toLowerCase() : 'quiz';
-        var allowed = { 'quiz': true, 'multiple': true, 'true-false': true, 'short-answer': true, 'numeric': true };
+        var allowed = { 'quiz': true, 'multiple': true, 'true-false': true, 'short-answer': true, 'numeric': true, 'poll': true };
         if(!allowed[type]){
             type = 'quiz';
         }
@@ -915,6 +921,9 @@ function renderSelectedMeta(){
         }
 
         // Para tipos no indexados mantenemos compatibilidad (correctAnswers = [1]).
+        if(type === 'poll'){
+            return { type: type, correctAnswers: [], correct: 0, acceptedAnswers: [], numericAnswer: null, tolerance: null };
+        }
         if(type === 'short-answer' || type === 'numeric'){
             return {
                 type: type,
@@ -1739,6 +1748,7 @@ function startQuiz(){
         var feedback = document.getElementById('feedback');
 
         var isCorrect = false;
+        var scoreRatio = 0;
         var correctAnswerText = '';
 
         if(meta.type === 'short-answer'){
@@ -1746,6 +1756,7 @@ function startQuiz(){
             var normalized = normalizeFreeText(rawText);
             var accepted = Array.isArray(meta.acceptedAnswers) ? meta.acceptedAnswers : splitAcceptedAnswers(meta.acceptedAnswers);
             isCorrect = !!normalized && accepted.some(function(ans){ return normalizeFreeText(ans) === normalized; });
+            scoreRatio = isCorrect ? 1 : 0;
             correctAnswerText = accepted.join(', ');
 
             var input = document.getElementById('solo-free-input');
@@ -1762,6 +1773,7 @@ function startQuiz(){
             }else{
                 isCorrect = false;
             }
+            scoreRatio = isCorrect ? 1 : 0;
             if(target !== null){
                 correctAnswerText = (tol && tol > 0) ? (String(target) + ' ± ' + String(tol)) : String(target);
             }
@@ -1779,11 +1791,15 @@ function startQuiz(){
             }else if(choice !== null && typeof choice !== 'undefined'){
                 selected = [choice];
             }
-            var correctList = Array.isArray(meta.correctAnswers) && meta.correctAnswers.length ? meta.correctAnswers : [(parseInt(q.correct, 10) || 1)];
-            if(meta.type === 'multiple'){
+            var correctList = meta.type === 'poll' ? [] : (Array.isArray(meta.correctAnswers) && meta.correctAnswers.length ? meta.correctAnswers : [(parseInt(q.correct, 10) || 1)]);
+            if(meta.type === 'poll'){
+                isCorrect = false;
+            }else if(meta.type === 'multiple'){
                 isCorrect = areAnswerSetsEqual(selected, correctList);
+                scoreRatio = correctList.length ? correctList.filter(function(answer){ return selected.indexOf(answer) !== -1; }).length / correctList.length : 0;
             }else{
                 isCorrect = selected.length && selected[0] === (meta.correct || correctList[0] || 1);
+                scoreRatio = isCorrect ? 1 : 0;
             }
 
             if(answersWrap){
@@ -1793,7 +1809,7 @@ function startQuiz(){
                     if(correctList.indexOf(n) !== -1){
                         btnEl.classList.add('correct');
                     }
-                    if(selected.indexOf(n) !== -1 && !isCorrect){
+                    if(selected.indexOf(n) !== -1 && correctList.indexOf(n) === -1){
                         btnEl.classList.add('wrong');
                     }
                 });
@@ -1810,20 +1826,33 @@ function startQuiz(){
             }
         }
 
-        if(isCorrect){
+        if(meta.type === 'poll'){
+            scoreRatio = 0;
+        }else if(meta.type === 'multiple' && scoreRatio === 1){
+            isCorrect = true;
+        }
+        if(scoreRatio > 0){
             state.correct += 1;
             var bonus = Math.round(1000 * Math.max(0, Math.min(1, state.timerLeft / state.timerTotal)));
-            state.score += bonus;
+            state.score += Math.round(bonus * scoreRatio);
         }
         if(feedback){
             if(timedOut){
                 feedback.classList.remove('feedback--success', 'feedback--error');
                 feedback.classList.add('feedback--muted');
                 feedback.textContent = t('timeup');
+            }else if(meta.type === 'poll'){
+                feedback.classList.remove('feedback--error', 'feedback--success');
+                feedback.classList.add('feedback--muted');
+                feedback.textContent = t('pollThanks');
             }else if(isCorrect){
                 feedback.classList.remove('feedback--muted', 'feedback--error');
                 feedback.classList.add('feedback--success');
                 feedback.textContent = t('correctText');
+            }else if(meta.type === 'multiple' && scoreRatio > 0){
+                feedback.classList.remove('feedback--muted', 'feedback--error');
+                feedback.classList.add('feedback--success');
+                feedback.textContent = t('partialText');
             }else{
                 feedback.classList.remove('feedback--muted', 'feedback--success');
                 feedback.classList.add('feedback--error');
