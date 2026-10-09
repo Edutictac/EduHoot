@@ -98,6 +98,13 @@
         var labels = opts.labels || {};
         var storageKey = opts.storageKey;
         var volumeStorageKey = opts.volumeStorageKey || (storageKey ? (storageKey + ':volume') : null);
+        // sharedAudio: <audio> ya creado (y desbloqueado por un gesto) en otra vista,
+        // p. ej. la sala del anfitrión cuando la partida se carga en un iframe.
+        var sharedAudio = opts.sharedAudio || null;
+        var sharedTrack = null;
+        if(sharedAudio){
+            try{ sharedTrack = new URL(sharedAudio.currentSrc || sharedAudio.src, window.location.href).pathname; }catch(e){}
+        }
         var savedTrack = storageKey ? safeGetStorage(storageKey) : null;
         if(savedTrack && !trackExists(savedTrack)){
             savedTrack = null;
@@ -114,7 +121,7 @@
             }
         }
 
-        var selectedTrack = savedTrack;
+        var selectedTrack = (sharedTrack && trackExists(sharedTrack)) ? sharedTrack : savedTrack;
         // Solo rotamos aleatoriamente si:
         // - randomStart está activo
         // - NO hay pista guardada
@@ -197,17 +204,24 @@
         wrapper.appendChild(title);
         wrapper.appendChild(chooseLabel);
         wrapper.appendChild(controls);
-        var audio = document.createElement('audio');
-        audio.preload = 'auto';
-        audio.loop = !randomRotationEnabled;
-        audio.volume = initialVolume;
-        audio.src = selectedTrack;
-        audio.style.display = 'none';
-        wrapper.appendChild(audio);
+        var audio = sharedAudio;
+        if(audio){
+            // No lo movemos de documento: debe seguir siendo el elemento que el gesto desbloqueó.
+            audio.loop = !randomRotationEnabled;
+            volumeInput.value = audio.volume;
+        }else{
+            audio = document.createElement('audio');
+            audio.preload = 'auto';
+            audio.loop = !randomRotationEnabled;
+            audio.volume = initialVolume;
+            audio.src = selectedTrack;
+            audio.style.display = 'none';
+            wrapper.appendChild(audio);
+        }
         container.appendChild(wrapper);
         createTrackOptions(select, selectedTrack);
         select.value = selectedTrack;
-        var isPlaying = false;
+        var isPlaying = !!sharedAudio && !sharedAudio.paused;
         var autoplayBlocked = false;
         function updatePlayButton(){
             if(isPlaying){
@@ -253,7 +267,7 @@
             applyUserTrackSelection(defaultTracks[nextIndex].url);
         }
 
-        audio.addEventListener('ended', function(){
+        function onEnded(){
             if(!randomRotationEnabled || userSelectedTrack) return;
             var nextUrl = pickRandomTrack(audio.src);
             if(!nextUrl) return;
@@ -262,7 +276,8 @@
             if(isPlaying){
                 audio.play().catch(function(){});
             }
-        });
+        }
+        audio.addEventListener('ended', onEnded);
 
         prevBtn.addEventListener('click', function(){
             goToDelta(-1);
@@ -353,7 +368,9 @@
             updateLabels: updateLabels,
             play: play,
             pause: pause,
-            isPlaying: function(){ return isPlaying; }
+            isPlaying: function(){ return isPlaying; },
+            // Deja de gobernar el <audio> (sin pararlo) para que otra vista lo reutilice.
+            detach: function(){ audio.removeEventListener('ended', onEnded); }
         };
     }
     window.initBackgroundMusic = initBackgroundMusic;

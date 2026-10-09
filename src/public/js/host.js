@@ -430,8 +430,44 @@ socket.on('gameStarted', function(id){
     try{ pin = localStorage.getItem(lastPinKey); }catch(e){}
     var qs = '?id=' + encodeURIComponent(id);
     if(pin) qs += '&pin=' + encodeURIComponent(pin);
-    window.location.href="/host/game/" + qs;
+    if(!openEmbeddedHostGame("/host/game/" + qs)){
+        window.location.href="/host/game/" + qs;
+    }
 });
+
+// Carga la vista de juego en un iframe sin salir de esta página. Así la música y el
+// gong siguen siendo los <audio> que desbloqueó el clic en "Iniciar partida" y el
+// navegador no vuelve a bloquear el autoplay al cambiar de página.
+function openEmbeddedHostGame(url){
+    if(!hostStartClicked || document.getElementById('host-game-frame')) return false;
+    var music = hostLobbyMusicPlayerInstance;
+    if(!music || !music.audio || typeof music.detach !== 'function') return false;
+    try{
+        music.detach();
+        window.eduhootHostAudio = { music: music.audio, gong: hostLobbyGongAudio };
+        // La vista de juego abre su propia conexión de anfitrión, como al navegar.
+        socket.disconnect();
+        var frame = document.createElement('iframe');
+        frame.id = 'host-game-frame';
+        frame.className = 'host-game-frame';
+        frame.setAttribute('allow', 'autoplay; fullscreen');
+        frame.setAttribute('allowfullscreen', '');
+        frame.addEventListener('load', function(){
+            try{
+                document.title = frame.contentDocument.title || document.title;
+                frame.contentWindow.focus();
+            }catch(e){}
+        });
+        frame.src = url;
+        document.body.classList.add('host-game-embedded');
+        document.body.appendChild(frame);
+        // Si se recarga, se abre directamente la vista de juego (como antes).
+        try{ window.history.replaceState(null, '', url); }catch(e){}
+        return true;
+    }catch(e){
+        return false;
+    }
+}
 
 // Precarga del gong al cargar la portada
 initHostLobbyGong();

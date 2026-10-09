@@ -81,6 +81,15 @@ var currentAnswerTexts = ['', '', '', ''];
 var questionCountdownTimer = null;
 var gongAudio = null;
 var gongUrl = '/effects/gong.mp3';
+// Audio de la sala cuando esta vista va incrustada en ella (ver openEmbeddedHostGame en host.js).
+var hostSharedAudio = (function(){
+    try{
+        if(window.parent && window.parent !== window && window.parent.eduhootHostAudio){
+            return window.parent.eduhootHostAudio;
+        }
+    }catch(e){}
+    return null;
+})();
 var GONG_VOLUME_BOOST = 1.25;
 var hostModalStep = 'chart';
 var hostResultsHasRanking = true;
@@ -490,6 +499,7 @@ function setLang(newLang){
 function initHostMusicPlayer(){
     if(typeof initBackgroundMusic !== 'function') return;
     hostMusicPlayerInstance = initBackgroundMusic('#host-music-player', {
+        sharedAudio: hostSharedAudio && hostSharedAudio.music,
         storageKey: 'eduhoot-host-music',
         randomStart: true,
         volume: 0.7
@@ -587,6 +597,10 @@ function updateSquareHeights(counts, total){
 
 function initGong(){
     if(gongAudio) return;
+    if(hostSharedAudio && hostSharedAudio.gong){
+        gongAudio = hostSharedAudio.gong;
+        return;
+    }
     try{
         gongAudio = new Audio(gongUrl);
         gongAudio.preload = 'auto';
@@ -830,7 +844,10 @@ socket.on('connect', function() {
 });
 
 socket.on('noGameFound', function(){
-   window.location.href = '../../';//Redirect user to 'join game' page
+   // Si vamos incrustados en la sala, salimos en la ventana principal.
+   var target = window;
+   try{ if(hostSharedAudio && window.top) target = window.top; }catch(e){}
+   target.location.href = '/';//Redirect user to 'join game' page
 });
 
 socket.on('disconnect', function(){
