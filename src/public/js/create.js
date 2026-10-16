@@ -243,7 +243,7 @@ var i18n = {
         modalClose: 'Cerrar',
         signinEyebrow: 'Nuevo en EduHoot',
         signinTitle: 'Guarda tus cuestionarios desde el primer minuto',
-        signinDesc: 'Entra con Google para tener biblioteca propia, editar después y lanzar tus juegos desde cualquier equipo.',
+        signinDesc: 'Entra con EduTicTac para tener biblioteca propia, editar después y lanzar tus juegos desde cualquier equipo.',
         accessEyebrow: 'Acceso',
         accessTitle: 'Usuarios',
         accessDesc: 'Inicia sesión para crear, editar o borrar quizzes.',
@@ -260,6 +260,7 @@ var i18n = {
         panelCollapse: 'Ocultar',
         btnAccount: 'Cuenta',
         btnLogout: 'Cerrar sesión',
+        btnSignOut: 'Salir',
         forgotPass: '¿Olvidaste la contraseña?',
         resetEyebrow: 'Recuperar acceso',
         resetDesc: 'Te enviaremos un token (se registra en el log del servidor si no hay correo configurado). Luego úsalo para poner una nueva contraseña.',
@@ -504,7 +505,7 @@ var i18n = {
         modalClose: 'Close',
         signinEyebrow: 'New to EduHoot',
         signinTitle: 'Save your quizzes from the first minute',
-        signinDesc: 'Sign in with Google to get your own library, keep editing later and launch games from any device.',
+        signinDesc: 'Sign in with EduTicTac to get your own library, keep editing later and launch games from any device.',
         accessEyebrow: 'Access',
         accessTitle: 'Users',
         accessDesc: 'Sign in to create, edit or delete quizzes.',
@@ -521,6 +522,7 @@ var i18n = {
         panelCollapse: 'Hide',
         btnAccount: 'Account',
         btnLogout: 'Log out',
+        btnSignOut: 'Log out',
         forgotPass: 'Forgot your password?',
         resetEyebrow: 'Recover access',
         resetDesc: 'We will generate a token (check server log if no email). Use it to set a new password.',
@@ -765,7 +767,7 @@ var i18n = {
         modalClose: 'Tancar',
         signinEyebrow: 'Nou a EduHoot',
         signinTitle: 'Desa els teus qüestionaris des del primer minut',
-        signinDesc: 'Entra amb Google per tindre biblioteca pròpia, editar després i llançar els jocs des de qualsevol equip.',
+        signinDesc: 'Entra amb EduTicTac per tindre biblioteca pròpia, editar després i llançar els jocs des de qualsevol equip.',
         accessEyebrow: 'Accés',
         accessTitle: 'Usuaris',
         accessDesc: 'Inicia sessió per crear, editar o esborrar qüestionaris.',
@@ -782,6 +784,7 @@ var i18n = {
         panelCollapse: 'Amagar',
         btnAccount: 'Compte',
         btnLogout: 'Tancar sessió',
+        btnSignOut: 'Eixir',
         forgotPass: 'Has oblidat la contrasenya?',
         resetEyebrow: 'Recuperar accés',
         resetDesc: 'Generarem un token (mira el log del servidor si no hi ha correu). Després fes-lo servir per posar una nova contrasenya.',
@@ -3042,11 +3045,13 @@ var iaTema = document.getElementById('ia-tema');
 // --- Auth modal ---
 var authModal = document.getElementById('auth-modal');
 var openAuthBtn = document.getElementById('open-auth');
+var openAccountBtn = document.getElementById('open-account');
 var newUserSignin = document.getElementById('new-user-signin');
 var authGoogleHeroBtn = document.getElementById('auth-google-hero');
 var authAuthentikHeroBtn = document.getElementById('auth-authentik-hero');
 
 function openAuthModal(){
+    if(authentikOnlyMode && !(authState && authState.user)){ loginWithAuthentik(); return; }
     if(!authModal) return;
     authModal.classList.remove('hidden');
     document.body.classList.add('modal-open');
@@ -3070,10 +3075,11 @@ function warnNoPermission(message){
 }
 
 function updateTopAuthButton(){
+    if(openAccountBtn) openAccountBtn.classList.toggle('hidden', !(authState && authState.user));
     if(!openAuthBtn) return;
     if(authState && authState.user){
-        openAuthBtn.setAttribute('data-i18n', 'btnAccount');
-        openAuthBtn.textContent = t('btnAccount');
+        openAuthBtn.setAttribute('data-i18n', 'btnSignOut');
+        openAuthBtn.textContent = t('btnSignOut');
     }else{
         openAuthBtn.setAttribute('data-i18n', 'btnLogin');
         openAuthBtn.textContent = t('btnLogin');
@@ -3082,9 +3088,11 @@ function updateTopAuthButton(){
 
 if(openAuthBtn){
     openAuthBtn.addEventListener('click', function(){
-        openAuthModal();
+        if(authState && authState.user) logout();
+        else openAuthModal();
     });
 }
+if(openAccountBtn) openAccountBtn.addEventListener('click', openAuthModal);
 
 if(authModal){
     authModal.querySelectorAll('[data-modal-close]').forEach(function(el){
@@ -3144,6 +3152,7 @@ var resetStatus = document.getElementById('reset-status');
 var authState = { user: null };
 var googleAuthEnabled = false;
 var authentikAuthEnabled = false;
+var authentikOnlyMode = false;
 
 function updateAuthUI(){
     if(newUserSignin){
@@ -3161,7 +3170,7 @@ function updateAuthUI(){
         }
     }
     if(adminPanel){
-        if(authState.user && authState.user.role === 'admin'){
+        if(authState.user && authState.user.role === 'admin' && !authentikOnlyMode){
             adminPanel.classList.remove('hidden');
         }else{
             adminPanel.classList.add('hidden');
@@ -3169,7 +3178,7 @@ function updateAuthUI(){
     }
 
     if(authLoginBtn){
-        authLoginBtn.classList.toggle('hidden', !!(authState && authState.user));
+        authLoginBtn.classList.toggle('hidden', authentikOnlyMode || !!(authState && authState.user));
     }
     if(authSaveNickBtn){
         authSaveNickBtn.classList.toggle('hidden', !(authState && authState.user));
@@ -4153,3 +4162,23 @@ if(kahootForm){
         }
     });
 }
+
+fetch('/api/auth/migration', { credentials: 'include' })
+    .then(function(res){ return res.ok ? res.json() : {}; })
+    .then(function(cfg){
+        if (!cfg.end && !cfg.authentikOnly) return;
+        var notice = document.getElementById('auth-migration-notice');
+        var lang = document.getElementById('lang-select').value;
+        var date = new Date(cfg.end).toLocaleString(lang === 'en' ? 'en-GB' : lang === 'es' ? 'es-ES' : 'ca-ES', { timeZone: 'Europe/Madrid' });
+        var text = lang === 'en' ? 'From ' + date + ' (Madrid time), sign in with EduTicTac. Google remains available inside EduTicTac.' :
+            lang === 'es' ? 'Desde el ' + date + ' (hora peninsular), entra con EduTicTac. Google seguirá disponible dentro de EduTicTac.' :
+            'A partir del ' + date + ' (hora peninsular), entra amb EduTicTac. Google continuarà disponible dins d’EduTicTac.';
+        if (notice && cfg.end) { notice.textContent = text; notice.classList.remove('hidden'); }
+        authentikOnlyMode = !!cfg.authentikOnly;
+        if (authentikOnlyMode) {
+            ['auth-email', 'auth-pass', 'auth-login', 'reset-request', 'reset-confirm', 'reset-panel'].forEach(function(id){
+                var el = document.getElementById(id); if(el) { var label = el.closest('label'); (label || el).classList.add('hidden'); }
+            });
+            updateAuthUI();
+        }
+    }).catch(function(){});

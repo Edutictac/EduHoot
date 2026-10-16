@@ -1,0 +1,58 @@
+name: Publica la imatge Docker
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Versió existent en el registre d'EduTicTac (per exemple, 1.0.5)
+        required: true
+        type: string
+        default: '1.0.5'
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: publish-image-${{ inputs.version }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Valida la versió
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+
+      - name: Copia la imatge publicada a GitHub Container Registry
+        env:
+          VERSION: ${{ inputs.version }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_USER: ${{ github.actor }}
+        run: |
+          set -euo pipefail
+          source="registry.edutictac.es/edutictac/eduhoot:$VERSION"
+          destination="ghcr.io/${GITHUB_REPOSITORY,,}:$VERSION"
+          docker pull "$source"
+          docker tag "$source" "$destination"
+          # Autenticació temporal, sense guardar credencials en el runner.
+          export DOCKER_CONFIG
+          DOCKER_CONFIG=$(mktemp -d)
+          trap 'rm -rf "$DOCKER_CONFIG"' EXIT
+          docker login ghcr.io -u "$GH_USER" --password-stdin <<< "$GH_TOKEN"
+          docker push "$destination"
+          # Comprova que el manifest publicat conserva el digest original.
+          original=$(docker image inspect "$source" --format '{{index .RepoDigests 0}}')
+          docker pull "$destination"
+          published=$(docker image inspect "$destination" --format '{{json .RepoDigests}}')
+          [[ "$published" == *"${destination%:*}@${original##*@}"* ]]
+          {
+            echo "### EduHoot $VERSION"
+            echo "\`docker pull $destination\`"
+            echo ""
+            echo "Digest original: \`${original##*@}\`"
+          } >> "$GITHUB_STEP_SUMMARY"

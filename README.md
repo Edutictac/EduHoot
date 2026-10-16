@@ -3,6 +3,8 @@
 Versió actual del paquet: [1.0.7](CHANGELOG.md), amb proves automàtiques
 d'idiomes (`cd src` i `npm run test:i18n`; preparació en les notes de versió).
 
+Imatge Docker i publicació en GitHub: [documentació](docs/DOCKER.md).
+
 ## Valencià
 
 **EduHoot** és una aplicació tipus Kahoot per a l’aula: pots crear, importar i llançar qüestionaris amb imatges, vídeos i temps configurables. Admet CSV (inclosos els generats per IA) i importació de Kahoot públic. Està inspirada i reutilitza idees de [llixhoot](https://github.com/llixhoot/llixhoot), [llixhoot en lliurex](https://github.com/lliurex/llixhoot) i [qplay](https://github.com/jjdeharo/qplay).
@@ -103,6 +105,20 @@ El primer usuario que entra con Google se crea como `admin`; los siguientes entr
 En la pantalla de create, el bloque de alta rápida muestra solo el botón de Google. El botón `Entrar/Cuenta` sigue abriendo el modal de acceso con email para usuarios antiguos.
 
 ### Acceso docente con Authentik
+
+En producción hay una transición de 14 días desde el 12 de octubre de 2026.
+La fecha anunciada para dejar solo «Entrar con EduTicTac» era el 26 de octubre
+a las 19:00 (Europe/Madrid). La retirada automática y el recordatorio están
+desactivados mientras se valida la corrección del acceso real. Google seguirá
+disponible dentro de Authentik. Véase el
+[plan de migración](docs/PLA-MIGRACIO-AUTHENTIK-2026-10.md).
+
+`AUTHENTIK_MIGRATION_END` permite fijar el fin de la transición en ISO UTC.
+Al llegar al plazo se desactivan Google directo y las vías docentes locales,
+y las sesiones HTTP antiguas requieren volver a entrar por Authentik.
+La vinculación inicial requiere correo verificado; los accesos posteriores
+usan issuer/sub y conservan la propiedad de los cuestionarios y el rol.
+El grupo `professorat` se admite entre los grupos docentes.
 
 EduHoot admite login OIDC con Authentik. Solo las identidades que incluyen un
 rol docente en la claim configurada pueden iniciar sesión; el alumnado no puede

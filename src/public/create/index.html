@@ -22,20 +22,22 @@
                             <option value="en" data-i18n="langEn">English</option>
                         </select>
                     </label>
+                    <button id="open-account" type="button" class="btn btn-ghost btn-small hidden" data-i18n="btnAccount">Cuenta</button>
                     <button id="open-auth" type="button" class="btn btn-ghost btn-small" data-i18n="btnLogin">Entrar</button>
                 </div>
             </div>
             <h4 id = "subtitle" data-i18n="subtitle">Genera con IA, importa (CSV o Kahoot) o <a id = "link" href = "quiz-creator/">crea un cuestionario desde cero</a>.</h4>
 
+            <p id="auth-migration-notice" class="signin-callout hidden" role="status"></p>
             <section id="new-user-signin" class="signin-callout hidden" aria-labelledby="new-user-signin-title">
                 <div>
                     <p class="eyebrow" data-i18n="signinEyebrow">Nuevo en EduHoot</p>
                     <h2 id="new-user-signin-title" data-i18n="signinTitle">Guarda tus cuestionarios desde el primer minuto</h2>
-                    <p class="subtext" data-i18n="signinDesc">Entra con Google para tener biblioteca propia, editar después y lanzar tus juegos desde cualquier equipo.</p>
+                    <p class="subtext" data-i18n="signinDesc">Entra con EduTicTac para tener biblioteca propia, editar después y lanzar tus juegos desde cualquier equipo.</p>
                 </div>
                 <div class="signin-callout__actions">
-                    <button id="auth-google-hero" type="button" class="btn btn-google btn-google-prominent" data-i18n="btnGoogleLogin">Entrar con Google</button>
                     <button id="auth-authentik-hero" type="button" class="btn btn-primary btn-google-prominent hidden" data-i18n="btnAuthentikLogin">Entrar con EduTicTac</button>
+                    <button id="auth-google-hero" type="button" class="btn btn-google btn-google-prominent" data-i18n="btnGoogleLogin">Entrar con Google</button>
                 </div>
             </section>
 
