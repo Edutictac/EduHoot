@@ -103,6 +103,20 @@ En la pantalla de create, el bloque de alta rápida muestra solo el botón de Go
 
 ### Acceso docente con Authentik
 
+En producción hay una transición de 14 días desde el 12 de octubre de 2026.
+La fecha anunciada para dejar solo «Entrar con EduTicTac» era el 26 de octubre
+a las 19:00 (Europe/Madrid). La retirada automática y el recordatorio están
+desactivados mientras se valida la corrección del acceso real. Google seguirá
+disponible dentro de Authentik. Véase el
+[plan de migración](docs/PLA-MIGRACIO-AUTHENTIK-2026-10.md).
+
+`AUTHENTIK_MIGRATION_END` permite fijar el fin de la transición en ISO UTC.
+Al llegar al plazo se desactivan Google directo y las vías docentes locales,
+y las sesiones HTTP antiguas requieren volver a entrar por Authentik.
+La vinculación inicial requiere correo verificado; los accesos posteriores
+usan issuer/sub y conservan la propiedad de los cuestionarios y el rol.
+El grupo `professorat` se admite entre los grupos docentes.
+
 EduHoot admite login OIDC con Authentik. Solo las identidades que incluyen un
 rol docente en la claim configurada pueden iniciar sesión; el alumnado no puede
 usar este login para crear o gestionar cuestionarios. Configura

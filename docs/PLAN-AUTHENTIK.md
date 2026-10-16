@@ -1,5 +1,7 @@
 # Plan: añadir Authentik como login en EduHoot
 
+> Plan histórico: sustituido el 12 de octubre de 2026 por [PLA-MIGRACIO-AUTHENTIK-2026-10.md](PLA-MIGRACIO-AUTHENTIK-2026-10.md). La convivencia será temporal durante 14 días; después quedará solo Authentik, con Google integrado.
+
 Estado: PENDIENTE (diseñado 2026-09-08, revisado 2026-09-13). Las fuentes de
 Google **ya están autoalojadas**.
 

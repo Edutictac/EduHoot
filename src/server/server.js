@@ -12,6 +12,7 @@ const crypto = require('crypto');
 const { parseCsv, toQuestion } = require('./importCsv');
 const { LiveGames } = require('./utils/liveGames');
 const { Players } = require('./utils/players');
+const { linkAuthentikUser } = require('./authentikUsers');
 const {
   normalizeQuestionMeta,
   normalizeCorrectAnswers,
@@ -81,7 +82,7 @@ const GOOGLE_OAUTH_USERINFO_URL = 'https://openidconnect.googleapis.com/v1/useri
 const GOOGLE_OAUTH_STATE_TTL_MS = 10 * 60 * 1000;
 const AUTHENTIK_OAUTH_STATE_TTL_MS = 10 * 60 * 1000;
 const AUTHENTIK_TEACHER_ROLES = new Set(
-  (process.env.AUTHENTIK_TEACHER_ROLES || 'profesor,teacher,docente,administrador,admin')
+  (process.env.AUTHENTIK_TEACHER_ROLES || 'professorat,profesor,teacher,docente,administrador,admin')
     .split(',').map((value) => value.trim().toLowerCase()).filter(Boolean)
 );
 const AUTHENTIK_ROLE_CLAIM = (process.env.AUTHENTIK_ROLE_CLAIM || 'groups').trim();
@@ -354,6 +355,7 @@ async function ensureIndexes(dbInstance) {
     games.createIndex({ ownerId: 1 }),
     soloScores.createIndex({ quizId: 1, score: -1, createdAt: 1 }),
     users.createIndex({ email: 1 }, { unique: true, sparse: true }),
+    users.createIndex({ authentikIssuer: 1, authentikId: 1 }, { unique: true, partialFilterExpression: { authentikIssuer: { $type: 'string' }, authentikId: { $type: 'string' } } }),
     users.createIndex({ resetTokenHash: 1 }, { sparse: true }),
     ephemerals.createIndex({ id: 1 }, { unique: true, sparse: true }),
     ephemerals.createIndex({ expires: 1 }, { expireAfterSeconds: 0 }),
@@ -1555,11 +1557,12 @@ function getCookieOptions(req, extra = {}) {
   };
 }
 
-function createSession(user) {
+function createSession(user, provider = 'local') {
   const sessionId = crypto.randomBytes(24).toString('hex');
   sessions.set(sessionId, {
     userId: user._id ? user._id.toString() : user.id,
     role: user.role || 'editor',
+    provider,
     email: user.email,
     nickname: user.nickname || ''
   });
@@ -1599,6 +1602,12 @@ function authentikDiscoveryUrl() {
 function authentikConfigured() {
   return !!(AUTHENTIK_ISSUER && AUTHENTIK_CLIENT_ID && AUTHENTIK_CLIENT_SECRET);
 }
+
+function authentikOnly() {
+  const deadline = Date.parse(process.env.AUTHENTIK_MIGRATION_END || '');
+  return AUTHENTIK_ONLY || (authentikConfigured() && Number.isFinite(deadline) && Date.now() >= deadline);
+}
+
 
 function base64Url(value) {
   return Buffer.from(value).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
@@ -1722,37 +1731,8 @@ async function fetchAuthentikProfile(accessToken, endpoint) {
 }
 
 async function findOrCreateAuthentikUser(profile) {
-  const email = (profile.email || '').toLowerCase().trim();
-  if (!email) throw new Error('Authentik no devolvió email.');
   if (!authentikTeacher(profile)) throw new Error('La cuenta de Authentik no tiene rol docente.');
-  const users = await getUsersCollection();
-  const now = new Date();
-  const existing = await users.findOne({ email });
-  if (existing) {
-    const providers = Array.isArray(existing.authProviders) ? existing.authProviders : [];
-    const update = {
-      authentikId: profile.sub,
-      authentikVerifiedEmail: profile.email_verified !== false,
-      lastLoginAt: now,
-      updatedAt: now
-    };
-    if (!existing.nickname && (profile.name || profile.preferred_username)) update.nickname = profile.name || profile.preferred_username;
-    if (!providers.includes('authentik')) update.authProviders = [...providers, 'authentik'];
-    await users.updateOne({ _id: existing._id }, { $set: update });
-    return { ...existing, ...update };
-  }
-  const user = {
-    email,
-    authentikId: profile.sub,
-    authentikVerifiedEmail: profile.email_verified !== false,
-    authProviders: ['authentik'],
-    role: 'editor',
-    nickname: profile.name || profile.preferred_username || '',
-    createdAt: now,
-    lastLoginAt: now
-  };
-  const result = await users.insertOne(user);
-  return { ...user, _id: result.insertedId };
+  return linkAuthentikUser(await getUsersCollection(), profile, AUTHENTIK_ISSUER);
 }
 
 async function findOrCreateGoogleUser(profile) {
@@ -1808,7 +1788,7 @@ function parseCookies(header) {
 async function sessionMiddleware(req, res, next) {
   const cookies = parseCookies(req.headers.cookie || '');
   const sessionId = cookies.sessionId;
-  if (sessionId && sessions.has(sessionId)) {
+  if (sessionId && sessions.has(sessionId) && (!authentikOnly() || sessions.get(sessionId).provider === 'authentik')) {
     const session = sessions.get(sessionId);
     req.user = { id: session.userId, email: session.email, role: session.role, nickname: session.nickname || '' };
   }
@@ -3252,7 +3232,7 @@ app.patch('/api/quizzes/:id/sharing', async (req, res) => {
 io.on('connection', (socket) => {
   const cookies = parseCookies(socket.handshake.headers.cookie || '');
   const sessionId = cookies.sessionId;
-  if (sessionId && sessions.has(sessionId)) {
+  if (sessionId && sessions.has(sessionId) && (!authentikOnly() || sessions.get(sessionId).provider === 'authentik')) {
     socket.user = sessions.get(sessionId);
   }
   socket.on('host-join', async (data) => {
@@ -4506,6 +4486,7 @@ app.post('/api/quizzes/local', async (req, res) => {
 });
 // Auth endpoints
 app.post('/api/auth/bootstrap', async (req, res) => {
+  if (authentikOnly()) return res.status(404).json({ error: 'Utiliza el acceso EduTicTac.' });
   try {
     const users = await getUsersCollection();
     const count = await users.countDocuments();
@@ -4528,6 +4509,7 @@ app.post('/api/auth/bootstrap', async (req, res) => {
 });
 
 app.post('/api/auth/login', authRateLimiter, async (req, res) => {
+  if (authentikOnly()) return res.status(404).json({ error: 'Utiliza el acceso EduTicTac.' });
   try {
     const email = (req.body.email || '').toLowerCase().trim();
     const password = req.body.password || '';
@@ -4553,7 +4535,11 @@ app.post('/api/auth/login', authRateLimiter, async (req, res) => {
 
 app.get('/api/auth/google/config', (req, res) => {
   const config = googleOAuthConfig(req);
-  res.json({ enabled: !AUTHENTIK_ONLY && !!(config.clientId && config.clientSecret) });
+  res.json({ enabled: !authentikOnly() && !!(config.clientId && config.clientSecret) });
+});
+
+app.get('/api/auth/migration', (req, res) => {
+  res.json({ end: process.env.AUTHENTIK_MIGRATION_END || null, authentikOnly: authentikOnly() });
 });
 
 app.get('/api/auth/authentik/config', (req, res) => {
@@ -4601,7 +4587,7 @@ app.get('/api/auth/authentik/callback', async (req, res) => {
     res.cookie('authentikOAuthState', '', getCookieOptions(req, { expires: new Date(0) }));
     if (stored && stored.next) nextTarget = sanitizeRedirectTarget(stored.next);
     if (!code || !state || !stored || stored.expiresAt <= Date.now()) throw new Error('Estado OIDC inválido o caducado.');
-    if (cookies.authentikOAuthState && cookies.authentikOAuthState !== state) throw new Error('La cookie de estado OIDC no coincide.');
+    if (cookies.authentikOAuthState !== state) throw new Error('La cookie de estado OIDC no coincide.');
     const config = {
       clientId: AUTHENTIK_CLIENT_ID,
       clientSecret: AUTHENTIK_CLIENT_SECRET,
@@ -4611,7 +4597,7 @@ app.get('/api/auth/authentik/callback', async (req, res) => {
     if (!tokenData.access_token) throw new Error('Authentik no devolvió access_token.');
     const profile = await fetchAuthentikProfile(tokenData.access_token, stored.endpoints.userinfo_endpoint);
     const user = await findOrCreateAuthentikUser(profile);
-    const sid = createSession(user);
+    const sid = createSession(user, 'authentik');
     res.cookie('sessionId', sid, getCookieOptions(req));
     const separator = nextTarget.includes('?') ? '&' : '?';
     return res.redirect(`${nextTarget}${separator}authentik=ok`);
@@ -4623,7 +4609,7 @@ app.get('/api/auth/authentik/callback', async (req, res) => {
 });
 
 app.get('/api/auth/google/start', (req, res) => {
-  if (AUTHENTIK_ONLY) {
+  if (authentikOnly()) {
     return res.status(404).json({ error: 'Google está desactivado en el modo Authentik.' });
   }
   const config = googleOAuthConfig(req);
@@ -4649,6 +4635,7 @@ app.get('/api/auth/google/start', (req, res) => {
 });
 
 app.get('/api/auth/google/callback', async (req, res) => {
+  if (authentikOnly()) return res.status(404).json({ error: 'Utiliza el acceso EduTicTac.' });
   let nextTarget = '/create/';
   try {
     const code = (req.query.code || '').toString();
@@ -4681,7 +4668,7 @@ app.get('/api/auth/google/callback', async (req, res) => {
       throw new Error('Email de Google no verificado.');
     }
     const user = await findOrCreateGoogleUser(profile);
-    const sid = createSession(user);
+    const sid = createSession(user, 'google');
     res.cookie('sessionId', sid, getCookieOptions(req));
     const separator = nextTarget.includes('?') ? '&' : '?';
     return res.redirect(`${nextTarget}${separator}google=ok`);
@@ -4693,6 +4680,7 @@ app.get('/api/auth/google/callback', async (req, res) => {
 });
 
 app.post('/api/auth/users', requireRole('admin'), async (req, res) => {
+  if (authentikOnly()) return res.status(404).json({ error: 'Gestiona las cuentas desde EduTicTac.' });
   try {
     const email = (req.body.email || '').toLowerCase().trim();
     const password = req.body.password || '';
@@ -4715,6 +4703,7 @@ app.post('/api/auth/users', requireRole('admin'), async (req, res) => {
 });
 
 app.post('/api/auth/reset-admin', requireRole('admin'), async (req, res) => {
+  if (authentikOnly()) return res.status(404).json({ error: 'Gestiona las cuentas desde EduTicTac.' });
   try {
     const email = (req.body.email || '').toLowerCase().trim();
     const password = req.body.password || '';
@@ -5039,6 +5028,7 @@ app.get(['/admin', '/admin/', '/admin-stats.html'], (req, res) => {
 
 // Solicitar token de reseteo (se guarda en BD y se muestra en logs)
 app.post('/api/auth/request-reset', authRateLimiter, async (req, res) => {
+  if (authentikOnly()) return res.status(404).json({ error: 'Utiliza el acceso EduTicTac.' });
   try {
     const email = (req.body.email || '').toLowerCase().trim();
     if (!email) return res.status(400).json({ error: 'Falta email.' });
@@ -5068,6 +5058,7 @@ app.post('/api/auth/request-reset', authRateLimiter, async (req, res) => {
 
 // Resetear contraseña usando token
 app.post('/api/auth/reset', authRateLimiter, async (req, res) => {
+  if (authentikOnly()) return res.status(404).json({ error: 'Utiliza el acceso EduTicTac.' });
   try {
     const token = (req.body.token || '').trim();
     const tokenHash = hashResetToken(token);
