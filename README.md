@@ -49,6 +49,9 @@ En la pantalla de create, el bloc d'alta ràpida mostra només el botó de Googl
 - Botó de “Saltar pregunta” i marcador de progrés.
 - Recuperació ràpida de jugadors quan la connexió cau.
 
+Vols saber amb detall com funciona cada funcionalitat (modes de joc, avanç
+de preguntes, informe CSV...)? Consulta [FEATURES.md](FEATURES.md).
+
 ### Actualitzacions recents
 
 - Pantalla neta a l’instant entre preguntes, sense restes de la pregunta anterior.
@@ -155,6 +158,9 @@ Flujo recomendado:
 - Botón de “Saltar pregunta” y contador de progreso.
 - Reincorporación ágil de jugadores si se cae la conexión.
 
+¿Quieres saber en detalle cómo funciona cada funcionalidad (modos de
+juego, avance de preguntas, informe CSV...)? Consulta [FEATURES.md](FEATURES.md).
+
 ### Actualizaciones recientes
 
 - Pantalla limpia al instante entre preguntas, sin restos de la pregunta anterior.
@@ -233,6 +239,9 @@ Recommended flow:
 - Visibility controls (private, by link, public) with clone permissions.
 - “Skip question” button and progress tracking.
 - Fast player rejoin if the connection drops.
+
+Want the full details on how each feature works (game modes, question
+advancing, CSV report...)? See [FEATURES.md](FEATURES.md).
 
 ### Recent updates
 

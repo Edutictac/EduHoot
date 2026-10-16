@@ -15,6 +15,8 @@ funcionamiento del proyecto.
 
 - [Unión a la partida: nombre e icono del jugador](#unión-a-la-partida-nombre-e-icono-del-jugador)
 - [Informe de partida (descarga en CSV)](#informe-de-partida-descarga-en-csv)
+- [Modos de juego](#modos-de-juego)
+- [Avance de pregunta: ¿automático o manual?](#avance-de-pregunta-automático-o-manual)
 
 ## Unión a la partida: nombre e icono del jugador
 
@@ -23,7 +25,7 @@ Cuando un alumno se une a una partida (pantalla de `join`, código en
 
 - **El nombre lo escribe el propio alumno**, en un campo de texto libre. No
   existe ningún generador de apodos aleatorios (es una mejora propuesta en
-  `KAHOOT_FEATURES.md`, pendiente de implementar).
+  `POPULAR_FEATURES.md`, pendiente de implementar).
 - El nombre se normaliza antes de enviarse: se recortan espacios al
   principio/final, se colapsan espacios múltiples, y se limita a un máximo
   de caracteres (`normalizeGuestName` / `normalizeGuestNameLive`,
@@ -86,3 +88,49 @@ El CSV mezcla dos niveles de información en el mismo fichero:
 que calcularlo a partir de `aciertos` / `preguntasTotales` en una hoja de
 cálculo (por ejemplo, con una fórmula `=aciertos/preguntasTotales` por fila
 de alumno).
+
+## Modos de juego
+
+Al crear o lanzar un quiz desde la biblioteca (`src/public/js/create.js`),
+hay tres botones/modos distintos. Solo uno de ellos está pensado para una
+clase con un dispositivo por alumno:
+
+| Modo (botón) | Función / destino | Para qué sirve |
+|---|---|---|
+| **"Jugar en el aula"** | `startGame(quiz.id)` → `/host/` (`create.js:2249-2251`) | El modo clásico tipo Kahoot: se genera un PIN/QR, cada alumno se une desde su propio móvil/tablet vía `/join`, y el profesor proyecta las preguntas desde `/host/`. **Es el modo a usar con un grupo de alumnos, cada uno con su dispositivo.** Es *host-paced*: el profesor controla el ritmo (ver sección siguiente). |
+| **"Multijugador"** | `startMultiplayer(quiz.id)` → `/multiplayer/` | Pensado para 2-4 jugadores compartiendo **una sola pantalla/dispositivo** ("Juega en la misma pantalla", `src/public/multiplayer/index.html:18-19`). No sirve para una clase con un dispositivo por alumno. |
+| **"Solo"** | `startSolo(quiz.id)` → `/solo/` | Modo individual, para practicar fuera de clase (ver también los [enlaces directos al modo Solo](README.md) del README). No es un modo de grupo. |
+
+Para una clase con muchos alumnos, cada uno con su propio dispositivo, la
+única opción correcta hoy es **"Jugar en el aula"**.
+
+## Avance de pregunta: ¿automático o manual?
+
+**Hoy no existe ninguna opción para que las preguntas avancen solas.** No
+hay ningún toggle ni en el creador del quiz (`src/public/create/index.html`,
+`src/public/js/quizCreator.js`) ni en la pantalla de host
+(`src/public/host/index.html`, `src/public/js/host.js`) para activar un
+avance automático.
+
+Lo que sí es automático es el **cierre de una pregunta**:
+- Si todos los jugadores responden antes de tiempo, el servidor lo detecta
+  (`playersAnswered === playerNum.length`, `src/server/server.js:3692-3697`)
+  y muestra resultados.
+- Si se acaba el tiempo, el host emite `timeUp` y el servidor hace lo mismo
+  (`src/server/server.js:3725-3747`).
+
+Pero eso solo abre la pantalla de resultados/ranking. **Pasar a la pregunta
+siguiente requiere siempre una acción explícita del profesor**: pulsar el
+botón "Siguiente pregunta" (o la tecla Enter) en ese modal
+(`handleResultsModalNext()` → `nextQuestion()`, `src/public/js/hostGame.js:983-1007,1263`),
+lo que emite el evento de Socket.IO `nextQuestion`. El servidor solo avanza
+la pregunta dentro de ese handler (`socket.on('nextQuestion', ...)`,
+`src/server/server.js:3773-3882`) — no existe ningún temporizador en el
+servidor que dispare ese avance por sí solo.
+
+En resumen: en el modo "Jugar en el aula", el profesor tiene que estar
+pendiente de pulsar "Siguiente pregunta" después de cada pregunta. Un modo
+"autoritmo" (cada alumno avanza solo) o un modo de presentación que avance
+sin intervención del profesor son mejoras pendientes, no implementadas
+todavía — están recogidas en `POPULAR_FEATURES.md` ("Modo autoritmo
+(self-paced)" y "Modo 'presentación' híbrido").
