@@ -3,6 +3,8 @@
 Versió actual del paquet: [1.0.5](RELEASE-1.0.5.md), amb proves automàtiques
 d'idiomes (`cd src` i `npm run test:i18n`; preparació en les notes de versió).
 
+Imatge Docker i publicació en GitHub: [documentació](docs/DOCKER.md).
+
 ## Valencià
 
 **EduHoot** és una aplicació tipus Kahoot per a l’aula: pots crear, importar i llançar qüestionaris amb imatges, vídeos i temps configurables. Admet CSV (inclosos els generats per IA) i importació de Kahoot públic. Està inspirada i reutilitza idees de [llixhoot](https://github.com/llixhoot/llixhoot), [llixhoot en lliurex](https://github.com/lliurex/llixhoot) i [qplay](https://github.com/jjdeharo/qplay).
