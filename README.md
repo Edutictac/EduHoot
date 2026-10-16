@@ -1,6 +1,6 @@
 # EduHoot
 
-Versió actual del paquet: [1.0.5](RELEASE-1.0.5.md), amb proves automàtiques
+Versió actual del paquet: [1.0.7](CHANGELOG.md), amb proves automàtiques
 d'idiomes (`cd src` i `npm run test:i18n`; preparació en les notes de versió).
 
 ## Valencià
