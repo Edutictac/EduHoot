@@ -5042,10 +5042,11 @@ app.post('/api/auth/request-reset', authRateLimiter, async (req, res) => {
         { _id: user._id },
         { $set: { resetTokenHash: tokenHash, resetExpires: expires }, $unset: { resetToken: '' } }
       );
-      if (process.env.NODE_ENV === 'production') {
-        console.log(`[password-reset] Token generado para ${email} (caduca ${expires.toISOString()})`);
-      } else {
+      // El token solo se muestra en desarrollo local; en cualquier otro entorno no se registra ni token ni email.
+      if (process.env.NODE_ENV === 'development') {
         console.log(`[password-reset] Para ${email} usa el token: ${token} (caduca ${expires.toISOString()})`);
+      } else {
+        console.log(`[password-reset] Token generado (caduca ${expires.toISOString()})`);
       }
     }
     // responder genérico para no filtrar emails
