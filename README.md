@@ -50,6 +50,12 @@ En la pantalla de create, el bloc d'alta ràpida mostra només el botó de Googl
 - Control de visibilitat (privat, per enllaç, públic) i permisos de clonació.
 - Botó de “Saltar pregunta” i marcador de progrés.
 - Recuperació ràpida de jugadors quan la connexió cau.
+- Tres modes de joc: **Jugar a l’aula** (amb PIN), **Multijugador**
+  (pantalla compartida) i **Solo** (individual, al teu ritme).
+- L’alumnat s’uneix amb un nom lliure i una icona; l’amfitrió avança les
+  preguntes a mà, no hi ha avanç automàtic.
+- Informe de partida en CSV, i exportació del banc de preguntes a Moodle
+  XML per a AULES.
 
 Vols saber amb detall com funciona cada funcionalitat (modes de joc, avanç
 de preguntes, informe CSV...)? Consulta [FEATURES.md](FEATURES.md).
@@ -173,6 +179,12 @@ Flujo recomendado:
 - Control de visibilidad (privado, por enlace, público) y permisos para clonar.
 - Botón de “Saltar pregunta” y contador de progreso.
 - Reincorporación ágil de jugadores si se cae la conexión.
+- Tres modos de juego: **Jugar en el aula** (con PIN), **Multijugador**
+  (pantalla compartida) y **Solo** (individual, a tu ritmo).
+- El alumnado se une con un nombre libre y un icono; el profesorado avanza
+  las preguntas a mano, no hay avance automático.
+- Informe de partida en CSV, y exportación del banco de preguntas a Moodle
+  XML para AULES.
 
 ¿Quieres saber en detalle cómo funciona cada funcionalidad (modos de
 juego, avance de preguntas, informe CSV...)? Consulta [FEATURES.md](FEATURES.md).
@@ -255,6 +267,12 @@ Recommended flow:
 - Visibility controls (private, by link, public) with clone permissions.
 - “Skip question” button and progress tracking.
 - Fast player rejoin if the connection drops.
+- Three game modes: **Classroom** (with a PIN), **Multiplayer** (shared
+  screen), and **Solo** (individual, self-paced).
+- Students join with a free-text name and an icon; the teacher advances
+  questions manually — there's no auto-advance.
+- CSV game report, plus exporting the question bank to Moodle XML for
+  Moodle/AULES.
 
 Want the full details on how each feature works (game modes, question
 advancing, CSV report...)? See [FEATURES.md](FEATURES.md).
