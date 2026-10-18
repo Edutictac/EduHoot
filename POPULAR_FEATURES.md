@@ -546,7 +546,7 @@ realista, no només una llista d'idees.
 ### Fase 0 — Habilitadors (requisits, no una recomanació)
 
 Separar responsabilitats de `server.js` i tindre recàrrega automàtica en
-desenvolupament haurien de ser **requisits per a començar la Fase 2**, no
+desenvolupament haurien de ser **requisits per a començar la següent fase**, no
 un suggeriment ajornable:
 
 - Entorn de desenvolupament amb recàrrega automàtica (`docs/DEV_DOCKER_SETUP.md`).
@@ -665,3 +665,11 @@ la numeració 1-32 de dalt.
   del mode Solo passa sola al qualificador. Només cobrix Solo, no
   "Jugar a l'aula". Relació amb la **21**: via complementària, no
   ampliació del mateix mecanisme.
+- **W5 — Personalització d'opcions per jugador o grup de jugadors.**
+  Poder ajustar paràmetres de la partida (p. ex. el temps límit) de
+  forma diferenciada per a certs participants o grups, en lloc d'un
+  únic valor per a tota la classe (p. ex. llevar el límit de temps a
+  l'alumnat amb necessitats educatives especials). Inclou també
+  ajustos d'accessibilitat per alumne o grup concret (lectura en veu
+  alta, alt contrast, tipografia per a dislèxia...), a l'estil de les
+  "Accommodations" de Wayground.
