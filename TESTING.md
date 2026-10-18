@@ -1,122 +1,123 @@
-# Cómo probar cambios en desarrollo
+# Com provar canvis en desenvolupament
 
-Documento único con todo lo necesario para probar un cambio en EduHoot
-antes de darlo por bueno: cómo arrancar la app, qué comandos de test existen,
-qué cubre cada uno, y cómo probar manualmente cada modo de juego en el
-navegador. 
+Document únic amb tot el necessari per a provar un canvi en EduHoot abans
+de donar-lo per bo: com arrancar l'app, quines ordes de test existeixen,
+què cobrix cada una, i com provar manualment cada mode de joc en el
+navegador.
 
-Todos los comandos se ejecutan desde `src/`.
+Totes les ordes s'executen des de `src/`.
 
-## Resumen rápido
+## Resum ràpid
 
 ```bash
 cd src
 npm ci                                      # o npm install
-npx playwright install --with-deps chromium # solo la primera vez / tras actualizar Playwright
-npm run lint                                # comprobación de sintaxis
-npm test                                    # tests unitarios + integración
+npx playwright install --with-deps chromium # només la primera vegada / després d'actualitzar Playwright
+npm run lint                                # comprovació de sintaxi
+npm test                                    # tests unitaris + integració
 npm run test:i18n                           # tests de navegador (Playwright)
 ```
 
-Este es también el orden exacto que usa la CI de GitHub Actions
-(`.github/workflows/tests.yml`, con Node 24).
+Este és també l'orde exacte que usa la CI de GitHub Actions
+(`.github/workflows/tests.yml`, amb Node 24).
 
-## Arrancar la app para probarla a mano
+## Arrancar l'app per a provar-la a mà
 
-1. MongoDB corriendo en `127.0.0.1:27017` (`sudo systemctl start mongod`), o
-   `MONGO_URL` apuntando a otra instancia.
+1. MongoDB funcionant en `127.0.0.1:27017` (`sudo systemctl start mongod`), o
+   `MONGO_URL` apuntant a una altra instància.
 2. `cd src && npm install`
 3. `node server/server.js`
-4. Abrir `http://localhost:3000/create/`.
+4. Obrir `http://localhost:3000/create/`.
 
-No hay script `start` ni `dev` en `package.json` todavía — ver
-`docs/DOCKER_HOWTO.md` para una propuesta (aún sin implementar) de entorno de
-desarrollo con recarga automática.
+No hi ha script `start` ni `dev` en `package.json` encara — vore
+`docs/DEV_DOCKER_SETUP.md` per a una proposta (encara sense implementar)
+d'entorn de desenvolupament amb recàrrega automàtica.
 
-## Tests automáticos
+## Tests automàtics
 
-> **¿Qué es Playwright?** Es una herramienta de Microsoft para probar
-> aplicaciones web automatizando un navegador real (en este proyecto,
-> Chrome) sin que nadie tenga que hacer clic a mano: abre la página,
-> navega, rellena campos, pulsa botones y comprueba que lo que aparece en
-> pantalla es lo esperado. A diferencia de `npm test` (que prueba funciones
-> y la API del servidor directamente), Playwright prueba la aplicación
-> "desde fuera", igual que la vería una persona real usando el navegador.
-> En EduHoot se usa solo para `npm run test:i18n` (cambio de idioma y
-> estado de sesión), ejecutando cada test dos veces: una emulando escritorio
-> y otra emulando un móvil (`src/playwright.config.js`).
+> **Què és Playwright?** És una ferramenta de Microsoft per a provar
+> aplicacions web automatitzant un navegador real (en este projecte,
+> Chrome) sense que ningú haja de fer clic a mà: obri la pàgina, navega,
+> emplena camps, prem botons i comprova que allò que apareix en pantalla
+> és l'esperat. A diferència de `npm test` (que prova funcions i l'API
+> del servidor directament), Playwright prova l'aplicació "des de fora",
+> igual que la veuria una persona real usant el navegador. En EduHoot
+> s'usa només per a `npm run test:i18n` (canvi d'idioma i estat de
+> sessió), executant cada test dos vegades: una emulant escriptori i
+> l'altra emulant un mòbil (`src/playwright.config.js`).
 
-| Comando | Qué ejecuta | Necesita Mongo real | Necesita algo más |
+| Orde | Què executa | Necessita Mongo real | Necessita alguna cosa més |
 |---|---|---|---|
-| `npm test` | `node --test "test/**/*.test.js"` (todo: unit + integration) | No | — |
-| `npm run test:unit` | Solo `test/unit/*.test.js` | No | — |
-| `npm run test:integration` | Solo `test/integration/*.test.js` | No | — |
-| `npm run test:i18n` | `playwright test` sobre `test/browser/*.spec.js` | No | `npx playwright install --with-deps chromium`, y `python3` en el `PATH` |
-| `npm run lint` | `node scripts/lint.js`: recorre `server/` y `public/js/` y valida la sintaxis de cada fichero con `node --check` | No | — |
+| `npm test` | `node --test "test/**/*.test.js"` (tot: unit + integració) | No | — |
+| `npm run test:unit` | Només `test/unit/*.test.js` | No | — |
+| `npm run test:integration` | Només `test/integration/*.test.js` | No | — |
+| `npm run test:i18n` | `playwright test` sobre `test/browser/*.spec.js` | No | `npx playwright install --with-deps chromium`, i `python3` en el `PATH` |
+| `npm run lint` | `node scripts/lint.js`: recorre `server/` i `public/js/` i valida la sintaxi de cada fitxer amb `node --check` | No | — |
 
-Ninguno de los tests (`test`, `test:unit`, `test:integration`, `test:i18n`)
-requiere un Mongo real: `test/integration/*.test.js` levanta un Mongo en
-memoria con `mongodb-memory-server` (devDependency) y arranca el servidor
-Express en un puerto aleatorio (`app.listen(0)`). `test:i18n` ni siquiera
-arranca el servidor Node: Playwright sirve los estáticos de `public/` con
-`python3 -m http.server 18090` (ver `src/playwright.config.js`), con dos
-proyectos de navegador — `desktop` (Chrome de escritorio) y `mobile`
-(emulación Pixel 7).
+Cap dels tests (`test`, `test:unit`, `test:integration`, `test:i18n`)
+requerix un Mongo real: `test/integration/*.test.js` alça un Mongo en
+memòria amb `mongodb-memory-server` (devDependency) i arranca el servidor
+Express en un port aleatori (`app.listen(0)`). `test:i18n` ni tan sols
+arranca el servidor Node: Playwright servix els estàtics de `public/` amb
+`python3 -m http.server 18090` (vore `src/playwright.config.js`), amb dos
+projectes de navegador — `desktop` (Chrome d'escriptori) i `mobile`
+(emulació Pixel 7).
 
-`lint` **no** es ESLint ni un linter de estilo: es un script propio mínimo
-que solo comprueba que cada fichero JS del backend (`server/`) y del
-frontend (`public/js/`) tenga sintaxis válida (`node --check`). No detecta
-problemas de estilo, variables sin usar, etc.
+`lint` **no** és ESLint ni un linter d'estil: és un script propi mínim
+que només comprova que cada fitxer JS del backend (`server/`) i del
+frontend (`public/js/`) tinga sintaxi vàlida (`node --check`). No detecta
+problemes d'estil, variables sense usar, etc.
 
-### Qué cubre cada carpeta de test
+### Què cobrix cada carpeta de test
 
-- **`test/unit/`** — lógica aislada sin servidor HTTP: idiomas
-  (`language.test.js`), importación de CSV (`importCsv.test.js`), gestión
-  de jugadores (`players.test.js`), utilidades de preguntas
-  (`questionUtils.test.js`), partidas en vivo (`liveGames.test.js`).
-- **`test/integration/`** — levanta el servidor Express real (con Mongo en
-  memoria) y prueba la API HTTP de extremo a extremo: `api.test.js`,
-  `sessionReport.test.js`, y los más recientes `auth-migration.test.js` y
-  `authentik.test.js` (migración de cuentas a Authentik).
-- **`test/browser/`** — tests de navegador con Playwright: `language.spec.js`
-  (cambio de idioma) y el más reciente `auth-state.spec.js` (estado de
-  sesión tras la migración a Authentik).
+- **`test/unit/`** — lògica aïllada sense servidor HTTP: idiomes
+  (`language.test.js`), importació de CSV (`importCsv.test.js`), gestió
+  de jugadors (`players.test.js`), utilitats de preguntes
+  (`questionUtils.test.js`), partides en directe (`liveGames.test.js`).
+- **`test/integration/`** — alça el servidor Express real (amb Mongo en
+  memòria) i prova l'API HTTP d'extrem a extrem: `api.test.js`,
+  `sessionReport.test.js`, i els més recents `auth-migration.test.js` i
+  `authentik.test.js` (migració de comptes a Authentik).
+- **`test/browser/`** — tests de navegador amb Playwright: `language.spec.js`
+  (canvi d'idioma) i el més recent `auth-state.spec.js` (estat de sessió
+  després de la migració a Authentik).
 
-### Scripts puntuales que NO son parte del flujo de test estándar
+### Scripts puntuals que NO són part del flux de test estàndard
 
-Estos no se ejecutan con `npm test` ni en la CI; son herramientas manuales
-para tareas concretas de administración/migración, no pruebas automáticas:
+Estos no s'executen amb `npm test` ni en la CI; són ferramentes manuals
+per a tasques concretes d'administració/migració, no proves automàtiques:
 
-- `scripts/configure-authentik-migration.py` — configura la migración de
-  cuentas a Authentik.
-- `scripts/test-authentik-google-verification.py` — verifica manualmente
-  la vinculación de Google dentro de Authentik.
-- `scripts/normalize-tags.js` (`npm run normalize-tags`) — normaliza
-  etiquetas de quizzes existentes en la base de datos.
+- `scripts/configure-authentik-migration.py` — configura la migració de
+  comptes a Authentik.
+- `scripts/test-authentik-google-verification.py` — verifica manualment
+  la vinculació de Google dins d'Authentik.
+- `scripts/normalize-tags.js` (`npm run normalize-tags`) — normalitza
+  etiquetes de qüestionaris existents en la base de dades.
 
-## Pruebas manuales en el navegador
+## Proves manuals en el navegador
 
-Para comprobar un cambio "a ojo" después de arrancar el servidor
-(ver [Arrancar la app](#arrancar-la-app-para-probarla-a-mano)):
+Per a comprovar un canvi "a ull" després d'arrancar el servidor
+(vore [Arrancar l'app](#arrancar-lapp-per-a-provar-la-a-mà)):
 
-- **Crear/editar un quiz**: `http://localhost:3000/create/`
-- **Jugar en el aula** (host + varios dispositivos/pestañas como jugador,
-  el modo real de clase): botón "Jugar en el aula" desde la biblioteca →
-  `/host/`, y unirse desde `/join` con el PIN. Ver el detalle de este y los
-  otros modos en [FEATURES.md → Modos de juego](FEATURES.md#modos-de-juego).
-- **Multijugador** (pantalla compartida, 2-4 jugadores): botón
+- **Crear/editar un qüestionari**: `http://localhost:3000/create/`
+- **Jugar a l'aula** (amfitrió + diversos dispositius/pestanyes com a
+  jugador, el mode real de classe): botó "Jugar a l'aula" des de la
+  biblioteca → `/host/`, i unir-se des de `/join` amb el PIN. Vore el
+  detall d'este i la resta de modes en
+  [FEATURES.md → Modos de juego](FEATURES.md#modos-de-juego).
+- **Multijugador** (pantalla compartida, 2-4 jugadors): botó
   "Multijugador" → `/multiplayer/`.
-- **Solo** (modo individual): botón "Solo" → `/solo/`, o enlaces directos
-  como `/solo/?id=<quizId>` o `/solo/?tag=musica` (ver `README.md`).
+- **Solo** (mode individual): botó "Solo" → `/solo/`, o enllaços directes
+  com `/solo/?id=<quizId>` o `/solo/?tag=musica` (vore `README.md`).
 
-Para probar cambios de idioma, usar el selector de idioma de la interfaz o
-añadir `?lang=va|es|en` a la URL.
+Per a provar canvis d'idioma, usar el selector d'idioma de la interfície o
+afegir `?lang=va|es|en` a la URL.
 
-## Antes de etiquetar una versión (checklist)
+## Abans d'etiquetar una versió (checklist)
 
-Equivalente a lo que hacían las secciones "Comprovacions" de
-`RELEASE-1.0.2.md`/`RELEASE-1.0.5.md`, pero como referencia única y
-reutilizable para cualquier versión futura:
+Equivalent a allò que feien les seccions "Comprovacions" de
+`RELEASE-1.0.2.md`/`RELEASE-1.0.5.md`, però com a referència única i
+reutilitzable per a qualsevol versió futura:
 
 ```bash
 cd src
@@ -128,7 +129,8 @@ npm run test:i18n
 npm audit
 ```
 
-Si el cambio afecta a sesiones/autenticación, ejecutar también de forma
-manual el flujo de login afectado (Google, Authentik) en local antes de
-publicar, ya que los tests automáticos de `authentik.test.js`/
-`auth-state.spec.js` cubren casos concretos, no toda la superficie de la UI.
+Si el canvi afecta a sessions/autenticació, executar també de forma
+manual el flux de login afectat (Google, Authentik) en local abans de
+publicar, ja que els tests automàtics d'`authentik.test.js`/
+`auth-state.spec.js` cobrixen casos concrets, no tota la superfície de la
+interfície.

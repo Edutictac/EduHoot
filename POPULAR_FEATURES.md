@@ -457,7 +457,7 @@ full de ruta més avall.)
 Esta secció creua les 31 propostes anteriors amb la resta de la
 documentació del repositori (`PROXIMAS_MEJORAS_PLAN.md`,
 `PLAN_ESTABILIDAD_SESION.md`, `REVISION_MEJORAS.md`, els documents de
-migració a Authentik, `FEATURES.md`, `TESTING.md`, `docs/DOCKER_HOWTO.md`,
+migració a Authentik, `FEATURES.md`, `TESTING.md`, `docs/DEV_DOCKER_SETUP.md`,
 `docs/DOCKER.md`, `CHANGELOG.md`) per a fixar un orde de treball
 realista, no només una llista d'idees.
 
@@ -498,7 +498,7 @@ realista, no només una llista d'idees.
   recolzar-se en eixa base sense preocupar-se primer per la reconnexió
   bàsica.
 - **No hi ha entorn de desenvolupament amb recàrrega automàtica.**
-  `docs/DOCKER_HOWTO.md` continua sent només una guia de disseny; hui
+  `docs/DEV_DOCKER_SETUP.md` continua sent només una guia de disseny; hui
   cada canvi exigix reiniciar `node server/server.js` a mà.
   Implementar-ho abans de començar diverses propostes accelera la
   iteració de totes les fases següents.
@@ -549,7 +549,7 @@ Separar responsabilitats de `server.js` i tindre recàrrega automàtica en
 desenvolupament haurien de ser **requisits per a començar la Fase 2**, no
 un suggeriment ajornable:
 
-- Entorn de desenvolupament amb recàrrega automàtica (`docs/DOCKER_HOWTO.md`).
+- Entorn de desenvolupament amb recàrrega automàtica (`docs/DEV_DOCKER_SETUP.md`).
 - Separar del monòlit `server.js` almenys la lògica de tipus de pregunta,
   abans d'afegir els tipus nous de la Fase 2.
 - Deixar que la migració a Authentik es tanque abans de tocar codi

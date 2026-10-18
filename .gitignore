@@ -13,3 +13,4 @@ src/logs/
 
 # Directorios y ficheros para trabajar en local
 .local
+AGENTS.md

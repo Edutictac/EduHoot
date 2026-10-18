@@ -14,7 +14,9 @@
   - [4. `.env.example` (raïl) + entrada en `.gitignore`](#4-envexample-raïl--entrada-en-gitignore)
   - [5. Punter en `README.md`](#5-punter-en-readmemd)
 - [Per què estes decisions de disseny](#per-què-estes-decisions-de-disseny)
+- [Posada en marxa del dia a dia (una vegada implementat)](#posada-en-marxa-del-dia-a-dia-una-vegada-implementat)
 - [Verificació d'extrem a extrem (una vegada implementat)](#verificació-dextrem-a-extrem-una-vegada-implementat)
+- [Pròxim pas: Pull Request](#pròxim-pas-pull-request)
 
 ## Objectiu
 
@@ -136,7 +138,7 @@ Afegir `.env` a `.gitignore` (hui només està exclòs en `.dockerignore`) per a
 
 Afegir una línia en cada bloc d'"Inici ràpid" (valencià ~línia 17, castellà ~línia 83, English ~línia 189) apuntant a este document (o a un `DOCKER.md` final), per exemple en castellà:
 
-> 5. Alternativa con Docker: consulta [docs/DOCKER_HOWTO.md](docs/DOCKER_HOWTO.md) para desarrollar sin instalar Node ni MongoDB localmente.
+> 5. Alternativa con Docker: consulta [docs/DEV_DOCKER_SETUP.md](docs/DEV_DOCKER_SETUP.md) para desarrollar sin instalar Node ni MongoDB localmente.
 
 ## Per què estes decisions de disseny
 
@@ -153,6 +155,24 @@ Afegir una línia en cada bloc d'"Inici ràpid" (valencià ~línia 17, castellà
 - **Volum anomenat per a `node_modules`**: el bind mount `./src:/app` tapa tot `/app`, inclòs el `node_modules` instal·lat durant la construcció de la imatge. Sense un volum anomenat a banda muntat sobre `/app/node_modules`, les dependències desapareixerien en arrancar el contenidor.
 - **`.env` només per a variables opcionals**: `MONGO_URL`, `HOST`, `PORT`, `NODE_ENV` van fixos en el compose perquè són necessaris sempre dins de la xarxa Docker. El `.env` en la raïl només servix perquè Compose substituïsca `${VAR}` dins del propi `docker-compose.yml` (no hi ha `dotenv` instal·lat, així que no el llig directament el procés de Node).
 
+## Posada en marxa del dia a dia (una vegada implementat)
+
+Una vegada existisquen els fitxers de la secció anterior, el flux habitual
+per a treballar cada dia és:
+
+```bash
+cp .env.example .env          # només la primera vegada, i omplir el que calga
+docker compose up --build     # primera vegada, o quan canvie Dockerfile.dev/package.json
+docker compose up             # la resta de vegades (ja no cal --build)
+```
+
+- Obri `http://localhost:3000/create/`.
+- Edita codi en `src/` amb normalitat: `node --watch` reinicia el servidor
+  sol dins del contenidor (veure's en `docker compose logs -f app`).
+- Per a parar-ho: `Ctrl+C`, o `docker compose down` en una altra terminal
+  (manté les dades de Mongo). `docker compose down -v` esborra també el
+  volum de Mongo (torna a un estat net).
+
 ## Verificació d'extrem a extrem (una vegada implementat)
 
 1. `docker compose config` — valida la sintaxi i la resolució de variables.
@@ -162,3 +182,22 @@ Afegir una línia en cada bloc d'"Inici ràpid" (valencià ~línia 17, castellà
 5. Editar `src/server/server.js` (p. ex. un `console.log` temporal) amb l'estiba alçada i veure en `docker compose logs -f app` que `node --watch` reinicia sol, sense necessitat de `--build`.
 6. Pujar una imatge en crear un qüestionari i comprovar que apareix en `src/public/uploads/quiz-images/` en l'amfitrió.
 7. `docker compose down -v` al finalitzar, per a netejar els volums de prova.
+
+## Pròxim pas: Pull Request
+
+Una vegada el canvi funciona en l'entorn de desenvolupament i passa
+`npm run lint` i `npm test` (vore [`TESTING.md`](../TESTING.md)), el pas
+següent **no** és desplegar-ho directament: és obrir un Pull Request cap a
+la branca `main` del repositori principal (`Edutictac/EduHoot`), perquè
+algú el revise abans de fusionar-lo.
+
+```bash
+git push <el-teu-remot> <la-teua-branca>
+gh pr create --repo Edutictac/EduHoot --base main \
+  --head <el-teu-usuari>:<la-teua-branca> \
+  --title "..." --body "..."
+```
+
+Una vegada fusionat a `main`, el següent pas del mateix camí (abans de
+producció) és validar-ho en l'entorn de preproducció descrit en
+[`STAGE_SETUP.md`](../STAGE_SETUP.md).
