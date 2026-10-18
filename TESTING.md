@@ -30,7 +30,7 @@ Este es también el orden exacto que usa la CI de GitHub Actions
 4. Abrir `http://localhost:3000/create/`.
 
 No hay script `start` ni `dev` en `package.json` todavía — ver
-`DOCKER_HOWTO.md` para una propuesta (aún sin implementar) de entorno de
+`docs/DOCKER_HOWTO.md` para una propuesta (aún sin implementar) de entorno de
 desarrollo con recarga automática.
 
 ## Tests automáticos

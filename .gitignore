@@ -10,3 +10,6 @@ node_modules/
 src/test-results/
 src/playwright-report/
 src/logs/
+
+# Directorios y ficheros para trabajar en local
+.local
