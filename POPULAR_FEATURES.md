@@ -1,5 +1,7 @@
 # Funcionalitats populars per a EduHoot
 
+## Introducció
+
 Llistat unificat a partir d'una anàlisi de 20 propostes inspirades en
 Kahoot i 20 propostes inspirades en Wayground, fusionant les que
 representen la mateixa idea de fons encara que cada plataforma li done un
@@ -8,6 +10,20 @@ Wayground es compten com una sola proposta). Resultat: **31 propostes
 úniques** (de les 40 originals, 9 parelles es van fusionar en 9 propostes
 "Ambdues"), més la **proposta 32**, afegida després en separar de la 15 la
 part que crida a un proveïdor d'IA extern (vore nota 5 de la taula).
+
+## Lectura d'este resum
+
+Kahoot i Wayground són les dos plataformes educatives més usades del
+sector: la seua popularitat és un senyal fiable de quines funcionalitats
+valora de veritat el professorat i l'alumnat. Però eixa popularitat no
+basta per si sola: el criteri pedagògic és el que decidix finalment si
+una proposta avança, s'aparca o es descarta, per damunt de lo popular que
+siga en Kahoot/Wayground.
+
+De les 9 propostes marcades com «Ambdues»: 5 (avatars) queda aparcada; 18
+i 22 queden descartades per protecció de dades; 4 (power-ups) continua
+avant amb l'abast reduït (sense "robar punts"); i 1, 6, 7, 13 i 20 queden
+confirmades com a prioritat alta, combinant popularitat i valor pedagògic.
 
 ## Llegenda
 
@@ -408,20 +424,6 @@ full de ruta més avall.)
   pregunta ordenar/emparellar, autoritme, modes arcade, IA nativa, tipus
   de pregunta addicionals, informe de progrés, lliçons interactives,
   Google Classroom, insígnies, matchmaking.
-
-## Lectura d'este resum
-
-Kahoot i Wayground són les dos plataformes educatives més usades del
-sector: la seua popularitat és un senyal fiable de quines funcionalitats
-valora de veritat el professorat i l'alumnat. Però eixa popularitat no
-basta per si sola: el criteri pedagògic és el que decidix finalment si
-una proposta avança, s'aparca o es descarta, per damunt de lo popular que
-siga en Kahoot/Wayground.
-
-De les 9 propostes marcades com «Ambdues»: 5 (avatars) queda aparcada; 18
-i 22 queden descartades per protecció de dades; 4 (power-ups) continua
-avant amb l'abast reduït (sense "robar punts"); i 1, 6, 7, 13 i 20 queden
-confirmades com a prioritat alta, combinant popularitat i valor pedagògic.
 
 ## Full de ruta d'implementació
 
