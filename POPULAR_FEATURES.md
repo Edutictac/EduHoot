@@ -1,5 +1,27 @@
 # Funcionalitats populars per a EduHoot
 
+## Índex
+
+- [Introducció](#introducció)
+- [Lectura d'este resum](#lectura-deste-resum)
+- [Llegenda](#llegenda)
+- [Criteri pedagògic](#criteri-pedagògic)
+- [Llistat de propostes](#llistat-de-propostes)
+  - [Notes de la taula](#notes-de-la-taula)
+- [Descripció detallada de cada proposta](#descripció-detallada-de-cada-proposta)
+- [Resum per origen](#resum-per-origen)
+- [Resum per dificultat](#resum-per-dificultat)
+- [Full de ruta d'implementació](#full-de-ruta-dimplementació)
+  - [Troballes que condicionen l'orde](#troballes-que-condicionen-lorde)
+  - [Fase 0 — Habilitadors (requisits, no una recomanació)](#fase-0--habilitadors-requisits-no-una-recomanació)
+  - [Fase 1a — Millores cosmètiques/aïllades, sense tocar la lògica de joc](#fase-1a--millores-cosmètiquesaïllades-sense-tocar-la-lògica-de-joc)
+  - [Fase 1b — Mecàniques de Solo/amfitrió, sense tocar l'arquitectura del cicle de partida](#fase-1b--mecàniques-de-soloamfitrió-sense-tocar-larquitectura-del-cicle-de-partida)
+  - [Fase 2 — Mecàniques de joc de major abast, però autocontingudes](#fase-2--mecàniques-de-joc-de-major-abast-però-autocontingudes)
+  - [Fase 3 — Canvi d'arquitectura del cicle de partida](#fase-3--canvi-darquitectura-del-cicle-de-partida)
+  - [Fase 4 — Integracions externes o de baixa prioritat per escala](#fase-4--integracions-externes-o-de-baixa-prioritat-per-escala)
+  - [Aparcades](#aparcades)
+  - [Descartades](#descartades)
+
 ## Introducció
 
 Llistat unificat a partir d'una anàlisi de 20 propostes inspirades en
