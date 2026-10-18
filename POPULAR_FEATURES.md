@@ -21,6 +21,7 @@
   - [Fase 4 — Integracions externes o de baixa prioritat per escala](#fase-4--integracions-externes-o-de-baixa-prioritat-per-escala)
   - [Aparcades](#aparcades)
   - [Descartades](#descartades)
+- [Llista de desitjos](#llista-de-desitjos)
 
 ## Introducció
 
@@ -368,6 +369,10 @@ el context, que ja estan en la taula).
     companys) · ➖ Inclusió: Neutra → sense canvis; nota positiva: al
     comparar contra un mateix en lloc de contra companys, és
     pedagògicament més sa que un rànquing competitiu.
+    **Acotació d'abast:** la "millor marca" es guarda només en
+    `localStorage` del navegador (mai en el servidor ni lligada a una
+    identitat), així que no hi ha dada personal a tractar, a diferència
+    de 18 i 22.
 
 27. 🟦 **Wayground** — Mode "presentació" híbrid (projecció + ritme
     individual) — 🟡 Mitjana
@@ -634,3 +639,29 @@ dades. 29 no encaixa en un context escolar supervisat: exposaria
 l'alumnat a jugar contra desconeguts fora del control del docent. 28 es
 descarta per decisió de producte, sense que el criteri mecànic ho
 exigira.
+
+## Llista de desitjos
+
+Idees pròpies, no derivades de la comparativa amb Kahoot/Wayground ni de
+l'anàlisi d'altres plataformes ([`PLATFORMS_ANALYSIS.md`](docs/PLATFORMS_ANALYSIS.md)),
+i encara no analitzades amb el criteri pedagògic complet ni incloses en
+cap fase del full de ruta. Es numeren amb prefix "W" per a no xocar amb
+la numeració 1-32 de dalt.
+
+- **W1 — Temes visuals seleccionables pel professorat.** Poder triar un
+  tema (paleta de colors/estil) per al quiz o la sessió, triat pel
+  compte autenticat (professorat), no per l'alumnat que s'uneix com a
+  jugador.
+- **W2 — Millores de disseny i usabilitat.** Revisió general de la
+  interfície (amfitrió, jugador, creació de quiz) després d'un estudi
+  dedicat, no lligada a cap funcionalitat concreta de la llista
+  anterior.
+- **W3 — Internacionalització a més idiomes.** Ampliar els idiomes
+  disponibles més enllà de valencià, castellà i anglés (francés,
+  alemany, holandés, i altres a decidir).
+- **W4 — Paquet SCORM per al mode Solo, amb pas automàtic de la nota a
+  Moodle/AULES.** El professorat puja un paquet SCORM al seu curs
+  (sense dependre d'LTI, que AULES no té habilitat), i la nota final
+  del mode Solo passa sola al qualificador. Només cobrix Solo, no
+  "Jugar a l'aula". Relació amb la **21**: via complementària, no
+  ampliació del mateix mecanisme.

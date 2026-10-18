@@ -15,6 +15,7 @@ funcionamiento del proyecto.
 
 - [Unión a la partida: nombre e icono del jugador](#unión-a-la-partida-nombre-e-icono-del-jugador)
 - [Informe de partida (descarga en CSV)](#informe-de-partida-descarga-en-csv)
+- [Exportación a Moodle XML](#exportación-a-moodle-xml)
 - [Modos de juego](#modos-de-juego)
 - [Avance de pregunta: ¿automático o manual?](#avance-de-pregunta-automático-o-manual)
 
@@ -88,6 +89,30 @@ El CSV mezcla dos niveles de información en el mismo fichero:
 que calcularlo a partir de `aciertos` / `preguntasTotales` en una hoja de
 cálculo (por ejemplo, con una fórmula `=aciertos/preguntasTotales` por fila
 de alumno).
+
+## Exportación a Moodle XML
+
+Cada quiz de la biblioteca (`/create/`) tiene, junto al botón de descarga en
+CSV, un botón con el icono de Moodle (`src/public/js/create.js:2046`,
+función `downloadMoodleXml()` en la línea 2396) que descarga ese mismo quiz
+convertido al formato Moodle XML, listo para importarlo al banco de
+preguntas de Moodle/AULES y montar ahí un "Cuestionario" nativo.
+
+- **Endpoint**: `GET /api/quizzes/:id/moodle-xml` (`src/server/server.js:2901`),
+  que llama a la función `quizToMoodleXml()` (línea 1095).
+- **Tipos de pregunta que convierte**: opción múltiple de una o varias
+  respuestas correctas (`multichoice`), verdadero/falso (`truefalse`),
+  respuesta corta (`shortanswer`) y numérica con tolerancia (`numerical`).
+  El enunciado y las respuestas se exportan en HTML.
+- **Qué no incluye**: esto exporta solo el banco de preguntas, no la
+  partida en sí. En Moodle/AULES el alumno resolvería el cuestionario de
+  forma independiente, sin la mecánica de juego de EduHoot (marcador,
+  ritmo marcado por el profesor, PIN, etc.) ni paso automático de la nota
+  a EduHoot.
+
+Esta función no requiere que el centro habilite nada a nivel de servidor
+(a diferencia de una integración LTI): el profesorado solo necesita poder
+importar un fichero XML al banco de preguntas de su propio curso.
 
 ## Modos de juego
 
