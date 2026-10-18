@@ -58,7 +58,7 @@ En la pantalla de create, el bloc d'alta ràpida mostra només el botó de Googl
   XML per a AULES.
 
 Vols saber amb detall com funciona cada funcionalitat (modes de joc, avanç
-de preguntes, informe CSV...)? Consulta [FEATURES.md](FEATURES.md).
+de preguntes, informe CSV...)? Consulta [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ### Actualitzacions recents
 
@@ -187,7 +187,7 @@ Flujo recomendado:
   XML para AULES.
 
 ¿Quieres saber en detalle cómo funciona cada funcionalidad (modos de
-juego, avance de preguntas, informe CSV...)? Consulta [FEATURES.md](FEATURES.md).
+juego, avance de preguntas, informe CSV...)? Consulta [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ### Actualizaciones recientes
 
@@ -275,7 +275,7 @@ Recommended flow:
   Moodle/AULES.
 
 Want the full details on how each feature works (game modes, question
-advancing, CSV report...)? See [FEATURES.md](FEATURES.md).
+advancing, CSV report...)? See [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ### Recent updates
 

@@ -104,7 +104,7 @@ Per a comprovar un canvi "a ull" després d'arrancar el servidor
   jugador, el mode real de classe): botó "Jugar a l'aula" des de la
   biblioteca → `/host/`, i unir-se des de `/join` amb el PIN. Vore el
   detall d'este i la resta de modes en
-  [FEATURES.md → Modos de juego](FEATURES.md#modos-de-juego).
+  [ARCHITECTURE.md → Modes de joc](ARCHITECTURE.md#modes-de-joc).
 - **Multijugador** (pantalla compartida, 2-4 jugadors): botó
   "Multijugador" → `/multiplayer/`.
 - **Solo** (mode individual): botó "Solo" → `/solo/`, o enllaços directes

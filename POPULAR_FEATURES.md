@@ -457,7 +457,7 @@ full de ruta més avall.)
 Esta secció creua les 31 propostes anteriors amb la resta de la
 documentació del repositori (`PROXIMAS_MEJORAS_PLAN.md`,
 `PLAN_ESTABILIDAD_SESION.md`, `REVISION_MEJORAS.md`, els documents de
-migració a Authentik, `FEATURES.md`, `TESTING.md`, `docs/DEV_DOCKER_SETUP.md`,
+migració a Authentik, `ARCHITECTURE.md`, `TESTING.md`, `docs/DEV_DOCKER_SETUP.md`,
 `docs/DOCKER.md`, `CHANGELOG.md`) per a fixar un orde de treball
 realista, no només una llista d'idees.
 
@@ -593,7 +593,7 @@ presentació híbrid).
 
 Totes depenen de rompre l'assumpció actual de que tots els jugadors
 avancen al mateix ritme dirigits per l'amfitrió (confirmat en
-`FEATURES.md → Avanç de pregunta`). Convé construir primer el mode
+`ARCHITECTURE.md → Avanç de pregunta`). Convé construir primer el mode
 autoritme (3) com a primitiva reutilitzable, i recolzar-se en ell per a
 les altres dos. Les 3 tenen prioritat pedagògica alta confirmada.
 
@@ -642,7 +642,7 @@ exigira.
 
 ## Llista de desitjos
 
-Idees pròpies, no derivades de la comparativa amb Kahoot/Wayground ni de
+Idees addicionals, no derivades de la comparativa amb Kahoot/Wayground ni de
 l'anàlisi d'altres plataformes ([`PLATFORMS_ANALYSIS.md`](docs/PLATFORMS_ANALYSIS.md)),
 i encara no analitzades amb el criteri pedagògic complet ni incloses en
 cap fase del full de ruta. Es numeren amb prefix "W" per a no xocar amb

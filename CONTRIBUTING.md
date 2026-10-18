@@ -33,7 +33,7 @@ de treball esperat per a proposar un canvi.
 - Si el canvi afecta a sessions o autenticació, prova també a mà el flux
   de login afectat (vore `TESTING.md`).
 - Si el canvi toca el comportament d'una funcionalitat, actualitza
-  [`FEATURES.md`](FEATURES.md) i, si aplica, el `README.md` — mantenint
+  [`ARCHITECTURE.md`](ARCHITECTURE.md) i, si aplica, el `README.md` — mantenint
   sincronitzats els tres idiomes.
 
 ### Obrir el Pull Request
@@ -91,7 +91,7 @@ flujo de trabajo esperado para proponer un cambio.
 - Si el cambio afecta a sesiones o autenticación, prueba también a mano
   el flujo de login afectado (ver `TESTING.md`).
 - Si el cambio toca el comportamiento de una funcionalidad, actualiza
-  [`FEATURES.md`](FEATURES.md) y, si aplica, el `README.md` — manteniendo
+  [`ARCHITECTURE.md`](ARCHITECTURE.md) y, si aplica, el `README.md` — manteniendo
   sincronizados los tres idiomas.
 
 ### Abrir el Pull Request
@@ -149,7 +149,7 @@ summarizes the expected workflow for proposing a change.
 - If the change affects sessions or authentication, also test the
   affected login flow manually (see `TESTING.md`).
 - If the change affects how a feature behaves, update
-  [`FEATURES.md`](FEATURES.md) and, if relevant, `README.md` — keeping
+  [`ARCHITECTURE.md`](ARCHITECTURE.md) and, if relevant, `README.md` — keeping
   all three languages in sync.
 
 ### Opening the Pull Request
