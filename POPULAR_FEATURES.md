@@ -22,6 +22,7 @@
   - [Aparcades](#aparcades)
   - [Descartades](#descartades)
 - [Llista de desitjos](#llista-de-desitjos)
+- [Nota sobre drets d'autor](#nota-sobre-drets-dautor)
 
 ## Introducció
 
@@ -673,3 +674,27 @@ la numeració 1-32 de dalt.
   ajustos d'accessibilitat per alumne o grup concret (lectura en veu
   alta, alt contrast, tipografia per a dislèxia...), a l'estil de les
   "Accommodations" de Wayground.
+
+## Nota sobre drets d'autor
+
+Cap de les 32 propostes té drets d'autor: les mecàniques i regles de joc
+(power-ups, podi, mode equips, ratxes, flashcards, mode fantasma, time
+attack...) no són objecte de copyright, que protegix l'expressió
+concreta, no les idees ni els sistemes de joc — per això Kahoot,
+Wayground, Blooket i Gimkit comparteixen entre ells quasi totes estes
+mecàniques sense problemes legals.
+
+El risc real només apareixeria en implementar-les, si es copiara
+l'expressió concreta de Kahoot/Wayground en lloc de només la idea:
+
+- **9 (Música/so de tensió per fases)**: usar música pròpia o de stock,
+  mai l'arxiu d'àudio real de Kahoot.
+- **2 (Podi amb confeti)** i **23 (Compte arrere 3-2-1)**: implementació
+  gràfica/sonora pròpia del mateix concepte, no còpia dels assets
+  exactes — igual que ja es va fer amb les formes de colors de les
+  respostes (documentat en `README.md`/`CHANGELOG.md`).
+
+A banda del copyright: "Kahoot!" i "Wayground" són marques registrades,
+no drets d'autor. Usar-les en este document per a comparar és ús
+descriptiu normal, però no haurien d'usar-se com a nom d'una funció
+dins del propi producte EduHoot.
