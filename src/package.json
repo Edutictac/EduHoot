@@ -4,6 +4,8 @@
   "description": "A kahoot website clone",
   "main": "index.js",
   "scripts": {
+    "start": "node server/server.js",
+    "dev": "node --watch server/server.js",
     "test:i18n": "playwright test",
     "lint": "node scripts/lint.js",
     "normalize-tags": "node scripts/normalize-tags.js",

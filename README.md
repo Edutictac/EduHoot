@@ -22,6 +22,7 @@ Imatge Docker i publicació en GitHub: [documentació](docs/DOCKER.md).
 2. Inicia MongoDB local (`sudo systemctl start mongod`) o defineix `MONGO_URL`.
 3. Executa `node server/server.js`.
 4. Obri `http://localhost:3000/create/`.
+5. Alternativa amb Docker: consulta [docs/DEV_DOCKER_SETUP.md](docs/DEV_DOCKER_SETUP.md) per a desenvolupar sense instal·lar Node ni MongoDB en local.
 
 ### Accés amb Google
 
@@ -97,6 +98,7 @@ de preguntes, informe CSV...)? Consulta [ARCHITECTURE.md](ARCHITECTURE.md).
 2. Inicia MongoDB local (`sudo systemctl start mongod`) o configura `MONGO_URL`.
 3. Ejecuta `node server/server.js`.
 4. Abre `http://localhost:3000/create/`.
+5. Alternativa con Docker: consulta [docs/DEV_DOCKER_SETUP.md](docs/DEV_DOCKER_SETUP.md) para desarrollar sin instalar Node ni MongoDB localmente.
 
 ### Acceso con Google
 
@@ -226,6 +228,7 @@ juego, avance de preguntas, informe CSV...)? Consulta [ARCHITECTURE.md](ARCHITEC
 2. Start local MongoDB (`sudo systemctl start mongod`) or set `MONGO_URL`.
 3. Run `node server/server.js`.
 4. Open `http://localhost:3000/create/`.
+5. Docker alternative: see [docs/DEV_DOCKER_SETUP.md](docs/DEV_DOCKER_SETUP.md) to develop without installing Node or MongoDB locally.
 
 ### Google Sign-In
 
