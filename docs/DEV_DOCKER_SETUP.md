@@ -111,9 +111,9 @@ CMD ["npm", "run", "dev"]
   "normalize-tags": "node scripts/normalize-tags.js",
   "seed:dev": "node scripts/seed-dev-data.js",
   "unseed:dev": "node scripts/seed-dev-data.js --remove",
-  "test": "node --test \"test/**/*.test.js\"",
-  "test:unit": "node --test \"test/unit/*.test.js\"",
-  "test:integration": "node --test \"test/integration/*.test.js\""
+  "test": "node --test test/unit test/integration",
+  "test:unit": "node --test test/unit",
+  "test:integration": "node --test test/integration"
 }
 ```
 
