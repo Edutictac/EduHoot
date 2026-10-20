@@ -201,7 +201,17 @@ async function removeSeedUsers(collection) {
   console.log(`[seed-dev-data] Usuaris eliminats: ${result.deletedCount}.`);
 }
 
+function assertDevelopmentEnvironment() {
+  if (process.env.NODE_ENV === 'development') return;
+  throw new Error(
+    "Este script només s'executa amb NODE_ENV=development (ja fixat a docker-compose.yml). " +
+    "Insereix qüestionaris públics i un usuari admin amb contrasenya coneguda " +
+    "(exemple1234) — mai l'executes contra una base de dades real."
+  );
+}
+
 async function main() {
+  assertDevelopmentEnvironment();
   const client = new MongoClient(mongoUrl, { serverSelectionTimeoutMS: 3000 });
   try {
     await client.connect();

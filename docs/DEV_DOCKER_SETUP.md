@@ -111,9 +111,9 @@ CMD ["npm", "run", "dev"]
   "normalize-tags": "node scripts/normalize-tags.js",
   "seed:dev": "node scripts/seed-dev-data.js",
   "unseed:dev": "node scripts/seed-dev-data.js --remove",
-  "test": "node --test test/unit test/integration",
-  "test:unit": "node --test test/unit",
-  "test:integration": "node --test test/integration"
+  "test": "node --test test/unit/*.test.js test/integration/*.test.js",
+  "test:unit": "node --test test/unit/*.test.js",
+  "test:integration": "node --test test/integration/*.test.js"
 }
 ```
 
@@ -163,6 +163,7 @@ També insereix **5 usuaris locals de prova** (email + contrasenya), per a prova
 
 - **Idempotent**: cada qüestionari i cada usuari porta un camp propi `devSeedKey` (`eduhoot-seed-demo-1`..`5` i `eduhoot-seed-user-1`..`5` respectivament); l'script només insereix els que encara no existisquen.
 - **Reversible**: `node scripts/seed-dev-data.js --remove` (o `npm run unseed:dev`) esborra només els documents amb eixe marcador, mai cap altre qüestionari o usuari.
+- **Salvaguarda de seguretat**: l'script es nega a executar-se si `NODE_ENV` no és exactament `development` (ja fixat a `docker-compose.yml`). Sense esta comprovació, executar `npm run seed:dev` per error contra una base de dades real crearia un usuari `admin@exemple.local` amb la contrasenya pública `exemple1234` i un hash compatible amb el login real.
 - El `command` del servei `app` l'executa automàticament en cada arrancada (vore «Alçar i parar l'entorn de desenvolupament»).
 
 ## Per què estes decisions de disseny

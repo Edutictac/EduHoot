@@ -48,9 +48,9 @@ més carrega 5 qüestionaris de mostra.
 
 | Orde | Què executa | Necessita Mongo real | Necessita alguna cosa més |
 |---|---|---|---|
-| `npm test` | `node --test test/unit test/integration` (tot: unit + integració) | No | — |
-| `npm run test:unit` | Només `test/unit/` | No | — |
-| `npm run test:integration` | Només `test/integration/` | No | — |
+| `npm test` | `node --test test/unit/*.test.js test/integration/*.test.js` (tot: unit + integració) | No | — |
+| `npm run test:unit` | Només `test/unit/*.test.js` | No | — |
+| `npm run test:integration` | Només `test/integration/*.test.js` | No | — |
 | `npm run test:i18n` | `playwright test` sobre `test/browser/*.spec.js` | No | `npx playwright install --with-deps chromium`, i `python3` en el `PATH` |
 | `npm run lint` | `node scripts/lint.js`: recorre `server/` i `public/js/` i valida la sintaxi de cada fitxer amb `node --check` | No | — |
 
