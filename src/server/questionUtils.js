@@ -108,6 +108,10 @@ function toValidAnswerIndex(value) {
   return parsed;
 }
 
+function isFreeAnswerType(type) {
+  return type === 'short-answer' || type === 'numeric';
+}
+
 function normalizeCorrectAnswers(rawCorrect, fallback = true) {
   const answers = [];
   const seen = new Set();
@@ -198,11 +202,89 @@ function normalizeQuestionMeta(item = {}) {
   };
 }
 
+function looksLikeFreeTypeQuestion(q) {
+  if (!q) return false;
+  // Señales defensivas por si el tipo está corrupto pero vienen campos libres.
+  const accepted = q.acceptedAnswers;
+  const hasAccepted = Array.isArray(accepted)
+    ? accepted.length > 0
+    : (typeof accepted === 'string' && accepted.trim().length > 0);
+
+  const hasNumeric =
+    (typeof q.numericAnswer === 'number') ||
+    (q.numericAnswer !== null && q.numericAnswer !== undefined && typeof q.numericAnswer === 'string' && q.numericAnswer.trim().length > 0) ||
+    (q.numero !== null && q.numero !== undefined && String(q.numero).trim().length > 0) ||
+    (q.tolerancia !== null && q.tolerancia !== undefined && String(q.tolerancia).trim().length > 0) ||
+    (q.tolerance !== null && q.tolerance !== undefined && String(q.tolerance).trim().length > 0);
+
+  return hasAccepted || hasNumeric;
+}
+
+function isSubmissionCorrect(meta, submission) {
+  if (!meta || !Array.isArray(meta.correctAnswers) || !meta.correctAnswers.length) {
+    return false;
+  }
+  if (meta.type === 'short-answer') {
+    const raw = submission && typeof submission === 'object' && submission.text !== undefined ? submission.text : submission;
+    const normalized = normalizeFreeText(raw);
+    if (!normalized) return false;
+    const accepted = Array.isArray(meta.acceptedAnswers) ? meta.acceptedAnswers : splitAcceptedAnswers(meta.acceptedAnswers);
+    return accepted.some((ans) => normalizeFreeText(ans) === normalized);
+  }
+  if (meta.type === 'numeric') {
+    const raw = submission && typeof submission === 'object' && submission.number !== undefined ? submission.number : submission;
+    const num = parseLenientNumber(raw);
+    if (num === null) return false;
+    const target = typeof meta.numericAnswer === 'number' ? meta.numericAnswer : parseLenientNumber(meta.numericAnswer);
+    if (target === null) return false;
+    const tol = typeof meta.tolerance === 'number' ? meta.tolerance : (parseLenientNumber(meta.tolerance) || 0);
+    return Math.abs(num - target) <= Math.max(0, tol);
+  }
+  if (meta.type === 'multiple') {
+    if (!Array.isArray(submission) || submission.length === 0) {
+      return false;
+    }
+    const submissionSet = new Set(submission);
+    if (submissionSet.size !== meta.correctAnswers.length) {
+      return false;
+    }
+    return meta.correctAnswers.every((value) => submissionSet.has(value));
+  }
+  const normalized = Array.isArray(submission) ? submission[0] : submission;
+  return Number(normalized) === meta.correctAnswers[0];
+}
+
+function buildAnswerFields(item = {}, meta, { hasVideo = false } = {}) {
+  if (meta.type === 'short-answer') {
+    const recoveredAnswers = !meta.acceptedAnswers.length && !hasVideo
+      ? splitAcceptedAnswers(item.video)
+      : [];
+    return {
+      acceptedAnswers: [
+        ...(Array.isArray(meta.acceptedAnswers) ? meta.acceptedAnswers : []),
+        ...recoveredAnswers
+      ]
+    };
+  }
+  if (meta.type === 'numeric') {
+    return {
+      numericAnswer: meta.numericAnswer,
+      tolerance: meta.tolerance
+    };
+  }
+  return {};
+}
+
 module.exports = {
   normalizeQuestionType,
   normalizeCorrectAnswers,
   normalizeQuestionMeta,
   splitAcceptedAnswers,
   parseLenientNumber,
+  normalizeFreeText,
+  isFreeAnswerType,
+  looksLikeFreeTypeQuestion,
+  isSubmissionCorrect,
+  buildAnswerFields,
   VALID_TYPES
 };
