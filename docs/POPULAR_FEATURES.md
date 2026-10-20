@@ -476,15 +476,16 @@ realista, no només una llista d'idees.
   i 14 (so de feedback) queden aparcades — encara que algunes d'elles
   siguen populars en Kahoot/Wayground. La proposta 4 (power-ups) continua,
   però sense el sub-ítem "robar punts".
-- **Accés docent en transició activa, però ja sense la barrera de l'octubre.**
+- **Accés docent: fallada corregida, migració encara oberta.**
   La migració a Authentik (`docs/PLA-MIGRACIO-AUTHENTIK-2026-10.md`)
-  continua oberta, sense una nova data de tancament encara, però la
-  fallada real de detecció del rol docent detectada el 12 d'octubre de
-  2026 ja està corregida eixe mateix dia (vore «Vinculació real i botó
-  d'eixida» al pla de migració). Ja no cal evitar tocar el codi
-  d'accés/sessió (`server.js`) ni posposar propostes que depenguen d'una
-  integració d'identitat docent estable (21, Google Classroom) per este
-  motiu.
+  continua oberta, sense una nova data de tancament encara. La fallada
+  real de detecció del rol docent detectada el 12 d'octubre de 2026 ja
+  està corregida eixe mateix dia (vore «Vinculació real i botó
+  d'eixida» al pla de migració), però mentre la migració no es tanque,
+  convé seguir coordinant-se abans de tocar el codi d'accés/sessió
+  (`server.js`) per un altre motiu, i no donar per fet que propostes
+  que depenguen d'una integració d'identitat docent estable (21,
+  Google Classroom) ja es poden abordar sense restriccions.
 - **El codi del servidor ha crescut sense reorganitzar-se.**
   `src/server/server.js` ha passat de 3.588 a 5.122 línies des de
   l'auditoria d'abril (`REVISION_MEJORAS.md`), i `src/public/js/create.js`
