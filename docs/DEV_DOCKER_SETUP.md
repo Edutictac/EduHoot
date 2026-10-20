@@ -137,7 +137,7 @@ Per a saber com aconseguir `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` i què és 
 
 Afegir una línia en cada bloc d'"Inici ràpid" (valencià ~línia 17, castellà ~línia 83, English ~línia 189) apuntant a este document (o a un `DOCKER.md` final), per exemple en castellà:
 
-> 5. Alternativa con Docker: consulta [docs/DEV_DOCKER_SETUP.md](docs/DEV_DOCKER_SETUP.md) para desarrollar sin instalar Node ni MongoDB localmente.
+> 5. Alternativa con Docker: consulta [DEV_DOCKER_SETUP.md](DEV_DOCKER_SETUP.md) para desarrollar sin instalar Node ni MongoDB localmente.
 
 ### 6. `src/scripts/seed-dev-data.js` — 5 qüestionaris de mostra
 

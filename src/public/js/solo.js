@@ -310,6 +310,7 @@ var browserLang = normalizeLang(navigator.language || 'es');
         rankingTitle: 'Top 10 global',
             rankingHint: 'Solo se muestra al finalizar la partida.',
         resultSummary: 'Acertadas {correct}/{total} · {score} pts',
+        pollSummary: 'Encuestas: {total} · sin puntuación',
         publicEmpty: 'No hay juegos públicos disponibles.',
         loading: 'Cargando...',
         startSelect: 'Selecciona un juego público para empezar.',
@@ -404,6 +405,7 @@ var browserLang = normalizeLang(navigator.language || 'es');
             rankingTitle: 'Global Top 10',
             rankingHint: 'Only visible after finishing.',
             resultSummary: 'Correct {correct}/{total} · {score} pts',
+            pollSummary: 'Polls: {total} · unscored',
             publicEmpty: 'No public games available.',
             loading: 'Loading...',
             startSelect: 'Select a public game to start.',
@@ -498,6 +500,7 @@ var browserLang = normalizeLang(navigator.language || 'es');
             rankingTitle: 'Top 10 global',
             rankingHint: 'Només es mostra al final.',
             resultSummary: 'Encerts {correct}/{total} · {score} pts',
+            pollSummary: 'Enquestes: {total} · sense puntuació',
             publicEmpty: 'No hi ha jocs públics disponibles.',
             loading: 'Carregant...',
             startSelect: 'Selecciona un joc públic per començar.',
@@ -1825,7 +1828,7 @@ function startQuiz(){
                     if(correctList.indexOf(n) !== -1){
                         btnEl.classList.add('correct');
                     }
-                    if(selected.indexOf(n) !== -1 && correctList.indexOf(n) === -1){
+                    if(meta.type !== 'poll' && selected.indexOf(n) !== -1 && correctList.indexOf(n) === -1){
                         btnEl.classList.add('wrong');
                     }
                 });
@@ -1882,7 +1885,7 @@ function startQuiz(){
         updateSoloSelectionStyles();
         updateSoloMultiSubmitVisibility();
         state.lastWrong = null;
-        if(isCorrect){
+        if(isCorrect || meta.type === 'poll'){
             updateScorePill();
             setTimeout(function(){
                 state.idx += 1;
@@ -1909,18 +1912,27 @@ function startQuiz(){
         if(resultArea) resultArea.classList.remove('hidden');
         var summary = document.getElementById('result-summary');
         if(summary){
-            var totalQs = getQuestions().length;
-            summary.textContent = format(t('resultSummary'), {
+            var totalQs = getScoredQuestionCount();
+            var pollCount = getQuestions().length - totalQs;
+            var scoredSummary = totalQs ? format(t('resultSummary'), {
                 correct: state.correct,
                 total: totalQs,
                 score: state.score
-            });
+            }) : '';
+            var pollSummary = pollCount ? format(t('pollSummary'), { total: pollCount }) : '';
+            summary.textContent = [scoredSummary, pollSummary].filter(Boolean).join(' · ');
         }
         var ranking = document.getElementById('ranking');
         var rankingList = document.getElementById('ranking-list');
         if(ranking) ranking.classList.add('hidden');
         if(rankingList) rankingList.innerHTML = '';
-        prepareScoreSubmission();
+        if(getScoredQuestionCount() > 0) prepareScoreSubmission();
+    }
+
+    function getScoredQuestionCount(){
+        return getQuestions().filter(function(question){
+            return normalizeQuestionMeta(question).type !== 'poll';
+        }).length;
     }
 
     function submitScore(nameToUse){
@@ -1938,7 +1950,7 @@ function startQuiz(){
                 name: nameToUse || state.playerName,
                 studentJoinToken: state.studentJoinToken || '',
                 score: state.score,
-                totalQuestions: getQuestions().length
+                totalQuestions: getScoredQuestionCount()
             })
         })
             .then(function(res){ return res.json().then(function(body){ return { ok: res.ok, body: body }; }); })
