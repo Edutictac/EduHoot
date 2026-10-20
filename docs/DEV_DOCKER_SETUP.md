@@ -66,7 +66,7 @@ services:
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
       - PUBLIC_BASE_URL=${PUBLIC_BASE_URL:-}
     ports:
-      - "${APP_PORT:-3000}:3000"
+      - "127.0.0.1:${APP_PORT:-3000}:3000"
     volumes:
       - ./src:/app
       - eduhoot_node_modules:/app/node_modules
