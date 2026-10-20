@@ -18,10 +18,22 @@ intacte com la nota de versió més detallada.
 ### Afegit
 - Traduccions que faltaven al peu de pàgina; el llistat públic d'activitats
   ara s'ordena per valoració.
+- Entorn de desenvolupament amb Docker (`docker compose up`): alça EduHoot
+  amb recàrrega automàtica, sense instal·lar Node ni MongoDB en local.
+  Documentat en [`docs/DEV_DOCKER_SETUP.md`](docs/DEV_DOCKER_SETUP.md).
+- L'entorn de desenvolupament carrega automàticament 5 qüestionaris públics
+  de mostra i 5 usuaris de prova (1 administrador, 4 editors), de forma
+  idempotent i reversible (`npm run seed:dev` / `unseed:dev`).
 
 ### Canviat
 - La música de la partida ara s'inicia automàticament, sense esperar que
   l'amfitrió prema «Comencem!».
+
+### Corregit
+- Les preguntes d'enquesta («opinió») en el mode Solo ja no es compten com a
+  errors: ja no obrin el diàleg d'error, queden excloses del total puntuat
+  del rànquing, i una partida només d'enquestes no demana entrada al
+  rànquing.
 
 ## [1.0.7] - 2026-10-09
 

@@ -79,8 +79,9 @@ problemes d'estil, variables sense usar, etc.
   `sessionReport.test.js`, i els més recents `auth-migration.test.js` i
   `authentik.test.js` (migració de comptes a Authentik).
 - **`test/browser/`** — tests de navegador amb Playwright: `language.spec.js`
-  (canvi d'idioma) i el més recent `auth-state.spec.js` (estat de sessió
-  després de la migració a Authentik).
+  (canvi d'idioma), `auth-state.spec.js` (estat de sessió després de la
+  migració a Authentik), i el més recent `solo-poll.spec.js` (les preguntes
+  d'enquesta en mode Solo no compten com a error ni puntuen).
 
 ### Scripts puntuals que NO són part del flux de test estàndard
 

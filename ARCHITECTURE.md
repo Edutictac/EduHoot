@@ -321,3 +321,22 @@ autoritme (self-paced)" i "Mode 'presentació' híbrid").
   basen en els punts, no en el % d'encerts; el CSV guarda eixe recompte
   (`aciertos`/`fallos`/`sinResponder`) només com a dada informativa a
   banda.
+
+### Preguntes d'enquesta («opinió») en mode Solo
+
+Les preguntes de tipus `poll` (sense resposta correcta) queden **fora
+del càlcul de puntuació** en el mode Solo
+(`src/public/js/solo.js:1932-1936`, `getScoredQuestionCount()` les
+filtra). En concret:
+
+- Cap opció marcada apareix com a «incorrecta» (`solo.js:1831`): es
+  passa a la pregunta següent igual que si fora un encert
+  (`solo.js:1888`), sense obrir el diàleg d'error.
+- El resum final separa els encerts puntuats de les enquestes
+  respostes (p. ex. «Encerts 1/1 · Enquestes: 1 · sense puntuació»,
+  `solo.js:1915-1923`).
+- Si **tot** el qüestionari és d'enquestes, no s'envia cap puntuació al
+  rànquing global (`solo.js:1929`, `prepareScoreSubmission()` només es
+  crida si `getScoredQuestionCount() > 0`).
+
+Cobert per `src/test/browser/solo-poll.spec.js` (vore `TESTING.md`).
