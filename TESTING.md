@@ -114,6 +114,58 @@ Per a comprovar un canvi "a ull" després d'arrancar el servidor
 Per a provar canvis d'idioma, usar el selector d'idioma de la interfície o
 afegir `?lang=va|es|en` a la URL.
 
+## Proves de caixa negra (recorregut de validació externa)
+
+Les proves automàtiques i les manuals de la secció anterior proven
+trossos concrets. Este recorregut és diferent: és per a **validar tot
+el projecte des de fora**, com ho faria una persona usuària real,
+**sense mirar el codi**, seguint-lo sencer de dalt a baix abans de
+publicar un canvi gran o etiquetar una versió.
+
+Fes-lo en un navegador, amb l'app alçada (vore
+[Arrancar l'app](#arrancar-lapp-per-a-provar-la-a-mà) o
+`docs/DEV_DOCKER_SETUP.md` si vols partir ja amb 5 qüestionaris i 5
+usuaris de mostra carregats).
+
+1. **Biblioteca i creació** (`/create/`):
+   - Crear un qüestionari nou amb almenys una pregunta de cada tipus
+     (`quiz`, `multiple`, `true-false`, `short-answer`, `numeric`,
+     `poll`) — vore `ARCHITECTURE.md` si cal recordar què és cada u.
+   - Editar-lo, afegir etiquetes, canviar la visibilitat
+     (privat/no llistat/públic), clonar-lo i esborrar el clon.
+   - Pujar un qüestionari per CSV (vore `README.md`).
+2. **Jugar a l'aula** (mode classe, amb PIN): llançar la partida des de
+   la biblioteca, unir-se amb almenys dos dispositius/pestanyes com a
+   alumnat des de `/join`, respondre totes les preguntes (cada tipus
+   inclòs), comprovar el compte arrere, l'avanç manual entre preguntes,
+   el rànquing final i la celebració d'encert/fallada col·lectiva.
+3. **Multijugador** (pantalla compartida, 2-4 jugadors): jugar una
+   partida sencera des d'un sol dispositiu.
+4. **Solo**: jugar amb un enllaç directe (`/solo/?id=<quizId>` o
+   `/solo/?tag=...`), comprovar que les preguntes d'enquesta no obrin
+   el diàleg d'error ni puntuen, i que l'estadística final i el
+   rànquing global es mostren bé.
+5. **Informe i exportació**: des de "Jugar a l'aula", descarregar
+   l'informe CSV de la partida i comprovar que les columnes tenen
+   sentit; exportar el qüestionari a Moodle XML i comprovar que
+   s'importa sense error en un Moodle/AULES de prova (si n'hi ha a
+   l'abast).
+6. **Idiomes**: canviar entre els 4 idiomes disponibles (català,
+   valencià, castellà, anglés) amb el selector de la interfície, i
+   comprovar que el canvi persistix en recarregar i en navegar entre
+   `/create/`, `/host/`, `/join`, `/solo/` i `/multiplayer/`.
+7. **Sessió i accés**: tancar sessió i tornar a entrar; si hi ha Google
+   o Authentik configurats en l'entorn de prova, provar també eixos
+   fluxos d'inici de sessió.
+8. **Accessibilitat bàsica**: comprovar que les respostes es distingixen
+   per forma a més de color, i navegar almenys una pantalla amb només
+   el teclat — vore `docs/ACCESSIBILITY.md` per a l'abast complet.
+
+Si algun pas d'estos falla o es comporta de manera inesperada, és un
+senyal fiable encara que els tests automàtics donen tots en verd — el
+recorregut complet és el que capta regressions que cap test aïllat
+cobrix.
+
 ## Abans d'etiquetar una versió (checklist)
 
 Equivalent a allò que feien les seccions "Comprovacions" de
