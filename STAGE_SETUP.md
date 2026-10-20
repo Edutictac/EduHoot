@@ -1,16 +1,16 @@
-# Entorno Stage en servidor
+# Entorn Stage en servidor
 
-Este documento define una preproducción (stage) aislada para validar cambios antes de pasar a producción.
+Este document definix una preproducció (stage) aïllada per a validar canvis abans de passar a producció.
 
-## Objetivo
+## Objectiu
 
-- Código separado en `/opt/eduhoot-stage/src`.
-- Proceso Node separado (`eduhoot-stage-server.service`).
-- Puerto propio (`3100`).
-- Host propio (`stage.tu-dominio`).
-- Base de datos separada (`eduhoot_stage`).
+- Codi separat en `/opt/eduhoot-stage/src`.
+- Procés Node separat (`eduhoot-stage-server.service`).
+- Port propi (`3100`).
+- Host propi (`stage.tu-dominio`).
+- Base de dades separada (`eduhoot_stage`).
 
-## 1) Preparar servidor
+## 1) Preparar el servidor
 
 ```bash
 sudo mkdir -p /opt/eduhoot-stage/src
@@ -21,7 +21,7 @@ sudo chown -R root:adm /var/log/eduhoot-stage
 sudo chmod 755 /var/log/eduhoot-stage
 ```
 
-## 2) Variables de entorno de stage
+## 2) Variables d'entorn de stage
 
 ```bash
 sudo cp install-files/stage.env.example /etc/eduhoot/stage.env
@@ -29,12 +29,20 @@ sudo nano /etc/eduhoot/stage.env
 sudo chmod 640 /etc/eduhoot/stage.env
 ```
 
-Ajusta mínimo:
+Ajusta com a mínim:
 - `PORT=3100`
 - `MONGO_URL=mongodb://127.0.0.1:27017/eduhoot_stage`
 - `PUBLIC_BASE_URL=https://stage.tu-dominio`
 
-## 3) Servicio systemd stage
+> **Avís:** hui este `/eduhoot_stage` no té cap efecte real. El nom de
+> base de dades està fix en el codi (`DB_NAME` en `server.js`), que
+> ignora el nom que porte `MONGO_URL` — stage llig i escriu la mateixa
+> base `kahootDB` que producció, en compartir el mateix mongod. Vore
+> `ARCHITECTURE.md` → "Deute tècnic conegut" per al detall i la
+> solució recomanada (`MONGO_DB=eduhoot_stage` una vegada `DB_NAME`
+> siga configurable).
+
+## 3) Servici systemd de stage
 
 ```bash
 sudo cp install-files/service/eduhoot-stage-server.service /etc/systemd/system/
@@ -42,7 +50,7 @@ sudo systemctl daemon-reload
 sudo systemctl enable eduhoot-stage-server
 ```
 
-## 4) Nginx para stage
+## 4) Nginx per a stage
 
 ```bash
 sudo cp install-files/nginx/eduhoot-stage.conf /etc/nginx/sites-available/eduhoot-stage.conf
@@ -58,19 +66,19 @@ cp scripts/deploy-stage.example.sh scripts/deploy-stage.sh
 chmod +x scripts/deploy-stage.sh
 ```
 
-Edita variables en `scripts/deploy-stage.sh` y ejecuta:
+Edita les variables en `scripts/deploy-stage.sh` i executa:
 
 ```bash
 ./scripts/deploy-stage.sh
 ```
 
-Para probar sin copiar archivos:
+Per a provar-ho sense copiar fitxers:
 
 ```bash
 DRY_RUN=1 ./scripts/deploy-stage.sh
 ```
 
-## 6) Checklist de validación fiable
+## 6) Checklist de validació fiable
 
 ```bash
 curl -I http://127.0.0.1:3100/
@@ -79,17 +87,17 @@ sudo systemctl --no-pager --full status eduhoot-stage-server
 sudo tail -n 120 /var/log/eduhoot-stage/server.log
 ```
 
-Validaciones recomendadas por cambio:
-- Login y recuperación de contraseña.
-- Flujo host/player completo con 2 navegadores.
-- Importación CSV y arranque de partida.
-- Revisión visual rápida de landing/create/host/player.
-- `npm run lint` antes de desplegar.
+Validacions recomanades per cada canvi:
+- Login i recuperació de contrasenya.
+- Flux host/jugador complet amb 2 navegadors.
+- Importació de CSV i arrancada de partida.
+- Revisió visual ràpida de landing/create/host/player.
+- `npm run lint` abans de desplegar.
 
-## 7) Promoción a producción
+## 7) Promoció a producció
 
-Promociona solo si stage está en verde:
+Promociona només si stage està en verd:
 - Lint OK.
-- Auditoría de seguridad en nivel esperado.
-- Flujos críticos validados.
-- Sin errores recurrentes en logs.
+- Auditoria de seguretat en el nivell esperat.
+- Fluxos crítics validats.
+- Sense errors recurrents en els logs.

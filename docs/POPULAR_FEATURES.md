@@ -654,9 +654,12 @@ la numeració 1-32 de dalt.
   interfície (amfitrió, jugador, creació de quiz) després d'un estudi
   dedicat, no lligada a cap funcionalitat concreta de la llista
   anterior.
-- **W3 — Internacionalització a més idiomes.** Ampliar els idiomes
-  disponibles més enllà de valencià, castellà i anglés (francés,
-  alemany, holandés, i altres a decidir).
+- **W3 — Internacionalització a més idiomes.** Ja hi ha una base de
+  **4 idiomes implementats** (`ca`/`va`/`es`/`en` — català i valencià
+  són variants separades, `quizCreator.js:16`, `create.js:208`,
+  `hostGame.js:39`, `solo.js:220`, `multiplayer.js:191`); esta proposta
+  és ampliar-los més enllà d'estos 4 (francés, alemany, holandés, i
+  altres a decidir).
 - **W4 — Paquet SCORM per al mode Solo, amb pas automàtic de la nota a
   Moodle/AULES.** El professorat puja un paquet SCORM al seu curs
   (sense dependre d'LTI, que AULES no té habilitat), i la nota final
