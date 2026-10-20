@@ -95,10 +95,17 @@ per a tasques concretes d'administració/migració, no proves automàtiques:
 - `scripts/normalize-tags.js` (`npm run normalize-tags`) — normalitza
   etiquetes de qüestionaris existents en la base de dades.
 
-## Proves manuals en el navegador
+## Proves de caixa negra (al navegador)
 
-Per a comprovar un canvi "a ull" després d'arrancar el servidor
-(vore [Arrancar l'app](#arrancar-lapp-per-a-provar-la-a-mà)):
+Proves fetes "des de fora", com ho faria una persona usuària real,
+**sense mirar el codi** — a diferència de les automàtiques i de
+`npm run lint`, que sí coneixen l'estructura interna. Totes es fan amb
+l'app alçada (vore [Arrancar l'app](#arrancar-lapp-per-a-provar-la-a-mà)
+o `docs/DEV_DOCKER_SETUP.md` si vols partir ja amb 5 qüestionaris i 5
+usuaris de mostra carregats).
+
+**Accés ràpid a cada mode**, per a comprovar un canvi puntual sense fer
+el recorregut complet de baix:
 
 - **Crear/editar un qüestionari**: `http://localhost:3000/create/`
 - **Jugar a l'aula** (amfitrió + diversos dispositius/pestanyes com a
@@ -110,22 +117,12 @@ Per a comprovar un canvi "a ull" després d'arrancar el servidor
   "Multijugador" → `/multiplayer/`.
 - **Solo** (mode individual): botó "Solo" → `/solo/`, o enllaços directes
   com `/solo/?id=<quizId>` o `/solo/?tag=musica` (vore `README.md`).
+- Per a provar canvis d'idioma: selector d'idioma de la interfície, o
+  afegir `?lang=va|es|en` a la URL.
 
-Per a provar canvis d'idioma, usar el selector d'idioma de la interfície o
-afegir `?lang=va|es|en` a la URL.
-
-## Proves de caixa negra (recorregut de validació externa)
-
-Les proves automàtiques i les manuals de la secció anterior proven
-trossos concrets. Este recorregut és diferent: és per a **validar tot
-el projecte des de fora**, com ho faria una persona usuària real,
-**sense mirar el codi**, seguint-lo sencer de dalt a baix abans de
-publicar un canvi gran o etiquetar una versió.
-
-Fes-lo en un navegador, amb l'app alçada (vore
-[Arrancar l'app](#arrancar-lapp-per-a-provar-la-a-mà) o
-`docs/DEV_DOCKER_SETUP.md` si vols partir ja amb 5 qüestionaris i 5
-usuaris de mostra carregats).
+**Recorregut complet**, per a validar tot el projecte de dalt a baix
+abans de publicar un canvi gran o etiquetar una versió — capta
+regressions que cap test automàtic ni comprovació puntual cobrix:
 
 1. **Biblioteca i creació** (`/create/`):
    - Crear un qüestionari nou amb almenys una pregunta de cada tipus
