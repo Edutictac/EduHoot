@@ -3,7 +3,7 @@
 Anàlisi de quines altres plataformes, a més de Kahoot i Wayground (abans
 Quizizz), tenen una popularitat comparable a l'aula, per a decidir en el
 futur si val la pena comparar-les també contra
-[`POPULAR_FEATURES.md`](../POPULAR_FEATURES.md).
+[`POPULAR_FEATURES.md`](./POPULAR_FEATURES.md).
 
 **Avís important:** no hi ha cap classificació numèrica oficial per quota
 d'ús (ni enquestes recents de districtes escolars, ni dades públiques dels

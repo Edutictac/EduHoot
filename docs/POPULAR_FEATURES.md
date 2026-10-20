@@ -476,15 +476,15 @@ realista, no només una llista d'idees.
   i 14 (so de feedback) queden aparcades — encara que algunes d'elles
   siguen populars en Kahoot/Wayground. La proposta 4 (power-ups) continua,
   però sense el sub-ítem "robar punts".
-- **Accés docent en transició activa.** La migració a Authentik
-  (`docs/PLA-MIGRACIO-AUTHENTIK-2026-10.md`) continua oberta: hi va haver
-  una fallada real de detecció del rol docent detectada el 12 d'octubre
-  de 2026, per la qual cosa es va desactivar la data de tall automàtica
-  del 26 d'octubre i encara no hi ha una nova data de tancament. Mentre
-  això no es tanque, convé no tocar el mateix codi d'accés/sessió
-  (`server.js`) per un altre motiu, i posposar qualsevol proposta que
-  depenga d'una integració d'identitat docent estable (21, Google
-  Classroom).
+- **Accés docent en transició activa, però ja sense la barrera de l'octubre.**
+  La migració a Authentik (`docs/PLA-MIGRACIO-AUTHENTIK-2026-10.md`)
+  continua oberta, sense una nova data de tancament encara, però la
+  fallada real de detecció del rol docent detectada el 12 d'octubre de
+  2026 ja està corregida eixe mateix dia (vore «Vinculació real i botó
+  d'eixida» al pla de migració). Ja no cal evitar tocar el codi
+  d'accés/sessió (`server.js`) ni posposar propostes que depenguen d'una
+  integració d'identitat docent estable (21, Google Classroom) per este
+  motiu.
 - **El codi del servidor ha crescut sense reorganitzar-se.**
   `src/server/server.js` ha passat de 3.588 a 5.122 línies des de
   l'auditoria d'abril (`REVISION_MEJORAS.md`), i `src/public/js/create.js`
@@ -553,8 +553,6 @@ un suggeriment ajornable:
 - Entorn de desenvolupament amb recàrrega automàtica (`docs/DEV_DOCKER_SETUP.md`).
 - Separar del monòlit `server.js` almenys la lògica de tipus de pregunta,
   abans d'afegir els tipus nous de la Fase 2.
-- Deixar que la migració a Authentik es tanque abans de tocar codi
-  d'accés/sessió per un altre motiu.
 
 ### Fase 1a — Millores cosmètiques/aïllades, sense tocar la lògica de joc
 
@@ -644,7 +642,7 @@ exigira.
 ## Llista de desitjos
 
 Idees addicionals, no derivades de la comparativa amb Kahoot/Wayground ni de
-l'anàlisi d'altres plataformes ([`PLATFORMS_ANALYSIS.md`](docs/PLATFORMS_ANALYSIS.md)),
+l'anàlisi d'altres plataformes ([`PLATFORMS_ANALYSIS.md`](./PLATFORMS_ANALYSIS.md)),
 i encara no analitzades amb el criteri pedagògic complet ni incloses en
 cap fase del full de ruta. Es numeren amb prefix "W" per a no xocar amb
 la numeració 1-32 de dalt.
