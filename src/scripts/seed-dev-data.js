@@ -1,11 +1,14 @@
 #!/usr/bin/env node
 
+const crypto = require('crypto');
 const { MongoClient } = require('mongodb');
 
 const mongoUrl = process.env.MONGO_URL || 'mongodb://127.0.0.1:27017/';
 const dbName = process.env.MONGO_DB || 'kahootDB';
 const remove = process.argv.includes('--remove') || process.env.REMOVE === '1';
 const SEED_KEY_PREFIX = 'eduhoot-seed-demo-';
+const USER_SEED_KEY_PREFIX = 'eduhoot-seed-user-';
+const DEV_USER_PASSWORD = 'exemple1234';
 
 const GLOBAL_OWNER_ID = 'global-anon-owner';
 const GLOBAL_OWNER_EMAIL = 'anon@local';
@@ -121,6 +124,19 @@ const SAMPLE_QUIZZES = [
   }
 ];
 
+function hashPassword(password, salt = crypto.randomBytes(16).toString('hex')) {
+  const hash = crypto.pbkdf2Sync(password, salt, 10000, 64, 'sha512').toString('hex');
+  return { salt, hash };
+}
+
+const SAMPLE_USERS = [
+  { devSeedKey: `${USER_SEED_KEY_PREFIX}1`, email: 'admin@exemple.local', nickname: 'Admin de prova', role: 'admin' },
+  { devSeedKey: `${USER_SEED_KEY_PREFIX}2`, email: 'docent1@exemple.local', nickname: 'Docent de prova 1', role: 'editor' },
+  { devSeedKey: `${USER_SEED_KEY_PREFIX}3`, email: 'docent2@exemple.local', nickname: 'Docent de prova 2', role: 'editor' },
+  { devSeedKey: `${USER_SEED_KEY_PREFIX}4`, email: 'docent3@exemple.local', nickname: 'Docent de prova 3', role: 'editor' },
+  { devSeedKey: `${USER_SEED_KEY_PREFIX}5`, email: 'docent4@exemple.local', nickname: 'Docent de prova 4', role: 'editor' }
+];
+
 async function nextGameId(collection) {
   const doc = await collection.find({}, { projection: { id: 1 } }).sort({ id: -1 }).limit(1).next();
   const maxId = doc && doc.id ? doc.id : 0;
@@ -152,16 +168,52 @@ async function removeSeed(collection) {
   console.log(`[seed-dev-data] Eliminats: ${result.deletedCount}.`);
 }
 
+async function seedUsers(collection) {
+  let inserted = 0;
+  let skipped = 0;
+  for (const user of SAMPLE_USERS) {
+    const existing = await collection.findOne({ devSeedKey: user.devSeedKey });
+    if (existing) {
+      console.log(`[seed-dev-data] usuari "${user.email}" ja existix, s'omet.`);
+      skipped += 1;
+      continue;
+    }
+    const { salt, hash } = hashPassword(DEV_USER_PASSWORD);
+    await collection.insertOne({
+      devSeedKey: user.devSeedKey,
+      email: user.email,
+      passwordSalt: salt,
+      passwordHash: hash,
+      role: user.role,
+      nickname: user.nickname,
+      createdAt: new Date()
+    });
+    console.log(`[seed-dev-data] Inserit usuari "${user.email}" (rol ${user.role}).`);
+    inserted += 1;
+  }
+  console.log(`[seed-dev-data] Usuaris sembrats: ${inserted}. Ja existien: ${skipped}.`);
+}
+
+async function removeSeedUsers(collection) {
+  const result = await collection.deleteMany({
+    devSeedKey: { $regex: new RegExp(`^${USER_SEED_KEY_PREFIX}`) }
+  });
+  console.log(`[seed-dev-data] Usuaris eliminats: ${result.deletedCount}.`);
+}
+
 async function main() {
   const client = new MongoClient(mongoUrl, { serverSelectionTimeoutMS: 3000 });
   try {
     await client.connect();
     const db = client.db(dbName);
-    const collection = db.collection('kahootGames');
+    const quizzes = db.collection('kahootGames');
+    const users = db.collection('users');
     if (remove) {
-      await removeSeed(collection);
+      await removeSeed(quizzes);
+      await removeSeedUsers(users);
     } else {
-      await seed(collection);
+      await seed(quizzes);
+      await seedUsers(users);
     }
   } finally {
     await client.close();

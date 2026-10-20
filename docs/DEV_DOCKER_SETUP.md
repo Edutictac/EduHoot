@@ -139,7 +139,7 @@ Afegir una línia en cada bloc d'"Inici ràpid" (valencià ~línia 17, castellà
 
 > 5. Alternativa con Docker: consulta [DEV_DOCKER_SETUP.md](DEV_DOCKER_SETUP.md) para desarrollar sin instalar Node ni MongoDB localmente.
 
-### 6. `src/scripts/seed-dev-data.js` — 5 qüestionaris de mostra
+### 6. `src/scripts/seed-dev-data.js` — 5 qüestionaris i 5 usuaris de mostra
 
 Script independent (mateix patró que `src/scripts/normalize-tags.js`: `MongoClient` propi, sense requerir `server.js`) que insereix 5 qüestionaris de mostra, tots amb `visibility: 'public'` (visibles a `/create/` sense necessitat de login), 5 preguntes cadascun, cobrint els 6 tipus de pregunta existents:
 
@@ -151,8 +151,18 @@ Script independent (mateix patró que `src/scripts/normalize-tags.js`: `MongoCli
 | Matemàtiques ràpides | `numeric` (amb tolerància en la de pi) |
 | Sondeig: hàbits d'estudi | `poll` (sense resposta correcta) |
 
-- **Idempotent**: cada qüestionari porta un camp propi `devSeedKey` (`eduhoot-seed-demo-1`..`5`); l'script només insereix els que encara no existisquen.
-- **Reversible**: `node scripts/seed-dev-data.js --remove` (o `npm run unseed:dev`) esborra només els documents amb eixe marcador, mai cap altre qüestionari.
+També insereix **5 usuaris locals de prova** (email + contrasenya), per a provar l'accés amb rols sense haver de fer `/api/auth/bootstrap` a mà. Contrasenya compartida, només per a desenvolupament: **`exemple1234`**.
+
+| Email | Rol |
+|---|---|
+| `admin@exemple.local` | `admin` |
+| `docent1@exemple.local` | `editor` |
+| `docent2@exemple.local` | `editor` |
+| `docent3@exemple.local` | `editor` |
+| `docent4@exemple.local` | `editor` |
+
+- **Idempotent**: cada qüestionari i cada usuari porta un camp propi `devSeedKey` (`eduhoot-seed-demo-1`..`5` i `eduhoot-seed-user-1`..`5` respectivament); l'script només insereix els que encara no existisquen.
+- **Reversible**: `node scripts/seed-dev-data.js --remove` (o `npm run unseed:dev`) esborra només els documents amb eixe marcador, mai cap altre qüestionari o usuari.
 - El `command` del servei `app` l'executa automàticament en cada arrancada (vore «Alçar i parar l'entorn de desenvolupament»).
 
 ## Per què estes decisions de disseny
