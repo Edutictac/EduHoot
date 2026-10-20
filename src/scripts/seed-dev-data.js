@@ -33,12 +33,12 @@ function quizDefaults(devSeedKey, name) {
   };
 }
 
-function quizQuestion({ question, answers, correct, type = 'quiz', time = 20, acceptedAnswers, numericAnswer, tolerance }) {
+function quizQuestion({ question, answers, correct, correctAnswers, type = 'quiz', time = 20, acceptedAnswers, numericAnswer, tolerance }) {
   const base = {
     question,
     answers: answers || ['', '', '', ''],
     correct: correct || 1,
-    correctAnswers: correct ? [correct] : [],
+    correctAnswers: correctAnswers || (correct ? [correct] : []),
     type,
     time,
     pointsMultiplier: 1,
