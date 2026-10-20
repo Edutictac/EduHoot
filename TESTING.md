@@ -29,9 +29,9 @@ Este és també l'orde exacte que usa la CI de GitHub Actions
 3. `node server/server.js`
 4. Obrir `http://localhost:3000/create/`.
 
-No hi ha script `start` ni `dev` en `package.json` encara — vore
-`docs/DEV_DOCKER_SETUP.md` per a una proposta (encara sense implementar)
-d'entorn de desenvolupament amb recàrrega automàtica.
+Alternativa amb recàrrega automàtica i sense instal·lar Node ni MongoDB
+en local: vore `docs/DEV_DOCKER_SETUP.md` (`docker compose up`), que a
+més carrega 5 qüestionaris de mostra.
 
 ## Tests automàtics
 

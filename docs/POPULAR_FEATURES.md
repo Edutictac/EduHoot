@@ -498,11 +498,10 @@ realista, no només una llista d'idees.
   document no ho reflectisca. Les propostes de les Fases 2 i 3 poden
   recolzar-se en eixa base sense preocupar-se primer per la reconnexió
   bàsica.
-- **No hi ha entorn de desenvolupament amb recàrrega automàtica.**
-  `docs/DEV_DOCKER_SETUP.md` continua sent només una guia de disseny; hui
-  cada canvi exigix reiniciar `node server/server.js` a mà.
-  Implementar-ho abans de començar diverses propostes accelera la
-  iteració de totes les fases següents.
+- **✅ Entorn de desenvolupament amb recàrrega automàtica, ja implementat.**
+  `docs/DEV_DOCKER_SETUP.md` ja no és una guia de disseny: `docker compose up`
+  alça EduHoot amb recàrrega automàtica (`node --watch`) i carrega 5
+  qüestionaris de mostra per a provar sense haver de crear-ne de propis.
 - **El full de ruta de biblioteca pública (`PROXIMAS_MEJORAS_PLAN.md`) és
   un eix a banda.** No competix pel mateix codi que estes 31 propostes
   (excepte parcialment en "perfil d'autor docent"), així que pot avançar
@@ -550,7 +549,7 @@ Separar responsabilitats de `server.js` i tindre recàrrega automàtica en
 desenvolupament haurien de ser **requisits per a començar la següent fase**, no
 un suggeriment ajornable:
 
-- Entorn de desenvolupament amb recàrrega automàtica (`docs/DEV_DOCKER_SETUP.md`).
+- ✅ Entorn de desenvolupament amb recàrrega automàtica (`docs/DEV_DOCKER_SETUP.md`) — fet.
 - Separar del monòlit `server.js` almenys la lògica de tipus de pregunta,
   abans d'afegir els tipus nous de la Fase 2.
 

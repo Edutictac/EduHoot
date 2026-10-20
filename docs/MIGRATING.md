@@ -217,7 +217,7 @@ Es continua servint tot igual que ara; no cal tocar
 | | Desenvolupament (dev) | Preproducció (stage) | Producció |
 |---|---|---|---|
 | **Què canvia** | Cal fer córrer el bundler en mode watch (p. ex. servidor de desenvolupament de Vite amb HMR) junt al backend (`node --watch`) — dos processos en lloc d'un. | `scripts/deploy-stage.sh` hauria d'executar `npm run build` abans de reiniciar el servici, i Express passaria a servir `dist/` en lloc de `public/js/` directament. | El `Dockerfile` de producció (que hui fa `npm ci --omit=dev`, sense devDependencies) necessitaria convertir-se en un **build multi-stage**: una fase amb devDependencies que execute `npm run build`, i una fase final que només copie el `dist/` resultant — patró estàndard de Docker, però nou ací. |
-| **Documents a actualitzar** | `docs/DEV_DOCKER_SETUP.md` (encara ni implementat) necessitaria un segon servici o procés per al bundler. | `STAGE_SETUP.md`, punt 5 (desplegar a stage). | `docs/DOCKER.md` (publicació d'imatge) i, si aplica, `scripts/deploy.example.sh`. |
+| **Documents a actualitzar** | `docs/DEV_DOCKER_SETUP.md` (ja implementat) necessitaria un segon servici o procés per al bundler. | `STAGE_SETUP.md`, punt 5 (desplegar a stage). | `docs/DOCKER.md` (publicació d'imatge) i, si aplica, `scripts/deploy.example.sh`. |
 | **Risc** | Baix (entorn d'un sol desenvolupador). | Mitjà (és justament l'entorn pensat per a detectar este tipus de problema abans de producció). | Mitjà-alt si no es prova abans a fons en stage — és l'entorn real dels centres. |
 
 Esta taula és, en si mateixa, part de l'argument a favor de Vue via CDN

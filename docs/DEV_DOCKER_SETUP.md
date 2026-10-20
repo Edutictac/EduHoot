@@ -70,7 +70,7 @@ services:
     volumes:
       - ./src:/app
       - eduhoot_node_modules:/app/node_modules
-    command: npm run dev
+    command: sh -c "npm run seed:dev; npm run dev"
 
 volumes:
   eduhoot_mongo_data:
@@ -109,6 +109,8 @@ CMD ["npm", "run", "dev"]
   "test:i18n": "playwright test",
   "lint": "node scripts/lint.js",
   "normalize-tags": "node scripts/normalize-tags.js",
+  "seed:dev": "node scripts/seed-dev-data.js",
+  "unseed:dev": "node scripts/seed-dev-data.js --remove",
   "test": "node --test \"test/**/*.test.js\"",
   "test:unit": "node --test \"test/unit/*.test.js\"",
   "test:integration": "node --test \"test/integration/*.test.js\""
@@ -137,6 +139,22 @@ Afegir una línia en cada bloc d'"Inici ràpid" (valencià ~línia 17, castellà
 
 > 5. Alternativa con Docker: consulta [docs/DEV_DOCKER_SETUP.md](docs/DEV_DOCKER_SETUP.md) para desarrollar sin instalar Node ni MongoDB localmente.
 
+### 6. `src/scripts/seed-dev-data.js` — 5 qüestionaris de mostra
+
+Script independent (mateix patró que `src/scripts/normalize-tags.js`: `MongoClient` propi, sense requerir `server.js`) que insereix 5 qüestionaris de mostra, tots amb `visibility: 'public'` (visibles a `/create/` sense necessitat de login), 5 preguntes cadascun, cobrint els 6 tipus de pregunta existents:
+
+| Qüestionari | Tipus de pregunta |
+|---|---|
+| Cultura general | `quiz` i `multiple` barrejats |
+| Música bàsica | `true-false` |
+| Informàtica bàsica | `short-answer` |
+| Matemàtiques ràpides | `numeric` (amb tolerància en la de pi) |
+| Sondeig: hàbits d'estudi | `poll` (sense resposta correcta) |
+
+- **Idempotent**: cada qüestionari porta un camp propi `devSeedKey` (`eduhoot-seed-demo-1`..`5`); l'script només insereix els que encara no existisquen.
+- **Reversible**: `node scripts/seed-dev-data.js --remove` (o `npm run unseed:dev`) esborra només els documents amb eixe marcador, mai cap altre qüestionari.
+- El `command` del servei `app` l'executa automàticament en cada arrancada (vore «Alçar i parar l'entorn de desenvolupament»).
+
 ## Per què estes decisions de disseny
 
 - **Dockerfile separat en lloc de reutilitzar el de producció**: el de producció fixa `NODE_ENV=production` i fa `npm ci --omit=dev` (sense devDependencies), i usa `entrypoint.sh` amb un usuari no-root que generaria conflictes de permisos en fer bind-mount del codi de l'amfitrió amb un UID distint. Separar els Dockerfiles evita qualsevol risc sobre el flux de producció.
@@ -149,7 +167,7 @@ Afegir una línia en cada bloc d'"Inici ràpid" (valencià ~línia 17, castellà
   sudo chown -R $(id -u):$(id -g) src/public/uploads src/logs
   ```
 - **`node --watch` en lloc de `nodemon`**: Node 20 ho admet de forma nativa, evitant afegir una dependència nova només per a això. Pot imprimir un `ExperimentalWarning` per stderr; és inofensiu.
-- **Volum anomenat per a `node_modules`**: el bind mount `./src:/app` tapa tot `/app`, inclòs el `node_modules` instal·lat durant la construcció de la imatge. Sense un volum anomenat a banda muntat sobre `/app/node_modules`, les dependències desapareixerien en arrancar el contenidor.
+- **Volum anomenat per a `node_modules`**: el bind mount `./src:/app` tapa tot `/app`, inclòs el `node_modules` instal·lat durant la construcció de la imatge. Sense un volum anomenat a banda muntat sobre `/app/node_modules`, les dependències desapareixerien en arrancar el contenidor. Efecte colateral: la primera vegada que s'alça el contenidor, Docker crea `src/node_modules` com a directori buit propietat de `root` en l'amfitrió (punt de muntatge del volum). Si abans o després vols fer `npm install` directament en l'amfitrió (fora de Docker), cal eliminar-lo primer amb `sudo rmdir src/node_modules`.
 - **`.env` només per a variables opcionals**: `MONGO_URL`, `HOST`, `PORT`, `NODE_ENV` van fixos en el compose perquè són necessaris sempre dins de la xarxa Docker. El `.env` en la raïl només servix perquè Compose substituïsca `${VAR}` dins del propi `docker-compose.yml` (no hi ha `dotenv` instal·lat, així que no el llig directament el procés de Node).
 
 ## Alçar i parar l'entorn de desenvolupament
@@ -171,10 +189,18 @@ docker compose up             # la resta de vegades (ja no cal --build)
 docker compose up -d          # en segon pla, sense bloquejar el terminal
 ```
 
-- Obri `http://localhost:3000/create/`.
+- Obri `http://localhost:3000/create/` — ja hi hauran 5 qüestionaris de
+  mostra (es sembren sols en l'arrancada; vore «6. `src/scripts/seed-dev-data.js`»).
 - Edita codi en `src/` amb normalitat: `node --watch` reinicia el servidor
   sol dins del contenidor.
 - Si l'has alçat amb `-d`, veure els logs en viu amb `docker compose logs -f app`.
+
+**Sembrar o desfer les dades de mostra manualment, amb el contenidor ja alçat:**
+
+```bash
+docker compose exec app npm run seed:dev      # torna a sembrar el que falte (idempotent)
+docker compose exec app npm run unseed:dev    # esborra només els 5 qüestionaris de mostra
+```
 
 **Per a parar-ho:**
 
@@ -188,12 +214,13 @@ docker compose down -v        # esborra també el volum de Mongo (torna a un est
 ## Verificació d'extrem a extrem
 
 1. `docker compose config` — valida la sintaxi i la resolució de variables.
-2. `docker compose up --build` — comprovar en els logs `Server started on 0.0.0.0:3000` i la connexió a Mongo.
-3. Obrir `http://localhost:3000/create/` i crear un qüestionari de prova.
-4. `docker compose restart` i comprovar que el qüestionari continua ahí (persistència del volum de Mongo).
-5. Editar `src/server/server.js` (p. ex. un `console.log` temporal) amb l'estiba alçada i veure en `docker compose logs -f app` que `node --watch` reinicia sol, sense necessitat de `--build`.
-6. Pujar una imatge en crear un qüestionari i comprovar que apareix en `src/public/uploads/quiz-images/` en l'amfitrió.
-7. `docker compose down -v` al finalitzar, per a netejar els volums de prova.
+2. `docker compose up --build` — comprovar en els logs `Server started on 0.0.0.0:3000`, la connexió a Mongo, i que `seed-dev-data` diu `Sembrats: 5`.
+3. Obrir `http://localhost:3000/create/`, comprovar que ja apareixen els 5 qüestionaris de mostra, i crear-ne un de propi per a la prova.
+4. `docker compose restart app` i comprovar als logs que ara diu `Sembrats: 0` (ja existien) i que `/create/` continua mostrant exactament els mateixos 5 de mostra més el propi (no duplicats).
+5. `docker compose exec app npm run unseed:dev` i comprovar que els 5 de mostra desapareixen de `/create/` però el qüestionari propi continua ahí; `docker compose exec app npm run seed:dev` els torna a crear.
+6. Editar `src/server/server.js` (p. ex. un `console.log` temporal) amb l'estiba alçada i veure en `docker compose logs -f app` que `node --watch` reinicia sol, sense necessitat de `--build`.
+7. Pujar una imatge en crear un qüestionari i comprovar que apareix en `src/public/uploads/quiz-images/` en l'amfitrió.
+8. `docker compose down -v` al finalitzar, per a netejar els volums de prova.
 
 ## Pròxim pas: Pull Request
 
