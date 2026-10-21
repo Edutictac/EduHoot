@@ -32,15 +32,14 @@ sudo chmod 640 /etc/eduhoot/stage.env
 Ajusta com a mínim:
 - `PORT=3100`
 - `MONGO_URL=mongodb://127.0.0.1:27017/eduhoot_stage`
+- `MONGO_DB=eduhoot_stage`
 - `PUBLIC_BASE_URL=https://stage.tu-dominio`
 
-> **Avís:** hui este `/eduhoot_stage` no té cap efecte real. El nom de
-> base de dades està fix en el codi (`DB_NAME` en `server.js`), que
-> ignora el nom que porte `MONGO_URL` — stage llig i escriu la mateixa
-> base `kahootDB` que producció, en compartir el mateix mongod. Vore
-> `ARCHITECTURE.md` → "Deute tècnic conegut" per al detall i la
-> solució recomanada (`MONGO_DB=eduhoot_stage` una vegada `DB_NAME`
-> siga configurable).
+> **Important:** cal definir `MONGO_DB=eduhoot_stage` (ja present en
+> `install-files/stage.env.example`). `DB_NAME` en `server.js` ara és
+> configurable (`process.env.MONGO_DB || 'kahootDB'`), però si
+> s'oblida esta variable, stage tornaria a llegir i escriure la base
+> `kahootDB` real de producció en compartir el mateix mongod.
 
 ## 3) Servici systemd de stage
 

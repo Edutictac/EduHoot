@@ -152,20 +152,14 @@ Esdeveniments principals que rep el servidor en `server.js`:
   responsabilitats de `server.js` com a **requisit**, no com a millora
   opcional, abans de seguir afegint mecàniques de joc de dificultat
   alta.
-- **Stage i producció comparteixen hui la mateixa base de dades.**
-  `DB_NAME` és una constant fixa (`server.js:233`,
-  `const DB_NAME = 'kahootDB'`) i `mongoClient.db(DB_NAME)` sempre
-  l'usa, **ignorant** el nom de base de dades que vaja al final de
-  `MONGO_URL`. Producció (`install-files/service/eduhoot-server.service`)
-  i stage (`install-files/stage.env.example`,
-  `MONGO_URL=.../eduhoot_stage`) apunten tots dos al mateix mongod
-  (`127.0.0.1:27017` del mateix VPS), així que el sufix `/eduhoot_stage`
-  no té cap efecte real: stage llig i escriu la base `kahootDB` real de
-  producció. Solució recomanada, sense migració necessària: fer
-  `DB_NAME` configurable (`process.env.MONGO_DB || 'kahootDB'`, mateix
-  patró que ja usen `src/scripts/normalize-tags.js` i
-  `src/scripts/seed-dev-data.js`) i afegir `MONGO_DB=eduhoot_stage` a
-  `/etc/eduhoot/stage.env` en el VPS.
+- ~~Stage i producció comparteixen hui la mateixa base de dades.~~
+  **Corregit.** `DB_NAME` (`server.js:237`) ja és configurable
+  (`process.env.MONGO_DB || 'kahootDB'`, mateix patró que ja usen
+  `src/scripts/normalize-tags.js` i `src/scripts/seed-dev-data.js`), i
+  `install-files/stage.env.example` ja definix
+  `MONGO_DB=eduhoot_stage`. Cal que `/etc/eduhoot/stage.env` en el VPS
+  incloga eixa variable (vore `STAGE_SETUP.md`) perquè l'aïllament de
+  base de dades siga efectiu.
 
 ## Unió a la partida: nom i icona del jugador
 

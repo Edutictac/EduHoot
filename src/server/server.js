@@ -234,7 +234,7 @@ function isLocalQuizId(id) {
 // MongoDB setup (single shared client to avoid legacy OP_QUERY code path)
 // Prefer IPv4 loopback to avoid ::1 connection issues on some setups
 const mongoUrl = process.env.MONGO_URL || 'mongodb://127.0.0.1:27017/';
-const DB_NAME = 'kahootDB';
+const DB_NAME = process.env.MONGO_DB || 'kahootDB';
 const GAMES_COLLECTION = 'kahootGames';
 const USERS_COLLECTION = 'users';
 const SOLO_SCORES_COLLECTION = 'soloScores';
