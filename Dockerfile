@@ -1,4 +1,4 @@
-FROM node:20-alpine
+FROM node:24-alpine
 
 LABEL org.opencontainers.image.title="EduHoot"
 LABEL org.opencontainers.image.description="Aplicacio de quiz tipus Kahoot, integrable amb identitat pseudonima EduTicTac"
@@ -9,8 +9,7 @@ ENV NODE_ENV=production
 WORKDIR /app
 
 COPY src/package.json src/package-lock.json ./
-RUN npm install -g npm@10.9.3 \
-    && npm ci --omit=dev
+RUN npm ci --omit=dev
 
 COPY src/ ./
 COPY entrypoint.sh /entrypoint.sh

@@ -31,7 +31,7 @@ Alçar EduHoot en local amb una sola orde (`docker compose up`), sense haver d'i
 - **`docker-compose.yml`** amb dos serveis: `mongo` (imatge oficial, amb volum anomenat per a persistència) i `app` (construït a partir de `Dockerfile.dev`).
 - **Bind mount** de `src/` dins del contenidor `app`, amb un **volum anomenat a banda per a `node_modules`** (perquè el muntatge de l'amfitrió no esborre les dependències instal·lades en la imatge).
 - El contenidor de desenvolupament funciona com **root** (sense l'usuari no-root ni l'`entrypoint.sh` de producció), per a evitar problemes de permisos per UID distint entre l'amfitrió i el contenidor. Acceptable perquè és un entorn local d'un sol desenvolupador.
-- Recàrrega automàtica amb **`node --watch`** (natiu de Node 20), sense afegir `nodemon` com a dependència nova.
+- Recàrrega automàtica amb **`node --watch`** (natiu de Node, des de la 20), sense afegir `nodemon` com a dependència nova.
 
 ## Fitxers creats
 
@@ -82,7 +82,7 @@ No es mapeja el port `27017` de Mongo a l'amfitrió per defecte (es pot descomen
 ### 2. `Dockerfile.dev`
 
 ```dockerfile
-FROM node:20-alpine
+FROM node:24-alpine
 
 LABEL org.opencontainers.image.title="EduHoot (dev)"
 
@@ -177,7 +177,7 @@ També insereix **5 usuaris locals de prova** (email + contrasenya), per a prova
   ```
   sudo chown -R $(id -u):$(id -g) src/public/uploads src/logs
   ```
-- **`node --watch` en lloc de `nodemon`**: Node 20 ho admet de forma nativa, evitant afegir una dependència nova només per a això. Pot imprimir un `ExperimentalWarning` per stderr; és inofensiu.
+- **`node --watch` en lloc de `nodemon`**: Node ho admet de forma nativa (des de la 20), evitant afegir una dependència nova només per a això. Pot imprimir un `ExperimentalWarning` per stderr; és inofensiu.
 - **Volum anomenat per a `node_modules`**: el bind mount `./src:/app` tapa tot `/app`, inclòs el `node_modules` instal·lat durant la construcció de la imatge. Sense un volum anomenat a banda muntat sobre `/app/node_modules`, les dependències desapareixerien en arrancar el contenidor. Efecte colateral: la primera vegada que s'alça el contenidor, Docker crea `src/node_modules` com a directori buit propietat de `root` en l'amfitrió (punt de muntatge del volum). Si abans o després vols fer `npm install` directament en l'amfitrió (fora de Docker), cal eliminar-lo primer amb `sudo rmdir src/node_modules`.
 - **`npm install` en cada arrancada del `command`**: eixe mateix volum és persistent entre arrancades, així que si canvies `package.json` i només fas `docker compose restart` (sense `--build`), el volum seguiria tenint les dependències antigues. Per això el `command` del servei `app` comença sempre amb `npm install` abans de sembrar i arrancar — ràpid quan no canvia res (només verifica l'arbre), i instal·la el que calga quan sí. Verificat: afegir una dependència a `package.json` i fer `docker compose restart app` (sense `--build`) ja la deixa disponible dins del contenidor.
 - **`.env` només per a variables opcionals**: `MONGO_URL`, `HOST`, `PORT`, `NODE_ENV` van fixos en el compose perquè són necessaris sempre dins de la xarxa Docker. El `.env` en la raïl només servix perquè Compose substituïsca `${VAR}` dins del propi `docker-compose.yml` (no hi ha `dotenv` instal·lat, així que no el llig directament el procés de Node).
