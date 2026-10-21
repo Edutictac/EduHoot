@@ -17,7 +17,11 @@ const {
   normalizeQuestionMeta,
   normalizeCorrectAnswers,
   splitAcceptedAnswers,
-  parseLenientNumber
+  parseLenientNumber,
+  isFreeAnswerType,
+  looksLikeFreeTypeQuestion,
+  isSubmissionCorrect,
+  buildAnswerFields
 } = require('./questionUtils');
 
 const publicPath = path.join(__dirname, '../public');
@@ -1386,9 +1390,6 @@ function normalizeQuestions(list = []) {
         correctText: cleanImportedText(item.correctText || '')
       });
       const video = normalizeVideoUrl(item.video);
-      const recoveredAnswers = meta.type === 'short-answer' && !meta.acceptedAnswers.length && !video
-        ? splitAcceptedAnswers(item.video)
-        : [];
       const base = {
         question: cleanImportedText(item.question || ''),
         answers: safeAnswers,
@@ -1400,26 +1401,11 @@ function normalizeQuestions(list = []) {
         image: item.image || '',
         video
       };
-
-      if (meta.type === 'short-answer') {
-        return {
-          ...base,
-          acceptedAnswers: [
-            ...(Array.isArray(meta.acceptedAnswers) ? meta.acceptedAnswers : []),
-            ...recoveredAnswers
-          ].map(cleanImportedText)
-        };
+      const answerFields = buildAnswerFields(item, meta, { hasVideo: Boolean(video) });
+      if (Array.isArray(answerFields.acceptedAnswers)) {
+        answerFields.acceptedAnswers = answerFields.acceptedAnswers.map(cleanImportedText);
       }
-
-      if (meta.type === 'numeric') {
-        return {
-          ...base,
-          numericAnswer: meta.numericAnswer,
-          tolerance: meta.tolerance
-        };
-      }
-
-      return base;
+      return { ...base, ...answerFields };
     })
     .filter((q) => q.question.trim().length > 0);
 }
@@ -1943,22 +1929,8 @@ function shuffleQuestions(originalQuestions = []) {
 function isMultiplayerFreeTypeQuestion(q) {
   if (!q) return false;
   const meta = normalizeQuestionMeta(q);
-  if (meta.type === 'short-answer' || meta.type === 'numeric') return true;
-
-  // Señales defensivas por si el tipo está corrupto pero vienen campos libres.
-  const accepted = q.acceptedAnswers;
-  const hasAccepted = Array.isArray(accepted)
-    ? accepted.length > 0
-    : (typeof accepted === 'string' && accepted.trim().length > 0);
-
-  const hasNumeric =
-    (typeof q.numericAnswer === 'number') ||
-    (q.numericAnswer !== null && q.numericAnswer !== undefined && typeof q.numericAnswer === 'string' && q.numericAnswer.trim().length > 0) ||
-    (q.numero !== null && q.numero !== undefined && String(q.numero).trim().length > 0) ||
-    (q.tolerancia !== null && q.tolerancia !== undefined && String(q.tolerancia).trim().length > 0) ||
-    (q.tolerance !== null && q.tolerance !== undefined && String(q.tolerance).trim().length > 0);
-
-  return hasAccepted || hasNumeric;
+  if (isFreeAnswerType(meta.type)) return true;
+  return looksLikeFreeTypeQuestion(q);
 }
 
 function buildQuestions(questions = [], opts = {}) {
@@ -1976,7 +1948,7 @@ function buildQuestions(questions = [], opts = {}) {
     const type = meta.type || (q.type || 'quiz');
 
     // Tipos de respuesta libre: no barajar opciones y preservar meta.
-    if (type === 'short-answer' || type === 'numeric') {
+    if (isFreeAnswerType(type)) {
       return {
         question: cleanImportedText(q.question),
         answers: Array.isArray(q.answers) ? q.answers.slice(0, 4).map(cleanImportedText) : [],
@@ -2133,51 +2105,6 @@ function getQuestionMeta(question) {
     numericAnswer: meta.numericAnswer,
     tolerance: meta.tolerance
   };
-}
-
-function normalizeFreeText(value) {
-  let str = (value || '').toString().trim().toLowerCase();
-  if (!str) return '';
-  try {
-    str = str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  } catch (e) {}
-  str = str.replace(/[^a-z0-9\s]/g, ' ');
-  str = str.replace(/\s+/g, ' ').trim();
-  return str;
-}
-
-function isSubmissionCorrect(meta, submission) {
-  if (!meta || !Array.isArray(meta.correctAnswers) || !meta.correctAnswers.length) {
-    return false;
-  }
-  if (meta.type === 'short-answer') {
-    const raw = submission && typeof submission === 'object' && submission.text !== undefined ? submission.text : submission;
-    const normalized = normalizeFreeText(raw);
-    if (!normalized) return false;
-    const accepted = Array.isArray(meta.acceptedAnswers) ? meta.acceptedAnswers : splitAcceptedAnswers(meta.acceptedAnswers);
-    return accepted.some((ans) => normalizeFreeText(ans) === normalized);
-  }
-  if (meta.type === 'numeric') {
-    const raw = submission && typeof submission === 'object' && submission.number !== undefined ? submission.number : submission;
-    const num = parseLenientNumber(raw);
-    if (num === null) return false;
-    const target = typeof meta.numericAnswer === 'number' ? meta.numericAnswer : parseLenientNumber(meta.numericAnswer);
-    if (target === null) return false;
-    const tol = typeof meta.tolerance === 'number' ? meta.tolerance : (parseLenientNumber(meta.tolerance) || 0);
-    return Math.abs(num - target) <= Math.max(0, tol);
-  }
-  if (meta.type === 'multiple') {
-    if (!Array.isArray(submission) || submission.length === 0) {
-      return false;
-    }
-    const submissionSet = new Set(submission);
-    if (submissionSet.size !== meta.correctAnswers.length) {
-      return false;
-    }
-    return meta.correctAnswers.every((value) => submissionSet.has(value));
-  }
-  const normalized = Array.isArray(submission) ? submission[0] : submission;
-  return Number(normalized) === meta.correctAnswers[0];
 }
 
 function getSubmissionScoreRatio(meta, submission) {
