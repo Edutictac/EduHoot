@@ -56,7 +56,7 @@ const {
   finishedSessionReports,
   FINISHED_SESSION_REPORT_DIR
 } = require('./services/sessionReport')({ players });
-const sessions = new Map();
+const { sessions, getCookieOptions, createSession, parseCookies } = require('./services/sessions');
 const oauthStates = new Map();
 const authentikOauthStates = new Map();
 const studentJoinTokens = new Map();
@@ -887,29 +887,6 @@ function setPasswordFields(password) {
   return { passwordSalt: salt, passwordHash: hash };
 }
 
-function getCookieOptions(req, extra = {}) {
-  const forwardedProto = (req.headers['x-forwarded-proto'] || '').toString().split(',')[0].trim();
-  const secure = req.secure || forwardedProto === 'https';
-  return {
-    httpOnly: true,
-    sameSite: 'lax',
-    secure,
-    ...extra
-  };
-}
-
-function createSession(user, provider = 'local') {
-  const sessionId = crypto.randomBytes(24).toString('hex');
-  sessions.set(sessionId, {
-    userId: user._id ? user._id.toString() : user.id,
-    role: user.role || 'editor',
-    provider,
-    email: user.email,
-    nickname: user.nickname || ''
-  });
-  return sessionId;
-}
-
 function publicBaseUrl(req) {
   const configured = (process.env.PUBLIC_BASE_URL || process.env.BASE_URL || '').trim();
   if (configured) return configured.replace(/\/+$/, '');
@@ -1112,18 +1089,6 @@ async function findOrCreateGoogleUser(profile) {
   };
   const result = await users.insertOne(user);
   return { ...user, _id: result.insertedId };
-}
-
-function parseCookies(header) {
-  const list = {};
-  if (!header) return list;
-  header.split(';').forEach((cookie) => {
-    const parts = cookie.split('=');
-    const key = parts.shift().trim();
-    const value = decodeURIComponent(parts.join('='));
-    list[key] = value;
-  });
-  return list;
 }
 
 async function sessionMiddleware(req, res, next) {
