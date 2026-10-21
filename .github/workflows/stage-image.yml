@@ -1,0 +1,71 @@
+name: Publica la imatge de stage
+
+# Una etiqueta stage-* publica la imatge en ghcr.io/edutictac/eduhoot-stage.
+# El VPS comprova cada pocs minuts si :latest ha canviat i la desplega en
+# eduhoot-stage.edutictac.es. GitHub no té cap accés al servidor.
+on:
+  push:
+    tags: ['stage-*']
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: stage-image
+  cancel-in-progress: false
+
+jobs:
+  tests:
+    # Persones que poden publicar en stage.
+    if: contains(fromJSON('["sasogu","eduardomillan"]'), github.actor)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: src
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: src/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+
+  publish:
+    needs: tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - name: Construïx i publica la imatge
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_USER: ${{ github.actor }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          [[ "$TAG" =~ ^stage-[A-Za-z0-9._-]+$ ]]
+          image="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/eduhoot-stage"
+          docker build \
+            --label org.opencontainers.image.source="https://github.com/${GITHUB_REPOSITORY}" \
+            --label org.opencontainers.image.revision="${GITHUB_SHA}" \
+            --label org.opencontainers.image.version="${TAG}" \
+            -t "$image:$TAG" -t "$image:latest" .
+          # Autenticació temporal, sense guardar credencials en el runner.
+          export DOCKER_CONFIG
+          DOCKER_CONFIG=$(mktemp -d)
+          trap 'rm -rf "$DOCKER_CONFIG"' EXIT
+          docker login ghcr.io -u "$GH_USER" --password-stdin <<< "$GH_TOKEN"
+          docker push "$image:$TAG"
+          docker push "$image:latest"
+          {
+            echo "### EduHoot stage: \`$TAG\`"
+            echo "Commit \`${GITHUB_SHA::7}\` publicat en \`$image:latest\`."
+            echo ""
+            echo "El servidor el desplegarà en https://eduhoot-stage.edutictac.es en uns minuts."
+          } >> "$GITHUB_STEP_SUMMARY"
