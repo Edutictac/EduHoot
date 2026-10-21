@@ -11,7 +11,7 @@ async function linkAuthentikUser(users, profile, issuer) {
   if (existing) {
     if (!linked && existing.authentikId &&
         (existing.authentikId !== subject || (existing.authentikIssuer && existing.authentikIssuer !== issuer))) {
-      throw new Error('El correo ya está vinculado a otra identidad. Contacta con info@sasogu.es.');
+      throw new Error('El correo ya está vinculado a otra identidad. Abre una incidencia en https://git.edutictac.es/Edutictac/eduhoot/issues.');
     }
     const update = { ...identity, authentikVerifiedEmail: true, lastLoginAt: now, updatedAt: now };
     if (!existing.nickname) update.nickname = profile.name || profile.preferred_username || '';
