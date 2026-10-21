@@ -57,9 +57,11 @@ const {
   FINISHED_SESSION_REPORT_DIR
 } = require('./services/sessionReport')({ players });
 const { sessions, getCookieOptions, createSession, parseCookies } = require('./services/sessions');
+const createCommonsService = require('./services/commons');
+const createPlayerAuthRouter = require('./routes/playerAuth');
+const commons = createCommonsService({ normalizePlayerName });
 const oauthStates = new Map();
 const authentikOauthStates = new Map();
-const studentJoinTokens = new Map();
 const soloScoreBuffer = [];
 const SOLO_SCORE_BUFFER_DELAY = 150;
 const SOLO_SCORE_BUFFER_MAX = 50;
@@ -115,11 +117,6 @@ const AUTHENTIK_USERINFO_URL = (process.env.AUTHENTIK_USERINFO_URL || '').trim()
 const AUTHENTIK_SCOPE = (process.env.AUTHENTIK_SCOPE || 'openid profile email groups').trim();
 const AUTHENTIK_ONLY = /^(1|true|yes)$/i.test(process.env.AUTHENTIK_ONLY || '');
 const EDUHOOT_RESOURCES_TOKEN = process.env.EDUHOOT_RESOURCES_TOKEN || '';
-const EDUTICTAC_ID_API_URL = (process.env.EDUTICTAC_ID_API_URL || '').replace(/\/+$/, '');
-const EDUTICTAC_ID_APP_TOKEN = process.env.EDUTICTAC_ID_APP_TOKEN || '';
-const EDUTICTAC_ID_AUTH_REQUIRED = /^(1|true|yes)$/i.test(process.env.EDUTICTAC_ID_AUTH_REQUIRED || '');
-const STUDENT_JOIN_TOKEN_TTL_MS = 10 * 60 * 1000;
-const STUDENT_ACTIVITY_TOKEN_TTL_MS = 4 * 60 * 60 * 1000;
 const PUBLIC_IMPORT_SOURCE_URL = (process.env.PUBLIC_IMPORT_SOURCE_URL || '').trim().replace(/\/+$/, '');
 
 function extractKahootId(raw = '') {
@@ -308,170 +305,6 @@ function normalizePlayerName(name) {
   const chars = (name || '').toString().match(/[0-9a-zA-Z]/g) || [];
   const trimmed = chars.join('').toUpperCase().slice(0, 3);
   return trimmed || '???';
-}
-
-function isStudentIdentityEnabled() {
-  return !!EDUTICTAC_ID_API_URL;
-}
-
-function cleanupStudentJoinTokens() {
-  const now = Date.now();
-  for (const [token, entry] of studentJoinTokens.entries()) {
-    if (!entry || entry.expiresAt <= now) studentJoinTokens.delete(token);
-  }
-}
-
-function createStudentJoinToken(identity, ttlMs = STUDENT_JOIN_TOKEN_TTL_MS) {
-  cleanupStudentJoinTokens();
-  const token = crypto.randomBytes(24).toString('hex');
-  const publicCode = normalizePlayerName(identity && identity.public_code);
-  studentJoinTokens.set(token, {
-    identity: {
-      id: identity && identity.id ? String(identity.id) : '',
-      public_code: publicCode,
-      avatar_icon: identity && identity.avatar_icon ? String(identity.avatar_icon) : '',
-      assignment_id: identity && identity.assignment_id ? String(identity.assignment_id) : '',
-      activity_id: identity && identity.activity_id ? String(identity.activity_id) : ''
-    },
-    expiresAt: Date.now() + ttlMs
-  });
-  return { token, publicCode };
-}
-
-function consumeStudentJoinToken(token) {
-  cleanupStudentJoinTokens();
-  const entry = token ? studentJoinTokens.get(String(token)) : null;
-  if (!entry) return null;
-  studentJoinTokens.delete(String(token));
-  return entry.identity;
-}
-
-function postJson(url, payload, timeoutMs = 5000, extraHeaders = {}) {
-  return new Promise((resolve, reject) => {
-    let parsed;
-    try {
-      parsed = new URL(url);
-    } catch (err) {
-      reject(err);
-      return;
-    }
-    const body = JSON.stringify(payload || {});
-    const lib = parsed.protocol === 'https:' ? https : http;
-    const req = lib.request({
-      protocol: parsed.protocol,
-      hostname: parsed.hostname,
-      port: parsed.port,
-      path: `${parsed.pathname}${parsed.search}`,
-      method: 'POST',
-      timeout: timeoutMs,
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Content-Length': Buffer.byteLength(body),
-        ...extraHeaders
-      }
-    }, (resp) => {
-      const chunks = [];
-      resp.on('data', (chunk) => chunks.push(chunk));
-      resp.on('end', () => {
-        const text = Buffer.concat(chunks).toString('utf8');
-        let data = null;
-        try { data = text ? JSON.parse(text) : null; } catch (err) {}
-        resolve({ statusCode: resp.statusCode || 0, data, text });
-      });
-    });
-    req.on('timeout', () => req.destroy(new Error('request timeout')));
-    req.on('error', reject);
-    req.write(body);
-    req.end();
-  });
-}
-
-async function authenticateStudentIdentity(publicCode, pin) {
-  if (!isStudentIdentityEnabled()) {
-    throw new Error('student identity service not configured');
-  }
-  const result = await postJson(`${EDUTICTAC_ID_API_URL}/api/auth/student`, {
-    public_code: publicCode,
-    pin
-  });
-  if (result.statusCode < 200 || result.statusCode >= 300 || !result.data || !result.data.identity) {
-    const err = new Error('invalid student credentials');
-    err.statusCode = result.statusCode;
-    throw err;
-  }
-  return result.data.identity;
-}
-
-async function consumeCommonsLaunchToken(token) {
-  if (!EDUTICTAC_ID_API_URL || !EDUTICTAC_ID_APP_TOKEN) {
-    throw new Error('student identity service not configured');
-  }
-  const result = await postJson(
-    `${EDUTICTAC_ID_API_URL}/api/apps/eduhoot/launch-tokens/consume`,
-    { token },
-    5000,
-    { Authorization: `Bearer ${EDUTICTAC_ID_APP_TOKEN}` }
-  );
-  if (
-    result.statusCode < 200 ||
-    result.statusCode >= 300 ||
-    !result.data ||
-    !result.data.identity
-  ) {
-    const err = new Error('invalid launch token');
-    err.statusCode = result.statusCode;
-    throw err;
-  }
-  return result.data;
-}
-
-async function reportCommonsScore(identityId, activityId, score, metadata = {}) {
-  if (!EDUTICTAC_ID_API_URL || !EDUTICTAC_ID_APP_TOKEN || !identityId || !activityId) return;
-  const result = await postJson(
-    `${EDUTICTAC_ID_API_URL}/api/apps/eduhoot/scores`,
-    {
-      identity_id: identityId,
-      activity_id: activityId,
-      score: Math.max(0, Math.round(Number(score) || 0)),
-      metadata
-    },
-    5000,
-    { Authorization: `Bearer ${EDUTICTAC_ID_APP_TOKEN}` }
-  );
-  if (result.statusCode < 200 || result.statusCode >= 300) {
-    console.error('[commons-score] failed', result.statusCode, result.text || result.data);
-  }
-}
-
-async function reportCommonsScores(game, playersInGame) {
-  if (!EDUTICTAC_ID_API_URL || !EDUTICTAC_ID_APP_TOKEN || !game || !game.gameData) return;
-  const activityId = game.gameData.gameid ? String(game.gameData.gameid) : '';
-  if (!activityId) return;
-  const totalQuestions = Number(game.gameData.totalQuestions) || 0;
-  const quizName = game.gameData.quizName || '';
-  const reports = (Array.isArray(playersInGame) ? playersInGame : [])
-    .filter((player) => player && player.gameData && player.gameData.identity && player.gameData.identity.id)
-    .map((player) => {
-      const correctCount = Number(player.gameData.correctCount) || 0;
-      const wrongCount = Number(player.gameData.wrongCount) || 0;
-      const rawScore = Number(player.gameData.score) || 0;
-      return reportCommonsScore(
-        player.gameData.identity.id,
-        activityId,
-        rawScore,
-        {
-          pin: String(game.pin || ''),
-          quiz_name: quizName,
-          correct: correctCount,
-          wrong: wrongCount,
-          total_questions: totalQuestions
-        }
-      ).catch((err) => {
-        console.error('[commons-score] error', err);
-      });
-    });
-  await Promise.all(reports);
 }
 
 function socketIp(socket) {
@@ -1535,65 +1368,7 @@ app.get('/api/validate-pin/:pin', (req, res) => {
   res.json({ valid: !!game });
 });
 
-app.get('/api/player-auth/config', (req, res) => {
-  res.json({
-    enabled: isStudentIdentityEnabled(),
-    required: isStudentIdentityEnabled() && EDUTICTAC_ID_AUTH_REQUIRED
-  });
-});
-
-app.post('/api/player-auth/student', authRateLimiter, async (req, res) => {
-  if (!isStudentIdentityEnabled()) {
-    return res.status(503).json({ error: 'Identitat EduTicTac no configurada.' });
-  }
-  const publicCode = (req.body.public_code || '').toString().trim().toUpperCase();
-  const pin = (req.body.pin || '').toString().trim();
-  try {
-    const identity = await authenticateStudentIdentity(publicCode, pin);
-    const join = createStudentJoinToken(identity);
-    return res.json({
-      ok: true,
-      public_code: join.publicCode,
-      display_name: join.publicCode,
-      avatar_icon: identity && identity.avatar_icon ? String(identity.avatar_icon) : '',
-      join_token: join.token
-    });
-  } catch (err) {
-    const status = err && err.statusCode === 429 ? 429 : 401;
-    return res.status(status).json({ error: 'Codi o PIN incorrecte.' });
-  }
-});
-
-app.post('/api/player-auth/launch-token', authRateLimiter, async (req, res) => {
-  if (!isStudentIdentityEnabled() || !EDUTICTAC_ID_APP_TOKEN) {
-    return res.status(503).json({ error: 'Identitat EduTicTac no configurada.' });
-  }
-  const launchToken = (req.body.launch_token || '').toString().trim();
-  if (!launchToken) {
-    return res.status(400).json({ error: 'Falta el token de Commons.' });
-  }
-  try {
-    const launch = await consumeCommonsLaunchToken(launchToken);
-    const assignment = launch.assignment || {};
-    const identity = {
-      ...(launch.identity || {}),
-      assignment_id: assignment.id || '',
-      activity_id: assignment.activity_id || ''
-    };
-    const join = createStudentJoinToken(identity, STUDENT_ACTIVITY_TOKEN_TTL_MS);
-    return res.json({
-      ok: true,
-      public_code: join.publicCode,
-      display_name: join.publicCode,
-      avatar_icon: identity.avatar_icon || '',
-      join_token: join.token,
-      assignment
-    });
-  } catch (err) {
-    const status = err && err.statusCode === 429 ? 429 : 401;
-    return res.status(status).json({ error: 'Token de Commons no vàlid.' });
-  }
-});
+app.use('/api/player-auth', createPlayerAuthRouter({ commons, authRateLimiter }));
 
 app.post('/api/upload-csv', uploadRateLimiter, upload.single('file'), async (req, res) => {
   if (!req.file) {
@@ -2661,9 +2436,9 @@ io.on('connection', (socket) => {
     }
 
     let studentIdentity = null;
-    if (isStudentIdentityEnabled()) {
-      studentIdentity = consumeStudentJoinToken(params.studentJoinToken);
-      if (EDUTICTAC_ID_AUTH_REQUIRED && !studentIdentity) {
+    if (commons.isStudentIdentityEnabled()) {
+      studentIdentity = commons.consumeStudentJoinToken(params.studentJoinToken);
+      if (commons.EDUTICTAC_ID_AUTH_REQUIRED && !studentIdentity) {
         socket.emit('playerJoinRejected', { error: 'Identificació de l’alumnat no vàlida.' });
         return;
       }
@@ -3073,7 +2848,7 @@ io.on('connection', (socket) => {
         cacheFinishedSessionReport(game, playersInGame);
         const uniquePlayers = Array.isArray(playersInGame) ? playersInGame.length : 0;
         await incrementQuizStats(game.gameData.gameid, uniquePlayers);
-        await reportCommonsScores(game, playersInGame);
+        await commons.reportCommonsScores(game, playersInGame);
         scheduleGameCleanup(socket.id);
       }
     } catch (err) {
@@ -3479,7 +3254,7 @@ app.post('/api/quizzes/:id/solo-run', async (req, res) => {
     let studentIdentity = null;
     const studentJoinToken = (req.body.studentJoinToken || '').toString().trim();
     if (studentJoinToken) {
-      studentIdentity = consumeStudentJoinToken(studentJoinToken);
+      studentIdentity = commons.consumeStudentJoinToken(studentJoinToken);
       if (!studentIdentity) {
         return res.status(401).json({ error: 'Sessió Commons no vàlida.' });
       }
@@ -3509,7 +3284,7 @@ app.post('/api/quizzes/:id/solo-run', async (req, res) => {
     }
     if (studentIdentity && studentIdentity.id) {
       try {
-        await reportCommonsScore(
+        await commons.reportCommonsScore(
           studentIdentity.id,
           studentIdentity.activity_id || quizKey,
           score,
