@@ -202,6 +202,20 @@ function normalizeQuestionMeta(item = {}) {
   };
 }
 
+function getQuestionMeta(question) {
+  if (!question) {
+    return { correctAnswers: [1], type: 'quiz' };
+  }
+  const meta = normalizeQuestionMeta(question);
+  return {
+    correctAnswers: meta.correctAnswers,
+    type: meta.type,
+    acceptedAnswers: meta.acceptedAnswers,
+    numericAnswer: meta.numericAnswer,
+    tolerance: meta.tolerance
+  };
+}
+
 function looksLikeFreeTypeQuestion(q) {
   if (!q) return false;
   // Señales defensivas por si el tipo está corrupto pero vienen campos libres.
@@ -279,6 +293,7 @@ module.exports = {
   normalizeQuestionType,
   normalizeCorrectAnswers,
   normalizeQuestionMeta,
+  getQuestionMeta,
   splitAcceptedAnswers,
   parseLenientNumber,
   normalizeFreeText,
