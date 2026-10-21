@@ -71,6 +71,12 @@ services:
       - ./src:/app
       - eduhoot_node_modules:/app/node_modules
     command: sh -c "npm install; npm run seed:dev; npm run dev"
+    develop:
+      watch:
+        - action: rebuild
+          path: ./src/package.json
+        - action: rebuild
+          path: ./src/package-lock.json
 
 volumes:
   eduhoot_mongo_data:
@@ -78,6 +84,17 @@ volumes:
 ```
 
 No es mapeja el port `27017` de Mongo a l'amfitrió per defecte (es pot descomentar) per a no xocar amb un Mongo natiu que ja tingues corrent segons el `README.md`.
+
+El bloc `develop.watch` **no** és el mecanisme de recàrrega — eixe ja el
+donen el bind mount (`./src:/app`) i `node --watch` (vore punt 3 més avall)
+per al codi normal. Sense `develop.watch`, l'opció "w: Watch" del menú
+interactiu de `docker compose up` avisa que "watch is not yet configured",
+encara que tot funcione bé. El bloc només cobrix allò que el bind mount no
+fa: si canvia `package.json`/`package-lock.json`, reconstruïx la imatge
+(torna a executar `npm install` dins, en lloc de fer-ho només en arrancar)
+i recrea el contenidor sense parar i tornar a alçar l'entorn a mà. Per a
+activar-ho cal `docker compose watch` (o prémer `w` en `docker compose up`)
+en una terminal a banda, mentres l'entorn ja està alçat.
 
 ### 2. `Dockerfile.dev`
 

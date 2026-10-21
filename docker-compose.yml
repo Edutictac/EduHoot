@@ -31,6 +31,17 @@ services:
       - ./src:/app
       - eduhoot_node_modules:/app/node_modules
     command: sh -c "npm install; npm run seed:dev; npm run dev"
+    develop:
+      watch:
+        # El código ya se recarga solo vía bind mount + `node --watch` (ver
+        # arriba); esto solo cubre lo que ese camino no hace: si cambian las
+        # dependencias, reconstruye la imagen (vuelve a correr `npm install`
+        # dentro del contenedor) y lo recrea, sin tener que parar y volver a
+        # levantar el entorno a mano.
+        - action: rebuild
+          path: ./src/package.json
+        - action: rebuild
+          path: ./src/package-lock.json
 
 volumes:
   eduhoot_mongo_data:
