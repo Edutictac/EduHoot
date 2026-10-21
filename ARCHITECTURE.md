@@ -31,12 +31,16 @@ funcionament del projecte.
 
 ## Arquitectura tècnica (resum)
 
-- **Monòlit Express + Socket.IO** (`src/server/server.js`, 5.123 línies):
-  rutes HTTP, esdeveniments de Socket.IO, lògica de partida, càlcul de
-  puntuació, generació de CSV/Moodle XML i autenticació conviuen en el
-  mateix fitxer. Només una petita part està separada en mòduls propis:
-  `importCsv.js`, `questionUtils.js`, `authentikUsers.js` i
-  `utils/liveGames.js` / `utils/players.js` (unes 500 línies en total).
+- **Express + Socket.IO en un sol procés Node**, organitzat en capes
+  (`src/server/`): `data/` (accés a MongoDB), `services/` (lògica de
+  negoci), `routes/` (rutes HTTP, una per recurs) i `sockets/`
+  (esdeveniments de Socket.IO). `server.js` (~355 línies) és només el
+  punt d'entrada: configura Express, instancia els serveis, munta els
+  routers i registra els handlers de Socket.IO. Els mòduls amb estat o
+  que depenen d'altres instàncies s'exporten com a factories
+  (`createXxx({ dependències })`); la resta són mòduls plans que es
+  requereixen directament. Vore `docs/MIGRATING.md` (Subfase A) per al
+  perquè d'esta divisió.
 - **Sense build step ni framework de frontend**: el client és JS vanilla
   servit directament des de `src/public/`, sense React/Vue ni bundler
   (webpack/vite). Cada pantalla (`create`, `host`, `player`, `solo`,
@@ -53,7 +57,36 @@ funcionament del projecte.
 ```
 src/
 ├── server/
-│   ├── server.js          # monòlit: rutes HTTP, Socket.IO, lògica de joc
+│   ├── server.js          # punt d'entrada: Express + Socket.IO, munta tot
+│   ├── data/
+│   │   ├── db.js              # connexió a MongoDB (MONGO_URL, MONGO_DB) i índexs
+│   │   └── repositories.js    # una funció per col·lecció (getGamesCollection...)
+│   ├── services/
+│   │   ├── scoring.js         # càlcul de puntuació
+│   │   ├── moodleExport.js    # quiz -> Moodle XML
+│   │   ├── sessionReport.js   # informe CSV de partida (memòria + disc)
+│   │   ├── sessions.js        # sessions HTTP en memòria i cookies
+│   │   ├── passwords.js       # hash/verificació de contrasenyes
+│   │   ├── oauth.js           # login Google i Authentik (OIDC)
+│   │   ├── authMiddleware.js  # límit d'intents, req.user, requireRole
+│   │   ├── commons.js         # Edutictac ID / Commons (identitat alumnat)
+│   │   ├── quizNormalize.js   # neteja/normalització pura (text, preguntes, tags)
+│   │   ├── quizzes.js         # accés, permisos i creació de quizzes
+│   │   ├── ephemeralQuizzes.js # quizzes "local-*" sense compte (caduquen)
+│   │   ├── soloScores.js      # rànquing Solo amb escriptura en lots
+│   │   └── kahootImport.js    # importació de Kahoot i rèplica d'imatges
+│   ├── routes/
+│   │   ├── quizzes.js         # /api/quizzes..., /api/public-quizzes, /api/tags
+│   │   ├── games.js           # validate-pin, report.csv
+│   │   ├── auth.js            # /api/auth/... (login, Google, Authentik, usuaris)
+│   │   ├── playerAuth.js      # /api/player-auth/... (Edutictac ID)
+│   │   └── admin.js           # /api/admin/..., /admin
+│   ├── sockets/
+│   │   ├── index.js           # io.on('connection') i sessió del socket
+│   │   ├── hostEvents.js      # host-join, startGame, nextQuestion...
+│   │   ├── playerEvents.js    # player-join, playerAnswer...
+│   │   ├── common.js          # disconnect, timeUp, getScore...
+│   │   └── gameHelpers.js     # temporitzadors, preguntes, neteja de partides
 │   ├── importCsv.js       # anàlisi de CSV -> preguntes
 │   ├── questionUtils.js   # utilitats de tipus de pregunta
 │   ├── authentikUsers.js  # vinculació d'identitats Authentik
@@ -73,16 +106,19 @@ src/
 └── scripts/                             # scripts puntuals (vore TESTING.md)
 ```
 
-Els fitxers més grans, per si cal ubicar alguna cosa ràpid: `server.js`
-(5.123 línies) en el backend; en el frontend, `create.js` (~4.184
+Els fitxers més grans, per si cal ubicar alguna cosa ràpid: en el
+backend, `routes/quizzes.js` (~1.100 línies), `sockets/hostEvents.js`
+(~440) i `sockets/gameHelpers.js` (~370); en el frontend, `create.js` (~4.184
 línies / 174 KB), `solo.js` (~94 KB), `multiplayer.js` (~83 KB),
 `quizCreator.js` (~71 KB), `hostGame.js` (~52 KB) i `playerGame.js`
 (~35 KB).
 
 ## Model de dades (MongoDB)
 
-Sis col·leccions, totes en la base `kahootDB` (nom fixat en el codi —
-`server.js:232` — no configurable per `MONGO_URL`):
+Sis col·leccions, totes en la mateixa base de dades: `kahootDB` per
+defecte, configurable amb `MONGO_DB` (`src/server/data/db.js:6`). Els noms
+de col·lecció es definixen en `data/db.js` i s'hi accedix sempre a través
+de `data/repositories.js`:
 
 | Col·lecció | Constant en el codi | Contingut |
 |---|---|---|
@@ -112,7 +148,7 @@ vore `docs/PLA-MIGRACIO-AUTHENTIK-2026-10.md`):
   poden entrar.
 
 Les sessions HTTP **no es guarden en Mongo ni en un store extern**: és
-un `Map` en memòria (`sessions`, `server.js:1561`) indexat per un
+un `Map` en memòria (`sessions`, `src/server/services/sessions.js:3`) indexat per un
 `sessionId` aleatori que s'envia com a cookie. Això significa que
 **reiniciar el servidor tanca la sessió de tothom** — no hi ha
 persistència de sessió entre reinicis del procés.
@@ -123,7 +159,8 @@ login.
 
 ## Comunicació en temps real (Socket.IO)
 
-Esdeveniments principals que rep el servidor en `server.js`:
+Esdeveniments principals que rep el servidor (registrats en
+`src/server/sockets/`: `hostEvents.js`, `playerEvents.js` i `common.js`):
 
 | Esdeveniment | Qui l'envia | Per a què |
 |---|---|---|
@@ -141,19 +178,24 @@ Esdeveniments principals que rep el servidor en `server.js`:
 
 ## Deute tècnic conegut
 
-- `server.js` ha crescut de 3.588 a 5.123 línies des de l'auditoria
-  d'abril (`REVISION_MEJORAS.md`) sense dividir-se en mòduls — concentra
-  rutes HTTP, lògica de Socket.IO, càlcul de puntuació, generació de
-  CSV/Moodle XML i autenticació. `src/public/js/create.js` (4.184
-  línies) té un problema equivalent en el frontend.
+- ~~`server.js` concentrava tot el backend (5.123 línies).~~
+  **Corregit** (Subfase A de `docs/MIGRATING.md`): dividit en `data/`,
+  `services/`, `routes/` i `sockets/`; `server.js` és ara un punt
+  d'entrada de ~355 línies. Queda pendent el mateix en el frontend:
+  `src/public/js/create.js` (4.184 línies) té un problema equivalent.
+- Els routers i els handlers de Socket.IO reben moltes dependències per
+  injecció des de `server.js` (`routes/quizzes.js` en rep més de 30).
+  Funciona i és explícit, però moltes d'eixes dependències són mòduls
+  sense estat que els fitxers podrien requerir directament; és una
+  simplificació possible, no un requisit.
 - Les partides en curs i les sessions HTTP viuen només en memòria: no
   sobreviuen a un reinici del procés (vore seccions anteriors).
-- `POPULAR_FEATURES.md` (secció "Fase 0") marca separar
-  responsabilitats de `server.js` com a **requisit**, no com a millora
-  opcional, abans de seguir afegint mecàniques de joc de dificultat
-  alta.
+- `POPULAR_FEATURES.md` (secció "Fase 0") marcava separar
+  responsabilitats de `server.js` com a **requisit** abans de seguir
+  afegint mecàniques de joc de dificultat alta; la part del backend ja
+  està feta (vore punt anterior).
 - ~~Stage i producció comparteixen hui la mateixa base de dades.~~
-  **Corregit.** `DB_NAME` (`server.js:237`) ja és configurable
+  **Corregit.** `DB_NAME` (`src/server/data/db.js:6`) ja és configurable
   (`process.env.MONGO_DB || 'kahootDB'`, mateix patró que ja usen
   `src/scripts/normalize-tags.js` i `src/scripts/seed-dev-data.js`), i
   `install-files/stage.env.example` ja definix
@@ -194,7 +236,7 @@ informe complet dels resultats:
   (`src/public/js/hostGame.js:130`, funció `downloadSessionReportCsv()`
   en la línia 382).
 - **Endpoint**: `GET /api/live-games/:pin/report.csv?hostId=...`
-  (`src/server/server.js:2943`). El servidor comprova que el `hostId`
+  (`src/server/routes/games.js:17`). El servidor comprova que el `hostId`
   que arriba en la petició coincidix amb l'amfitrió real d'esa partida;
   si no, respon `403 No autorizado para descargar este informe`. Això
   evita que qualsevol amb el PIN de la partida puga descarregar els
@@ -202,14 +244,15 @@ informe complet dels resultats:
 - **Disponibilitat després de la partida**: l'informe es servix primer
   des de la partida en memòria si el servidor continua alçat; si no, es
   busca en disc (els fitxers d'informe es guarden i es netegen de forma
-  programada, `src/server/server.js`, vore també `CHANGELOG.md` 1.0.5).
+  programada, `src/server/services/sessionReport.js`, vore també
+  `CHANGELOG.md` 1.0.5).
   Això permet descarregar l'informe encara que el servidor s'haja
   reiniciat després que acabara la partida (abans de la versió 1.0.5
   això retornava un 404).
 
 ### Columnes del CSV
 
-Capçalera definida en `src/server/server.js:832`:
+Capçalera definida en `src/server/services/sessionReport.js:174`:
 
 ```
 pin;quizId;quizNombre;preguntasTotales;posicion;alumno;puntuacionFinal;
@@ -246,8 +289,8 @@ Moodle XML, llest per a importar-lo al banc de preguntes de Moodle/AULES
 i muntar ahí un "Qüestionari" natiu.
 
 - **Endpoint**: `GET /api/quizzes/:id/moodle-xml`
-  (`src/server/server.js:2901`), que crida la funció `quizToMoodleXml()`
-  (línia 1095).
+  (`src/server/routes/quizzes.js:147`), que crida la funció
+  `quizToMoodleXml()` (`src/server/services/moodleExport.js:43`).
 - **Tipus de pregunta que convertix**: opció múltiple d'una o diverses
   respostes correctes (`multichoice`), verdader/fals (`truefalse`),
   resposta curta (`shortanswer`) i numèrica amb tolerància
@@ -287,10 +330,10 @@ la pantalla d'amfitrió (`src/public/host/index.html`,
 
 El que sí és automàtic és el **tancament d'una pregunta**:
 - Si tots els jugadors responen abans de temps, el servidor ho detecta
-  (`playersAnswered === playerNum.length`, `src/server/server.js:3692-3697`)
+  (`playersAnswered === playerNum.length`, `src/server/sockets/playerEvents.js:247`)
   i mostra resultats.
 - Si s'acaba el temps, l'amfitrió emet `timeUp` i el servidor fa el
-  mateix (`src/server/server.js:3725-3747`).
+  mateix (`src/server/sockets/common.js:71-93`).
 
 Però això només obri la pantalla de resultats/rànquing. **Passar a la
 pregunta següent requerix sempre una acció explícita del professorat**:
@@ -299,7 +342,7 @@ prémer el botó "Siguiente pregunta" (o la tecla Enter) en eixe modal
 `src/public/js/hostGame.js:983-1007,1263`), el que emet l'esdeveniment
 de Socket.IO `nextQuestion`. El servidor només avança la pregunta dins
 d'eixe handler (`socket.on('nextQuestion', ...)`,
-`src/server/server.js:3773-3882`) — no existix cap temporitzador en el
+`src/server/sockets/hostEvents.js:199-308`) — no existix cap temporitzador en el
 servidor que dispare eixe avanç per si sol.
 
 En resum: en el mode "Jugar a l'aula", el professorat ha d'estar
@@ -312,7 +355,7 @@ autoritme (self-paced)" i "Mode 'presentació' híbrid").
 ## Càlcul de la puntuació
 
 **EduHoot puntua a l'estil Kahoot/Wayground, no per simple % d'encerts**
-(`calculateQuestionScore`, `src/server/server.js:133`):
+(`calculateQuestionScore`, `src/server/services/scoring.js:5`):
 
 - Cada pregunta val fins a **1000 punts base**
   (`MAX_POINTS_PER_QUESTION`), multiplicats per la fracció de temps que
@@ -321,7 +364,7 @@ autoritme (self-paced)" i "Mode 'presentació' híbrid").
 - S'aplica el multiplicador del power-up de doble puntuació
   (`pointsMultiplier`) si està actiu en eixa pregunta.
 - En preguntes de resposta múltiple hi ha **crèdit parcial amb
-  penalització** (`getSubmissionScoreRatio`, línia 2183): cada opció
+  penalització** (`getSubmissionScoreRatio`, `services/scoring.js:21`): cada opció
   correcta marcada suma, cada opció incorrecta marcada resta el mateix,
   amb un mínim de 0 — no és tot o res.
 - La puntuació final (`puntuacionFinal` en el CSV) és la **suma
