@@ -28,7 +28,6 @@ const { quizToMoodleXml } = require('./services/moodleExport');
 const {
   getGamesCollection,
   getUsersCollection,
-  getSoloScoresCollection,
   getEphemeralCollection,
   getRatingsCollection,
   getRatingVotesCollection
@@ -62,6 +61,7 @@ const createAuthRouter = require('./routes/auth');
 const registerSocketHandlers = require('./sockets');
 const createKahootImportService = require('./services/kahootImport');
 const createEphemeralQuizzesService = require('./services/ephemeralQuizzes');
+const { getTopSoloScores, enqueueSoloScore } = require('./services/soloScores');
 const commons = createCommonsService({ normalizePlayerName });
 const kahootImport = createKahootImportService({ publicPath, normalizeQuestions, cleanImportedText });
 const { extractKahootId, mirrorExternalImage, mirrorKahootImage, mapKahootQuestions } = kahootImport;
@@ -85,13 +85,6 @@ const {
 } = ephemeralQuizzes;
 const oauthStates = new Map();
 const authentikOauthStates = new Map();
-const soloScoreBuffer = [];
-const SOLO_SCORE_BUFFER_DELAY = 150;
-const SOLO_SCORE_BUFFER_MAX = 50;
-let soloScoreFlushTimer = null;
-let soloScoreFlushPromise = null;
-let soloScoreFlushResolve = null;
-let soloScoreFlushInFlight = false;
 
 // Log y absorbe errores no controlados para evitar que el proceso caiga
 process.on('unhandledRejection', (reason, promise) => {
@@ -176,73 +169,6 @@ function normalizePlayerName(name) {
   const chars = (name || '').toString().match(/[0-9a-zA-Z]/g) || [];
   const trimmed = chars.join('').toUpperCase().slice(0, 3);
   return trimmed || '???';
-}
-
-async function getTopSoloScores(quizIdKey, limit = 10) {
-  const collection = await getSoloScoresCollection();
-  const top = await collection
-    .find({ quizId: quizIdKey })
-    .sort({ score: -1, createdAt: 1 })
-    .limit(limit)
-    .project({ _id: 0, quizId: 1, quizName: 1, playerName: 1, score: 1, totalQuestions: 1, createdAt: 1 })
-    .toArray();
-  return top;
-}
-
-function scheduleSoloScoreFlush(immediate = false) {
-  if (!soloScoreFlushPromise) {
-    soloScoreFlushPromise = new Promise((resolve) => {
-      soloScoreFlushResolve = resolve;
-    });
-  }
-  if (immediate) {
-    if (soloScoreFlushTimer) {
-      clearTimeout(soloScoreFlushTimer);
-      soloScoreFlushTimer = null;
-    }
-    setImmediate(runSoloScoreFlush);
-    return soloScoreFlushPromise;
-  }
-  if (!soloScoreFlushTimer) {
-    soloScoreFlushTimer = setTimeout(runSoloScoreFlush, SOLO_SCORE_BUFFER_DELAY);
-  }
-  return soloScoreFlushPromise;
-}
-
-async function runSoloScoreFlush() {
-  if (soloScoreFlushInFlight) {
-    if (!soloScoreFlushTimer) {
-      soloScoreFlushTimer = setTimeout(runSoloScoreFlush, SOLO_SCORE_BUFFER_DELAY);
-    }
-    return;
-  }
-  soloScoreFlushInFlight = true;
-  if (soloScoreFlushTimer) {
-    clearTimeout(soloScoreFlushTimer);
-    soloScoreFlushTimer = null;
-  }
-  const docs = soloScoreBuffer.splice(0, soloScoreBuffer.length);
-  const resolve = soloScoreFlushResolve;
-  soloScoreFlushPromise = null;
-  soloScoreFlushResolve = null;
-  try {
-    if (docs.length > 0) {
-      const collection = await getSoloScoresCollection();
-      const ops = docs.map((doc) => ({ insertOne: { document: doc } }));
-      await collection.bulkWrite(ops, { ordered: false });
-    }
-  } catch (err) {
-    console.error('soloScore bulkWrite error', err);
-  } finally {
-    soloScoreFlushInFlight = false;
-    if (resolve) resolve();
-  }
-}
-
-function enqueueSoloScore(doc) {
-  soloScoreBuffer.push(doc);
-  const immediate = soloScoreBuffer.length >= SOLO_SCORE_BUFFER_MAX;
-  return scheduleSoloScoreFlush(immediate);
 }
 
 async function findGameById(gameId) {
