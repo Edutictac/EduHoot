@@ -102,7 +102,8 @@ Proves fetes "des de fora", com ho faria una persona usuària real,
 `npm run lint`, que sí coneixen l'estructura interna. Totes es fan amb
 l'app alçada (vore [Arrancar l'app](#arrancar-lapp-per-a-provar-la-a-mà)
 o `docs/DEV_DOCKER_SETUP.md` si vols partir ja amb 5 qüestionaris i 5
-usuaris de mostra carregats).
+usuaris de mostra carregats). Sobre si estes proves es poden
+automatitzar i amb què, vore `docs/TESTING_BLACKBOX.md`.
 
 **Accés ràpid a cada mode**, per a comprovar un canvi puntual sense fer
 el recorregut complet de baix:
