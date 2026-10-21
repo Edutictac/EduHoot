@@ -1,21 +1,16 @@
 # Guia: dockeritzar l'entorn de desenvolupament d'EduHoot
 
-> **Nota:** este document és una guia de disseny per a implementar més avant. Hui per hui **no existeixen** `docker-compose.yml` ni `Dockerfile.dev` en el repositori — només el `Dockerfile` de producció (usat per a construir la imatge, no per al desplegament real, que va per systemd+nginx). Esta guia descriu com afegir un flux de desenvolupament amb Docker sense tocar ni arriscar eixe `Dockerfile` existent.
+> **Nota:** `docker-compose.yml` i `Dockerfile.dev` ja existixen en el repositori i estan verificats d'extrem a extrem (vore secció corresponent). El `Dockerfile` de producció continua intacte i separat (usat per a construir la imatge, no per al desplegament real, que va per systemd+nginx).
 
 ## Índex
 
 - [Objectiu](#objectiu)
 - [Troballes del codi que condicionen el disseny](#troballes-del-codi-que-condicionen-el-disseny)
 - [Enfocament general](#enfocament-general)
-- [Fitxers a crear (quan s'implemente)](#fitxers-a-crear-quan-simplemente)
-  - [1. `docker-compose.yml` (raïl)](#1-docker-composeyml-raïl)
-  - [2. `Dockerfile.dev` (raïl)](#2-dockerfiledev-raïl)
-  - [3. `src/package.json` — afegir dos scripts](#3-srcpackagejson--afegir-dos-scripts)
-  - [4. `.env.example` (raïl) + entrada en `.gitignore`](#4-envexample-raïl--entrada-en-gitignore)
-  - [5. Punter en `README.md`](#5-punter-en-readmemd)
+- [Fitxers creats](#fitxers-creats)
 - [Per què estes decisions de disseny](#per-què-estes-decisions-de-disseny)
-- [Posada en marxa del dia a dia (una vegada implementat)](#posada-en-marxa-del-dia-a-dia-una-vegada-implementat)
-- [Verificació d'extrem a extrem (una vegada implementat)](#verificació-dextrem-a-extrem-una-vegada-implementat)
+- [Alçar i parar l'entorn de desenvolupament](#alçar-i-parar-lentorn-de-desenvolupament)
+- [Verificació d'extrem a extrem](#verificació-dextrem-a-extrem)
 - [Pròxim pas: Pull Request](#pròxim-pas-pull-request)
 
 ## Objectiu
@@ -27,8 +22,8 @@ Alçar EduHoot en local amb una sola orde (`docker compose up`), sense haver d'i
 - `src/server/server.js:2321` usa `HOST = process.env.HOST || '127.0.0.1'` i `server.listen(PORT, HOST, ...)`. Si el contenidor escolta en `127.0.0.1`, el mapatge de ports de Docker (`-p 3000:3000`) **no funciona** — cal forçar `HOST=0.0.0.0` dins del contenidor.
 - `DB_NAME` està fixat a `'kahootDB'` (`server.js:232`), així que `MONGO_URL` no necessita incloure el nom de la base de dades.
 - Els directoris de pujades (`src/public/uploads/quiz-images`) i logs (`src/logs/finished-session-reports`) ja es creen sols amb `fs.mkdirSync(..., { recursive: true })` dins de `server.js` — el `mkdir`/`chown` de l'`entrypoint.sh` de producció és només per a permisos d'un usuari no-root, no es necessita en desenvolupament.
-- `src/package.json` encara no té scripts `start` ni `dev`.
-- `.gitignore` no exclou `.env` (només ho fa `.dockerignore`) — cal afegir-ho si es promou un `.env` local.
+- `src/package.json` no tenia scripts `start` ni `dev` (ja afegits, vore «Fitxers creats»).
+- `.gitignore` no excloïa `.env` (només ho feia `.dockerignore`) — ja afegit.
 
 ## Enfocament general
 
@@ -38,9 +33,9 @@ Alçar EduHoot en local amb una sola orde (`docker compose up`), sense haver d'i
 - El contenidor de desenvolupament funciona com **root** (sense l'usuari no-root ni l'`entrypoint.sh` de producció), per a evitar problemes de permisos per UID distint entre l'amfitrió i el contenidor. Acceptable perquè és un entorn local d'un sol desenvolupador.
 - Recàrrega automàtica amb **`node --watch`** (natiu de Node 20), sense afegir `nodemon` com a dependència nova.
 
-## Fitxers a crear (quan s'implemente)
+## Fitxers creats
 
-### 1. `docker-compose.yml` (raïl)
+### 1. `docker-compose.yml`
 
 ```yaml
 services:
@@ -71,11 +66,11 @@ services:
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
       - PUBLIC_BASE_URL=${PUBLIC_BASE_URL:-}
     ports:
-      - "${APP_PORT:-3000}:3000"
+      - "127.0.0.1:${APP_PORT:-3000}:3000"
     volumes:
       - ./src:/app
       - eduhoot_node_modules:/app/node_modules
-    command: npm run dev
+    command: sh -c "npm install; npm run seed:dev; npm run dev"
 
 volumes:
   eduhoot_mongo_data:
@@ -84,7 +79,7 @@ volumes:
 
 No es mapeja el port `27017` de Mongo a l'amfitrió per defecte (es pot descomentar) per a no xocar amb un Mongo natiu que ja tingues corrent segons el `README.md`.
 
-### 2. `Dockerfile.dev` (raïl)
+### 2. `Dockerfile.dev`
 
 ```dockerfile
 FROM node:20-alpine
@@ -105,7 +100,7 @@ CMD ["npm", "run", "dev"]
 
 `npm install` (no `npm ci`) per a instal·lar també les `devDependencies`. El `COPY src/ ./` final queda tapat pel bind mount en ús normal, però manté la imatge usable de forma autònoma si algun dia cal construir-la sense compose.
 
-### 3. `src/package.json` — afegir dos scripts
+### 3. `src/package.json` — scripts afegits
 
 ```json
 "scripts": {
@@ -114,15 +109,17 @@ CMD ["npm", "run", "dev"]
   "test:i18n": "playwright test",
   "lint": "node scripts/lint.js",
   "normalize-tags": "node scripts/normalize-tags.js",
-  "test": "node --test \"test/**/*.test.js\"",
-  "test:unit": "node --test \"test/unit/*.test.js\"",
-  "test:integration": "node --test \"test/integration/*.test.js\""
+  "seed:dev": "node scripts/seed-dev-data.js",
+  "unseed:dev": "node scripts/seed-dev-data.js --remove",
+  "test": "node --test test/unit/*.test.js test/integration/*.test.js",
+  "test:unit": "node --test test/unit/*.test.js",
+  "test:integration": "node --test test/integration/*.test.js"
 }
 ```
 
 No cal tocar el `Dockerfile` de producció (pot continuar amb `CMD ["node", "server/server.js"]` tal qual).
 
-### 4. `.env.example` (raïl) + entrada en `.gitignore`
+### 4. `.env.example` + entrada en `.gitignore`
 
 ```
 # Copia este fitxer a .env i omple només allò que necessites per a provar l'inici de sessió.
@@ -134,11 +131,40 @@ PUBLIC_BASE_URL=
 
 Afegir `.env` a `.gitignore` (hui només està exclòs en `.dockerignore`) per a evitar que algú comitege credencials reals.
 
+Per a saber com aconseguir `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` i què és `PUBLIC_BASE_URL`, vore la secció **"Accés amb Google"** del `README.md`. `APP_PORT` no requerix cap configuració externa: és només el port que `docker-compose.yml` mapeja a l'amfitrió (per defecte `3000`).
+
 ### 5. Punter en `README.md`
 
 Afegir una línia en cada bloc d'"Inici ràpid" (valencià ~línia 17, castellà ~línia 83, English ~línia 189) apuntant a este document (o a un `DOCKER.md` final), per exemple en castellà:
 
 > 5. Alternativa con Docker: consulta [DEV_DOCKER_SETUP.md](DEV_DOCKER_SETUP.md) para desarrollar sin instalar Node ni MongoDB localmente.
+
+### 6. `src/scripts/seed-dev-data.js` — 5 qüestionaris i 5 usuaris de mostra
+
+Script independent (mateix patró que `src/scripts/normalize-tags.js`: `MongoClient` propi, sense requerir `server.js`) que insereix 5 qüestionaris de mostra, tots amb `visibility: 'public'` (visibles a `/create/` sense necessitat de login), 5 preguntes cadascun, cobrint els 6 tipus de pregunta existents:
+
+| Qüestionari | Tipus de pregunta |
+|---|---|
+| Cultura general | `quiz` i `multiple` barrejats |
+| Música bàsica | `true-false` |
+| Informàtica bàsica | `short-answer` |
+| Matemàtiques ràpides | `numeric` (amb tolerància en la de pi) |
+| Sondeig: hàbits d'estudi | `poll` (sense resposta correcta) |
+
+També insereix **5 usuaris locals de prova** (email + contrasenya), per a provar l'accés amb rols sense haver de fer `/api/auth/bootstrap` a mà. Contrasenya compartida, només per a desenvolupament: **`exemple1234`**.
+
+| Email | Rol |
+|---|---|
+| `admin@exemple.local` | `admin` |
+| `docent1@exemple.local` | `editor` |
+| `docent2@exemple.local` | `editor` |
+| `docent3@exemple.local` | `editor` |
+| `docent4@exemple.local` | `editor` |
+
+- **Idempotent**: cada qüestionari i cada usuari porta un camp propi `devSeedKey` (`eduhoot-seed-demo-1`..`5` i `eduhoot-seed-user-1`..`5` respectivament); l'script només insereix els que encara no existisquen.
+- **Reversible**: `node scripts/seed-dev-data.js --remove` (o `npm run unseed:dev`) esborra només els documents amb eixe marcador, mai cap altre qüestionari o usuari.
+- **Salvaguarda de seguretat**: l'script es nega a executar-se si `NODE_ENV` no és exactament `development` (ja fixat a `docker-compose.yml`). Sense esta comprovació, executar `npm run seed:dev` per error contra una base de dades real crearia un usuari `admin@exemple.local` amb la contrasenya pública `exemple1234` i un hash compatible amb el login real.
+- El `command` del servei `app` l'executa automàticament en cada arrancada (vore «Alçar i parar l'entorn de desenvolupament»).
 
 ## Per què estes decisions de disseny
 
@@ -152,36 +178,61 @@ Afegir una línia en cada bloc d'"Inici ràpid" (valencià ~línia 17, castellà
   sudo chown -R $(id -u):$(id -g) src/public/uploads src/logs
   ```
 - **`node --watch` en lloc de `nodemon`**: Node 20 ho admet de forma nativa, evitant afegir una dependència nova només per a això. Pot imprimir un `ExperimentalWarning` per stderr; és inofensiu.
-- **Volum anomenat per a `node_modules`**: el bind mount `./src:/app` tapa tot `/app`, inclòs el `node_modules` instal·lat durant la construcció de la imatge. Sense un volum anomenat a banda muntat sobre `/app/node_modules`, les dependències desapareixerien en arrancar el contenidor.
+- **Volum anomenat per a `node_modules`**: el bind mount `./src:/app` tapa tot `/app`, inclòs el `node_modules` instal·lat durant la construcció de la imatge. Sense un volum anomenat a banda muntat sobre `/app/node_modules`, les dependències desapareixerien en arrancar el contenidor. Efecte colateral: la primera vegada que s'alça el contenidor, Docker crea `src/node_modules` com a directori buit propietat de `root` en l'amfitrió (punt de muntatge del volum). Si abans o després vols fer `npm install` directament en l'amfitrió (fora de Docker), cal eliminar-lo primer amb `sudo rmdir src/node_modules`.
+- **`npm install` en cada arrancada del `command`**: eixe mateix volum és persistent entre arrancades, així que si canvies `package.json` i només fas `docker compose restart` (sense `--build`), el volum seguiria tenint les dependències antigues. Per això el `command` del servei `app` comença sempre amb `npm install` abans de sembrar i arrancar — ràpid quan no canvia res (només verifica l'arbre), i instal·la el que calga quan sí. Verificat: afegir una dependència a `package.json` i fer `docker compose restart app` (sense `--build`) ja la deixa disponible dins del contenidor.
 - **`.env` només per a variables opcionals**: `MONGO_URL`, `HOST`, `PORT`, `NODE_ENV` van fixos en el compose perquè són necessaris sempre dins de la xarxa Docker. El `.env` en la raïl només servix perquè Compose substituïsca `${VAR}` dins del propi `docker-compose.yml` (no hi ha `dotenv` instal·lat, així que no el llig directament el procés de Node).
 
-## Posada en marxa del dia a dia (una vegada implementat)
+## Alçar i parar l'entorn de desenvolupament
 
-Una vegada existisquen els fitxers de la secció anterior, el flux habitual
-per a treballar cada dia és:
+Si acabes d'afegir el teu usuari al grup `docker`
+(`sudo usermod -aG docker $USER`), cal tancar i tornar a obrir la sessió
+(o fer `newgrp docker` en un terminal nou) perquè el canvi tinga efecte
+abans d'executar `docker compose` sense `sudo`.
 
 ```bash
 cp .env.example .env          # només la primera vegada, i omplir el que calga
-docker compose up --build     # primera vegada, o quan canvie Dockerfile.dev/package.json
-docker compose up             # la resta de vegades (ja no cal --build)
 ```
 
-- Obri `http://localhost:3000/create/`.
-- Edita codi en `src/` amb normalitat: `node --watch` reinicia el servidor
-  sol dins del contenidor (veure's en `docker compose logs -f app`).
-- Per a parar-ho: `Ctrl+C`, o `docker compose down` en una altra terminal
-  (manté les dades de Mongo). `docker compose down -v` esborra també el
-  volum de Mongo (torna a un estat net).
+**Per a alçar-ho:**
 
-## Verificació d'extrem a extrem (una vegada implementat)
+```bash
+docker compose up --build     # primera vegada, o quan canvie Dockerfile.dev/package.json
+docker compose up             # la resta de vegades (ja no cal --build)
+docker compose up -d          # en segon pla, sense bloquejar el terminal
+```
+
+- Obri `http://localhost:3000/create/` — ja hi hauran 5 qüestionaris de
+  mostra (es sembren sols en l'arrancada; vore «6. `src/scripts/seed-dev-data.js`»).
+- Edita codi en `src/` amb normalitat: `node --watch` reinicia el servidor
+  sol dins del contenidor.
+- Si l'has alçat amb `-d`, veure els logs en viu amb `docker compose logs -f app`.
+
+**Sembrar o desfer les dades de mostra manualment, amb el contenidor ja alçat:**
+
+```bash
+docker compose exec app npm run seed:dev      # torna a sembrar el que falte (idempotent)
+docker compose exec app npm run unseed:dev    # esborra només els 5 qüestionaris de mostra
+```
+
+**Per a parar-ho:**
+
+```bash
+# Si l'has alçat en primer pla (sense -d): Ctrl+C
+
+docker compose down           # para i elimina els contenidors, manté les dades de Mongo
+docker compose down -v        # esborra també el volum de Mongo (torna a un estat net)
+```
+
+## Verificació d'extrem a extrem
 
 1. `docker compose config` — valida la sintaxi i la resolució de variables.
-2. `docker compose up --build` — comprovar en els logs `Server started on 0.0.0.0:3000` i la connexió a Mongo.
-3. Obrir `http://localhost:3000/create/` i crear un qüestionari de prova.
-4. `docker compose restart` i comprovar que el qüestionari continua ahí (persistència del volum de Mongo).
-5. Editar `src/server/server.js` (p. ex. un `console.log` temporal) amb l'estiba alçada i veure en `docker compose logs -f app` que `node --watch` reinicia sol, sense necessitat de `--build`.
-6. Pujar una imatge en crear un qüestionari i comprovar que apareix en `src/public/uploads/quiz-images/` en l'amfitrió.
-7. `docker compose down -v` al finalitzar, per a netejar els volums de prova.
+2. `docker compose up --build` — comprovar en els logs `Server started on 0.0.0.0:3000`, la connexió a Mongo, i que `seed-dev-data` diu `Sembrats: 5`.
+3. Obrir `http://localhost:3000/create/`, comprovar que ja apareixen els 5 qüestionaris de mostra, i crear-ne un de propi per a la prova.
+4. `docker compose restart app` i comprovar als logs que ara diu `Sembrats: 0` (ja existien) i que `/create/` continua mostrant exactament els mateixos 5 de mostra més el propi (no duplicats).
+5. `docker compose exec app npm run unseed:dev` i comprovar que els 5 de mostra desapareixen de `/create/` però el qüestionari propi continua ahí; `docker compose exec app npm run seed:dev` els torna a crear.
+6. Editar `src/server/server.js` (p. ex. un `console.log` temporal) amb l'estiba alçada i veure en `docker compose logs -f app` que `node --watch` reinicia sol, sense necessitat de `--build`.
+7. Pujar una imatge en crear un qüestionari i comprovar que apareix en `src/public/uploads/quiz-images/` en l'amfitrió.
+8. `docker compose down -v` al finalitzar, per a netejar els volums de prova.
 
 ## Pròxim pas: Pull Request
 

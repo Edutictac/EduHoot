@@ -11,6 +11,9 @@ src/test-results/
 src/playwright-report/
 src/logs/
 
+# Entorno de desarrollo con Docker
+.env
+
 # Directorios y ficheros para trabajar en local
 .local
 AGENTS.md

@@ -29,9 +29,9 @@ Este és també l'orde exacte que usa la CI de GitHub Actions
 3. `node server/server.js`
 4. Obrir `http://localhost:3000/create/`.
 
-No hi ha script `start` ni `dev` en `package.json` encara — vore
-`docs/DEV_DOCKER_SETUP.md` per a una proposta (encara sense implementar)
-d'entorn de desenvolupament amb recàrrega automàtica.
+Alternativa amb recàrrega automàtica i sense instal·lar Node ni MongoDB
+en local: vore `docs/DEV_DOCKER_SETUP.md` (`docker compose up`), que a
+més carrega 5 qüestionaris de mostra.
 
 ## Tests automàtics
 
@@ -48,7 +48,7 @@ d'entorn de desenvolupament amb recàrrega automàtica.
 
 | Orde | Què executa | Necessita Mongo real | Necessita alguna cosa més |
 |---|---|---|---|
-| `npm test` | `node --test "test/**/*.test.js"` (tot: unit + integració) | No | — |
+| `npm test` | `node --test test/unit/*.test.js test/integration/*.test.js` (tot: unit + integració) | No | — |
 | `npm run test:unit` | Només `test/unit/*.test.js` | No | — |
 | `npm run test:integration` | Només `test/integration/*.test.js` | No | — |
 | `npm run test:i18n` | `playwright test` sobre `test/browser/*.spec.js` | No | `npx playwright install --with-deps chromium`, i `python3` en el `PATH` |

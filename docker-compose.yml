@@ -1,0 +1,37 @@
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - eduhoot_mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    depends_on:
+      mongo:
+        condition: service_healthy
+    environment:
+      - MONGO_URL=mongodb://mongo:27017/
+      - HOST=0.0.0.0
+      - PORT=3000
+      - NODE_ENV=development
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
+      - PUBLIC_BASE_URL=${PUBLIC_BASE_URL:-}
+    ports:
+      - "127.0.0.1:${APP_PORT:-3000}:3000"
+    volumes:
+      - ./src:/app
+      - eduhoot_node_modules:/app/node_modules
+    command: sh -c "npm install; npm run seed:dev; npm run dev"
+
+volumes:
+  eduhoot_mongo_data:
+  eduhoot_node_modules:

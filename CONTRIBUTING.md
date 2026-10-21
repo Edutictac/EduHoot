@@ -17,8 +17,8 @@ de treball esperat per a proposar un canvi.
    ```
 3. Instal·la dependències i arranca l'app en local seguint l'"Inici ràpid"
    del [`README.md`](README.md), o la guia de Docker en desenvolupament
-   [`docs/DEV_DOCKER_SETUP.md`](docs/DEV_DOCKER_SETUP.md) quan estiga
-   implementada.
+   [`docs/DEV_DOCKER_SETUP.md`](docs/DEV_DOCKER_SETUP.md) (`docker compose up`,
+   amb 5 qüestionaris de mostra ja carregats).
 
 ### Abans d'obrir un Pull Request
 
@@ -76,7 +76,7 @@ flujo de trabajo esperado para proponer un cambio.
 3. Instala dependencias y arranca la app en local siguiendo el "Inicio
    rápido" del [`README.md`](README.md), o la guía de Docker en
    desarrollo [`docs/DEV_DOCKER_SETUP.md`](docs/DEV_DOCKER_SETUP.md)
-   cuando esté implementada.
+   (`docker compose up`, con 5 cuestionarios de ejemplo ya cargados).
 
 ### Antes de abrir un Pull Request
 
@@ -133,8 +133,8 @@ summarizes the expected workflow for proposing a change.
    ```
 3. Install dependencies and run the app locally following the "Quick
    start" section of [`README.md`](README.md), or the development Docker
-   guide [`docs/DEV_DOCKER_SETUP.md`](docs/DEV_DOCKER_SETUP.md) once it's
-   implemented.
+   guide [`docs/DEV_DOCKER_SETUP.md`](docs/DEV_DOCKER_SETUP.md)
+   (`docker compose up`, with 5 sample quizzes already loaded).
 
 ### Before opening a Pull Request
 

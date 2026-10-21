@@ -476,15 +476,16 @@ realista, no només una llista d'idees.
   i 14 (so de feedback) queden aparcades — encara que algunes d'elles
   siguen populars en Kahoot/Wayground. La proposta 4 (power-ups) continua,
   però sense el sub-ítem "robar punts".
-- **Accés docent en transició activa.** La migració a Authentik
-  (`docs/PLA-MIGRACIO-AUTHENTIK-2026-10.md`) continua oberta: hi va haver
-  una fallada real de detecció del rol docent detectada el 12 d'octubre
-  de 2026, per la qual cosa es va desactivar la data de tall automàtica
-  del 26 d'octubre i encara no hi ha una nova data de tancament. Mentre
-  això no es tanque, convé no tocar el mateix codi d'accés/sessió
-  (`server.js`) per un altre motiu, i posposar qualsevol proposta que
-  depenga d'una integració d'identitat docent estable (21, Google
-  Classroom).
+- **Accés docent: fallada corregida, migració encara oberta.**
+  La migració a Authentik (`docs/PLA-MIGRACIO-AUTHENTIK-2026-10.md`)
+  continua oberta, sense una nova data de tancament encara. La fallada
+  real de detecció del rol docent detectada el 12 d'octubre de 2026 ja
+  està corregida eixe mateix dia (vore «Vinculació real i botó
+  d'eixida» al pla de migració), però mentre la migració no es tanque,
+  convé seguir coordinant-se abans de tocar el codi d'accés/sessió
+  (`server.js`) per un altre motiu, i no donar per fet que propostes
+  que depenguen d'una integració d'identitat docent estable (21,
+  Google Classroom) ja es poden abordar sense restriccions.
 - **El codi del servidor ha crescut sense reorganitzar-se.**
   `src/server/server.js` ha passat de 3.588 a 5.122 línies des de
   l'auditoria d'abril (`REVISION_MEJORAS.md`), i `src/public/js/create.js`
@@ -498,11 +499,10 @@ realista, no només una llista d'idees.
   document no ho reflectisca. Les propostes de les Fases 2 i 3 poden
   recolzar-se en eixa base sense preocupar-se primer per la reconnexió
   bàsica.
-- **No hi ha entorn de desenvolupament amb recàrrega automàtica.**
-  `docs/DEV_DOCKER_SETUP.md` continua sent només una guia de disseny; hui
-  cada canvi exigix reiniciar `node server/server.js` a mà.
-  Implementar-ho abans de començar diverses propostes accelera la
-  iteració de totes les fases següents.
+- **✅ Entorn de desenvolupament amb recàrrega automàtica, ja implementat.**
+  `docs/DEV_DOCKER_SETUP.md` ja no és una guia de disseny: `docker compose up`
+  alça EduHoot amb recàrrega automàtica (`node --watch`) i carrega 5
+  qüestionaris de mostra per a provar sense haver de crear-ne de propis.
 - **El full de ruta de biblioteca pública (`PROXIMAS_MEJORAS_PLAN.md`) és
   un eix a banda.** No competix pel mateix codi que estes 31 propostes
   (excepte parcialment en "perfil d'autor docent"), així que pot avançar
@@ -550,11 +550,9 @@ Separar responsabilitats de `server.js` i tindre recàrrega automàtica en
 desenvolupament haurien de ser **requisits per a començar la següent fase**, no
 un suggeriment ajornable:
 
-- Entorn de desenvolupament amb recàrrega automàtica (`docs/DEV_DOCKER_SETUP.md`).
+- ✅ Entorn de desenvolupament amb recàrrega automàtica (`docs/DEV_DOCKER_SETUP.md`) — fet.
 - Separar del monòlit `server.js` almenys la lògica de tipus de pregunta,
   abans d'afegir els tipus nous de la Fase 2.
-- Deixar que la migració a Authentik es tanque abans de tocar codi
-  d'accés/sessió per un altre motiu.
 
 ### Fase 1a — Millores cosmètiques/aïllades, sense tocar la lògica de joc
 
@@ -644,7 +642,7 @@ exigira.
 ## Llista de desitjos
 
 Idees addicionals, no derivades de la comparativa amb Kahoot/Wayground ni de
-l'anàlisi d'altres plataformes ([`PLATFORMS_ANALYSIS.md`](docs/PLATFORMS_ANALYSIS.md)),
+l'anàlisi d'altres plataformes ([`PLATFORMS_ANALYSIS.md`](./PLATFORMS_ANALYSIS.md)),
 i encara no analitzades amb el criteri pedagògic complet ni incloses en
 cap fase del full de ruta. Es numeren amb prefix "W" per a no xocar amb
 la numeració 1-32 de dalt.
@@ -657,9 +655,12 @@ la numeració 1-32 de dalt.
   interfície (amfitrió, jugador, creació de quiz) després d'un estudi
   dedicat, no lligada a cap funcionalitat concreta de la llista
   anterior.
-- **W3 — Internacionalització a més idiomes.** Ampliar els idiomes
-  disponibles més enllà de valencià, castellà i anglés (francés,
-  alemany, holandés, i altres a decidir).
+- **W3 — Internacionalització a més idiomes.** Ja hi ha una base de
+  **4 idiomes implementats** (`ca`/`va`/`es`/`en` — català i valencià
+  són variants separades, `quizCreator.js:16`, `create.js:208`,
+  `hostGame.js:39`, `solo.js:220`, `multiplayer.js:191`); esta proposta
+  és ampliar-los més enllà d'estos 4 (francés, alemany, holandés, i
+  altres a decidir).
 - **W4 — Paquet SCORM per al mode Solo, amb pas automàtic de la nota a
   Moodle/AULES.** El professorat puja un paquet SCORM al seu curs
   (sense dependre d'LTI, que AULES no té habilitat), i la nota final
