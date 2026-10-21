@@ -1,28 +1,14 @@
 const path = require('path');
 const fs = require('fs');
 const http = require('http');
-const https = require('https');
 const express = require('express');
 const socketIO = require('socket.io');
 const helmet = require('helmet');
-const { ObjectId } = require('mongodb');
-const crypto = require('crypto');
 
 const { LiveGames } = require('./utils/liveGames');
 const { Players } = require('./utils/players');
-const { linkAuthentikUser } = require('./authentikUsers');
-const {
-  normalizeQuestionMeta,
-  normalizeCorrectAnswers,
-  splitAcceptedAnswers,
-  parseLenientNumber,
-  isFreeAnswerType,
-  looksLikeFreeTypeQuestion,
-  isSubmissionCorrect,
-  buildAnswerFields,
-  getQuestionMeta
-} = require('./questionUtils');
-const { mongoClient, getDb } = require('./data/db');
+const { isSubmissionCorrect } = require('./questionUtils');
+const { mongoClient } = require('./data/db');
 const { calculateQuestionScore, getSubmissionScoreRatio } = require('./services/scoring');
 const { quizToMoodleXml } = require('./services/moodleExport');
 const {
@@ -42,13 +28,7 @@ const {
   coerceDate,
   normalizeQuizId
 } = require('./services/quizNormalize');
-const {
-  getGamesCollection,
-  getUsersCollection,
-  getEphemeralCollection,
-  getRatingsCollection,
-  getRatingVotesCollection
-} = require('./data/repositories');
+const { getEphemeralCollection } = require('./data/repositories');
 
 const publicPath = path.join(__dirname, '../public');
 const BODY_LIMIT = '1mb';
@@ -70,7 +50,7 @@ const {
   finishedSessionReports,
   FINISHED_SESSION_REPORT_DIR
 } = require('./services/sessionReport')({ players });
-const { sessions, getCookieOptions, createSession, parseCookies } = require('./services/sessions');
+const { sessions, parseCookies } = require('./services/sessions');
 const createCommonsService = require('./services/commons');
 const createPlayerAuthRouter = require('./routes/playerAuth');
 const createGamesRouter = require('./routes/games');
@@ -160,7 +140,6 @@ io.engine.on('connection_error', (err) => {
   console.error('[socket-connection-error]', err);
 });
 const PUBLIC_IMPORT_SOURCE_URL = (process.env.PUBLIC_IMPORT_SOURCE_URL || '').trim().replace(/\/+$/, '');
-
 
 // Body parsers (bump limit to allow quizzes con recursos más pesados)
 app.use(helmet({
