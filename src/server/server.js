@@ -24,6 +24,7 @@ const {
   buildAnswerFields
 } = require('./questionUtils');
 const { mongoClient, getDb } = require('./data/db');
+const { calculateQuestionScore, getSubmissionScoreRatio } = require('./services/scoring');
 const {
   getGamesCollection,
   getUsersCollection,
@@ -85,7 +86,6 @@ const GAME_CLEANUP_DELAY = 100 * 1000; // 90 segundos tras GameOver
 const GAME_INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutos de inactividad
 const HOST_RECONNECT_GRACE_MS = 30 * 1000; // 30 segundos para reanudar partida en aula
 const PLAYER_RECONNECT_GRACE_MS = 40 * 1000; // 40 segundos para reconexion de alumno
-const MAX_POINTS_PER_QUESTION = 1000;
 const QUESTION_COUNTDOWN_SECONDS = 3;
 const GOOGLE_OAUTH_SCOPE = 'openid email profile';
 const GOOGLE_OAUTH_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
@@ -140,22 +140,6 @@ function normalizeEphemeralQuiz(raw) {
     updatedAt: coerceDate(raw.updatedAt, new Date()),
     expires: coerceDate(raw.expires, null)
   };
-}
-
-function calculateQuestionScore(game) {
-  const gameData = game && game.gameData ? game.gameData : {};
-  const questions = Array.isArray(gameData.questions) ? gameData.questions : [];
-  const current = questions[(Number(gameData.question) || 1) - 1] || {};
-  const limitSeconds = Number(
-    (gameData.options && gameData.options.timePerQuestion) || current.time || 20
-  );
-  const limitMs = Math.max(1, limitSeconds) * 1000;
-  const startedAt = Number(gameData.questionStartedAt) || Date.now();
-  const elapsedMs = Math.max(0, Date.now() - startedAt);
-  const remainingRatio = Math.max(0, Math.min(1, (limitMs - elapsedMs) / limitMs));
-  const multiplierRaw = Number(current.pointsMultiplier);
-  const multiplier = Number.isFinite(multiplierRaw) && multiplierRaw > 0 ? multiplierRaw : 1;
-  return Math.round(MAX_POINTS_PER_QUESTION * remainingRatio * multiplier);
 }
 
 async function persistEphemeralQuiz(quiz) {
@@ -2005,18 +1989,6 @@ function getQuestionMeta(question) {
     numericAnswer: meta.numericAnswer,
     tolerance: meta.tolerance
   };
-}
-
-function getSubmissionScoreRatio(meta, submission) {
-  if (!meta || meta.type === 'poll') return 0;
-  if (meta.type !== 'multiple') return isSubmissionCorrect(meta, submission) ? 1 : 0;
-  const selected = Array.isArray(submission) ? new Set(submission) : new Set();
-  const correct = Array.isArray(meta.correctAnswers) ? meta.correctAnswers : [];
-  if (!correct.length) return 0;
-  // Cada selecció errònia resta el mateix que suma una encertada; mínim 0.
-  const hits = correct.filter((answer) => selected.has(answer)).length;
-  const wrongs = selected.size - hits;
-  return Math.max(0, hits - wrongs) / correct.length;
 }
 
 // 'allCorrect'/'allWrong' cuando el 100% del grupo acierta o falla la pregunta
