@@ -1,6 +1,6 @@
 # Es poden automatitzar les proves de caixa negra?
 
-Resposta a una pregunta concreta: el "Recorregut complet" de `TESTING.md`
+El "Recorregut complet" de `TESTING.md`
 (proves fetes "des de fora", com ho faria una persona usuària real, sense
 mirar el codi) es pot automatitzar? Amb què, i amb quin esforç.
 
