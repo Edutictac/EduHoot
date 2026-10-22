@@ -557,7 +557,7 @@ un suggeriment ajornable:
   i `server.js` queda com a punt d'entrada (vore `ARCHITECTURE.md`).
 - Migrar el frontend: dividir els fitxers més grans (`create.js`, `solo.js`)
   en mòduls per responsabilitat, en JS vanilla i sense build step. Vore
-  `docs/MIGRATING.md` (Subfase A, "Estimació del frontend") — pendent.
+  `docs/MIGRATING.md` (Subfase A) — pendent.
 
 ### Fase 1a — Millores cosmètiques/aïllades, sense tocar la lògica de joc
 
