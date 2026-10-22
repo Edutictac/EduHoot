@@ -87,31 +87,29 @@ d'EduTicTac). És idempotent (no duplica si ja existixen) i es pot desfer amb
 `--remove`. Mai s'executa si `NODE_ENV` no és `staging` o si `MONGO_DB` val
 `kahootDB` (el nom de la BD de producció).
 
-**Qui ho pot llançar**: qualsevol persona amb accés SSH al VPS de stage —
-les mateixes autoritzades hui per a `deploy-stage.sh` (les indicades en
-`.github/workflows/stage-image.yml` per a publicar tags). No cal cap
-credencial nova.
+**Important**: el VPS de stage no accepta connexions SSH entrants de ningú
+(el disseny és *pull-only*: el propi VPS consulta `ghcr.io` cada pocs
+minuts i es desplega a si mateix; vore `docs/STAGE-AUTOMATIC.md`). No hi ha,
+per tant, cap manera d'executar el seed per SSH des d'un equip extern.
 
-**Com, manual (per defecte)** — des de l'equip local, sense entrar a mà per
-SSH:
+**Qui ho pot llançar**: qui puga editar `/etc/eduhoot/stage.env` o obrir una
+consola directa en el VPS a través del tauler del proveïdor de hosting
+(no per SSH remot) — en la pràctica, qui administre hui eixa màquina.
 
-```bash
-./scripts/seed-stage-data-remote.sh seed      # sembrar
-./scripts/seed-stage-data-remote.sh unseed    # desfer
-```
+**Com, automàtic (recomanat)** — definix `AUTO_SEED_STAGE=1` en
+`/etc/eduhoot/stage.env` (vore `install-files/stage.env.example`); el mateix
+`eduhoot-stage-server.service` siembra en cada arrancada o reinici del
+servici (via `ExecStartPre`), tant si el reinici ve del desplegament
+automàtic per etiqueta com si és manual. Mentres eixa variable no estiga
+definida, no fa res.
 
-o, ja connectat per SSH en `/opt/eduhoot-stage/src`:
+**Com, puntual** — des d'una sessió de consola oberta directament en el
+VPS (no SSH remot), en `/opt/eduhoot-stage/src`:
 
 ```bash
 npm run seed:stage
 npm run unseed:stage
 ```
-
-**Com, automàtic (apagat per defecte)** — si es definix `AUTO_SEED_STAGE=1`
-en `/etc/eduhoot/stage.env` (vore `install-files/stage.env.example`), el
-mateix `eduhoot-stage-server.service` siembra en cada arrancada o reinici
-(via `ExecStartPre`), sense intervenció manual. Mentres eixa variable no
-estiga definida, no fa res.
 
 ## 7) Checklist de validació fiable
 
