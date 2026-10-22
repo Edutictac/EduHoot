@@ -18,6 +18,8 @@ introduir un framework de frontend — i quin.
 - [Pròxims passos](#pròxims-passos)
 - [Subfase A — Proposta concreta de separació](#subfase-a--proposta-concreta-de-separació)
   - [Arbre de directoris proposat](#arbre-de-directoris-proposat)
+  - [Estat de la Subfase A (2026-10-22)](#estat-de-la-subfase-a-2026-10-22)
+  - [Estimació del frontend (2026-10-22)](#estimació-del-frontend-2026-10-22)
 - [Subfase B — Proposta concreta d'implementació amb Vue](#subfase-b--proposta-concreta-dimplementació-amb-vue)
   - [Arbre de directoris proposat (Vue)](#arbre-de-directoris-proposat-vue)
 - [Taula comparativa entre subfases](#taula-comparativa-entre-subfases)
@@ -339,7 +341,65 @@ registra Socket.IO. S'ha seguit l'arbre de dalt amb estes diferències
 Tot s'ha fet movent codi sense reescriure'l, verificant cada peça amb
 `npm run lint`, `npm test` i proves manuals contra el contenidor de dev.
 
-**Frontend (`create.js`, `solo.js`): pendent.**
+**Frontend (`create.js`, `solo.js`): pendent.** Vore l'estimació
+següent.
+
+### Estimació del frontend (2026-10-22)
+
+Estimació feta amb mesures reals del codi, abans de començar.
+
+**Mida actual**
+
+| Fitxer | Línies | Estructura |
+|---|---|---|
+| `create.js` | 4.184 | 93 funcions i 98 variables globals de primer nivell, 42 listeners. Unes 800 línies (237–1035) són només el diccionari de traduccions `i18n`. |
+| `solo.js` | 2.374 | Tot dins d'una funció autoexecutable, amb un estat central `state`. Unes 330 línies són traduccions. |
+
+**Línies**
+
+- Es mourien unes 6.500 línies a uns 12–14 fitxers: uns 8 per a
+  `create.js` (traduccions, autenticació, biblioteca, filtres, accions de
+  quiz, exportacions, panell d'admin, arrancada) i uns 5 per a `solo.js`.
+- El codi nou seria poc, unes 200–400 línies (etiquetes `<script>`,
+  capçaleres i enllaç entre mòduls). Com que és "moure, no reescriure",
+  el total gairebé no canvia; només es reparteix.
+- El més fàcil de separar són les ~1.100 línies de traduccions dels dos
+  fitxers, que no tenen lògica.
+
+**Temps** (en sessions com les del backend)
+
+- `solo.js`: 1 sessió. Està més ordenat (un estat i un àmbit tancat).
+- `create.js`: 2–3 sessions. És el més embolicat per les seues 98
+  variables globals, que es llegixen i s'escriuen des de tot arreu.
+- Total: unes 3–4 sessions, aproximadament 1,5–2,5 dies de treball.
+
+**Per què costa més que el backend, encara que siga menys codi**
+
+1. **Hi ha poca xarxa de tests.** El backend tenia 67 tests i cada peça
+   es podia provar amb `curl` i un client Socket.IO real. En el frontend
+   només hi ha 3 specs de Playwright, i amb el backend simulat. Cada
+   peça necessita una prova manual en navegador, i és això el que més
+   allarga el procés, no el moviment de codi en si.
+2. **Cal triar com trossejar sense build step:**
+   - **Diversos `<script>` clàssics que compartixen l'àmbit global**
+     (recomanat). És l'equivalent exacte a "moure sense reescriure": el
+     comportament no canvia i només importa l'ordre de càrrega.
+   - **Mòduls ES (`type="module"`).** Més net, però canvia l'àmbit:
+     trenca els `onclick` de l'HTML i qualsevol variable global que un
+     altre script espere trobar. Això ja és reescriure, i puja el risc i
+     el temps (potser 5–6 sessions).
+
+**Fora d'este càlcul**
+
+L'abast d'esta subfase només inclou `create.js` i `solo.js`. Hi ha altres
+fitxers grans que no hi entren: `multiplayer.js` (2.423), `quizCreator.js`
+(1.833) i `hostGame.js` (1.403). Incloure'ls afegiria unes 3–4 sessions
+més. Abans de fer-ho convé decidir si es faran amb el pilot de Vue
+(Subfase B), perquè `hostGame.js` és justament la pantalla candidata per
+a eixe pilot.
+
+**Recomanació:** començar per `solo.js` amb `<script>` clàssics. És la
+peça més barata i servirà per a calibrar millor el cost de `create.js`.
 
 ## Subfase B — Proposta concreta d'implementació amb Vue
 
