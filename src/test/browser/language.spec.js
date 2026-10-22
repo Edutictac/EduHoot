@@ -42,6 +42,15 @@ for (const lang of ['ca', 'va', 'es', 'en']) {
     });
 }
 
+for (const lang of ['ca', 'va', 'es', 'en']) {
+    test(`${lang}: el desplegable d'idiomes de /create/ mostra noms, no claus`, async ({ page }) => {
+        await page.goto(`/create/?lang=${lang}`);
+        await expect(page.locator('#lang-select')).toHaveValue(lang);
+        const labels = await page.locator('#lang-select option').evaluateAll(options => options.map(option => option.textContent.trim()));
+        expect(labels.filter(label => /^lang[A-Z]/.test(label))).toEqual([]);
+    });
+}
+
 for (const route of ['/create/', '/create/quiz-creator/', '/solo/', '/multiplayer/', '/host/game/?id=test&pin=12345']) {
     test(`canvi VA a EN persistent: ${route}`, async ({ page }) => {
         await page.goto(`${route}${route.includes('?') ? '&' : '?'}lang=va`);
