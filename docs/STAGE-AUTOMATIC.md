@@ -29,6 +29,11 @@ Només poden publicar les persones indicades en el workflow; per a la resta,
 el workflow s'omet. Es pot publicar qualsevol commit: l'etiqueta no ha d'estar
 en `main`.
 
+## Contingut d'exemple
+
+Este flux no siembra per si sol quizzes d'exemple: el seed és manual per
+defecte (o opt-in via `AUTO_SEED_STAGE`). Vore `docs/STAGE_SETUP.md`, punt 6.
+
 ## Què no fa
 
 - No desplega mai en producció. Producció continua amb el procediment manual.

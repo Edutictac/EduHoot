@@ -161,7 +161,7 @@ Al terminar una partida, EduHoot envía resumen de puntuación a `/api/apps/eduh
 
 ### Entorno stage (preproducción)
 
-- Guía completa: `STAGE_SETUP.md`
+- Guía completa: `docs/STAGE_SETUP.md`
 - Plantilla de deploy stage: `scripts/deploy-stage.example.sh`
 - Servicio systemd stage: `install-files/service/eduhoot-stage-server.service`
 - Config Nginx stage: `install-files/nginx/eduhoot-stage.conf`
@@ -169,7 +169,7 @@ Al terminar una partida, EduHoot envía resumen de puntuación a `/api/apps/eduh
 
 Flujo recomendado:
 
-1. Monta stage una vez siguiendo `STAGE_SETUP.md`.
+1. Monta stage una vez siguiendo `docs/STAGE_SETUP.md`.
 2. Despliega cambios a `/opt/eduhoot-stage/src` con `scripts/deploy-stage.sh`.
 3. Valida en `stage.tu-dominio` (flujos host/player, login y CSV).
 4. Solo después promueve a producción.
@@ -250,7 +250,7 @@ The first Google user becomes `admin`; later users become `editor`. If a user wi
 
 ### Stage Environment (pre-production)
 
-- Full guide: `STAGE_SETUP.md`
+- Full guide: `docs/STAGE_SETUP.md`
 - Stage deploy template: `scripts/deploy-stage.example.sh`
 - Stage systemd service: `install-files/service/eduhoot-stage-server.service`
 - Stage Nginx config: `install-files/nginx/eduhoot-stage.conf`
@@ -258,7 +258,7 @@ The first Google user becomes `admin`; later users become `editor`. If a user wi
 
 Recommended flow:
 
-1. Set up stage once using `STAGE_SETUP.md`.
+1. Set up stage once using `docs/STAGE_SETUP.md`.
 2. Deploy changes to `/opt/eduhoot-stage/src` via `scripts/deploy-stage.sh`.
 3. Validate on `stage.your-domain` (host/player flows, login, CSV import).
 4. Promote to production only after stage is green.

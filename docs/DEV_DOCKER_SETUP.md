@@ -268,4 +268,4 @@ gh pr create --repo Edutictac/EduHoot --base main \
 
 Una vegada fusionat a `main`, el següent pas del mateix camí (abans de
 producció) és validar-ho en l'entorn de preproducció descrit en
-[`STAGE_SETUP.md`](../STAGE_SETUP.md).
+[`STAGE_SETUP.md`](STAGE_SETUP.md).

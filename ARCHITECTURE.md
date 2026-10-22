@@ -200,7 +200,7 @@ Esdeveniments principals que rep el servidor (registrats en
   `src/scripts/normalize-tags.js` i `src/scripts/seed-dev-data.js`), i
   `install-files/stage.env.example` ja definix
   `MONGO_DB=eduhoot_stage`. Cal que `/etc/eduhoot/stage.env` en el VPS
-  incloga eixa variable (vore `STAGE_SETUP.md`) perquè l'aïllament de
+  incloga eixa variable (vore `docs/STAGE_SETUP.md`) perquè l'aïllament de
   base de dades siga efectiu.
 
 ## Unió a la partida: nom i icona del jugador
