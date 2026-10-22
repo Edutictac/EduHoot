@@ -516,19 +516,26 @@ function updateVisibilityWarning(){
     warning.classList.toggle('hidden', !show);
 }
 
+function updateTitleUserId(userId){
+    var base = document.title.replace(/ \[uid:[^\]]*\]$/, '');
+    document.title = userId ? (base + ' [uid:' + userId + ']') : base;
+}
+
 function refreshAuthStatus(){
     fetch('/api/auth/me', { credentials: 'include' })
         .then(function(res){
             if(!res.ok) throw new Error();
             return res.json();
         })
-        .then(function(){
+        .then(function(user){
             isUserAuthenticated = true;
             updateVisibilityWarning();
+            updateTitleUserId(user && user.id);
         })
         .catch(function(){
             isUserAuthenticated = false;
             updateVisibilityWarning();
+            updateTitleUserId(null);
         });
 }
 

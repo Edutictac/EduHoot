@@ -148,6 +148,9 @@ app.use(helmet({
 }));
 app.use(express.json({ limit: BODY_LIMIT }));
 app.use(express.urlencoded({ extended: true, limit: BODY_LIMIT }));
+app.get('/api/env', (req, res) => {
+  res.json({ env: process.env.NODE_ENV || '' });
+});
 app.get('/manifest.webmanifest', (req, res) => {
   res.type('application/manifest+json');
   res.set('Cache-Control', 'no-cache, must-revalidate, max-age=0');

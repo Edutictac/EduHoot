@@ -389,6 +389,9 @@ var i18n = {
         renamePrompt: 'Nuevo nombre',
         confirmDelete: '¿Eliminar este quiz?',
         cannotStartPrivate: 'Solo el propietario puede usar un quiz privado.',
+        cannotEditNotOwner: 'Solo el propietario puede editar este quiz.',
+        cannotDeleteNotOwner: 'Solo el propietario puede eliminar este quiz.',
+        cannotCloneNotOwner: 'No puedes clonar este quiz.',
         needLogin: 'Inicia sesión para realizar esta acción.',
         permissionDenied: 'No tienes permiso para realizar esta acción.',
         saveSharing: 'Guardar permisos',
@@ -648,6 +651,9 @@ var i18n = {
         renamePrompt: 'New name',
         confirmDelete: 'Delete this quiz?',
         cannotStartPrivate: 'Only the owner can use a private quiz.',
+        cannotEditNotOwner: 'Only the owner can edit this quiz.',
+        cannotDeleteNotOwner: 'Only the owner can delete this quiz.',
+        cannotCloneNotOwner: 'You can\'t clone this quiz.',
         needLogin: 'Sign in to perform this action.',
         permissionDenied: 'You don\'t have permission to perform this action.',
         saveSharing: 'Save permissions',
@@ -907,6 +913,9 @@ var i18n = {
         renamePrompt: 'Nom nou',
         confirmDelete: 'Eliminar aquest quiz?',
         cannotStartPrivate: 'Només el propietari pot usar un quiz privat.',
+        cannotEditNotOwner: 'Només el propietari pot editar este quiz.',
+        cannotDeleteNotOwner: 'Només el propietari pot eliminar este quiz.',
+        cannotCloneNotOwner: 'No pots clonar este quiz.',
         needLogin: 'Inicia sessió per realitzar aquesta acció.',
         permissionDenied: 'No tens permís per realitzar aquesta acció.',
         saveSharing: 'Desar permisos',
@@ -1954,7 +1963,10 @@ function renderGames(data){
             }
             startGame(quiz.id);
         };
-        if(!canStart) playBtn.title = t('cannotStartPrivate');
+        if(!canStart){
+            playBtn.title = t('cannotStartPrivate');
+            playBtn.disabled = true;
+        }
 
         var soloBtn = document.createElement('button');
         soloBtn.className = 'btn btn-ghost';
@@ -1966,7 +1978,10 @@ function renderGames(data){
             }
             startSolo(quiz.id);
         };
-        if(!canStart) soloBtn.title = t('cannotStartPrivate');
+        if(!canStart){
+            soloBtn.title = t('cannotStartPrivate');
+            soloBtn.disabled = true;
+        }
 
         var mpBtn = document.createElement('button');
         mpBtn.className = 'btn btn-ghost';
@@ -1978,12 +1993,16 @@ function renderGames(data){
             }
             startMultiplayer(quiz.id);
         };
-        if(!canStart) mpBtn.title = t('cannotStartPrivate');
+        if(!canStart){
+            mpBtn.title = t('cannotStartPrivate');
+            mpBtn.disabled = true;
+        }
 
         var editBtn = document.createElement('button');
         editBtn.className = 'btn btn-ghost icon-only';
         editBtn.innerHTML = '✏️';
-        editBtn.title = t('edit');
+        editBtn.title = canEdit ? t('edit') : t('cannotEditNotOwner');
+        editBtn.disabled = !canEdit;
         editBtn.onclick = function(){
             if(!canEdit){
                 warnNoPermission(authState.user ? t('permissionDenied') : t('needLogin'));
@@ -2092,7 +2111,8 @@ function renderGames(data){
         var deleteBtn = document.createElement('button');
         deleteBtn.className = 'btn btn-danger icon-only';
         deleteBtn.innerHTML = '🗑️';
-        deleteBtn.title = t('delete');
+        deleteBtn.title = canEdit ? t('delete') : t('cannotDeleteNotOwner');
+        deleteBtn.disabled = !canEdit;
         deleteBtn.onclick = function(){
             if(!canEdit){
                 warnNoPermission(authState.user ? t('permissionDenied') : t('needLogin'));
@@ -2113,7 +2133,8 @@ function renderGames(data){
         var cloneBtn = document.createElement('button');
         cloneBtn.className = 'btn btn-ghost icon-only';
         cloneBtn.innerHTML = '📄';
-        cloneBtn.title = t('clone');
+        cloneBtn.title = canClone ? t('clone') : t('cannotCloneNotOwner');
+        cloneBtn.disabled = !canClone;
         cloneBtn.onclick = function(){
             if(!canClone){
                 warnNoPermission(authState.user ? t('permissionDenied') : t('needLogin'));
@@ -2161,6 +2182,10 @@ function renderGames(data){
         var shareBtn = document.createElement('button');
         shareBtn.className = 'btn btn-ghost';
         shareBtn.textContent = t('saveSharing');
+        if(!canEdit){
+            shareBtn.title = t('cannotEditNotOwner');
+            shareBtn.disabled = true;
+        }
         shareBtn.onclick = function(){
             if(!canEdit){
                 warnNoPermission(authState.user ? t('permissionDenied') : t('needLogin'));
@@ -3025,7 +3050,7 @@ function warnNoPermission(message){
     var msg = message || t('permissionDenied');
     if(authMsg){
         authMsg.textContent = msg;
-        if(!authState.user) openAuthModal();
+        openAuthModal();
         return;
     }
     try{ window.alert(msg); }catch(e){}
@@ -3111,6 +3136,11 @@ var googleAuthEnabled = false;
 var authentikAuthEnabled = false;
 var authentikOnlyMode = false;
 
+function updateTitleUserId(){
+    var base = document.title.replace(/ \[uid:[^\]]*\]$/, '');
+    document.title = (authState.user && authState.user.id) ? (base + ' [uid:' + authState.user.id + ']') : base;
+}
+
 function updateAuthUI(){
     if(newUserSignin){
         newUserSignin.classList.toggle('hidden', !(googleAuthEnabled || authentikAuthEnabled) || !!(authState && authState.user));
@@ -3154,6 +3184,7 @@ function updateAuthUI(){
     }
 
     updateTopAuthButton();
+    updateTitleUserId();
 }
 
 function fetchMe(){
