@@ -551,8 +551,13 @@ desenvolupament haurien de ser **requisits per a començar la següent fase**, n
 un suggeriment ajornable:
 
 - ✅ Entorn de desenvolupament amb recàrrega automàtica (`docs/DEV_DOCKER_SETUP.md`) — fet.
-- Separar del monòlit `server.js` almenys la lògica de tipus de pregunta,
-  abans d'afegir els tipus nous de la Fase 2.
+- ✅ Separar del monòlit `server.js` almenys la lògica de tipus de pregunta,
+  abans d'afegir els tipus nous de la Fase 2 — fet, i més enllà del mínim:
+  tot el backend s'ha migrat a `data/`, `services/`, `routes/` i `sockets/`,
+  i `server.js` queda com a punt d'entrada (vore `ARCHITECTURE.md`).
+- Migrar el frontend: dividir els fitxers més grans (`create.js`, `solo.js`)
+  en mòduls per responsabilitat, en JS vanilla i sense build step. Vore
+  `docs/MIGRATING.md` (Subfase A, "Estimació del frontend") — pendent.
 
 ### Fase 1a — Millores cosmètiques/aïllades, sense tocar la lògica de joc
 
