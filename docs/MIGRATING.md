@@ -18,7 +18,6 @@ introduir un framework de frontend — i quin.
 - [Pròxims passos](#pròxims-passos)
 - [Subfase A — Proposta concreta de separació](#subfase-a--proposta-concreta-de-separació)
   - [Arbre de directoris proposat](#arbre-de-directoris-proposat)
-  - [Estat de la Subfase A (2026-10-22)](#estat-de-la-subfase-a-2026-10-22)
   - [Estimació del frontend (2026-10-22)](#estimació-del-frontend-2026-10-22)
 - [Subfase B — Proposta concreta d'implementació amb Vue](#subfase-b--proposta-concreta-dimplementació-amb-vue)
   - [Arbre de directoris proposat (Vue)](#arbre-de-directoris-proposat-vue)
@@ -36,14 +35,8 @@ anar més enllà i introduir un framework (React/Vue/altres).
 
 ## Estat actual: sense separació de responsabilitats
 
-> **Actualització (2026-10-22):** la part del **backend** d'esta secció ja
-> no és vigent — la Subfase A s'ha aplicat a `src/server/` (vore
-> [Subfase A](#subfase-a--proposta-concreta-de-separació) i l'estructura
-> real en `ARCHITECTURE.md`). El que es descriu ací baix del frontend
-> continua igual.
-
-Abans de la Subfase A no hi havia res paregut a MVC, ni en el backend ni
-en el frontend (vore `ARCHITECTURE.md` → "Deute tècnic conegut"):
+No hi ha res paregut a MVC hui, ni en el backend ni en el frontend (vore
+`ARCHITECTURE.md` → "Deute tècnic conegut"):
 
 - **Backend**: `src/server/server.js` (5.123 línies) mescla, dins de la
   mateixa funció, anàlisi de la petició HTTP, lògica de negoci i accés
@@ -237,8 +230,6 @@ a la vegada.
 
 1. Plantejar la separació de responsabilitats (backend i
    frontend) com a pas 0, independent de qualsevol framework.
-   **Backend fet** (2026-10-22); el frontend (`create.js`, `solo.js`)
-   continua pendent.
 2. Realitzar una prova acotada amb Vue (via
    CDN, Options API) en una sola pantalla (p. ex. el lobby de
    `host.js`) abans de decidir si s'estén a la resta.
@@ -316,33 +307,6 @@ src/public/js/
 Cap d'estos noms és definitiu — l'objectiu de l'arbre és fer visible la
 mida del canvi (quants fitxers nous, de quina grandària aproximada) més
 que fixar l'estructura final exacta.
-
-### Estat de la Subfase A (2026-10-22)
-
-**Backend: fet.** `server.js` ha passat de 5.123 a ~355 línies i ara
-només configura Express, instancia els serveis, munta els routers i
-registra Socket.IO. S'ha seguit l'arbre de dalt amb estes diferències
-(l'estructura real, fitxer a fitxer, està en `ARCHITECTURE.md` →
-"Estructura de directoris"):
-
-- `services/` té més mòduls dels previstos, perquè en buidar `server.js`
-  van aparéixer blocs de lògica que no encaixaven en cap dels quatre
-  inicials: `passwords.js`, `oauth.js`, `authMiddleware.js`,
-  `commons.js` (Edutictac ID/Commons), `quizNormalize.js`, `quizzes.js`
-  (permisos i creació), `ephemeralQuizzes.js`, `soloScores.js` i
-  `kahootImport.js`.
-- `sockets/` té a més `gameHelpers.js`, amb els temporitzadors i la
-  lògica de preguntes compartida pels tres grups d'esdeveniments.
-- Els routers i els sockets reben les dependències per injecció
-  (factories `createXxx({ ... })`); els mòduls sense estat
-  (`data/`, `questionUtils.js`, `quizNormalize.js`...) es requereixen
-  directament.
-
-Tot s'ha fet movent codi sense reescriure'l, verificant cada peça amb
-`npm run lint`, `npm test` i proves manuals contra el contenidor de dev.
-
-**Frontend (`create.js`, `solo.js`): pendent.** Vore l'estimació
-següent.
 
 ### Estimació del frontend (2026-10-22)
 
