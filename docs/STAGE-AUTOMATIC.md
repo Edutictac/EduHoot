@@ -63,30 +63,19 @@ a `/opt/eduhoot-stage/`:
 - `state/deployed` i `state/failed`: versió activa i imatge que ha fallat.
 
 No hi ha `/opt/eduhoot-stage/src`, ni `/etc/eduhoot/stage.env`, ni cap servei
-`eduhoot-stage-server.service`. Per tant `AUTO_SEED_STAGE=1` **no té cap
-efecte** en esta instal·lació: només el llegiria l'`ExecStartPre` del servei
-systemd descrit a `docs/STAGE_SETUP.md`.
+`eduhoot-stage-server.service`. Les variables del contenidor estan en
+`/opt/eduhoot-stage/eduhoot-stage.env`.
 
 ### Sembra automàtica
 
-El `compose.yml` del VPS sobreescriu l'`entrypoint` de la imatge per a
-replicar-lo i executar el seed abans d'arrancar:
+L'`entrypoint.sh` de la imatge respecta `AUTO_SEED_STAGE`: si val `1` i
+`NODE_ENV` és `staging`, executa `npm run seed:stage || true` abans d'arrancar
+el servidor. Un error del seed no impedix l'arrancada, i el propi script es
+nega a executar-se fora de `staging` o contra `kahootDB`.
 
-```yaml
-entrypoint:
-  - /bin/sh
-  - -c
-  - |
-    mkdir -p public/uploads/quiz-images logs/finished-session-reports
-    chown -R app:app public/uploads logs
-    exec su -s /bin/sh app -c 'npm run seed:stage || true; exec node server/server.js'
-```
-
-Així, cada reinici o desplegament comprova el seed (idempotent). L'`entrypoint`
-està sobreescrit en el compose; si algun dia canvia `entrypoint.sh` a la
-imatge, cal revisar esta còpia. Si es vol incorporar al repositori, el lloc
-correcte és `entrypoint.sh` respectant `AUTO_SEED_STAGE`, i caldria publicar
-un tag `stage-*` nou.
+En el VPS, `AUTO_SEED_STAGE=1` està definit en
+`/opt/eduhoot-stage/eduhoot-stage.env`. Així, cada reinici o desplegament
+comprova el seed (idempotent).
 
 Sembra manual puntual, des del VPS:
 
