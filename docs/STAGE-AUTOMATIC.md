@@ -32,7 +32,8 @@ en `main`.
 ## Contingut d'exemple
 
 Este flux no siembra per si sol quizzes d'exemple: el seed és manual per
-defecte (o opt-in via `AUTO_SEED_STAGE`). Vore `docs/STAGE_SETUP.md`, punt 6.
+defecte, o automàtic si s'activa `AUTO_SEED_STAGE=1` (vore «Sembra de dades
+d'exemple», més avall).
 
 ## Què no fa
 
