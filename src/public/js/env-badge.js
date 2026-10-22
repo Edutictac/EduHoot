@@ -23,7 +23,8 @@
         var badgeStyle = badge.style;
         badgeStyle.position = 'fixed';
         badgeStyle.top = '10px';
-        badgeStyle.left = '10px';
+        badgeStyle.left = '50%';
+        badgeStyle.transform = 'translateX(-50%)';
         badgeStyle.zIndex = '999999';
         badgeStyle.padding = '8px 14px';
         badgeStyle.borderRadius = '10px';

@@ -516,9 +516,9 @@ function updateVisibilityWarning(){
     warning.classList.toggle('hidden', !show);
 }
 
-function updateTitleUserId(userId){
-    var base = document.title.replace(/ \[uid:[^\]]*\]$/, '');
-    document.title = userId ? (base + ' [uid:' + userId + ']') : base;
+function updateTitleUserId(name){
+    var base = document.title.replace(/ \[[^\]]*\]$/, '');
+    document.title = name ? (base + ' [' + name + ']') : base;
 }
 
 function refreshAuthStatus(){
@@ -530,7 +530,7 @@ function refreshAuthStatus(){
         .then(function(user){
             isUserAuthenticated = true;
             updateVisibilityWarning();
-            updateTitleUserId(user && user.id);
+            updateTitleUserId(user && (user.nickname || user.email));
         })
         .catch(function(){
             isUserAuthenticated = false;

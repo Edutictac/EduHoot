@@ -3137,8 +3137,9 @@ var authentikAuthEnabled = false;
 var authentikOnlyMode = false;
 
 function updateTitleUserId(){
-    var base = document.title.replace(/ \[uid:[^\]]*\]$/, '');
-    document.title = (authState.user && authState.user.id) ? (base + ' [uid:' + authState.user.id + ']') : base;
+    var base = document.title.replace(/ \[[^\]]*\]$/, '');
+    var name = authState.user && (authState.user.nickname || authState.user.email);
+    document.title = name ? (base + ' [' + name + ']') : base;
 }
 
 function updateAuthUI(){
