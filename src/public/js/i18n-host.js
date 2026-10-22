@@ -56,57 +56,7 @@
     }
   };
 
-  var LANG_KEYS = ['lang-host', 'lang', 'lang-player', 'edutictac-portal-lang', 'edutictac-lang'];
-
-  function normalizeLang(raw){
-    var value = String(raw || '').toLowerCase();
-    if(value.indexOf('valencia') !== -1) return 'va';
-    var base = value.split('-')[0];
-    return translations[base] ? base : '';
-  }
-
-  function queryLang(){
-    try{
-      return normalizeLang(new URLSearchParams(window.location.search).get('lang'));
-    }catch(e){
-      return '';
-    }
-  }
-
-  function storedLang(){
-    for(var i = 0; i < LANG_KEYS.length; i++){
-      var value = normalizeLang(localStorage.getItem(LANG_KEYS[i]));
-      if(value) return value;
-    }
-    return '';
-  }
-
-  function persistLang(value){
-      try {
-          var url = new URL(window.location.href);
-          if (url.searchParams.has('lang')) {
-              url.searchParams.set('lang', value);
-              window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
-          }
-      } catch (e) {}
-    for(var i = 0; i < LANG_KEYS.length; i++){
-      try{ localStorage.setItem(LANG_KEYS[i], value); }catch(e){}
-    }
-  }
-
-  function detectLang(){
-    var fromQuery = queryLang();
-    if(fromQuery) return fromQuery;
-    var stored = storedLang();
-    if(stored) return stored;
-    var nav = (navigator.language || 'es').toLowerCase();
-    var browserLang = normalizeLang(nav);
-    if(browserLang) return browserLang;
-    return 'en';
-  }
-
-  var lang = detectLang();
-  persistLang(lang);
+  var lang = EduhootLang.init({ preferKey: 'lang-host', fallback: 'en' });
 
   function t(key){
     var chain = lang === 'va' ? ['va', 'ca', 'en'] : [lang, 'en'];
@@ -147,7 +97,7 @@
   function setLang(newLang){
     if(translations[newLang]){
       lang = newLang;
-      persistLang(newLang);
+      EduhootLang.persist(newLang);
       apply();
     }
   }

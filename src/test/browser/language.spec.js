@@ -42,12 +42,37 @@ for (const lang of ['ca', 'va', 'es', 'en']) {
     });
 }
 
-for (const lang of ['ca', 'va', 'es', 'en']) {
-    test(`${lang}: el desplegable d'idiomes de /create/ mostra noms, no claus`, async ({ page }) => {
-        await page.goto(`/create/?lang=${lang}`);
-        await expect(page.locator('#lang-select')).toHaveValue(lang);
-        const labels = await page.locator('#lang-select option').evaluateAll(options => options.map(option => option.textContent.trim()));
-        expect(labels.filter(label => /^lang[A-Z]/.test(label))).toEqual([]);
+const LANG_CODES = ['ca', 'va', 'es', 'en'];
+const LANG_NAMES = ['Català', 'Valencià', 'Español', 'English'];
+const LANG_SHORT = ['CA', 'VA', 'ES', 'EN'];
+
+for (const [route, selector, labels] of [
+    ['/create/', '#lang-select', LANG_NAMES],
+    ['/create/quiz-creator/', '#lang-select', LANG_NAMES],
+    ['/host/', '#host-lang-select', LANG_NAMES],
+    ['/host/game/?id=test&pin=12345', '#lang-select', LANG_NAMES],
+    ['/solo/', '#lang-select', LANG_SHORT],
+    ['/multiplayer/', '#lang-select', LANG_SHORT]
+]) {
+    test(`desplegable d'idiomes de ${route}: llista comuna, noms natius en tots els idiomes`, async ({ page }) => {
+        for (const lang of LANG_CODES) {
+            await page.goto(`${route}${route.includes('?') ? '&' : '?'}lang=${lang}`);
+            const options = page.locator(`${selector} option`);
+            expect(await options.evaluateAll(els => els.map(el => el.value))).toEqual(LANG_CODES);
+            expect(await options.evaluateAll(els => els.map(el => el.textContent.trim()))).toEqual(labels);
+            await expect(page.locator(selector)).toHaveValue(lang);
+        }
+    });
+}
+
+for (const route of ['/', '/join.html']) {
+    test(`botons d'idioma de ${route}: llista comuna i botó actiu`, async ({ page }) => {
+        for (const lang of LANG_CODES) {
+            await page.goto(`${route}?lang=${lang}`);
+            const buttons = page.locator('#lang-switcher button[data-lang]');
+            expect(await buttons.evaluateAll(els => els.map(el => el.textContent.trim()))).toEqual(LANG_SHORT);
+            await expect(page.locator(`#lang-switcher [data-lang="${lang}"]`)).toHaveClass(/active/);
+        }
     });
 }
 

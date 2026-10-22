@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <meta charset="utf-8">
     <title>Multiplayer | EduHoot</title>
     <link rel="stylesheet" href="../css/multiplayer.css">
     <link rel="stylesheet" href="../css/music-player.css">
@@ -21,12 +22,7 @@
       <div class="hero__lang">
         <label class="lang-switch">
           <span data-i18n="langLabel">Idioma</span>
-          <select id="lang-select">
-            <option value="ca">CA</option>
-            <option value="va">VA</option>
-            <option value="es">ES</option>
-            <option value="en">EN</option>
-          </select>
+          <select id="lang-select" data-lang-options="short"></select>
         </label>
       </div>
     </header>
@@ -170,6 +166,7 @@
     </div>
 
     <script src="../js/music-player.js"></script>
+    <script src="/js/languages.js"></script>
     <script src="../js/multiplayer.js"></script>
   </body>
 </html>

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <meta charset="utf-8">
         <title>Host | EduHoot</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel = "stylesheet" href = "../css/host.css">
@@ -14,12 +15,7 @@
             <button id = "cancel" onclick = "endGame()">Cancelar partida</button>
             <label class="lang-switch host-lang">
                 <span>Idioma</span>
-                <select id="host-lang-select">
-                    <option value="ca">Català</option>
-                    <option value="va">Valencià</option>
-                    <option value="es">Español</option>
-                    <option value="en">English</option>
-                </select>
+                <select id="host-lang-select" data-lang-options="name"></select>
             </label>
         </div>
         <div class="join-cta">
@@ -61,6 +57,7 @@
         <script src = "../socket.io/socket.io.js"></script>
         <script src = "../js/libs/jqueryLibrary.js"></script>
         <script src = "../js/libs//deparam.js"></script>
+        <script src="/js/languages.js"></script>
         <script src = "../js/i18n-host.js"></script>
         <script src = "../js/music-player.js"></script>
         <script src = "../js/host.js"></script>

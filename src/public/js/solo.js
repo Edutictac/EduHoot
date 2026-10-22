@@ -212,40 +212,7 @@ function sortPublicQuizzes(list){
     });
 }
 
-var LANG_KEYS = ['lang', 'lang-player', 'lang-host', 'edutictac-portal-lang', 'edutictac-lang'];
-function normalizeLang(raw){
-    var value = String(raw || '').toLowerCase();
-    if(value.indexOf('valencia') !== -1) return 'va';
-    var base = value.split('-')[0];
-    return ['ca','va','es','en'].indexOf(base) !== -1 ? base : '';
-}
-function getQueryLang(){
-    try{ return normalizeLang(new URLSearchParams(window.location.search).get('lang')); }catch(e){ return ''; }
-}
-function getStoredLang(){
-    for(var i = 0; i < LANG_KEYS.length; i++){
-        try{
-            var value = normalizeLang(localStorage.getItem(LANG_KEYS[i]));
-            if(value) return value;
-        }catch(e){}
-    }
-    return '';
-}
-function persistLang(value){
-    try {
-        var url = new URL(window.location.href);
-        if (url.searchParams.has('lang')) {
-            url.searchParams.set('lang', value);
-            window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
-        }
-    } catch (e) {}
-    for(var i = 0; i < LANG_KEYS.length; i++){
-        try{ localStorage.setItem(LANG_KEYS[i], value); }catch(e){}
-    }
-}
-var browserLang = normalizeLang(navigator.language || 'es');
-    var lang = getQueryLang() || getStoredLang() || browserLang || 'es';
-    persistLang(lang);
+    var lang = EduhootLang.init();
 
     var i18n = {
         es: {
@@ -743,7 +710,7 @@ var browserLang = normalizeLang(navigator.language || 'es');
 
 function setLang(newLang){
     lang = newLang;
-    persistLang(lang);
+    EduhootLang.persist(lang);
     applyStaticText();
     updateTagFilterOptions();
     renderList();

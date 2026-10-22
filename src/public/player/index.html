@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <meta charset="utf-8">
         <title>Lobby | EduHoot</title>
         <link rel = "stylesheet" href = "../css/lobby.css">
         <link href="/css/fonts.css" rel="stylesheet">
@@ -12,12 +13,9 @@
         <h3 id = "title2" data-i18n="lobby_check">Do you see your name on the screen?</h3>
         <div class="loader"></div>
         <br/>
-        <div id="lang-switcher">
-            <button type="button" data-lang="ca" onclick="window.i18nPlayer && window.i18nPlayer.setLang('ca')">CA</button>
-            <button type="button" data-lang="va" onclick="window.i18nPlayer && window.i18nPlayer.setLang('va')">VA</button>
-            <button type="button" data-lang="es" onclick="window.i18nPlayer && window.i18nPlayer.setLang('es')">ES</button>
-            <button type="button" data-lang="en" onclick="window.i18nPlayer && window.i18nPlayer.setLang('en')">EN</button>
+        <div id="lang-switcher" data-lang-buttons>
         </div>
+        <script src="/js/languages.js"></script>
         <script src="../js/i18n-player.js"></script>
     </body>
     <script src = "../socket.io/socket.io.js"></script>

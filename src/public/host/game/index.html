@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <meta charset="utf-8">
         <title>Game | EduHoot</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel = "stylesheet" href = "../../css/hostGameView.css">
@@ -16,12 +17,7 @@
                 <button type="button" id="fullscreenToggle" class="fullscreen-toggle" onclick="toggleHostFullscreen()" aria-pressed="false">⛶</button>
                 <label class="lang-switch">
                     <span data-i18n="langLabel">Idioma</span>
-                    <select id="lang-select">
-                        <option value="ca">Català</option>
-                        <option value="va">Valencià</option>
-                        <option value="es">Español</option>
-                        <option value="en">English</option>
-                    </select>
+                    <select id="lang-select" data-lang-options="name"></select>
                 </label>
             </div>
         <h4 id = "questionNum">Question 1 / x</h4>
@@ -94,6 +90,7 @@
         <script src = "../../js/libs/jqueryLibrary.js"></script>
         <script src = "../../js/libs/deparam.js"></script>
         <script src = "../../js/music-player.js"></script>
+        <script src="/js/languages.js"></script>
         <script src = "../../js/hostGame.js"></script>
     </body>
 </html>

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <meta charset="utf-8">
         <title>Creator | EduHoot</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel = "stylesheet" href = "../../css/quizCreator.css">
@@ -13,12 +14,7 @@
                 <h1 id="title" data-i18n="title">Creador de quizzes</h1>
                 <label class="lang-switch">
                     <span data-i18n="langLabel">Idioma</span>
-                    <select id="lang-select">
-                        <option value="ca">Català</option>
-                        <option value="va">Valencià</option>
-                        <option value="es">Español</option>
-                        <option value="en">English</option>
-                    </select>
+                    <select id="lang-select" data-lang-options="name"></select>
                 </label>
             </div>
             <h4 id="subtitle" data-i18n="subtitle">Diseña las preguntas y guarda tu juego para lanzarlo cuando quieras.</h4>
@@ -86,6 +82,7 @@
         </div>
 
         <script src = "../../socket.io/socket.io.js"></script>
+        <script src="/js/languages.js"></script>
         <script src = "../../js/quizCreator.js"></script>
         <script src="/js/sw-version.js"></script>
     </body>

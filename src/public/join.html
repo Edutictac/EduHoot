@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <meta charset="utf-8">
         <title>Join | EduHoot</title>
         <link rel = "stylesheet" href = "css/index.css">
         <link href="/css/fonts.css" rel="stylesheet">
@@ -10,11 +11,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
     </head>
     <body>
-        <div id="lang-switcher">
-            <button type="button" data-lang="ca" onclick="window.i18nPlayer && window.i18nPlayer.setLang('ca')">CA</button>
-            <button type="button" data-lang="va" onclick="window.i18nPlayer && window.i18nPlayer.setLang('va')">VA</button>
-            <button type="button" data-lang="es" onclick="window.i18nPlayer && window.i18nPlayer.setLang('es')">ES</button>
-            <button type="button" data-lang="en" onclick="window.i18nPlayer && window.i18nPlayer.setLang('en')">EN</button>
+        <div id="lang-switcher" data-lang-buttons>
         </div>
         <div id="pinModal" class="pin-modal" role="dialog" aria-modal="true">
             <div class="pin-modal__card">
@@ -110,6 +107,7 @@
                 <p class="site-footer__about" id="sw-version" aria-live="polite"></p>
             </div>
         </footer>
+        <script src="/js/languages.js"></script>
         <script src="js/i18n-player.js"></script>
         <script src="js/join.js"></script>
         <script src="js/sw-version.js"></script>

@@ -10,12 +10,8 @@
         <link rel="stylesheet" href="css/landing.css">
     </head>
     <body>
-        <div class="lang-switcher" id="lang-switcher">
+        <div class="lang-switcher" id="lang-switcher" data-lang-buttons>
             <span data-i18n="landing_langLabel">Idioma</span>
-            <button type="button" data-lang="ca" onclick="window.i18nPlayer && window.i18nPlayer.setLang('ca')">CA</button>
-            <button type="button" data-lang="va" onclick="window.i18nPlayer && window.i18nPlayer.setLang('va')">VA</button>
-            <button type="button" data-lang="es" onclick="window.i18nPlayer && window.i18nPlayer.setLang('es')">ES</button>
-            <button type="button" data-lang="en" onclick="window.i18nPlayer && window.i18nPlayer.setLang('en')">EN</button>
         </div>
         <main class="landing-shell">
             <img class="logo" src="/icons/logo.svg" alt="EduHoot logo">
@@ -42,6 +38,7 @@
                 <p class="site-footer__about" id="sw-version" aria-live="polite"></p>
             </div>
         </footer>
+        <script src="/js/languages.js"></script>
         <script src="js/i18n-player.js"></script>
         <script src="js/pwa-install.js"></script>
         <script src="js/sw-version.js"></script>

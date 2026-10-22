@@ -200,40 +200,7 @@ function ownsLocal(id){
     }
 }
 
-var LANG_KEYS = ['lang', 'lang-player', 'lang-host', 'edutictac-portal-lang', 'edutictac-lang'];
-function normalizeLang(raw){
-    var value = String(raw || '').toLowerCase();
-    if(value.indexOf('valencia') !== -1) return 'va';
-    var base = value.split('-')[0];
-    return ['ca','va','es','en'].indexOf(base) !== -1 ? base : '';
-}
-function getQueryLang(){
-    try{ return normalizeLang(new URLSearchParams(window.location.search).get('lang')); }catch(e){ return ''; }
-}
-function getStoredLang(){
-    for(var i = 0; i < LANG_KEYS.length; i++){
-        try{
-            var value = normalizeLang(localStorage.getItem(LANG_KEYS[i]));
-            if(value) return value;
-        }catch(e){}
-    }
-    return '';
-}
-function persistLang(value){
-    try {
-        var url = new URL(window.location.href);
-        if (url.searchParams.has('lang')) {
-            url.searchParams.set('lang', value);
-            window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
-        }
-    } catch (e) {}
-    for(var i = 0; i < LANG_KEYS.length; i++){
-        try{ localStorage.setItem(LANG_KEYS[i], value); }catch(e){}
-    }
-}
-var browserLang = normalizeLang(navigator.language || 'es');
-var lang = getQueryLang() || getStoredLang() || browserLang || 'es';
-persistLang(lang);
+var lang = EduhootLang.init();
 var i18n = {
     es: {
         back: 'Volver',
@@ -489,10 +456,6 @@ var i18n = {
         iaCsvPlaceholder: 'Pega aquí el CSV devuelto por la IA',
         kahootUrlPlaceholder: 'URL o ID (p. ej. https://create.kahoot.it/details/... o 01234567)',
         visibilityHelp: '<strong>Solo yo:</strong> si no inicias sesión, el quiz se guarda solo en tu sesión y caduca en 24h.<br><strong>Por enlace / Público:</strong> aunque no tengas cuenta, se guardan de forma global en el servidor y sobreviven a reinicios. Si inicias sesión, quedan ligados a tu usuario. Puedes permitir o no las copias.',
-        langEs: 'Español',
-        langEn: 'English',
-        langCa: 'Català',
-        langVa: 'Valencià',
         optSpanish: 'Español',
         optCatalan: 'Catalán',
         optEnglish: 'Inglés',
@@ -752,10 +715,6 @@ var i18n = {
         iaCsvPlaceholder: 'Paste here the CSV returned by the AI',
         kahootUrlPlaceholder: 'URL or ID (e.g. https://create.kahoot.it/details/... or 01234567)',
         visibilityHelp: '<strong>Only me:</strong> if you don\'t sign in, the quiz is stored only in your session and expires in 24h.<br><strong>By link / Public:</strong> even without an account it is stored globally on the server and survives restarts. If you sign in, it links to your user. You can allow or block copies.',
-        langEs: 'Spanish',
-        langEn: 'English',
-        langCa: 'Catalan',
-        langVa: 'Valencian',
         optSpanish: 'Spanish',
         optCatalan: 'Catalan',
         optEnglish: 'English',
@@ -1015,10 +974,6 @@ var i18n = {
         iaCsvPlaceholder: 'Enganxa aquí el CSV retornat per la IA',
         kahootUrlPlaceholder: 'URL o ID (p. ex. https://create.kahoot.it/details/... o 01234567)',
         visibilityHelp: '<strong>Només jo:</strong> si no inicies sessió, el quiz es desa només a la teva sessió i caduca en 24h.<br><strong>Per enllaç / Públic:</strong> encara que no tinguis compte, es desa globalment al servidor i sobreviu a reinicis. Si inicies sessió, queda lligat al teu usuari. Pots permetre o no les còpies.',
-        langEs: 'Espanyol',
-        langEn: 'Anglès',
-        langCa: 'Català',
-        langVa: 'Valencià',
         optSpanish: 'Espanyol',
         optCatalan: 'Català',
         optEnglish: 'Anglès',
@@ -1453,7 +1408,7 @@ function applyStaticTranslations(){
 
 function setLang(newLang){
     lang = newLang;
-    persistLang(lang);
+    EduhootLang.persist(lang);
     applyStaticTranslations();
     renderTagSuggestions();
     socket.emit('requestDbNames');
