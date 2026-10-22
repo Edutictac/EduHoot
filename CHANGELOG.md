@@ -24,16 +24,28 @@ intacte com la nota de versió més detallada.
 - L'entorn de desenvolupament carrega automàticament 5 qüestionaris públics
   de mostra i 5 usuaris de prova (1 administrador, 4 editors), de forma
   idempotent i reversible (`npm run seed:dev` / `unseed:dev`).
+- Distintiu visual d'entorn: quan l'app s'executa en desenvolupament o en
+  stage, totes les pantalles principals mostren un distintiu fix a la part
+  superior, un tint de fons i un prefix al títol de la pestanya, per a no
+  confondre estos entorns amb producció. No fa res quan l'entorn és
+  producció.
 
 ### Canviat
 - La música de la partida ara s'inicia automàticament, sense esperar que
   l'amfitrió prema «Comencem!».
+- El títol de la pestanya del creador de qüestionaris ja no mostra l'id
+  intern de l'usuari autenticat, sinó el seu nom o correu.
 
 ### Corregit
 - Les preguntes d'enquesta («opinió») en el mode Solo ja no es compten com a
   errors: ja no obrin el diàleg d'error, queden excloses del total puntuat
   del rànquing, i una partida només d'enquestes no demana entrada al
   rànquing.
+- L'avís de falta de permisos en la biblioteca de qüestionaris ara s'obri
+  sempre que cal, encara que l'usuari tinga sessió iniciada (abans només
+  apareixia si no n'hi havia cap). Els botons de jugar, editar, eliminar,
+  clonar i compartir sense permís ara apareixen deshabilitats amb un
+  missatge explicatiu, en lloc de quedar clicables sense cap avís previ.
 
 ## [1.0.7] - 2026-10-09
 

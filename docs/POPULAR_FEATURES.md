@@ -680,6 +680,11 @@ la numeració 1-32 de dalt.
   ajustos d'accessibilitat per alumne o grup concret (lectura en veu
   alta, alt contrast, tipografia per a dislèxia...), a l'estil de les
   "Accommodations" de Wayground.
+- **W6 — Imatge destacada del qüestionari.** A l'estil de les entrades
+  de WordPress: que la persona creadora puga pujar una imatge de
+  portada/destacada per al qüestionari, que aparega en diversos llocs
+  (p. ex. la llista pública de qüestionaris o la pantalla d'entrada a
+  un d'ells).
 
 ## Nota sobre drets d'autor
 

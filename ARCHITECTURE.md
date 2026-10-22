@@ -21,6 +21,7 @@ funcionament del projecte.
 - [Model de dades (MongoDB)](#model-de-dades-mongodb)
 - [Autenticació i sessions](#autenticació-i-sessions)
 - [Comunicació en temps real (Socket.IO)](#comunicació-en-temps-real-socketio)
+- [Distintiu visual d'entorn (dev/stage)](#distintiu-visual-dentorn-devstage)
 - [Deute tècnic conegut](#deute-tècnic-conegut)
 - [Unió a la partida: nom i icona del jugador](#unió-a-la-partida-nom-i-icona-del-jugador)
 - [Informe de partida (descàrrega en CSV)](#informe-de-partida-descàrrega-en-csv)
@@ -175,6 +176,24 @@ Esdeveniments principals que rep el servidor (registrats en
 | `newQuiz` | Amfitrió | Carregar un qüestionari nou en una sala ja oberta. |
 | `requestDbNames` | Client | Demanar llistat de noms/qüestionaris (ús administratiu). |
 | `disconnect` | Socket.IO (automàtic) | Neteja quan cau la connexió d'un jugador/amfitrió. |
+
+## Distintiu visual d'entorn (dev/stage)
+
+Per a no confondre un entorn de desenvolupament o stage amb producció,
+`src/public/js/env-badge.js` es carrega en totes les pantalles públiques
+principals (`index`, `join`, `create`, `create/quiz-creator`, `host`,
+`host/game`, `player`, `player/game`, `solo`, `multiplayer`,
+`admin-stats`) i consulta l'endpoint `GET /api/env`
+(`src/server/server.js:151`, retorna `{ env: process.env.NODE_ENV || '' }`).
+
+- Si `NODE_ENV` és `development` o `staging`, afig un distintiu fix a
+  dalt de la pàgina ("🛠️ Entorn: desenvolupament" / "🧪 Entorn: stage"),
+  un tint de fons (taronja/verd) i un prefix al títol de la pestanya
+  (`🛠️ DEV — ` / `🧪 STAGE — `).
+- En qualsevol altre valor (`production`, buit...) no fa absolutament
+  res: cap petició ni canvi visual addicional.
+- Vore `docs/STAGE-AUTOMATIC.md` per a com es configura `NODE_ENV` i
+  `AUTO_SEED_STAGE` al VPS de stage.
 
 ## Deute tècnic conegut
 
