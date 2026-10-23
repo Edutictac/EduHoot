@@ -33,8 +33,7 @@ intacte com la nota de versió més detallada.
 ### Canviat
 - La música de la partida ara s'inicia automàticament, sense esperar que
   l'amfitrió prema «Comencem!».
-- El títol de la pestanya del creador de qüestionaris ja no mostra l'id
-  intern de l'usuari autenticat, sinó el seu nom o correu.
+- El títol de la pestanya del creador de qüestionaris mostra el seu nom o correu.
 
 ### Corregit
 - Les preguntes d'enquesta («opinió») en el mode Solo ja no es compten com a
