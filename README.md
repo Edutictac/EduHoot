@@ -31,6 +31,7 @@ Configura un client OAuth 2.0 de Google amb la URL de retorn `https://tu-dominio
 - `GOOGLE_CLIENT_ID`
 - `GOOGLE_CLIENT_SECRET`
 - `PUBLIC_BASE_URL` (recomanat en producció, per exemple `https://tu-dominio`)
+- `EDUTICTAC_COMMONS_URL` (opcional): Commons al qual apunta el xip de compte. Per defecte `https://commons.edutictac.es`; en un Commons local, l'adreça pública del portal, per exemple `http://edutictac.local:8082`.
 
 El primer usuari que entra amb Google es crea com `admin`; els següents entren com `editor`. Si ja existeix un usuari amb el mateix email, se li enllaça Google i conserva el rol.
 
@@ -107,6 +108,7 @@ Configura un cliente OAuth 2.0 de Google con la URL de retorno `https://tu-domin
 - `GOOGLE_CLIENT_ID`
 - `GOOGLE_CLIENT_SECRET`
 - `PUBLIC_BASE_URL` (recomendado en producción, por ejemplo `https://tu-dominio`)
+- `EDUTICTAC_COMMONS_URL` (opcional): Commons al que apunta el chip de cuenta. Por defecto `https://commons.edutictac.es`; en un Commons local, la dirección pública del portal, por ejemplo `http://edutictac.local:8082`.
 
 El primer usuario que entra con Google se crea como `admin`; los siguientes entran como `editor`. Si ya existe un usuario con el mismo email, se le enlaza Google y conserva su rol.
 
@@ -237,6 +239,7 @@ Create a Google OAuth 2.0 client with the redirect URL `https://your-domain/api/
 - `GOOGLE_CLIENT_ID`
 - `GOOGLE_CLIENT_SECRET`
 - `PUBLIC_BASE_URL` (recommended in production, for example `https://your-domain`)
+- `EDUTICTAC_COMMONS_URL` (optional): Commons the account chip points to. Defaults to `https://commons.edutictac.es`; in a local Commons, the portal's public address, for example `http://edutictac.local:8082`.
 
 The first Google user becomes `admin`; later users become `editor`. If a user with the same email already exists, Google is linked to that account and the current role is preserved.
 

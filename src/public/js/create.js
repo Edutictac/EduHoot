@@ -2950,7 +2950,9 @@ function closeAuthModal(){
 function openCentralAccountMenu(){
     var menu = document.querySelector('edutictac-account details.eta-account');
     if(!menu){
-        if(authMsg) authMsg.textContent = t('accountUnavailable');
+        // Sense xip (Commons no respon): l'accés propi d'EduHoot fa de respost.
+        if(authentikAuthEnabled) loginWithAuthentik();
+        else if(authMsg) authMsg.textContent = t('accountUnavailable');
         return;
     }
     // El xip tanca el menú amb qualsevol clic de fora: s'obri quan este clic ja ha passat.
@@ -3108,12 +3110,16 @@ function applyCentralSession(central){
     }
 }
 
-// Només quan EduHoot i Commons comparteixen domini (eduhoot.edutictac.es i
-// commons.edutictac.es). Una instal·lació local no depén del Commons d'internet.
+// Només quan EduHoot i Commons són del mateix lloc: eduhoot.edutictac.es i
+// commons.edutictac.es, o el mateix host d'un Commons local (edutictac.local, IP).
+// Una instal·lació local no depén del Commons d'internet.
 function sameSiteAsPage(base){
     try{
-        var site = new URL(base).hostname.split('.').slice(-2).join('.');
+        var baseHost = new URL(base).hostname;
         var host = window.location.hostname;
+        // Amb IP (o un nom sense domini, com edutictac.local) ha de ser el mateix host.
+        if(/^[0-9.]+$|^\[|:/.test(baseHost) || baseHost.split('.').length < 3) return host === baseHost;
+        var site = baseHost.split('.').slice(-2).join('.');
         return host === site || host.slice(-(site.length + 1)) === '.' + site;
     }catch(e){
         return false;

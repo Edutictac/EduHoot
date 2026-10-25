@@ -13,6 +13,20 @@ existia una nota `RELEASE-X.Y.Z.md` pròpia per a una versió (1.0.2, 1.0.5), el
 seu contingut es resumeix ací i s'hi enllaça; el fitxer original es manté
 intacte com la nota de versió més detallada.
 
+## [1.0.13] - 2026-10-25
+
+### Afegit
+- `EDUTICTAC_COMMONS_URL`: el xip de compte pot apuntar a un Commons local
+  (p. ex. `http://edutictac.local:8082`) en lloc de `commons.edutictac.es`. El
+  servidor reescriu l'adreça del xip a les pàgines que el porten.
+
+### Canviat
+- Si Commons no respon i el xip no es pinta, «Entrar» de `/create/` porta
+  directament a l'accés Authentik d'EduHoot, perquè el professorat mai es
+  quede sense entrar.
+- El pont de sessió accepta un Commons local del mateix host (nom local o IP)
+  i exigix el mateix host quan l'adreça és una IP o un nom sense domini.
+
 ## [1.0.12] - 2026-10-25
 
 ### Canviat

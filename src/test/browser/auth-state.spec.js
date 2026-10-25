@@ -30,6 +30,7 @@ async function stubServers(page, state) {
         const url = new URL(route.request().url());
         if (url.origin === COMMONS) {
             if (url.pathname === '/assets/account-widget.js') {
+                if (state.noWidget) return route.abort();
                 return route.fulfill({ contentType: 'application/javascript', body: WIDGET_STUB });
             }
             if (url.pathname === '/api/auth/session') {
@@ -115,4 +116,23 @@ test('en una instal·lació local, el Commons d’internet no toca la sessió d�
     await expect(page.locator('#open-account')).toBeVisible();
     await page.waitForTimeout(500);
     expect(state.logouts).toBe(0);
+});
+
+test('si Commons no respon, «Entrar» va directament a l’accés propi d’EduHoot', async ({ page }) => {
+    const state = newState({ noWidget: true });
+    await stubServers(page, state);
+    await page.goto(SITE + '/create/?lang=va');
+    await expect(page.locator('html')).toHaveClass(/account-fallback/, { timeout: 8000 });
+    await page.locator('#open-account-menu').click();
+    await expect.poll(() => state.starts.length).toBe(1);
+});
+
+test('mateix lloc: domini compartit o, amb IP o nom local, el mateix host', async ({ page }) => {
+    await stubServers(page, newState());
+    await page.goto('/create/?lang=va');
+    const check = base => page.evaluate(b => window.sameSiteAsPage(b), base);
+    expect(await check('http://127.0.0.1:8082')).toBe(true);
+    expect(await check('http://10.0.1.1:8082')).toBe(false);
+    expect(await check('http://edutictac.local:8082')).toBe(false);
+    expect(await check('https://commons.edutictac.es')).toBe(false);
 });
