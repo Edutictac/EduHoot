@@ -1,10 +1,15 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <meta charset="utf-8">
     <title>Multiplayer | EduHoot</title>
     <link rel="stylesheet" href="../css/multiplayer.css">
     <link rel="stylesheet" href="../css/music-player.css">
     <link href="/css/fonts.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/edutictac-footer.css">
+    <link rel="stylesheet" href="/css/edutictac-shared.css">
+    <script src="/js/edutictac-chip.js"></script>
+    <script src="https://commons.edutictac.es/assets/account-widget.js" defer onerror="document.documentElement.classList.add('account-fallback')"></script>
     <link rel="icon" href="/icons/logo.svg" type="image/svg+xml">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
   </head>
@@ -19,6 +24,7 @@
         <p class="subtext" data-i18n="subtitle">Elige un quiz público, selecciona 2–4 jugadores y responde en pantalla dividida.</p>
       </div>
       <div class="hero__lang">
+        <edutictac-account class="site-account" data-base="https://commons.edutictac.es"></edutictac-account>
         <label class="lang-switch">
           <span data-i18n="langLabel">Idioma</span>
           <select id="lang-select">
@@ -168,6 +174,21 @@
         <button id="round-ranking-continue" class="btn btn-primary" data-i18n="roundContinue">Continuar</button>
       </div>
     </div>
+
+    <footer class="ett-footer">
+      <p class="ett-footer__id">
+        <span class="ett-footer__brand">EduTicTac</span>
+        <span aria-hidden="true">·</span>
+        <span class="ett-footer__service">EduHoot</span>
+        <span class="ett-footer__version" id="sw-version" aria-live="polite"></span>
+      </p>
+      <div class="ett-footer__links">
+        <a href="https://edutictac.es/" target="_blank" rel="noopener">edutictac.es</a>
+        <a href="https://edutictac.es/privacitat.html" target="_blank" rel="noopener" data-i18n="footerPrivacy">Privacidad</a>
+        <a href="https://git.edutictac.es/Edutictac/eduhoot" target="_blank" rel="noopener" data-i18n="footerSource">Código fuente</a>
+        <a href="https://git.edutictac.es/Edutictac/eduhoot/src/branch/main/LICENSE" target="_blank" rel="noopener">AGPL-3.0</a>
+      </div>
+    </footer>
 
     <script src="../js/music-player.js"></script>
     <script src="../js/multiplayer.js"></script>

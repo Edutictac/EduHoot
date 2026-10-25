@@ -1,7 +1,7 @@
 const { test, expect } = require('@playwright/test');
 
 test.beforeEach(async ({ page }) => {
-    await page.route('https://**', route => route.abort());
+    await page.route(/^https:\/\//, route => route.abort());
     await page.route('**/socket.io/socket.io.js', route => route.fulfill({
         contentType: 'application/javascript',
         body: 'window.testSocketEvents = {}; window.io = function(){ return {on: function(name, fn){window.testSocketEvents[name] = fn;}, emit: function(){}, disconnect: function(){}}; };'

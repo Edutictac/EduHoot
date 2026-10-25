@@ -8,7 +8,7 @@ for (const [lang, signOut] of [['es', 'Salir'], ['va', 'Eixir']]) {
     test(`${lang}: header closes an authenticated session and survives reload`, async ({ page }) => {
         let authenticated = true;
         let logoutRequests = 0;
-        await page.route('https://**', route => route.abort());
+        await page.route(/^https:\/\//, route => route.abort());
         await page.route('**/socket.io/socket.io.js', route => route.fulfill({
             contentType: 'application/javascript',
             body: 'window.io=function(){return {on:function(){},emit:function(){},disconnect:function(){},connect:function(){}}};'

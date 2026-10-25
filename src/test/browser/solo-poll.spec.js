@@ -17,7 +17,7 @@ const quiz = {
 
 async function openQuiz(page, questions) {
     await page.addInitScript(() => { Math.random = () => 0.999; });
-    await page.route('https://**', route => route.abort());
+    await page.route(/^https:\/\//, route => route.abort());
     await page.route('**/api/**', route => {
         const path = new URL(route.request().url()).pathname;
         if (path === '/api/quizzes/123') {

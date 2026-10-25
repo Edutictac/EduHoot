@@ -8,8 +8,13 @@
         <link rel="manifest" href="manifest.webmanifest">
         <link rel="icon" href="/icons/logo.svg" type="image/svg+xml">
         <link rel="stylesheet" href="css/landing.css">
+        <link rel="stylesheet" href="/css/edutictac-footer.css">
+        <link rel="stylesheet" href="/css/edutictac-shared.css">
+        <script src="/js/edutictac-chip.js"></script>
+        <script src="https://commons.edutictac.es/assets/account-widget.js" defer onerror="document.documentElement.classList.add('account-fallback')"></script>
     </head>
     <body>
+        <edutictac-account class="site-account site-account--fixed" data-base="https://commons.edutictac.es"></edutictac-account>
         <div class="lang-switcher" id="lang-switcher">
             <span data-i18n="landing_langLabel">Idioma</span>
             <button type="button" data-lang="ca" onclick="window.i18nPlayer && window.i18nPlayer.setLang('ca')">CA</button>
@@ -29,17 +34,18 @@
             </div>
             <button id="installApp" class="install-button" type="button" data-i18n="landing_install_app" hidden>Instalar app</button>
         </main>
-        <footer class="site-footer">
-            <div class="site-footer__content">
-                <a class="site-footer__link" href="https://edutictac.es" target="_blank" rel="noopener">
-                    <img class="site-footer__logo" src="/icons/logoedutictac.jpeg" alt="EduTicTac">
-                    <span>edutictac.es</span>
-                </a>
-                <a class="site-footer__link" href="https://edutictac.es/privacitat.html" target="_blank" rel="noopener" data-i18n="footerPrivacy">Privacidad</a>
-                <a class="site-footer__link" href="https://git.edutictac.es/Edutictac/eduhoot" target="_blank" rel="noopener" data-i18n="footerSource">Codi font</a>
-                <p class="site-footer__about" data-i18n="footerLicense">EduHoot · Licencia GNU Affero General Public License v3.0 (AGPL-3.0)</p>
-                <p class="site-footer__about"><span data-i18n="footerContactLabel">Incidencias</span>: <a href="https://git.edutictac.es/Edutictac/eduhoot/issues" target="_blank" rel="noopener">git.edutictac.es</a></p>
-                <p class="site-footer__about" id="sw-version" aria-live="polite"></p>
+        <footer class="ett-footer ett-footer--bottom">
+            <p class="ett-footer__id">
+                <span class="ett-footer__brand">EduTicTac</span>
+                <span aria-hidden="true">·</span>
+                <span class="ett-footer__service">EduHoot</span>
+                <span class="ett-footer__version" id="sw-version" aria-live="polite"></span>
+            </p>
+            <div class="ett-footer__links">
+                <a href="https://edutictac.es/" target="_blank" rel="noopener">edutictac.es</a>
+                <a href="https://edutictac.es/privacitat.html" target="_blank" rel="noopener" data-i18n="footerPrivacy">Privacidad</a>
+                <a href="https://git.edutictac.es/Edutictac/eduhoot" target="_blank" rel="noopener" data-i18n="footerSource">Código fuente</a>
+                <a href="https://git.edutictac.es/Edutictac/eduhoot/src/branch/main/LICENSE" target="_blank" rel="noopener">AGPL-3.0</a>
             </div>
         </footer>
         <script src="js/i18n-player.js"></script>

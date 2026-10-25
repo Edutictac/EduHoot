@@ -49,6 +49,12 @@ body{
   margin: 14px auto 0;
 }
 
+/* El peu comú és per al catàleg i la configuració, no per a la partida a pantalla dividida. */
+body.preparing .ett-footer,
+body.playing .ett-footer{
+  display: none;
+}
+
 body.playing .music-section{
   display: none;
 }

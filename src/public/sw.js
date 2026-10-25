@@ -1,6 +1,6 @@
 // IMPORTANTE: cuando cambiemos JS/CSS y queramos evitar servir una versión antigua,
 // incrementa esta versión para invalidar el precache.
-const CACHE_NAME = 'eduh-pwa-v1.1.14';
+const CACHE_NAME = 'eduh-pwa-v1.1.15';
 
 // App shell: recursos críticos para que la app cargue incluso sin red.
 // El resto de recursos se cachean en runtime con stale-while-revalidate.
@@ -39,7 +39,10 @@ const ASSETS = [
   '/css/create.css',
   '/css/quizCreator.css',
   '/css/admin.css',
+  '/css/edutictac-footer.css',
+  '/css/edutictac-shared.css',
 
+  '/js/edutictac-chip.js',
   '/js/i18n-player.js',
   '/js/i18n-host.js',
   '/js/join.js',

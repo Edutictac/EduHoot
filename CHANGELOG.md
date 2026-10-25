@@ -13,13 +13,18 @@ existia una nota `RELEASE-X.Y.Z.md` pròpia per a una versió (1.0.2, 1.0.5), el
 seu contingut es resumeix ací i s'hi enllaça; el fitxer original es manté
 intacte com la nota de versió més detallada.
 
-## [Sense publicar]
+## [1.0.8] - 2026-10-25
 
 ### Afegit
-- Traduccions que faltaven al peu de pàgina; el llistat públic d'activitats
-  ara s'ordena per valoració.
+- Xip de compte central d'EduTicTac i peu comú a la portada, l'entrada, el joc
+  individual, la creació, el multijugador local i els lobbys d'amfitrió i
+  d'alumnat. El selector d'idioma propi queda com a resposta si Commons no
+  carrega.
+- Declaració explícita d'UTF-8 a les pàgines que no la tenien.
 
 ### Canviat
+- Traduccions que faltaven al peu de pàgina; el llistat públic d'activitats
+  ara s'ordena per valoració.
 - La música de la partida ara s'inicia automàticament, sense esperar que
   l'amfitrió prema «Comencem!».
 
