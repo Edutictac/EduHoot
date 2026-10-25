@@ -1,6 +1,6 @@
 // IMPORTANTE: cuando cambiemos JS/CSS y queramos evitar servir una versión antigua,
 // incrementa esta versión para invalidar el precache.
-const CACHE_NAME = 'eduh-pwa-v1.1.17';
+const CACHE_NAME = 'eduh-pwa-v1.1.18';
 
 // App shell: recursos críticos para que la app cargue incluso sin red.
 // El resto de recursos se cachean en runtime con stale-while-revalidate.
@@ -60,23 +60,8 @@ const ASSETS = [
   '/manifest.webmanifest',
   '/icons/logo.svg',
   '/icons/pdf.jpeg',
-  '/js/sw-version.js'
+  '/js/app-version.js'
 ];
-
-self.addEventListener('message', (event) => {
-  const data = event && event.data ? event.data : null;
-  if(!data || data.type !== 'GET_SW_VERSION') return;
-  const payload = { type: 'SW_VERSION', cacheName: CACHE_NAME, version: CACHE_NAME };
-  // Preferir MessageChannel si viene puerto
-  if(event.ports && event.ports[0]){
-    event.ports[0].postMessage(payload);
-    return;
-  }
-  // Fallback: responder al cliente que envió el mensaje
-  if(event.source && typeof event.source.postMessage === 'function'){
-    event.source.postMessage(payload);
-  }
-});
 
 self.addEventListener('install', (event) => {
   event.waitUntil(

@@ -101,6 +101,7 @@ const EDUTICTAC_ID_API_URL = (process.env.EDUTICTAC_ID_API_URL || '').replace(/\
 const EDUTICTAC_ID_APP_TOKEN = process.env.EDUTICTAC_ID_APP_TOKEN || '';
 const EDUTICTAC_ID_AUTH_REQUIRED = /^(1|true|yes)$/i.test(process.env.EDUTICTAC_ID_AUTH_REQUIRED || '');
 const STUDENT_JOIN_TOKEN_TTL_MS = 10 * 60 * 1000;
+const APP_VERSION = require('../package.json').version;
 const STUDENT_ACTIVITY_TOKEN_TTL_MS = 4 * 60 * 60 * 1000;
 const PUBLIC_IMPORT_SOURCE_URL = (process.env.PUBLIC_IMPORT_SOURCE_URL || '').trim().replace(/\/+$/, '');
 
@@ -4540,6 +4541,12 @@ app.get('/api/auth/google/config', (req, res) => {
 
 app.get('/api/auth/migration', (req, res) => {
   res.json({ end: process.env.AUTHENTIK_MIGRATION_END || null, authentikOnly: authentikOnly() });
+});
+
+// Versió de la imatge desplegada (package.json), per al peu de pàgina.
+app.get('/api/version', (req, res) => {
+  res.set('Cache-Control', 'no-cache');
+  res.json({ version: APP_VERSION });
 });
 
 app.get('/api/auth/authentik/config', (req, res) => {

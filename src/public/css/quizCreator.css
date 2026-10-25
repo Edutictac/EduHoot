@@ -342,7 +342,7 @@ label{
     justify-content: flex-end;
 }
 
-.sw-version{
+.app-version{
     margin: 10px 0 0;
     text-align: center;
 }

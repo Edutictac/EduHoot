@@ -13,7 +13,9 @@ async function stubBase(page) {
         contentType: 'application/javascript',
         body: SOCKET_STUB
     }));
-    await page.route('**/api/**', route => route.fulfill({ json: { tags: [], quizzes: [], enabled: false, top: [] } }));
+    await page.route('**/api/**', route => route.fulfill({ json: route.request().url().endsWith('/api/version')
+        ? { version: '9.9.9' }
+        : { tags: [], quizzes: [], enabled: false, top: [] } }));
 }
 
 async function stubCommons(page) {
@@ -40,6 +42,7 @@ test.describe('peu comú', () => {
             await expect(footer.locator('.ett-footer__service')).toHaveText('EduHoot');
             await expect(footer.locator('a[href="https://edutictac.es/privacitat.html"]')).toBeVisible();
             await expect(footer.locator('a[href$="/LICENSE"]')).toBeVisible();
+            await expect(footer.locator('#app-version')).toHaveText('v9.9.9');
         });
     }
 });

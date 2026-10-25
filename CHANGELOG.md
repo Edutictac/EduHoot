@@ -13,6 +13,14 @@ existia una nota `RELEASE-X.Y.Z.md` pròpia per a una versió (1.0.2, 1.0.5), el
 seu contingut es resumeix ací i s'hi enllaça; el fitxer original es manté
 intacte com la nota de versió més detallada.
 
+## [1.0.12] - 2026-10-25
+
+### Canviat
+- El peu mostra la versió d'EduHoot desplegada (p. ex. «v1.0.12»), servida per
+  `GET /api/version` a partir de `package.json`, en lloc de la versió de la
+  memòria cau del service worker. Ara també apareix a host, lobby i
+  multijugador. `sw-version.js` passa a `app-version.js`.
+
 ## [1.0.11] - 2026-10-25
 
 ### Corregit

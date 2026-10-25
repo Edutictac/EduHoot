@@ -1,6 +1,6 @@
 {
   "name": "kahootclone",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "description": "A kahoot website clone",
   "main": "index.js",
   "scripts": {

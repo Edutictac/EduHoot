@@ -57,11 +57,11 @@ html.account-fallback edutictac-account.site-account {
   margin-top: auto;
 }
 
-#sw-version:empty {
+#app-version:empty {
   display: none;
 }
 
-#sw-version:not(:empty)::before {
+#app-version:not(:empty)::before {
   content: "·";
   margin-inline-end: .35rem;
 }
