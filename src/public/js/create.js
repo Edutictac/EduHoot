@@ -2953,8 +2953,11 @@ function openCentralAccountMenu(){
         if(authMsg) authMsg.textContent = t('accountUnavailable');
         return;
     }
-    menu.open = true;
-    try{ menu.querySelector('summary').focus(); }catch(e){}
+    // El xip tanca el menú amb qualsevol clic de fora: s'obri quan este clic ja ha passat.
+    window.setTimeout(function(){
+        menu.open = true;
+        try{ menu.querySelector('summary').focus(); }catch(e){}
+    }, 0);
 }
 
 function requireLogin(message){

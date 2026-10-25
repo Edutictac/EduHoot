@@ -13,6 +13,12 @@ existia una nota `RELEASE-X.Y.Z.md` pròpia per a una versió (1.0.2, 1.0.5), el
 seu contingut es resumeix ací i s'hi enllaça; el fitxer original es manté
 intacte com la nota de versió més detallada.
 
+## [1.0.11] - 2026-10-25
+
+### Corregit
+- El botó «Entrar» de `/create/` obri el menú del xip i el deixa obert; abans
+  el mateix clic el tancava perquè el xip el prenia com un clic de fora.
+
 ## [1.0.10] - 2026-10-25
 
 ### Canviat

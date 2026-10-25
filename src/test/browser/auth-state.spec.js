@@ -17,6 +17,10 @@ const WIDGET_STUB = `customElements.define('edutictac-account', class extends HT
         this.innerHTML = '<nav class="eta"><a class="eta-home" href="https://edutictac.es/">Inici</a>'
             + '<details class="eta-account"><summary class="eta-chip">Entrar</summary>'
             + '<div class="eta-menu"><a class="eta-item" href="${COMMONS}/login">Professorat</a></div></details></nav>';
+        // Com el de Commons: un clic fora del xip tanca el menú.
+        document.addEventListener('click', event => {
+            if (!this.contains(event.target)) this.querySelector('details').open = false;
+        });
     }
 });`;
 
