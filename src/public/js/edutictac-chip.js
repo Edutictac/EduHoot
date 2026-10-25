@@ -84,7 +84,16 @@
     return;
   }
 
+  // Els scripts de cada pàgina ja han detectat l'idioma quan el xip es definix:
+  // alinea l'atribut lang (i el xip) amb la llengua real de la pàgina.
+  function syncPageLanguage() {
+    var value = pageLang();
+    document.documentElement.lang = value === 'va' ? 'ca-ES-valencia' : value;
+    window.dispatchEvent(new CustomEvent('edutictac:langchange', { detail: { lang: value } }));
+  }
+
   window.customElements.whenDefined('edutictac-account').then(function () {
+    syncPageLanguage();
     var tries = 0;
     (function check() {
       if (document.querySelector('edutictac-account nav.eta')) {

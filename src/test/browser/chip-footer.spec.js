@@ -52,6 +52,7 @@ test.describe('xip de compte', () => {
         await page.goto('/create/?lang=es');
 
         await expect(page.locator('html')).toHaveClass(/has-account-chip/);
+        await expect(page.locator('html')).toHaveAttribute('lang', 'es');
         await expect(page.locator('edutictac-account')).toBeVisible();
         await expect(page.locator('.top-actions .lang-switch')).toBeHidden();
         await expect(page.locator('#lang-select')).toHaveValue('es');

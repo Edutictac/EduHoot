@@ -13,6 +13,12 @@ existia una nota `RELEASE-X.Y.Z.md` pròpia per a una versió (1.0.2, 1.0.5), el
 seu contingut es resumeix ací i s'hi enllaça; el fitxer original es manté
 intacte com la nota de versió més detallada.
 
+## [1.0.9] - 2026-10-25
+
+### Corregit
+- El xip de compte ara pren l'idioma detectat per cada pàgina; abans podia
+  mostrar els textos en català amb la pàgina en castellà o anglés.
+
 ## [1.0.8] - 2026-10-25
 
 ### Afegit
