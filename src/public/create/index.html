@@ -14,11 +14,11 @@
     </head>
     <body>
         <a id = "back"href = "../" data-i18n="back">Volver</a>
+        <edutictac-account class="site-account site-account--top" data-base="https://commons.edutictac.es"></edutictac-account>
         <div class="page-shell">
             <div class="top-row">
                 <h1 id = "title" data-i18n="title">Crea y lanza tu EduHoot</h1>
                 <div class="top-actions">
-                    <edutictac-account class="site-account" data-base="https://commons.edutictac.es"></edutictac-account>
                     <label class="lang-switch">
                         <span data-i18n="langLabel">Idioma</span>
                         <select id="lang-select">
@@ -28,24 +28,22 @@
                             <option value="en" data-i18n="langEn">English</option>
                         </select>
                     </label>
-                    <button id="open-account" type="button" class="btn btn-ghost btn-small hidden" data-i18n="btnAccount">Cuenta</button>
-                    <button id="open-auth" type="button" class="btn btn-ghost btn-small" data-i18n="btnLogin">Entrar</button>
+                    <button id="open-account" type="button" class="btn btn-ghost btn-small hidden" data-i18n="btnAccount">Preferencias</button>
                 </div>
             </div>
             <h4 id = "subtitle" data-i18n="subtitle">Genera con IA, importa (CSV o Kahoot) o <a id = "link" href = "quiz-creator/">crea un cuestionario desde cero</a>.</h4>
 
-            <p id="auth-migration-notice" class="signin-callout hidden" role="status"></p>
             <section id="new-user-signin" class="signin-callout hidden" aria-labelledby="new-user-signin-title">
                 <div>
                     <p class="eyebrow" data-i18n="signinEyebrow">Nuevo en EduHoot</p>
                     <h2 id="new-user-signin-title" data-i18n="signinTitle">Guarda tus cuestionarios desde el primer minuto</h2>
-                    <p class="subtext" data-i18n="signinDesc">Entra con EduTicTac para tener biblioteca propia, editar después y lanzar tus juegos desde cualquier equipo.</p>
+                    <p class="subtext" data-i18n="signinDesc">Entra con tu cuenta EduTicTac para tener biblioteca propia, editar después y lanzar tus juegos desde cualquier equipo.</p>
                 </div>
                 <div class="signin-callout__actions">
-                    <button id="auth-authentik-hero" type="button" class="btn btn-primary btn-google-prominent hidden" data-i18n="btnAuthentikLogin">Entrar con EduTicTac</button>
-                    <button id="auth-google-hero" type="button" class="btn btn-google btn-google-prominent" data-i18n="btnGoogleLogin">Entrar con Google</button>
+                    <button id="open-account-menu" type="button" class="btn btn-primary btn-google-prominent" data-i18n="btnLogin">Entrar</button>
                 </div>
             </section>
+            <p class="subtext auth-message" id="auth-message" role="status"></p>
 
             <div id="auth-modal" class="modal hidden" role="dialog" aria-modal="true">
                 <div class="modal__backdrop" data-modal-close></div>
@@ -59,90 +57,18 @@
                         <p class="subtext" data-i18n="accessDesc">Inicia sesión para crear, editar o borrar quizzes.</p>
                     </div>
                 </div>
-                <form id="auth-login-form" autocomplete="on">
-                    <p id="auth-status" class="pill pill-muted" data-i18n="authStatus">No has iniciado sesión</p>
-                    <div class="auth-grid">
-                        <label data-i18n="labelEmail">Email
-                            <input id="auth-email" name="email" type="email" autocomplete="username" placeholder="tupro@centro.es">
-                        </label>
-                        <label data-i18n="labelPass">Contraseña
-                            <input id="auth-pass" name="password" type="password" autocomplete="current-password" placeholder="••••••••">
-                        </label>
-                        <label data-i18n="labelNick">Nombre visible (opcional)
-                            <input id="auth-nick" name="nickname" type="text" autocomplete="nickname" placeholder="Tu nick público">
-                        </label>
-                    </div>
-                    <div class="actions-row">
-                        <button id="auth-login" type="submit" class="btn btn-primary" data-i18n="btnLogin">Entrar</button>
-                        <button id="auth-save-nick" type="button" class="btn btn-ghost" data-i18n="btnSaveNick">Guardar nombre visible</button>
-                        <button id="auth-logout" type="button" class="btn btn-ghost hidden" data-i18n="btnLogout">Cerrar sesión</button>
-                    </div>
-                </form>
-                <p class="subtext" id="auth-message"></p>
+                <p id="auth-status" class="pill pill-muted" data-i18n="authStatus">No has iniciado sesión</p>
+                <div class="auth-grid">
+                    <label data-i18n="labelNick">Nombre visible (opcional)
+                        <input id="auth-nick" name="nickname" type="text" autocomplete="nickname" placeholder="Tu nick público">
+                    </label>
+                </div>
                 <div class="actions-row">
-                    <button id="toggle-reset" class="btn btn-ghost" data-i18n="forgotPass">¿Olvidaste la contraseña?</button>
+                    <button id="auth-save-nick" type="button" class="btn btn-ghost" data-i18n="btnSaveNick">Guardar nombre visible</button>
                 </div>
-                <div id="reset-panel" class="subpanel hidden">
-                    <p class="eyebrow" data-i18n="resetEyebrow">Recuperar acceso</p>
-                    <p class="subtext" data-i18n="resetDesc">Te enviaremos un token (se registra en el log del servidor si no hay correo configurado). Luego úsalo para poner una nueva contraseña.</p>
-                    <div class="auth-grid">
-                        <label data-i18n="labelEmail">
-                            <input id="reset-email" name="email" type="email" autocomplete="username" placeholder="tu correo">
-                        </label>
-                    </div>
-                    <div class="actions-row">
-                        <button id="reset-request" class="btn btn-primary" data-i18n="btnGenToken">Generar token</button>
-                        <span id="reset-status" class="subtext"></span>
-                    </div>
-                    <div class="auth-grid">
-                        <label data-i18n="labelToken">Token recibido
-                            <input id="reset-token" name="token" type="text" autocomplete="one-time-code" placeholder="copia el token del email/log">
-                        </label>
-                        <label data-i18n="labelNewPass">Nueva contraseña
-                            <input id="reset-pass" name="new-password" type="password" autocomplete="new-password" placeholder="••••••••">
-                        </label>
-                    </div>
-                    <div class="actions-row">
-                        <button id="reset-confirm" class="btn btn-ghost" data-i18n="btnChangePass">Cambiar contraseña</button>
-                    </div>
-                </div>
+                <p class="subtext" id="account-message" role="status"></p>
                 <div id="user-admin" class="subpanel hidden">
                     <p class="eyebrow" data-i18n="adminOnly">Solo admins</p>
-                    <h4 data-i18n="createUser">Crea un usuario nuevo</h4>
-                    <div class="auth-grid">
-                        <label data-i18n="labelEmail">
-                            <input id="new-user-email" type="email" placeholder="nuevo@centro.es">
-                        </label>
-                        <label data-i18n="labelPass">
-                            <input id="new-user-pass" type="password" placeholder="••••••••">
-                        </label>
-                        <label data-i18n="labelNick">
-                            <input id="new-user-nick" type="text" placeholder="Nick público (opcional)">
-                        </label>
-                        <label data-i18n="labelRole">Rol
-                            <select id="new-user-role">
-                                <option value="editor" data-i18n="roleEditor">Editor</option>
-                                <option value="admin" data-i18n="roleAdmin">Admin</option>
-                            </select>
-                        </label>
-                    </div>
-                    <div class="actions-row">
-                        <button id="create-user-btn" class="btn btn-ghost" data-i18n="btnCreateUser">Crear usuario</button>
-                        <span id="create-user-status" class="subtext"></span>
-                    </div>
-                    <div class="auth-grid">
-                        <label data-i18n="labelEmailReset">Email a resetear
-                            <input id="reset-admin-email" type="email" placeholder="usuario@centro.es">
-                        </label>
-                        <label data-i18n="labelNewPass">
-                            <input id="reset-admin-pass" type="password" placeholder="••••••••">
-                        </label>
-                    </div>
-                    <div class="actions-row">
-                        <button id="reset-admin-btn" class="btn btn-ghost" data-i18n="btnResetPass">Resetear contraseña</button>
-                        <span id="reset-admin-status" class="subtext"></span>
-                    </div>
-
                     <h4 data-i18n="adminBackupTitle">Importar / Exportar todos los quizzes</h4>
                     <p class="subtext" data-i18n="adminBackupDesc">Crea un backup completo (JSON) o restaura todos los quizzes desde un archivo.</p>
                     <div class="actions-row">

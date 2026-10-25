@@ -13,6 +13,29 @@ existia una nota `RELEASE-X.Y.Z.md` pròpia per a una versió (1.0.2, 1.0.5), el
 seu contingut es resumeix ací i s'hi enllaça; el fitxer original es manté
 intacte com la nota de versió més detallada.
 
+## [1.0.10] - 2026-10-25
+
+### Canviat
+- El xip de compte d'EduTicTac és l'únic accés del professorat. Quan el xip
+  té sessió de professorat, EduHoot hi entra sense demanar res més (SSO amb
+  Authentik), i quan el xip la tanca, EduHoot també. Només actua quan EduHoot
+  i Commons comparteixen domini; una instal·lació local no es veu afectada.
+- «Compte» passa a «Preferències» (nom visible i eines d'administració) i
+  només apareix amb sessió.
+- Alumnat i joc públic (`/join.html`, `/player/`, `/solo/`, `/multiplayer/`)
+  mostren només l'enllaç «Inici» del xip i conserven el selector d'idioma propi.
+
+### Llevat
+- Formulari antic d'accés de `/create/`: correu i contrasenya, recuperació de
+  contrasenya, alta i restabliment d'usuaris, Google, avís de migració i botons
+  «Entrar»/«Eixir» de la capçalera, amb els seus textos.
+
+### Corregit
+- Integració del xip i del peu: el xip ja no es mescla amb el títol de
+  `/create/` ni aixafa la capçalera de multijugador en mòbil; «Cancel·la la
+  partida» ja no es parteix en tres línies; el títol del lobby no queda davall
+  del xip en mòbil; el peu de la portada té marges laterals.
+
 ## [1.0.9] - 2026-10-25
 
 ### Corregit

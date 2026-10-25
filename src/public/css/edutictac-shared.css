@@ -14,17 +14,31 @@ edutictac-account.site-account {
   --muted: #5f6e72;
 }
 
-edutictac-account.site-account--fixed {
+edutictac-account.site-account--fixed,
+edutictac-account.site-account--top {
   position: fixed;
   top: 16px;
   right: 16px;
   z-index: 1200;
 }
 
-/* Quan el xip ja s'ha pintat, els selectors propis fan de respost només si falla. */
-html.has-account-chip .lang-switch,
-html.has-account-chip .lang-switcher,
-html.has-account-chip #lang-switcher {
+/* A la cantonada de la pàgina, però se'n va amb el desplaçament. */
+edutictac-account.site-account--top {
+  position: absolute;
+}
+
+/* Pàgines d'alumnat: el selector d'idioma propi ocupa la dreta. */
+edutictac-account.site-account--start {
+  right: auto;
+  left: 16px;
+}
+
+/* Quan el xip complet ja s'ha pintat, porta el selector d'idioma i els propis fan
+ * de respost. Amb data-home-only (alumnat, joc públic) només hi ha «Inici», i el
+ * selector propi es queda. */
+html.has-account-chip:not(.account-home-only) .lang-switch,
+html.has-account-chip:not(.account-home-only) .lang-switcher,
+html.has-account-chip:not(.account-home-only) #lang-switcher {
   display: none !important;
 }
 
@@ -53,8 +67,14 @@ html.account-fallback edutictac-account.site-account {
 }
 
 @media (max-width: 640px) {
-  edutictac-account.site-account--fixed {
+  edutictac-account.site-account--fixed,
+  edutictac-account.site-account--top {
     top: 10px;
     right: 10px;
+  }
+
+  edutictac-account.site-account--start {
+    right: auto;
+    left: 10px;
   }
 }

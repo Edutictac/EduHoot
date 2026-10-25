@@ -243,31 +243,17 @@ var i18n = {
         modalClose: 'Cerrar',
         signinEyebrow: 'Nuevo en EduHoot',
         signinTitle: 'Guarda tus cuestionarios desde el primer minuto',
-        signinDesc: 'Entra con EduTicTac para tener biblioteca propia, editar después y lanzar tus juegos desde cualquier equipo.',
-        accessEyebrow: 'Acceso',
-        accessTitle: 'Usuarios',
-        accessDesc: 'Inicia sesión para crear, editar o borrar quizzes.',
+        signinDesc: 'Entra con tu cuenta EduTicTac (arriba a la derecha) para tener biblioteca propia, editar después y lanzar tus juegos desde cualquier equipo.',
+        accessEyebrow: 'Cuenta',
+        accessTitle: 'Preferencias',
+        accessDesc: 'Nombre visible en EduHoot y herramientas de administración.',
         authStatus: 'No has iniciado sesión',
-        labelEmail: 'Email',
-        labelPass: 'Contraseña',
-        labelRole: 'Rol',
         btnSaveNick: 'Guardar nombre visible',
         btnLogin: 'Entrar',
-        btnGoogleLogin: 'Entrar con Google',
-        btnAuthentikLogin: 'Entrar con EduTicTac',
-        btnUseEmail: 'Usar email',
         panelExpand: 'Desplegar',
         panelCollapse: 'Ocultar',
-        btnAccount: 'Cuenta',
-        btnLogout: 'Cerrar sesión',
-        btnSignOut: 'Salir',
-        forgotPass: '¿Olvidaste la contraseña?',
-        resetEyebrow: 'Recuperar acceso',
-        resetDesc: 'Te enviaremos un token (se registra en el log del servidor si no hay correo configurado). Luego úsalo para poner una nueva contraseña.',
-        btnGenToken: 'Generar token',
-        labelToken: 'Token recibido',
-        labelNewPass: 'Nueva contraseña',
-        btnChangePass: 'Cambiar contraseña',
+        btnAccount: 'Preferencias',
+        accountUnavailable: 'No se puede conectar con la cuenta EduTicTac. Vuelve a intentarlo en un momento.',
         adminOnly: 'Solo admins',
         adminBackupTitle: 'Importar / Exportar todos los quizzes',
         adminBackupDesc: 'Crea un backup completo (JSON) o restaura todos los quizzes desde un archivo.',
@@ -299,12 +285,6 @@ var i18n = {
         importPublicOk: 'Importación completada',
         importPublicSkipped: 'ya existían',
         importPublicError: 'No se pudo importar las actividades públicas.',
-        createUser: 'Crea un usuario nuevo',
-        roleEditor: 'Editor',
-        roleAdmin: 'Admin',
-        btnCreateUser: 'Crear usuario',
-        labelEmailReset: 'Email a resetear',
-        btnResetPass: 'Resetear contraseña',
         aiEyebrow: 'Ayuda IA',
         aiTitle: 'Generador IA (CSV)',
         aiDesc: 'Rellena los campos y copia el prompt para generar tu cuestionario por IA.',
@@ -439,29 +419,17 @@ var i18n = {
         uploadCsv: 'Subiendo...',
         uploadCsvError: 'No se pudo importar el CSV.',
         startNow: 'Jugar en el aula',
-        createUserMissing: 'Introduce email y contraseña.',
-        createUserWorking: 'Creando usuario...',
-        createUserOk: 'Usuario creado.',
-        createUserError: 'No se pudo crear.',
         savingNick: 'Guardando nombre visible...',
         nickSaved: 'Nombre visible actualizado.',
         nickSaveError: 'No se pudo guardar.',
         loginError: 'Error al iniciar sesión.',
-        googleLoginError: 'No se pudo iniciar sesión con Google.',
-        loginWait: 'Iniciando sesión...',
-        loginOk: 'Sesión iniciada.',
         resetWaiting: 'Enviando...',
-        resetTokenSent: 'Revisa tu correo (o el log del servidor) para ver el token.',
-        resetTokenError: 'No se pudo generar el token.',
-        resetNeedFields: 'Completa token y nueva contraseña.',
-        resetUpdating: 'Actualizando...',
-        resetUpdated: 'Contraseña actualizada. Inicia sesión.',
         resetUpdateError: 'No se pudo actualizar.',
         notLogged: 'Inicia sesión para clonar un quiz.',
         cloneOk: 'Copia creada en tu biblioteca.',
         cloneError: 'No se pudo clonar.',
         saveToAccount: 'Guardar en mi cuenta',
-        loginToSave: 'Inicia sesión con Google para guardar este cuestionario en tu cuenta.',
+        loginToSave: 'Entra con tu cuenta EduTicTac para guardar este cuestionario en tu biblioteca.',
         savingToAccount: 'Guardando en tu cuenta...',
         saveToAccountOk: 'Cuestionario guardado en tu cuenta.',
         saveToAccountError: 'No se pudo guardar en tu cuenta.',
@@ -479,9 +447,7 @@ var i18n = {
         footerSource: 'Código fuente',
         footerContactLabel: 'Incidencias',
         importError: 'Error al importar.',
-        emailPlaceholder: 'tu correo',
         authNickPlaceholder: 'Tu nick público',
-        resetTokenPlaceholder: 'token del email/log',
         iaLevelPlaceholder: 'Ej: 2º ESO',
         iaTopicPlaceholder: 'Ej: Energía y calor',
         iaLangCustomPlaceholder: 'Otro idioma',
@@ -505,31 +471,17 @@ var i18n = {
         modalClose: 'Close',
         signinEyebrow: 'New to EduHoot',
         signinTitle: 'Save your quizzes from the first minute',
-        signinDesc: 'Sign in with EduTicTac to get your own library, keep editing later and launch games from any device.',
-        accessEyebrow: 'Access',
-        accessTitle: 'Users',
-        accessDesc: 'Sign in to create, edit or delete quizzes.',
+        signinDesc: 'Sign in with your EduTicTac account (top right) to get your own library, keep editing later and launch games from any device.',
+        accessEyebrow: 'Account',
+        accessTitle: 'Settings',
+        accessDesc: 'Display name in EduHoot and admin tools.',
         authStatus: 'Not signed in',
-        labelEmail: 'Email',
-        labelPass: 'Password',
-        labelRole: 'Role',
         btnSaveNick: 'Save display name',
         btnLogin: 'Log in',
-        btnGoogleLogin: 'Log in with Google',
-        btnAuthentikLogin: 'Log in with EduTicTac',
-        btnUseEmail: 'Use email',
         panelExpand: 'Expand',
         panelCollapse: 'Hide',
-        btnAccount: 'Account',
-        btnLogout: 'Log out',
-        btnSignOut: 'Log out',
-        forgotPass: 'Forgot your password?',
-        resetEyebrow: 'Recover access',
-        resetDesc: 'We will generate a token (check server log if no email). Use it to set a new password.',
-        btnGenToken: 'Generate token',
-        labelToken: 'Received token',
-        labelNewPass: 'New password',
-        btnChangePass: 'Change password',
+        btnAccount: 'Settings',
+        accountUnavailable: 'Could not reach your EduTicTac account. Try again in a moment.',
         adminOnly: 'Admins only',
         adminBackupTitle: 'Import / Export all quizzes',
         adminBackupDesc: 'Create a full JSON backup or restore all quizzes from a file.',
@@ -561,12 +513,6 @@ var i18n = {
         importPublicOk: 'Import complete',
         importPublicSkipped: 'already existed',
         importPublicError: 'Could not import the public activities.',
-        createUser: 'Create a new user',
-        roleEditor: 'Editor',
-        roleAdmin: 'Admin',
-        btnCreateUser: 'Create user',
-        labelEmailReset: 'Email to reset',
-        btnResetPass: 'Reset password',
         aiEyebrow: 'AI helper',
         aiTitle: 'AI generator (CSV)',
         aiDesc: 'Fill the fields and copy the prompt to generate your quiz with AI.',
@@ -701,29 +647,17 @@ var i18n = {
         uploadCsv: 'Uploading...',
         uploadCsvError: 'Could not import CSV.',
         startNow: 'Play in the classroom',
-        createUserMissing: 'Enter email and password.',
-        createUserWorking: 'Creating user...',
-        createUserOk: 'User created.',
-        createUserError: 'Could not create user.',
         savingNick: 'Saving display name...',
         nickSaved: 'Display name updated.',
         nickSaveError: 'Could not save.',
         loginError: 'Login failed.',
-        googleLoginError: 'Could not sign in with Google.',
-        loginWait: 'Signing in...',
-        loginOk: 'Session started.',
         resetWaiting: 'Sending...',
-        resetTokenSent: 'Check your email or server log for the token.',
-        resetTokenError: 'Could not generate the token.',
-        resetNeedFields: 'Fill token and new password.',
-        resetUpdating: 'Updating...',
-        resetUpdated: 'Password updated. Sign in.',
         resetUpdateError: 'Could not update.',
         notLogged: 'Sign in to clone a quiz.',
         cloneOk: 'Copy created in your library.',
         cloneError: 'Could not clone.',
         saveToAccount: 'Save to my account',
-        loginToSave: 'Sign in with Google to save this quiz to your account.',
+        loginToSave: 'Sign in with your EduTicTac account to save this quiz to your library.',
         savingToAccount: 'Saving to your account...',
         saveToAccountOk: 'Quiz saved to your account.',
         saveToAccountError: 'Could not save to your account.',
@@ -741,9 +675,7 @@ var i18n = {
         footerSource: 'Source code',
         footerContactLabel: 'Issues',
         importError: 'Import failed.',
-        emailPlaceholder: 'your email',
         authNickPlaceholder: 'Your public nickname',
-        resetTokenPlaceholder: 'token from email/log',
         iaLevelPlaceholder: 'e.g. 8th grade',
         iaTopicPlaceholder: 'e.g. Energy and heat',
         iaLangCustomPlaceholder: 'Other language',
@@ -767,31 +699,17 @@ var i18n = {
         modalClose: 'Tancar',
         signinEyebrow: 'Nou a EduHoot',
         signinTitle: 'Desa els teus qüestionaris des del primer minut',
-        signinDesc: 'Entra amb EduTicTac per tindre biblioteca pròpia, editar després i llançar els jocs des de qualsevol equip.',
-        accessEyebrow: 'Accés',
-        accessTitle: 'Usuaris',
-        accessDesc: 'Inicia sessió per crear, editar o esborrar qüestionaris.',
+        signinDesc: 'Entra amb el teu compte EduTicTac (dalt a la dreta) per tindre biblioteca pròpia, editar després i llançar els jocs des de qualsevol equip.',
+        accessEyebrow: 'Compte',
+        accessTitle: 'Preferències',
+        accessDesc: 'Nom visible a EduHoot i eines d’administració.',
         authStatus: 'No has iniciat sessió',
-        labelEmail: 'Email',
-        labelPass: 'Contrasenya',
-        labelRole: 'Rol',
         btnSaveNick: 'Desar nom visible',
         btnLogin: 'Entrar',
-        btnGoogleLogin: 'Entrar amb Google',
-        btnAuthentikLogin: 'Entrar amb EduTicTac',
-        btnUseEmail: 'Usar email',
         panelExpand: 'Desplegar',
         panelCollapse: 'Amagar',
-        btnAccount: 'Compte',
-        btnLogout: 'Tancar sessió',
-        btnSignOut: 'Eixir',
-        forgotPass: 'Has oblidat la contrasenya?',
-        resetEyebrow: 'Recuperar accés',
-        resetDesc: 'Generarem un token (mira el log del servidor si no hi ha correu). Després fes-lo servir per posar una nova contrasenya.',
-        btnGenToken: 'Generar token',
-        labelToken: 'Token rebut',
-        labelNewPass: 'Nova contrasenya',
-        btnChangePass: 'Canviar contrasenya',
+        btnAccount: 'Preferències',
+        accountUnavailable: 'No es pot connectar amb el compte EduTicTac. Torna-ho a provar d’aquí a un moment.',
         adminOnly: 'Només admins',
         adminBackupTitle: 'Importar / Exportar tots els qüestionaris',
         adminBackupDesc: 'Crea un backup complet (JSON) o restaura tots els qüestionaris des d\'un fitxer.',
@@ -823,12 +741,6 @@ var i18n = {
         importPublicOk: 'Importació completada',
         importPublicSkipped: 'ja existien',
         importPublicError: 'No s\'ha pogut importar les activitats públiques.',
-        createUser: 'Crea un usuari nou',
-        roleEditor: 'Editor',
-        roleAdmin: 'Admin',
-        btnCreateUser: 'Crear usuari',
-        labelEmailReset: 'Email a restablir',
-        btnResetPass: 'Restablir contrasenya',
         aiEyebrow: 'Ajuda IA',
         aiTitle: 'Generador IA (CSV)',
         aiDesc: 'Omple els camps i copia el prompt per generar el qüestionari amb IA.',
@@ -963,29 +875,17 @@ var i18n = {
         uploadCsv: 'Pujant...',
         uploadCsvError: 'No s\'ha pogut importar el CSV.',
         startNow: 'Jugar a l\'aula',
-        createUserMissing: 'Introdueix email i contrasenya.',
-        createUserWorking: 'Creant usuari...',
-        createUserOk: 'Usuari creat.',
-        createUserError: 'No s\'ha pogut crear.',
         savingNick: 'Desant nom visible...',
         nickSaved: 'Nom visible actualitzat.',
         nickSaveError: 'No s\'ha pogut desar.',
         loginError: 'Error en iniciar sessió.',
-        googleLoginError: 'No s\'ha pogut iniciar sessió amb Google.',
-        loginWait: 'Iniciant sessió...',
-        loginOk: 'Sessió iniciada.',
         resetWaiting: 'Enviant...',
-        resetTokenSent: 'Mira el correu o el log del servidor per al token.',
-        resetTokenError: 'No s\'ha pogut generar el token.',
-        resetNeedFields: 'Omple token i nova contrasenya.',
-        resetUpdating: 'Actualitzant...',
-        resetUpdated: 'Contrasenya actualitzada. Inicia sessió.',
         resetUpdateError: 'No s\'ha pogut actualitzar.',
         notLogged: 'Inicia sessió per clonar un quiz.',
         cloneOk: 'Còpia creada a la teva biblioteca.',
         cloneError: 'No s\'ha pogut clonar.',
         saveToAccount: 'Desar al meu compte',
-        loginToSave: 'Inicia sessió amb Google per desar aquest qüestionari al teu compte.',
+        loginToSave: 'Entra amb el teu compte EduTicTac per desar aquest qüestionari a la teua biblioteca.',
         savingToAccount: 'Desant al teu compte...',
         saveToAccountOk: 'Qüestionari desat al teu compte.',
         saveToAccountError: 'No s\'ha pogut desar al teu compte.',
@@ -1003,9 +903,7 @@ var i18n = {
         footerSource: 'Codi font',
         footerContactLabel: 'Incidències',
         importError: 'Error en importar.',
-        emailPlaceholder: 'el teu correu',
         authNickPlaceholder: 'El teu nick públic',
-        resetTokenPlaceholder: 'token del correu/log',
         iaLevelPlaceholder: 'Ex: 2n ESO',
         iaTopicPlaceholder: 'Ex: Energia i calor',
         iaLangCustomPlaceholder: 'Un altre idioma',
@@ -1028,7 +926,8 @@ var i18n = {
         confirmDelete: 'Eliminar este quiz?',
         noGamesHint: 'Puja un CSV o crea\'n un per vore\'l ací.',
         cloneOk: 'Còpia creada a la teua biblioteca.',
-        loginToSave: 'Inicia sessió amb Google per desar este qüestionari al teu compte.',
+        loginToSave: 'Entra amb el teu compte EduTicTac per desar este qüestionari a la teua biblioteca.',
+        accountUnavailable: 'No es pot connectar amb el compte EduTicTac. Torna-ho a provar d’ací a un moment.',
         iaCsvPlaceholder: 'Enganxa ací el CSV retornat per la IA',
         visibilityHelp: '<strong>Només jo:</strong> si no inicies sessió, el quiz es desa només a la teua sessió i caduca en 24h.<br><strong>Per enllaç / Públic:</strong> encara que no tingues compte, es desa globalment al servidor i sobreviu a reinicis. Si inicies sessió, queda lligat al teu usuari. Pots permetre o no les còpies.'
     }
@@ -1405,29 +1304,9 @@ function applyStaticTranslations(){
             el.textContent = t(key);
         }
     });
-    var authEmail = document.getElementById('auth-email');
-    if(authEmail) authEmail.placeholder = t('emailPlaceholder');
-    var authPass = document.getElementById('auth-pass');
-    if(authPass) authPass.placeholder = '••••••••';
     var authNick = document.getElementById('auth-nick');
     if(authNick) authNick.placeholder = t('authNickPlaceholder');
-    var resetEmail = document.getElementById('reset-email');
-    if(resetEmail) resetEmail.placeholder = t('emailPlaceholder');
-    var resetToken = document.getElementById('reset-token');
-    if(resetToken) resetToken.placeholder = t('resetTokenPlaceholder');
-    var resetPass = document.getElementById('reset-pass');
-    if(resetPass) resetPass.placeholder = '••••••••';
-    var newUserEmail = document.getElementById('new-user-email');
-    if(newUserEmail) newUserEmail.placeholder = t('emailPlaceholder');
-    var newUserPass = document.getElementById('new-user-pass');
-    if(newUserPass) newUserPass.placeholder = '••••••••';
-    var newUserNick = document.getElementById('new-user-nick');
-    if(newUserNick) newUserNick.placeholder = t('authNickPlaceholder');
-        var resetAdminEmail = document.getElementById('reset-admin-email');
-        if(resetAdminEmail) resetAdminEmail.placeholder = t('emailPlaceholder');
-        var resetAdminPass = document.getElementById('reset-admin-pass');
-        if(resetAdminPass) resetAdminPass.placeholder = '••••••••';
-        var iaName = document.getElementById('ia-name');
+    var iaName = document.getElementById('ia-name');
     if(iaName) iaName.placeholder = t('namePlaceholder');
     var iaNivel = document.getElementById('ia-nivel');
     if(iaNivel) iaNivel.placeholder = t('iaLevelPlaceholder');
@@ -3042,20 +2921,24 @@ var iaGenSvgWrap = document.getElementById('ia-gen-svg-wrap');
 var iaDocsHint = document.getElementById('ia-docs-hint');
 var iaTema = document.getElementById('ia-tema');
 
-// --- Auth modal ---
+// --- Auth ---
+// L'accés és el xip de compte d'EduTicTac (Commons). EduHoot manté la seua sessió
+// Authentik: quan el xip ja té sessió de professorat, s'entra a EduHoot sense
+// demanar res més (SSO), i quan el xip la tanca, EduHoot també.
 var authModal = document.getElementById('auth-modal');
-var openAuthBtn = document.getElementById('open-auth');
 var openAccountBtn = document.getElementById('open-account');
+var openAccountMenuBtn = document.getElementById('open-account-menu');
 var newUserSignin = document.getElementById('new-user-signin');
-var authGoogleHeroBtn = document.getElementById('auth-google-hero');
-var authAuthentikHeroBtn = document.getElementById('auth-authentik-hero');
+var accountChip = document.querySelector('edutictac-account');
+var AUTH_BRIDGE_KEY = 'eduh_auth_bridge';
+var AUTH_BRIDGE_RETRY_MS = 2 * 60 * 1000;
+var authBridgeFailed = false;
 
 function openAuthModal(){
-    if(authentikOnlyMode && !(authState && authState.user)){ loginWithAuthentik(); return; }
     if(!authModal) return;
     authModal.classList.remove('hidden');
     document.body.classList.add('modal-open');
-    try{ if(authEmail) authEmail.focus(); }catch(e){}
+    try{ if(authNick) authNick.focus(); }catch(e){}
 }
 
 function closeAuthModal(){
@@ -3064,34 +2947,30 @@ function closeAuthModal(){
     document.body.classList.remove('modal-open');
 }
 
+function openCentralAccountMenu(){
+    var menu = document.querySelector('edutictac-account details.eta-account');
+    if(!menu){
+        if(authMsg) authMsg.textContent = t('accountUnavailable');
+        return;
+    }
+    menu.open = true;
+    try{ menu.querySelector('summary').focus(); }catch(e){}
+}
+
+function requireLogin(message){
+    if(authMsg) authMsg.textContent = message || t('loginToSave');
+    openCentralAccountMenu();
+}
+
 function warnNoPermission(message){
     var msg = message || t('permissionDenied');
-    if(authMsg){
-        authMsg.textContent = msg;
-        if(!authState.user) openAuthModal();
+    if(!(authState && authState.user)){
+        requireLogin(msg);
         return;
     }
     try{ window.alert(msg); }catch(e){}
 }
 
-function updateTopAuthButton(){
-    if(openAccountBtn) openAccountBtn.classList.toggle('hidden', !(authState && authState.user));
-    if(!openAuthBtn) return;
-    if(authState && authState.user){
-        openAuthBtn.setAttribute('data-i18n', 'btnSignOut');
-        openAuthBtn.textContent = t('btnSignOut');
-    }else{
-        openAuthBtn.setAttribute('data-i18n', 'btnLogin');
-        openAuthBtn.textContent = t('btnLogin');
-    }
-}
-
-if(openAuthBtn){
-    openAuthBtn.addEventListener('click', function(){
-        if(authState && authState.user) logout();
-        else openAuthModal();
-    });
-}
 if(openAccountBtn) openAccountBtn.addEventListener('click', openAuthModal);
 
 if(authModal){
@@ -3108,27 +2987,12 @@ document.addEventListener('keydown', function(e){
     }
 });
 
-// --- Auth ---
-var authEmail = document.getElementById('auth-email');
-var authPass = document.getElementById('auth-pass');
 var authNick = document.getElementById('auth-nick');
-var authLoginForm = document.getElementById('auth-login-form');
 var authStatus = document.getElementById('auth-status');
 var authMsg = document.getElementById('auth-message');
-var authLoginBtn = document.getElementById('auth-login');
-var authLogoutBtn = document.getElementById('auth-logout');
+var accountMsg = document.getElementById('account-message');
 var authSaveNickBtn = document.getElementById('auth-save-nick');
 var adminPanel = document.getElementById('user-admin');
-var newUserEmail = document.getElementById('new-user-email');
-var newUserPass = document.getElementById('new-user-pass');
-var newUserRole = document.getElementById('new-user-role');
-var newUserNick = document.getElementById('new-user-nick');
-var createUserBtn = document.getElementById('create-user-btn');
-var createUserStatus = document.getElementById('create-user-status');
-var resetAdminEmail = document.getElementById('reset-admin-email');
-var resetAdminPass = document.getElementById('reset-admin-pass');
-var resetAdminBtn = document.getElementById('reset-admin-btn');
-var resetAdminStatus = document.getElementById('reset-admin-status');
 var adminExportAllBtn = document.getElementById('admin-export-quizzes');
 var adminImportFile = document.getElementById('admin-import-quizzes-file');
 var adminImportReplace = document.getElementById('admin-import-quizzes-replace');
@@ -3141,26 +3005,18 @@ var adminMirrorExternalStatus = document.getElementById('admin-mirror-external-s
 var adminImportPublicWrap = document.getElementById('admin-import-public-wrap');
 var adminImportPublicBtn = document.getElementById('admin-import-public-btn');
 var adminImportPublicStatus = document.getElementById('admin-import-public-status');
-var toggleResetBtn = document.getElementById('toggle-reset');
-var resetPanel = document.getElementById('reset-panel');
-var resetEmail = document.getElementById('reset-email');
-var resetToken = document.getElementById('reset-token');
-var resetPass = document.getElementById('reset-pass');
-var resetRequestBtn = document.getElementById('reset-request');
-var resetConfirmBtn = document.getElementById('reset-confirm');
-var resetStatus = document.getElementById('reset-status');
-var authState = { user: null };
-var googleAuthEnabled = false;
+var authState = { user: null, checked: false };
 var authentikAuthEnabled = false;
-var authentikOnlyMode = false;
 
 function updateAuthUI(){
+    var isLogged = !!(authState && authState.user);
     if(newUserSignin){
-        newUserSignin.classList.toggle('hidden', !(googleAuthEnabled || authentikAuthEnabled) || !!(authState && authState.user));
+        newUserSignin.classList.toggle('hidden', !authentikAuthEnabled || isLogged);
     }
+    if(openAccountBtn) openAccountBtn.classList.toggle('hidden', !isLogged);
 
     if(authStatus){
-        if(authState.user){
+        if(isLogged){
             var nickPart = authState.user.nickname ? ' · ' + authState.user.nickname : '';
             authStatus.textContent = authState.user.email + nickPart + ' (' + authState.user.role + ')';
             authStatus.classList.remove('pill-muted');
@@ -3170,33 +3026,16 @@ function updateAuthUI(){
         }
     }
     if(adminPanel){
-        if(authState.user && authState.user.role === 'admin' && !authentikOnlyMode){
-            adminPanel.classList.remove('hidden');
-        }else{
-            adminPanel.classList.add('hidden');
-        }
-    }
-
-    if(authLoginBtn){
-        authLoginBtn.classList.toggle('hidden', authentikOnlyMode || !!(authState && authState.user));
-    }
-    if(authSaveNickBtn){
-        authSaveNickBtn.classList.toggle('hidden', !(authState && authState.user));
-    }
-    if(authLogoutBtn){
-        authLogoutBtn.classList.toggle('hidden', !(authState && authState.user));
+        adminPanel.classList.toggle('hidden', !(isLogged && authState.user.role === 'admin'));
     }
 
     if(iaGenSvgWrap){
-        var isLogged = !!(authState && authState.user);
         iaGenSvgWrap.classList.toggle('hidden', !isLogged);
         if(!isLogged && iaGenSvg){
             iaGenSvg.checked = false;
             try{ localStorage.setItem('eduh_ia_gen_svg', '0'); }catch(e){}
         }
     }
-
-    updateTopAuthButton();
 }
 
 function fetchMe(){
@@ -3207,6 +3046,8 @@ function fetchMe(){
         })
         .then(function(user){
             authState.user = user;
+            authState.checked = true;
+            try{ sessionStorage.removeItem(AUTH_BRIDGE_KEY); }catch(e){}
             updateAuthUI();
             currentFilters.mineOnly = true;
             var mineCb = document.getElementById('filter-mine');
@@ -3216,42 +3057,14 @@ function fetchMe(){
         })
         .catch(function(){
             authState.user = null;
+            authState.checked = true;
             updateAuthUI();
             fetchWithFilters();
         });
 }
 
-function login(){
-    if(!authEmail || !authPass) return;
-    var email = authEmail.value.trim();
-    var pass = authPass.value;
-    var nick = authNick ? authNick.value.trim() : '';
-    authMsg.textContent = t('loginWait');
-    fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ email: email, password: pass, nickname: nick })
-    }).then(async function(res){
-        var body = {};
-        try { body = await res.json(); } catch(e){}
-        if(!res.ok){
-            authMsg.textContent = body.error || t('loginError');
-            return;
-        }
-        authMsg.textContent = t('loginOk') || t('authStatus');
-        authPass.value = '';
-        if(authNick) authNick.value = '';
-        closeAuthModal();
-        reconnectSocket();
-        fetchMe();
-    }).catch(function(){
-        authMsg.textContent = t('loginError');
-    });
-}
-
 function logout(){
-    fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
+    return fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
         .then(function(){
             authState.user = null;
             currentFilters.mineOnly = false;
@@ -3265,15 +3078,58 @@ function logout(){
         .catch(function(){});
 }
 
-function loginWithGoogle(){
-    var next = window.location.pathname + window.location.search;
-    window.location.href = '/api/auth/google/start?next=' + encodeURIComponent(next || '/create/');
-}
-
 function loginWithAuthentik(){
     var next = window.location.pathname + window.location.search;
     window.location.href = '/api/auth/authentik/start?next=' + encodeURIComponent(next || '/create/');
 }
+
+function bridgeRecentlyTried(){
+    try{
+        var last = Number(sessionStorage.getItem(AUTH_BRIDGE_KEY) || 0);
+        return !!last && (Date.now() - last) < AUTH_BRIDGE_RETRY_MS;
+    }catch(e){
+        return true;
+    }
+}
+
+// Alinea la sessió d'EduHoot amb la del xip. Sense resposta de Commons no es toca res.
+function applyCentralSession(central){
+    if(!central || !authState.checked) return;
+    var centralTeacher = !!central.authenticated && central.kind === 'oidc';
+    if(centralTeacher && !authState.user){
+        if(!authentikAuthEnabled || authBridgeFailed || bridgeRecentlyTried()) return;
+        try{ sessionStorage.setItem(AUTH_BRIDGE_KEY, String(Date.now())); }catch(e){ return; }
+        loginWithAuthentik();
+    }else if(!central.authenticated && authState.user){
+        logout();
+    }
+}
+
+// Només quan EduHoot i Commons comparteixen domini (eduhoot.edutictac.es i
+// commons.edutictac.es). Una instal·lació local no depén del Commons d'internet.
+function sameSiteAsPage(base){
+    try{
+        var site = new URL(base).hostname.split('.').slice(-2).join('.');
+        var host = window.location.hostname;
+        return host === site || host.slice(-(site.length + 1)) === '.' + site;
+    }catch(e){
+        return false;
+    }
+}
+
+function syncCentralSession(){
+    if(!accountChip || !authState.checked) return;
+    var base = (accountChip.getAttribute('data-base') || '').replace(/\/+$/, '');
+    if(!base || !sameSiteAsPage(base)) return;
+    fetch(base + '/api/auth/session', { credentials: 'include', cache: 'no-store', headers: { Accept: 'application/json' } })
+        .then(function(res){ return res.ok ? res.json() : null; })
+        .then(applyCentralSession)
+        .catch(function(){});
+}
+
+window.addEventListener('edutictac:sessionchange', function(e){
+    if(accountChip && sameSiteAsPage(accountChip.getAttribute('data-base') || '')) applyCentralSession(e.detail);
+});
 
 function removeLocalQuizId(id){
     if(!id) return;
@@ -3302,8 +3158,7 @@ async function claimQuizToAccount(id, options){
     if(!id) return false;
     if(!authState.user){
         try{ localStorage.setItem(PENDING_ACCOUNT_SAVE_KEY, String(id)); }catch(e){}
-        if(authMsg) authMsg.textContent = t('loginToSave');
-        openAuthModal();
+        requireLogin(t('loginToSave'));
         return false;
     }
     if(authMsg && !silent) authMsg.textContent = t('savingToAccount');
@@ -3342,44 +3197,11 @@ async function claimPendingQuizAfterLogin(){
     await claimQuizToAccount(pending, { silent: true });
 }
 
-async function createUser(){
-    if(!authState.user || authState.user.role !== 'admin') return;
-    if(!newUserEmail || !newUserPass || !newUserRole) return;
-    var email = newUserEmail.value.trim();
-    var pass = newUserPass.value;
-    var role = newUserRole.value;
-    var nick = newUserNick ? newUserNick.value.trim() : '';
-    if(!email || !pass){
-        if(createUserStatus) createUserStatus.textContent = t('createUserMissing') || t('resetNeedFields');
-        return;
-    }
-    if(createUserStatus) createUserStatus.textContent = t('createUserWorking') || t('resetWaiting');
-    try{
-        var res = await fetch('/api/auth/users', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ email: email, password: pass, role: role, nickname: nick })
-        });
-        var body = {};
-        try { body = await res.json(); } catch(e){}
-        if(!res.ok){
-            if(createUserStatus) createUserStatus.textContent = body.error || t('createUserError') || t('resetUpdateError');
-            return;
-        }
-        if(createUserStatus) createUserStatus.textContent = t('createUserOk') || t('saveOk');
-        newUserEmail.value = '';
-        newUserPass.value = '';
-    }catch(err){
-        if(createUserStatus) createUserStatus.textContent = t('createUserError') || t('resetUpdateError');
-    }
-}
-
 async function saveNickname(){
     if(!authState.user) return;
     if(!authNick) return;
     var nick = authNick.value.trim();
-    authMsg.textContent = t('savingNick') || t('resetWaiting');
+    accountMsg.textContent = t('savingNick') || t('resetWaiting');
     try{
         var res = await fetch('/api/auth/profile', {
             method: 'PATCH',
@@ -3390,45 +3212,15 @@ async function saveNickname(){
         var body = {};
         try { body = await res.json(); } catch(e){}
         if(!res.ok){
-            authMsg.textContent = body.error || t('nickSaveError') || t('resetUpdateError');
+            accountMsg.textContent = body.error || t('nickSaveError') || t('resetUpdateError');
             return;
         }
-        authMsg.textContent = t('nickSaved') || t('saveOk');
+        accountMsg.textContent = t('nickSaved') || t('saveOk');
         fetchMe();
     }catch(err){
-        authMsg.textContent = t('nickSaveError') || t('resetUpdateError');
+        accountMsg.textContent = t('nickSaveError') || t('resetUpdateError');
     }
 }
-async function resetPasswordAsAdmin(){
-    if(!authState.user || authState.user.role !== 'admin') return;
-    if(!resetAdminEmail || !resetAdminPass) return;
-    var email = resetAdminEmail.value.trim();
-    var pass = resetAdminPass.value;
-    if(!email || !pass){
-        if(resetAdminStatus) resetAdminStatus.textContent = t('resetNeedFields');
-        return;
-    }
-    if(resetAdminStatus) resetAdminStatus.textContent = t('resetUpdating');
-    try{
-        var res = await fetch('/api/auth/reset-admin', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ email: email, password: pass })
-        });
-        var body = {};
-        try { body = await res.json(); } catch(e){}
-        if(!res.ok){
-            if(resetAdminStatus) resetAdminStatus.textContent = body.error || t('resetUpdateError');
-            return;
-        }
-        if(resetAdminStatus) resetAdminStatus.textContent = t('resetUpdated');
-        resetAdminPass.value = '';
-    }catch(err){
-        if(resetAdminStatus) resetAdminStatus.textContent = t('resetUpdateError');
-    }
-}
-
 function exportAllQuizzesAsAdmin(){
     if(!authState.user || authState.user.role !== 'admin'){
         warnNoPermission();
@@ -3488,35 +3280,11 @@ async function importAllQuizzesAsAdmin(){
     }
 }
 
-if(authLoginForm){
-    authLoginForm.addEventListener('submit', function(e){
-        e.preventDefault();
-        login();
-    });
-}else if(authLoginBtn){
-    // Fallback por si el HTML no tiene el form (compatibilidad)
-    authLoginBtn.addEventListener('click', function(e){
-        if(e && e.preventDefault) e.preventDefault();
-        login();
-    });
-}
-if(authLogoutBtn){
-    authLogoutBtn.addEventListener('click', logout);
-}
-if(authGoogleHeroBtn){
-    authGoogleHeroBtn.addEventListener('click', loginWithGoogle);
-}
-if(authAuthentikHeroBtn){
-    authAuthentikHeroBtn.addEventListener('click', loginWithAuthentik);
-}
-if(createUserBtn){
-    createUserBtn.addEventListener('click', createUser);
+if(openAccountMenuBtn){
+    openAccountMenuBtn.addEventListener('click', openCentralAccountMenu);
 }
 if(authSaveNickBtn){
     authSaveNickBtn.addEventListener('click', saveNickname);
-}
-if(resetAdminBtn){
-    resetAdminBtn.addEventListener('click', resetPasswordAsAdmin);
 }
 if(adminExportAllBtn){
     adminExportAllBtn.addEventListener('click', exportAllQuizzesAsAdmin);
@@ -3574,100 +3342,29 @@ if(adminImportPublicBtn){
         }
     });
 }
-if(toggleResetBtn && resetPanel){
-    toggleResetBtn.addEventListener('click', function(){
-        resetPanel.classList.toggle('hidden');
-    });
-}
-if(resetRequestBtn){
-    resetRequestBtn.addEventListener('click', async function(){
-        if(!resetEmail) return;
-        var email = resetEmail.value.trim();
-        if(!email){
-            if(resetStatus) resetStatus.textContent = t('labelEmail');
-            return;
-        }
-        if(resetStatus) resetStatus.textContent = t('resetWaiting');
-        try{
-            var res = await fetch('/api/auth/request-reset', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: email })
-            });
-            await res.json().catch(function(){});
-            if(resetStatus) resetStatus.textContent = t('resetTokenSent');
-        }catch(err){
-            if(resetStatus) resetStatus.textContent = t('resetTokenError');
-        }
-    });
-}
-if(resetConfirmBtn){
-    resetConfirmBtn.addEventListener('click', async function(){
-        if(!resetToken || !resetPass) return;
-        var token = resetToken.value.trim();
-        var pass = resetPass.value;
-        if(!token || !pass){
-            if(resetStatus) resetStatus.textContent = t('resetNeedFields');
-            return;
-        }
-        if(resetStatus) resetStatus.textContent = t('resetUpdating');
-        try{
-            var res = await fetch('/api/auth/reset', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token: token, password: pass })
-            });
-            var body = {};
-            try { body = await res.json(); } catch(e){}
-            if(!res.ok){
-                if(resetStatus) resetStatus.textContent = body.error || t('resetUpdateError');
-                return;
-            }
-            if(resetStatus) resetStatus.textContent = t('resetUpdated');
-            resetPass.value = '';
-            resetToken.value = '';
-        }catch(err){
-            if(resetStatus) resetStatus.textContent = t('resetUpdateError');
-        }
-    });
-}
-
 // Start auth check on load
 try{
     var authParams = new URLSearchParams(window.location.search);
-    var googleResult = authParams.get('google');
     var authentikResult = authParams.get('authentik');
-    if(googleResult && authMsg){
-        authMsg.textContent = googleResult === 'ok' ? t('loginOk') : t('googleLoginError');
-        authParams.delete('google');
-    }
-    if(authentikResult && authMsg){
-        authMsg.textContent = authentikResult === 'ok' ? t('loginOk') : t('loginError');
+    if(authentikResult){
+        if(authentikResult !== 'ok'){
+            authBridgeFailed = true;
+            if(authMsg) authMsg.textContent = t('loginError');
+        }
         authParams.delete('authentik');
-    }
-    if(googleResult || authentikResult){
         var cleanUrl = window.location.pathname + (authParams.toString() ? '?' + authParams.toString() : '') + window.location.hash;
         window.history.replaceState({}, '', cleanUrl);
     }
 }catch(e){}
-fetchMe();
+fetchMe().then(syncCentralSession);
 fetchTags();
-
-fetch('/api/auth/google/config', { credentials: 'include' })
-    .then(function(res){ return res.ok ? res.json() : { enabled: false }; })
-    .then(function(cfg){
-        googleAuthEnabled = !!cfg.enabled;
-        if(authGoogleHeroBtn) authGoogleHeroBtn.classList.toggle('hidden', !googleAuthEnabled);
-        updateAuthUI();
-    })
-    .catch(function(){});
 
 fetch('/api/auth/authentik/config', { credentials: 'include' })
     .then(function(res){ return res.ok ? res.json() : { enabled: false }; })
     .then(function(cfg){
         authentikAuthEnabled = !!cfg.enabled;
-        if(authAuthentikHeroBtn) authAuthentikHeroBtn.classList.toggle('hidden', !authentikAuthEnabled);
         updateAuthUI();
+        syncCentralSession();
     })
     .catch(function(){});
 
@@ -4162,23 +3859,3 @@ if(kahootForm){
         }
     });
 }
-
-fetch('/api/auth/migration', { credentials: 'include' })
-    .then(function(res){ return res.ok ? res.json() : {}; })
-    .then(function(cfg){
-        if (!cfg.end && !cfg.authentikOnly) return;
-        var notice = document.getElementById('auth-migration-notice');
-        var lang = document.getElementById('lang-select').value;
-        var date = new Date(cfg.end).toLocaleString(lang === 'en' ? 'en-GB' : lang === 'es' ? 'es-ES' : 'ca-ES', { timeZone: 'Europe/Madrid' });
-        var text = lang === 'en' ? 'From ' + date + ' (Madrid time), sign in with EduTicTac. Google remains available inside EduTicTac.' :
-            lang === 'es' ? 'Desde el ' + date + ' (hora peninsular), entra con EduTicTac. Google seguirá disponible dentro de EduTicTac.' :
-            'A partir del ' + date + ' (hora peninsular), entra amb EduTicTac. Google continuarà disponible dins d’EduTicTac.';
-        if (notice && cfg.end) { notice.textContent = text; notice.classList.remove('hidden'); }
-        authentikOnlyMode = !!cfg.authentikOnly;
-        if (authentikOnlyMode) {
-            ['auth-email', 'auth-pass', 'auth-login', 'reset-request', 'reset-confirm', 'reset-panel'].forEach(function(id){
-                var el = document.getElementById(id); if(el) { var label = el.closest('label'); (label || el).classList.add('hidden'); }
-            });
-            updateAuthUI();
-        }
-    }).catch(function(){});

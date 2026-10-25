@@ -71,7 +71,9 @@
   }
 
   function chipReady() {
+    var chip = document.querySelector('edutictac-account');
     document.documentElement.classList.remove('account-fallback');
+    document.documentElement.classList.toggle('account-home-only', !!(chip && chip.hasAttribute('data-home-only')));
     document.documentElement.classList.add('has-account-chip');
   }
 

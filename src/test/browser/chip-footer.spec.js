@@ -74,4 +74,17 @@ test.describe('xip de compte', () => {
         await expect(page.locator('.top-actions .lang-switch')).toBeVisible();
         await expect(page.locator('edutictac-account')).toBeHidden();
     });
+
+    for (const path of ['/join.html', '/player/', '/solo/', '/multiplayer/']) {
+        test(`${path}: alumnat i joc públic només tenen «Inici» i conserven el selector propi`, async ({ page }) => {
+            await page.route(/^https:\/\//, route => route.abort());
+            await stubBase(page);
+            await stubCommons(page);
+            await page.goto(path);
+
+            await expect(page.locator('edutictac-account')).toHaveAttribute('data-home-only', '');
+            await expect(page.locator('html')).toHaveClass(/account-home-only/);
+            await expect(page.locator('#lang-switcher, .lang-switch').first()).toBeVisible();
+        });
+    }
 });
