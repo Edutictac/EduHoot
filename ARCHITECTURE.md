@@ -156,7 +156,9 @@ en la claim configurada poden entrar. Vore
   (`AUTHENTIK_ONLY`), però la interfície ja no té cap formulari per a fer-ho.
 - En desenvolupament, `/dev/login` (`src/server/routes/devLogin.js`, només
   amb `NODE_ENV=development`) permet entrar amb els usuaris de prova del
-  seed; vore `docs/DEV_DOCKER_SETUP.md`.
+  seed, i `docker compose` porta un OIDC simulat (`src/scripts/dev-oidc.js`)
+  que fa d'Authentik per a provar el flux OIDC real; vore
+  `docs/DEV_DOCKER_SETUP.md`.
 
 Les sessions HTTP **no es guarden en Mongo ni en un store extern**: és
 un `Map` en memòria (`sessions`, `src/server/services/sessions.js:3`) indexat per un

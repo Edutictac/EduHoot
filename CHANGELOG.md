@@ -30,6 +30,9 @@ intacte com la nota de versió més detallada.
 - `/dev/login` (només amb `NODE_ENV=development`): entrar com a qualsevol
   usuari de prova del seed amb un clic, ara que `/create/` només té l'accés
   pel xip d'EduTicTac. El distintiu de desenvolupament hi enllaça.
+- Authentik simulat en `docker compose` (servei `oidc`,
+  `src/scripts/dev-oidc.js`): prova el flux OIDC real en local amb usuaris de
+  prova (docents del seed, un docent nou i un alumne sense rol docent).
 
 ### Canviat
 - El títol de la pestanya del creador de qüestionaris mostra el seu nom o correu.

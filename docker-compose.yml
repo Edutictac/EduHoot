@@ -25,6 +25,16 @@ services:
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
       - PUBLIC_BASE_URL=${PUBLIC_BASE_URL:-}
+      # Authentik simulado por el servicio `oidc` (ver abajo). El navegador va a
+      # localhost:${OIDC_PORT}; el contenedor pide token/userinfo por la red
+      # interna (oidc:8080). Para desactivarlo: AUTHENTIK_CLIENT_ID= vacío en .env.
+      - AUTHENTIK_ISSUER=http://localhost:${OIDC_PORT:-8081}
+      - AUTHENTIK_CLIENT_ID=${AUTHENTIK_CLIENT_ID-eduhoot-dev}
+      - AUTHENTIK_CLIENT_SECRET=dev-secret
+      - AUTHENTIK_AUTHORIZATION_URL=http://localhost:${OIDC_PORT:-8081}/authorize
+      - AUTHENTIK_TOKEN_URL=http://oidc:8080/token
+      - AUTHENTIK_USERINFO_URL=http://oidc:8080/userinfo
+      - AUTHENTIK_REDIRECT_URI=http://localhost:${APP_PORT:-3000}/api/auth/authentik/callback
     ports:
       - "127.0.0.1:${APP_PORT:-3000}:3000"
     volumes:
@@ -42,6 +52,21 @@ services:
           path: ./src/package.json
         - action: rebuild
           path: ./src/package-lock.json
+
+  # Proveedor OIDC simulado que hace de Authentik solo en desarrollo
+  # (src/scripts/dev-oidc.js, sin dependencias): usuarios de prueba con un clic.
+  oidc:
+    image: node:24-alpine
+    environment:
+      - PORT=8080
+      - OIDC_ISSUER=http://localhost:${OIDC_PORT:-8081}
+      - OIDC_CLIENT_ID=eduhoot-dev
+      - OIDC_CLIENT_SECRET=dev-secret
+    ports:
+      - "127.0.0.1:${OIDC_PORT:-8081}:8080"
+    volumes:
+      - ./src/scripts/dev-oidc.js:/oidc/dev-oidc.js:ro
+    command: node /oidc/dev-oidc.js
 
 volumes:
   eduhoot_mongo_data:

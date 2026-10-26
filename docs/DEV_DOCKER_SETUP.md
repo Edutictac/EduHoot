@@ -182,6 +182,16 @@ També insereix **5 usuaris locals de prova** (email + contrasenya), per a prova
 
 Les sessions viuen en memòria: cada vegada que `node --watch` reinicia el servidor (en guardar un fitxer) es tanquen totes, i cal tornar a passar per `/dev/login`.
 
+**Authentik simulat**: `docker compose` alça també el servei `oidc` (`src/scripts/dev-oidc.js`, sense dependències), que fa d'Authentik en `http://localhost:8081` (`OIDC_PORT`). Des de `/dev/login`, «Entrar amb l'OIDC simulat» passa pel flux real (`/api/auth/authentik/start` → callback → rol per `groups`) i permet triar entre:
+
+| Usuari | `groups` | Resultat |
+|---|---|---|
+| `admin@exemple.local`, `docent1..4@exemple.local` | `professorat` | Es vincula a l'usuari del seed i conserva el seu rol |
+| `docent.nou@exemple.local` | `professorat` | Es crea un compte nou amb rol `editor` |
+| `alumne@exemple.local` | `alumnat` | Rebutjat (`/create/?authentik=error`) |
+
+Per a desactivar-lo, posa `AUTHENTIK_CLIENT_ID=` buit en `.env`. La primera vegada cal `docker compose up -d` (o parar i tornar a alçar) perquè es cree el servei `oidc` i `app` reba les variables noves.
+
 - **Idempotent**: cada qüestionari i cada usuari porta un camp propi `devSeedKey` (`eduhoot-seed-demo-1`..`5` i `eduhoot-seed-user-1`..`5` respectivament); l'script només insereix els que encara no existisquen.
 - **Reversible**: `node scripts/seed-dev-data.js --remove` (o `npm run unseed:dev`) esborra només els documents amb eixe marcador, mai cap altre qüestionari o usuari.
 - **Salvaguarda de seguretat**: l'script es nega a executar-se si `NODE_ENV` no és exactament `development` (ja fixat a `docker-compose.yml`). Sense esta comprovació, executar `npm run seed:dev` per error contra una base de dades real crearia un usuari `admin@exemple.local` amb la contrasenya pública `exemple1234` i un hash compatible amb el login real.
