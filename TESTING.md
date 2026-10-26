@@ -76,12 +76,15 @@ problemes d'estil, variables sense usar, etc.
   (`questionUtils.test.js`), partides en directe (`liveGames.test.js`).
 - **`test/integration/`** — alça el servidor Express real (amb Mongo en
   memòria) i prova l'API HTTP d'extrem a extrem: `api.test.js`,
-  `sessionReport.test.js`, i els més recents `auth-migration.test.js` i
-  `authentik.test.js` (migració de comptes a Authentik).
+  `sessionReport.test.js`, `auth-migration.test.js` i `authentik.test.js`
+  (migració de comptes a Authentik), `commonsUrl.test.js` (el xip apunta al
+  Commons de `EDUTICTAC_COMMONS_URL`), i `devLogin.test.js` /
+  `devLoginOff.test.js` (`/dev/login` funciona en desenvolupament i dona 404
+  fora d'ell).
 - **`test/browser/`** — tests de navegador amb Playwright: `language.spec.js`
-  (canvi d'idioma), `auth-state.spec.js` (estat de sessió després de la
-  migració a Authentik), i el més recent `solo-poll.spec.js` (les preguntes
-  d'enquesta en mode Solo no compten com a error ni puntuen).
+  (canvi d'idioma), `auth-state.spec.js` (estat de sessió i pont amb el xip),
+  `solo-poll.spec.js` (les preguntes d'enquesta en mode Solo no compten com a
+  error ni puntuen) i `chip-footer.spec.js` (xip de compte i peu comú).
 
 ### Scripts puntuals que NO són part del flux de test estàndard
 

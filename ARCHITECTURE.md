@@ -81,7 +81,8 @@ src/
 │   │   ├── games.js           # validate-pin, report.csv
 │   │   ├── auth.js            # /api/auth/... (login, Google, Authentik, usuaris)
 │   │   ├── playerAuth.js      # /api/player-auth/... (Edutictac ID)
-│   │   └── admin.js           # /api/admin/..., /admin
+│   │   ├── admin.js           # /api/admin/..., /admin
+│   │   └── devLogin.js        # /dev/login (només amb NODE_ENV=development)
 │   ├── sockets/
 │   │   ├── index.js           # io.on('connection') i sessió del socket
 │   │   ├── hostEvents.js      # host-join, startGame, nextQuestion...
@@ -139,14 +140,23 @@ perd.
 
 ## Autenticació i sessions
 
-Tres vies de login per al professorat conviuen hui (migració en curs,
-vore `docs/PLA-MIGRACIO-AUTHENTIK-2026-10.md`):
+Des de la versió 1.0.10, l'**únic accés del professorat en la interfície**
+és el xip de compte d'EduTicTac (`account-widget.js`, servit per Commons;
+la integració local està en `src/public/js/edutictac-chip.js`). Des de
+`/create/`, el xip fa de pont cap a la sessió **Authentik (OIDC)** d'EduHoot
+quan EduHoot i Commons són del mateix lloc. Només identitats amb rol docent
+en la claim configurada poden entrar. Vore
+`docs/PLA-MIGRACIO-AUTHENTIK-2026-10.md`.
 
-- **Correu + contrasenya local** (comptes antics).
-- **Google OAuth 2.0** directe.
-- **Authentik (OIDC)** — substituirà les dos anteriors en tancar la
-  migració; només identitats amb rol docent en la claim configurada
-  poden entrar.
+- L'adreça de Commons es pot canviar amb `EDUTICTAC_COMMONS_URL` (per a un
+  Commons local); el servidor la reescriu a les pàgines amb xip
+  (`CHIP_PAGES`, `src/server/server.js:147`).
+- El backend encara accepta **correu + contrasenya** (`POST /api/auth/login`)
+  i **Google** mentre no s'active el mode només Authentik
+  (`AUTHENTIK_ONLY`), però la interfície ja no té cap formulari per a fer-ho.
+- En desenvolupament, `/dev/login` (`src/server/routes/devLogin.js`, només
+  amb `NODE_ENV=development`) permet entrar amb els usuaris de prova del
+  seed; vore `docs/DEV_DOCKER_SETUP.md`.
 
 Les sessions HTTP **no es guarden en Mongo ni en un store extern**: és
 un `Map` en memòria (`sessions`, `src/server/services/sessions.js:3`) indexat per un
@@ -184,16 +194,21 @@ Per a no confondre un entorn de desenvolupament o stage amb producció,
 principals (`index`, `join`, `create`, `create/quiz-creator`, `host`,
 `host/game`, `player`, `player/game`, `solo`, `multiplayer`,
 `admin-stats`) i consulta l'endpoint `GET /api/env`
-(`src/server/server.js:151`, retorna `{ env: process.env.NODE_ENV || '' }`).
+(`src/server/server.js:179`, retorna `{ env: process.env.NODE_ENV || '' }`).
 
 - Si `NODE_ENV` és `development` o `staging`, afig un distintiu fix a
   dalt de la pàgina ("🛠️ Entorn: desenvolupament" / "🧪 Entorn: stage"),
   un tint de fons (taronja/verd) i un prefix al títol de la pestanya
-  (`🛠️ DEV — ` / `🧪 STAGE — `).
+  (`🛠️ DEV — ` / `🧪 STAGE — `). En desenvolupament, el distintiu és un
+  enllaç a `/dev/login`.
 - En qualsevol altre valor (`production`, buit...) no fa absolutament
   res: cap petició ni canvi visual addicional.
 - Vore `docs/STAGE-AUTOMATIC.md` per a com es configura `NODE_ENV` i
   `AUTO_SEED_STAGE` al VPS de stage.
+
+El peu comú de pàgina mostra la versió desplegada amb `app-version.js`, que
+consulta `GET /api/version` (`src/server/server.js:183`, versió de
+`package.json`).
 
 ## Deute tècnic conegut
 
