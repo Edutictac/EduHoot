@@ -63,3 +63,8 @@ body{
     #title2{ font-size: 15px; }
     .loader{ width: 54px; height: 54px; border-width: 7px; border-top-width: 7px; }
 }
+
+/* El títol centrat no ha de quedar davall de l'enllaç «Inici» del xip. */
+@media (max-width: 640px){
+    html.has-account-chip #title1{ margin-top: 48px; }
+}

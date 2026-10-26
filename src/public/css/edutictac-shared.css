@@ -1,0 +1,80 @@
+/* Integració del xip de compte i del peu comú d'EduTicTac a EduHoot.
+ *
+ * El peu canònic viu a edutictac-footer.css (còpia exacta de Commons).
+ * Ací només hi ha l'adaptació a EduHoot: xip clar sobre el fons fosc, paleta
+ * pròpia per no heretar les variables de l'app i selectors d'idioma com a
+ * respost si Commons no arriba.
+ */
+
+edutictac-account.site-account {
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  font-family: Inter, system-ui, sans-serif;
+  /* EduHoot definix --muted clar per al seu tema fosc; el xip clar no l'ha d'heretar. */
+  --muted: #5f6e72;
+}
+
+edutictac-account.site-account--fixed,
+edutictac-account.site-account--top {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 1200;
+}
+
+/* A la cantonada de la pàgina, però se'n va amb el desplaçament. */
+edutictac-account.site-account--top {
+  position: absolute;
+}
+
+/* Pàgines d'alumnat: el selector d'idioma propi ocupa la dreta. */
+edutictac-account.site-account--start {
+  right: auto;
+  left: 16px;
+}
+
+/* Quan el xip complet ja s'ha pintat, porta el selector d'idioma i els propis fan
+ * de respost. Amb data-home-only (alumnat, joc públic) només hi ha «Inici», i el
+ * selector propi es queda. */
+html.has-account-chip:not(.account-home-only) .lang-switch,
+html.has-account-chip:not(.account-home-only) .lang-switcher,
+html.has-account-chip:not(.account-home-only) #lang-switcher {
+  display: none !important;
+}
+
+html.account-fallback edutictac-account.site-account {
+  display: none !important;
+}
+
+/* El peu comú va sempre sobre el tema fosc d'EduHoot. */
+.ett-footer {
+  --ett-footer-ink: rgba(255, 255, 255, .78);
+  --ett-footer-line: rgba(255, 255, 255, .22);
+  --ett-footer-accent: #ffe670;
+}
+
+.ett-footer--bottom {
+  margin-top: auto;
+}
+
+#app-version:empty {
+  display: none;
+}
+
+#app-version:not(:empty)::before {
+  content: "·";
+  margin-inline-end: .35rem;
+}
+
+@media (max-width: 640px) {
+  edutictac-account.site-account--fixed,
+  edutictac-account.site-account--top {
+    top: 10px;
+    right: 10px;
+  }
+
+  edutictac-account.site-account--start {
+    right: auto;
+    left: 10px;
+  }
+}

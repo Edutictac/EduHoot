@@ -222,6 +222,12 @@ body{
     gap: 10px;
     flex-wrap: wrap;
 }
+.host-top-row #cancel{
+    margin: 0;
+    max-width: none;
+    padding: 12px 28px;
+    white-space: nowrap;
+}
 .lang-switch.host-lang{
     display: inline-flex;
     align-items: center;
@@ -263,6 +269,7 @@ body{
     .players-list{ gap: 10px; }
     .player-icon{ font-size: 38px; }
     .player-name{ font-size: 22px; }
+    .host-top-row #cancel{ width: auto; flex: 1 1 auto; }
 }
 
 /* Vista de juego incrustada en la sala (ver openEmbeddedHostGame en host.js). */

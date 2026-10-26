@@ -15,7 +15,9 @@
       pin_label: 'PIN',
       host_error: 'No se pudo iniciar la partida. Vuelve a elegir el quiz y prueba de nuevo.',
       host_error_missing_id: 'Falta el quiz para generar la partida. Vuelve a elegirlo.',
-      host_error_timeout: 'No pudimos obtener el PIN. Revisa la conexión y vuelve a elegir el quiz.'
+      host_error_timeout: 'No pudimos obtener el PIN. Revisa la conexión y vuelve a elegir el quiz.',
+      footerPrivacy: 'Privacidad',
+      footerSource: 'Código fuente'
     },
     en: {
       join_title: 'Join this game with the PIN:',
@@ -32,7 +34,9 @@
       pin_label: 'PIN',
       host_error: 'Could not start the game. Pick the quiz again and retry.',
       host_error_missing_id: 'Missing quiz to create the game. Please pick it again.',
-      host_error_timeout: 'Could not retrieve the PIN. Check your connection and pick the quiz again.'
+      host_error_timeout: 'Could not retrieve the PIN. Check your connection and pick the quiz again.',
+      footerPrivacy: 'Privacy',
+      footerSource: 'Source code'
     },
     ca: {
       join_title: 'Uneix-te a la partida amb el PIN:',
@@ -49,7 +53,9 @@
       pin_label: 'PIN',
       host_error: 'No s\'ha pogut iniciar la partida. Torna a triar el qüestionari i prova-ho de nou.',
       host_error_missing_id: 'Falta el qüestionari per generar la partida. Torna a triar-lo.',
-      host_error_timeout: 'No hem pogut obtenir el PIN. Comprova la connexió i torna a triar el qüestionari.'
+      host_error_timeout: 'No hem pogut obtenir el PIN. Comprova la connexió i torna a triar el qüestionari.',
+      footerPrivacy: 'Privacitat',
+      footerSource: 'Codi font'
     },
     va: {
       opt_time_help: 'Deixa-ho buit per usar el temps definit en cada pregunta del qüestionari.'
@@ -70,6 +76,11 @@
   function apply(){
     document.querySelectorAll('[data-i18n-host]').forEach(function(el){
       var key = el.getAttribute('data-i18n-host');
+      var txt = t(key);
+      if(txt) el.textContent = txt;
+    });
+    document.querySelectorAll('[data-i18n]').forEach(function(el){
+      var key = el.getAttribute('data-i18n');
       var txt = t(key);
       if(txt) el.textContent = txt;
     });

@@ -140,6 +140,34 @@ io.engine.on('connection_error', (err) => {
   console.error('[socket-connection-error]', err);
 });
 const PUBLIC_IMPORT_SOURCE_URL = (process.env.PUBLIC_IMPORT_SOURCE_URL || '').trim().replace(/\/+$/, '');
+const APP_VERSION = require('../package.json').version;
+// Commons al qual apunta el xip de compte. Per defecte el d'EduTicTac; un Commons
+// local (LliureX) passa la seua adreça pública, p. ex. http://edutictac.local:8082.
+const DEFAULT_COMMONS_URL = 'https://commons.edutictac.es';
+const EDUTICTAC_COMMONS_URL = (() => {
+  const raw = (process.env.EDUTICTAC_COMMONS_URL || '').trim();
+  if (!raw) return DEFAULT_COMMONS_URL;
+  try {
+    const url = new URL(raw);
+    if (url.protocol === 'http:' || url.protocol === 'https:') return url.origin + url.pathname.replace(/\/+$/, '');
+  } catch (e) {}
+  console.warn('EDUTICTAC_COMMONS_URL no és una URL http(s) vàlida; es fa servir ' + DEFAULT_COMMONS_URL);
+  return DEFAULT_COMMONS_URL;
+})();
+// Pàgines amb el xip; la resta es servixen tal qual.
+const CHIP_PAGES = {
+  '/': 'index.html',
+  '/index.html': 'index.html',
+  '/join.html': 'join.html',
+  '/solo/': 'solo/index.html',
+  '/solo/index.html': 'solo/index.html',
+  '/multiplayer/': 'multiplayer/index.html',
+  '/multiplayer/index.html': 'multiplayer/index.html',
+  '/host/': 'host/index.html',
+  '/host/index.html': 'host/index.html',
+  '/player/': 'player/index.html',
+  '/player/index.html': 'player/index.html'
+};
 
 // Body parsers (bump limit to allow quizzes con recursos más pesados)
 app.use(helmet({
@@ -151,6 +179,11 @@ app.use(express.urlencoded({ extended: true, limit: BODY_LIMIT }));
 app.get('/api/env', (req, res) => {
   res.json({ env: process.env.NODE_ENV || '' });
 });
+// Versió de la imatge desplegada (package.json), per al peu de pàgina.
+app.get('/api/version', (req, res) => {
+  res.set('Cache-Control', 'no-cache');
+  res.json({ version: APP_VERSION });
+});
 app.get('/manifest.webmanifest', (req, res) => {
   res.type('application/manifest+json');
   res.set('Cache-Control', 'no-cache, must-revalidate, max-age=0');
@@ -158,14 +191,26 @@ app.get('/manifest.webmanifest', (req, res) => {
   res.set('Expires', '0');
   res.sendFile(path.join(publicPath, 'manifest.webmanifest'));
 });
+function withCommonsUrl(html) {
+  return EDUTICTAC_COMMONS_URL === DEFAULT_COMMONS_URL ? html : html.split(DEFAULT_COMMONS_URL).join(EDUTICTAC_COMMONS_URL);
+}
+app.get(Object.keys(CHIP_PAGES), (req, res, next) => {
+  if (EDUTICTAC_COMMONS_URL === DEFAULT_COMMONS_URL) return next();
+  fs.readFile(path.join(publicPath, CHIP_PAGES[req.path]), 'utf8', (err, html) => {
+    if (err) return next();
+    res.set('Cache-Control', 'no-store');
+    res.type('html').send(withCommonsUrl(html));
+  });
+});
 app.get(['/create', '/create/', '/create/index.html'], (req, res) => {
   const config = googleOAuthConfig(req);
   const googleEnabled = !!(config.clientId && config.clientSecret);
   fs.readFile(path.join(publicPath, 'create', 'index.html'), 'utf8', (err, html) => {
     if (err) return res.status(500).send('Internal error');
+    const page = withCommonsUrl(html);
     const out = googleEnabled
-      ? html.replace('id="new-user-signin" class="signin-callout hidden"', 'id="new-user-signin" class="signin-callout"')
-      : html;
+      ? page.replace('id="new-user-signin" class="signin-callout hidden"', 'id="new-user-signin" class="signin-callout"')
+      : page;
     res.set('Cache-Control', 'no-cache, must-revalidate, max-age=0');
     res.type('html').send(out);
   });

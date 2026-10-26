@@ -1,41 +1,138 @@
 const { test, expect } = require('@playwright/test');
 
+// EduHoot servit com a eduhoot.edutictac.es, al mateix lloc que Commons.
+const SITE = 'http://eduhoot.edutictac.es:18090';
+const launchOptions = { args: ['--host-resolver-rules=MAP eduhoot.edutictac.es 127.0.0.1'] };
 if (process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH) {
-    test.use({ launchOptions: { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } });
+    launchOptions.executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH;
 }
+test.use({ launchOptions });
 
-for (const [lang, signOut] of [['es', 'Salir'], ['va', 'Eixir']]) {
-    test(`${lang}: header closes an authenticated session and survives reload`, async ({ page }) => {
-        let authenticated = true;
-        let logoutRequests = 0;
-        await page.route('https://**', route => route.abort());
-        await page.route('**/socket.io/socket.io.js', route => route.fulfill({
-            contentType: 'application/javascript',
-            body: 'window.io=function(){return {on:function(){},emit:function(){},disconnect:function(){},connect:function(){}}};'
-        }));
-        await page.route('**/api/**', async route => {
-            const path = new URL(route.request().url()).pathname;
-            if (path === '/api/auth/me') {
-                return route.fulfill({ status: authenticated ? 200 : 401, json: authenticated
-                    ? { id: 'test-user', email: 'teacher@example.invalid', role: 'editor', nickname: 'Teacher' }
-                    : { error: 'No autorizado' } });
-            }
-            if (path === '/api/auth/logout') {
-                expect(route.request().method()).toBe('POST');
-                authenticated = false;
-                logoutRequests++;
-                return route.fulfill({ json: { ok: true } });
-            }
-            return route.fulfill({ json: { enabled: false, tags: [], quizzes: [] } });
+const COMMONS = 'https://commons.edutictac.es';
+const TEACHER = { id: 'test-user', email: 'teacher@example.invalid', role: 'editor', nickname: 'Teacher' };
+
+// Xip mínim: inici + menú de compte, com el de Commons.
+const WIDGET_STUB = `customElements.define('edutictac-account', class extends HTMLElement {
+    connectedCallback() {
+        this.innerHTML = '<nav class="eta"><a class="eta-home" href="https://edutictac.es/">Inici</a>'
+            + '<details class="eta-account"><summary class="eta-chip">Entrar</summary>'
+            + '<div class="eta-menu"><a class="eta-item" href="${COMMONS}/login">Professorat</a></div></details></nav>';
+        // Com el de Commons: un clic fora del xip tanca el menú.
+        document.addEventListener('click', event => {
+            if (!this.contains(event.target)) this.querySelector('details').open = false;
         });
-        await page.goto(`/create/?lang=${lang}`);
-        await expect(page.locator('#open-auth')).toHaveText(signOut);
-        await expect(page.locator('#open-account')).toBeVisible();
-        await page.locator('#open-auth').click();
-        await expect(page.locator('#open-auth')).toHaveText('Entrar');
-        await expect(page.locator('#open-account')).toBeHidden();
-        expect(logoutRequests).toBe(1);
-        await page.reload();
-        await expect(page.locator('#open-auth')).toHaveText('Entrar');
+    }
+});`;
+
+// EduHoot i Commons simulats; `state` es pot canviar durant la prova.
+async function stubServers(page, state) {
+    await page.route('**/*', route => {
+        const url = new URL(route.request().url());
+        if (url.origin === COMMONS) {
+            if (url.pathname === '/assets/account-widget.js') {
+                if (state.noWidget) return route.abort();
+                return route.fulfill({ contentType: 'application/javascript', body: WIDGET_STUB });
+            }
+            if (url.pathname === '/api/auth/session') {
+                return route.fulfill({
+                    headers: { 'Access-Control-Allow-Origin': new URL(page.url()).origin, 'Access-Control-Allow-Credentials': 'true' },
+                    json: state.central
+                });
+            }
+            return route.abort();
+        }
+        if (url.protocol === 'https:') return route.abort();
+        if (url.pathname === '/socket.io/socket.io.js') {
+            return route.fulfill({
+                contentType: 'application/javascript',
+                body: 'window.io=function(){return {on:function(){},emit:function(){},disconnect:function(){},connect:function(){}}};'
+            });
+        }
+        if (url.pathname === '/api/auth/me') {
+            return route.fulfill(state.user ? { json: state.user } : { status: 401, json: { error: 'No autorizado' } });
+        }
+        if (url.pathname === '/api/auth/logout') {
+            state.user = null;
+            state.logouts++;
+            return route.fulfill({ json: { ok: true } });
+        }
+        if (url.pathname === '/api/auth/authentik/config') return route.fulfill({ json: { enabled: true } });
+        if (url.pathname === '/api/auth/authentik/start') {
+            state.starts.push(url.searchParams.get('next'));
+            return route.fulfill({ contentType: 'text/html', body: '<p>authentik</p>' });
+        }
+        if (url.pathname.startsWith('/api/')) return route.fulfill({ json: { enabled: false, tags: [], quizzes: [] } });
+        return route.continue();
     });
 }
+
+function newState(overrides) {
+    return Object.assign({ user: null, central: { authenticated: false, kind: 'anonymous' }, logouts: 0, starts: [] }, overrides);
+}
+
+test('el xip és l’únic accés: no queda formulari de contrasenya ni botó propi', async ({ page }) => {
+    await stubServers(page, newState());
+    await page.goto(SITE + '/create/?lang=va');
+    await expect(page.locator('#new-user-signin')).toBeVisible();
+    await expect(page.locator('#auth-email, #auth-pass, #open-auth, #auth-google-hero, #reset-panel')).toHaveCount(0);
+    await expect(page.locator('#open-account')).toBeHidden();
+    await page.locator('#open-account-menu').click();
+    await expect(page.locator('edutictac-account details.eta-account')).toHaveAttribute('open', '');
+});
+
+test('amb sessió de professorat al xip, EduHoot entra per SSO una sola vegada', async ({ page }) => {
+    const state = newState({ central: { authenticated: true, kind: 'oidc', role: 'docent' } });
+    await stubServers(page, state);
+    await page.goto(SITE + '/create/?lang=va');
+    await expect.poll(() => state.starts.length).toBe(1);
+    expect(state.starts[0]).toBe('/create/?lang=va');
+    // Si Authentik torna amb error, no es reintenta en bucle.
+    await page.goto(SITE + '/create/?lang=va&authentik=error');
+    await expect(page.locator('#auth-message')).not.toBeEmpty();
+    await page.waitForTimeout(500);
+    expect(state.starts.length).toBe(1);
+});
+
+test('quan el xip tanca la sessió, EduHoot també la tanca', async ({ page }) => {
+    const state = newState({ user: TEACHER, central: { authenticated: true, kind: 'oidc', role: 'docent' } });
+    await stubServers(page, state);
+    await page.goto(SITE + '/create/?lang=va');
+    await expect(page.locator('#open-account')).toBeVisible();
+    await expect(page.locator('#new-user-signin')).toBeHidden();
+    expect(state.logouts).toBe(0);
+
+    await page.evaluate(() => window.dispatchEvent(new CustomEvent('edutictac:sessionchange', {
+        detail: { authenticated: false, kind: 'anonymous' }
+    })));
+    await expect.poll(() => state.logouts).toBe(1);
+    await expect(page.locator('#open-account')).toBeHidden();
+    await expect(page.locator('#new-user-signin')).toBeVisible();
+});
+
+test('en una instal·lació local, el Commons d’internet no toca la sessió d’EduHoot', async ({ page }) => {
+    const state = newState({ user: TEACHER, central: { authenticated: false, kind: 'anonymous' } });
+    await stubServers(page, state);
+    await page.goto('/create/?lang=va');
+    await expect(page.locator('#open-account')).toBeVisible();
+    await page.waitForTimeout(500);
+    expect(state.logouts).toBe(0);
+});
+
+test('si Commons no respon, «Entrar» va directament a l’accés propi d’EduHoot', async ({ page }) => {
+    const state = newState({ noWidget: true });
+    await stubServers(page, state);
+    await page.goto(SITE + '/create/?lang=va');
+    await expect(page.locator('html')).toHaveClass(/account-fallback/, { timeout: 8000 });
+    await page.locator('#open-account-menu').click();
+    await expect.poll(() => state.starts.length).toBe(1);
+});
+
+test('mateix lloc: domini compartit o, amb IP o nom local, el mateix host', async ({ page }) => {
+    await stubServers(page, newState());
+    await page.goto('/create/?lang=va');
+    const check = base => page.evaluate(b => window.sameSiteAsPage(b), base);
+    expect(await check('http://127.0.0.1:8082')).toBe(true);
+    expect(await check('http://10.0.1.1:8082')).toBe(false);
+    expect(await check('http://edutictac.local:8082')).toBe(false);
+    expect(await check('https://commons.edutictac.es')).toBe(false);
+});

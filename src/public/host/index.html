@@ -8,11 +8,16 @@
         <link rel = "stylesheet" href = "../css/music-player.css">
         <link href="/css/fonts.css" rel="stylesheet">
         <link href="/css/fonts.css" rel="stylesheet">
+        <link rel="stylesheet" href="/css/edutictac-footer.css">
+        <link rel="stylesheet" href="/css/edutictac-shared.css">
+        <script src="/js/edutictac-chip.js"></script>
+        <script src="https://commons.edutictac.es/assets/account-widget.js" defer onerror="document.documentElement.classList.add('account-fallback')"></script>
         <link rel="icon" href="/icons/logo.svg" type="image/svg+xml">
     </head>
     <body>
         <div class="host-top-row">
             <button id = "cancel" onclick = "endGame()">Cancelar partida</button>
+            <edutictac-account class="site-account" data-base="https://commons.edutictac.es"></edutictac-account>
             <label class="lang-switch host-lang">
                 <span>Idioma</span>
                 <select id="host-lang-select" data-lang-options="name"></select>
@@ -54,6 +59,21 @@
 
         <div id="host-lobby-music-player" class="music-player-shell host-lobby-music-player"></div>
 
+        <footer class="ett-footer">
+            <p class="ett-footer__id">
+                <span class="ett-footer__brand">EduTicTac</span>
+                <span aria-hidden="true">·</span>
+                <span class="ett-footer__service">EduHoot</span>
+                <span class="ett-footer__version" id="app-version" aria-live="polite"></span>
+            </p>
+            <div class="ett-footer__links">
+                <a href="https://edutictac.es/" target="_blank" rel="noopener">edutictac.es</a>
+                <a href="https://edutictac.es/privacitat.html" target="_blank" rel="noopener" data-i18n="footerPrivacy">Privacidad</a>
+                <a href="https://git.edutictac.es/Edutictac/eduhoot" target="_blank" rel="noopener" data-i18n="footerSource">Código fuente</a>
+                <a href="https://git.edutictac.es/Edutictac/eduhoot/src/branch/main/LICENSE" target="_blank" rel="noopener">AGPL-3.0</a>
+            </div>
+        </footer>
+
         <script src = "../socket.io/socket.io.js"></script>
         <script src = "../js/libs/jqueryLibrary.js"></script>
         <script src = "../js/libs//deparam.js"></script>
@@ -62,5 +82,6 @@
         <script src = "../js/i18n-host.js"></script>
         <script src = "../js/music-player.js"></script>
         <script src = "../js/host.js"></script>
+        <script src="/js/app-version.js"></script>
     </body>
 </html>

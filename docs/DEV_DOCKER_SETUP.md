@@ -178,6 +178,8 @@ També insereix **5 usuaris locals de prova** (email + contrasenya), per a prova
 | `docent3@exemple.local` | `editor` |
 | `docent4@exemple.local` | `editor` |
 
+> **Pendent**: des de la versió 1.0.10 de l'upstream, `/create/` ja no té formulari de correu i contrasenya; l'únic accés docent és el xip d'EduTicTac amb Authentik. En dev (sense `AUTHENTIK_*` a `docker-compose.yml` i amb `localhost`, que no comparteix lloc amb Commons) no hi ha accés docent des de la interfície: estos usuaris només funcionen via API (`POST /api/auth/login`). Falta decidir com resoldre-ho.
+
 - **Idempotent**: cada qüestionari i cada usuari porta un camp propi `devSeedKey` (`eduhoot-seed-demo-1`..`5` i `eduhoot-seed-user-1`..`5` respectivament); l'script només insereix els que encara no existisquen.
 - **Reversible**: `node scripts/seed-dev-data.js --remove` (o `npm run unseed:dev`) esborra només els documents amb eixe marcador, mai cap altre qüestionari o usuari.
 - **Salvaguarda de seguretat**: l'script es nega a executar-se si `NODE_ENV` no és exactament `development` (ja fixat a `docker-compose.yml`). Sense esta comprovació, executar `npm run seed:dev` per error contra una base de dades real crearia un usuari `admin@exemple.local` amb la contrasenya pública `exemple1234` i un hash compatible amb el login real.

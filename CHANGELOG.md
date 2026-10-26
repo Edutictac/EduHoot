@@ -16,8 +16,6 @@ intacte com la nota de versió més detallada.
 ## [Sense publicar]
 
 ### Afegit
-- Traduccions que faltaven al peu de pàgina; el llistat públic d'activitats
-  ara s'ordena per valoració.
 - Entorn de desenvolupament amb Docker (`docker compose up`): alça EduHoot
   amb recàrrega automàtica, sense instal·lar Node ni MongoDB en local.
   Documentat en [`docs/DEV_DOCKER_SETUP.md`](docs/DEV_DOCKER_SETUP.md).
@@ -31,8 +29,6 @@ intacte com la nota de versió més detallada.
   producció.
 
 ### Canviat
-- La música de la partida ara s'inicia automàticament, sense esperar que
-  l'amfitrió prema «Comencem!».
 - El títol de la pestanya del creador de qüestionaris mostra el seu nom o correu.
 
 ### Corregit
@@ -45,6 +41,78 @@ intacte com la nota de versió més detallada.
   apareixia si no n'hi havia cap). Els botons de jugar, editar, eliminar,
   clonar i compartir sense permís ara apareixen deshabilitats amb un
   missatge explicatiu, en lloc de quedar clicables sense cap avís previ.
+
+## [1.0.13] - 2026-10-25
+
+### Afegit
+- `EDUTICTAC_COMMONS_URL`: el xip de compte pot apuntar a un Commons local
+  (p. ex. `http://edutictac.local:8082`) en lloc de `commons.edutictac.es`. El
+  servidor reescriu l'adreça del xip a les pàgines que el porten.
+
+### Canviat
+- Si Commons no respon i el xip no es pinta, «Entrar» de `/create/` porta
+  directament a l'accés Authentik d'EduHoot, perquè el professorat mai es
+  quede sense entrar.
+- El pont de sessió accepta un Commons local del mateix host (nom local o IP)
+  i exigix el mateix host quan l'adreça és una IP o un nom sense domini.
+
+## [1.0.12] - 2026-10-25
+
+### Canviat
+- El peu mostra la versió d'EduHoot desplegada (p. ex. «v1.0.12»), servida per
+  `GET /api/version` a partir de `package.json`, en lloc de la versió de la
+  memòria cau del service worker. Ara també apareix a host, lobby i
+  multijugador. `sw-version.js` passa a `app-version.js`.
+
+## [1.0.11] - 2026-10-25
+
+### Corregit
+- El botó «Entrar» de `/create/` obri el menú del xip i el deixa obert; abans
+  el mateix clic el tancava perquè el xip el prenia com un clic de fora.
+
+## [1.0.10] - 2026-10-25
+
+### Canviat
+- El xip de compte d'EduTicTac és l'únic accés del professorat. Quan el xip
+  té sessió de professorat, EduHoot hi entra sense demanar res més (SSO amb
+  Authentik), i quan el xip la tanca, EduHoot també. Només actua quan EduHoot
+  i Commons comparteixen domini; una instal·lació local no es veu afectada.
+- «Compte» passa a «Preferències» (nom visible i eines d'administració) i
+  només apareix amb sessió.
+- Alumnat i joc públic (`/join.html`, `/player/`, `/solo/`, `/multiplayer/`)
+  mostren només l'enllaç «Inici» del xip i conserven el selector d'idioma propi.
+
+### Llevat
+- Formulari antic d'accés de `/create/`: correu i contrasenya, recuperació de
+  contrasenya, alta i restabliment d'usuaris, Google, avís de migració i botons
+  «Entrar»/«Eixir» de la capçalera, amb els seus textos.
+
+### Corregit
+- Integració del xip i del peu: el xip ja no es mescla amb el títol de
+  `/create/` ni aixafa la capçalera de multijugador en mòbil; «Cancel·la la
+  partida» ja no es parteix en tres línies; el títol del lobby no queda davall
+  del xip en mòbil; el peu de la portada té marges laterals.
+
+## [1.0.9] - 2026-10-25
+
+### Corregit
+- El xip de compte ara pren l'idioma detectat per cada pàgina; abans podia
+  mostrar els textos en català amb la pàgina en castellà o anglés.
+
+## [1.0.8] - 2026-10-25
+
+### Afegit
+- Xip de compte central d'EduTicTac i peu comú a la portada, l'entrada, el joc
+  individual, la creació, el multijugador local i els lobbys d'amfitrió i
+  d'alumnat. El selector d'idioma propi queda com a resposta si Commons no
+  carrega.
+- Declaració explícita d'UTF-8 a les pàgines que no la tenien.
+
+### Canviat
+- Traduccions que faltaven al peu de pàgina; el llistat públic d'activitats
+  ara s'ordena per valoració.
+- La música de la partida ara s'inicia automàticament, sense esperar que
+  l'amfitrió prema «Comencem!».
 
 ## [1.0.7] - 2026-10-09
 

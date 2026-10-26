@@ -188,6 +188,8 @@
   var i18n = {
     es: {
       back: 'Volver',
+      footerPrivacy: 'Privacidad',
+      footerSource: 'Código fuente',
       eyebrow: 'Multiplayer local',
       title: 'Juega en la misma pantalla',
       subtitle: 'Elige un quiz público, selecciona 2–4 jugadores y responde por turnos en pantalla dividida.',
@@ -258,6 +260,8 @@
     },
     en: {
       back: 'Back',
+      footerPrivacy: 'Privacy',
+      footerSource: 'Source code',
       eyebrow: 'Local multiplayer',
       title: 'Play on the same screen',
       subtitle: 'Pick a public quiz, choose 2–4 players and answer on a split screen.',
@@ -328,6 +332,8 @@
     },
     ca: {
       back: 'Tornar',
+      footerPrivacy: 'Privacitat',
+      footerSource: 'Codi font',
       eyebrow: 'Multiplayer local',
       title: 'Juga a la mateixa pantalla',
       subtitle: 'Tria un quiz públic, selecciona 2–4 jugadors i respon en una pantalla dividida.',
