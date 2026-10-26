@@ -27,6 +27,9 @@ intacte com la nota de versió més detallada.
   superior, un tint de fons i un prefix al títol de la pestanya, per a no
   confondre estos entorns amb producció. No fa res quan l'entorn és
   producció.
+- `/dev/login` (només amb `NODE_ENV=development`): entrar com a qualsevol
+  usuari de prova del seed amb un clic, ara que `/create/` només té l'accés
+  pel xip d'EduTicTac. El distintiu de desenvolupament hi enllaça.
 
 ### Canviat
 - El títol de la pestanya del creador de qüestionaris mostra el seu nom o correu.

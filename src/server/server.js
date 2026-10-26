@@ -365,6 +365,11 @@ app.use(createAuthRouter({
   GOOGLE_OAUTH_AUTH_URL
 }));
 
+// Accés ràpid amb els usuaris de prova; només existix en desenvolupament.
+if (process.env.NODE_ENV === 'development') {
+  app.use(require('./routes/devLogin')({ authentikConfigured }));
+}
+
 // Fallback para errores de rutas no capturados
 app.use((err, req, res, next) => {
   console.error('[express-error]', err);

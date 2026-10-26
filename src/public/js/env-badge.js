@@ -5,7 +5,8 @@
             titlePrefix: '🛠️ DEV — ',
             badgeBg: 'rgba(249,115,22,0.9)',
             badgeColor: '#fff7ed',
-            tint: 'rgba(124,45,18,0.16)'
+            tint: 'rgba(124,45,18,0.16)',
+            href: '/dev/login'
         },
         staging: {
             label: '🧪 Entorn: stage',
@@ -17,9 +18,15 @@
     };
 
     function applyBadge(cfg){
-        var badge = document.createElement('div');
+        // En dev el distintiu porta a /dev/login (accés amb usuaris de prova).
+        var badge = document.createElement(cfg.href ? 'a' : 'div');
         badge.textContent = cfg.label;
-        badge.setAttribute('aria-hidden', 'true');
+        if(cfg.href){
+            badge.href = cfg.href;
+            badge.title = 'Entrar amb un usuari de prova';
+        }else{
+            badge.setAttribute('aria-hidden', 'true');
+        }
         var badgeStyle = badge.style;
         badgeStyle.position = 'fixed';
         badgeStyle.top = '10px';
@@ -31,7 +38,8 @@
         badgeStyle.font = '700 22px/1.3 system-ui, sans-serif';
         badgeStyle.background = cfg.badgeBg;
         badgeStyle.color = cfg.badgeColor;
-        badgeStyle.pointerEvents = 'none';
+        badgeStyle.pointerEvents = cfg.href ? 'auto' : 'none';
+        badgeStyle.textDecoration = 'none';
         badgeStyle.boxShadow = '0 2px 8px rgba(0,0,0,0.25)';
 
         var tint = document.createElement('div');
