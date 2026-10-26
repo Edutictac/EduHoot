@@ -65,6 +65,7 @@ function renderPage(seedUsers, oidcEnabled) {
     <a class="link-button" href="/create/">Anar a /create/</a>
     <p><button type="button" id="logout">Eixir</button></p>
   </section>
+  ${oidcSection}
 
   <section>
     <h2>Usuaris de prova del seed</h2>
@@ -79,7 +80,6 @@ function renderPage(seedUsers, oidcEnabled) {
       <button type="submit">Entrar</button>
     </form>
   </section>
-  ${oidcSection}
 
 <script>
 (function(){
