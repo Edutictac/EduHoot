@@ -63,6 +63,24 @@ apareix `/create/?authentik=error`, cal revisar que `AUTHENTIK_SCOPE` (en
 `/opt/eduhoot-stage/eduhoot-stage.env`) incloga `groups`, o que Authentik
 envie els grups dins de `profile`.
 
+## Proves amb alumnat
+
+Stage demana usuari i contrasenya al navegador (autenticació bàsica de
+l'nginx del VPS, fora d'este repositori). Es pot provar amb alumnat, però
+cada dispositiu hauria d'introduir eixes credencials abans de vore la
+pantalla del PIN; és incòmode en mòbils i, una vegada donades a un grup,
+deixen de protegir res i caldria canviar-les.
+
+Alternatives, totes en l'nginx del VPS:
+
+1. **Recomanada**: deixar sense contrasenya només les rutes de l'alumnat
+   (`/join.html`, `/player/`, `/socket.io/` i els estàtics que carreguen:
+   `/js/`, `/css/`, icones...) i mantindre-la en `/create/` i `/host/`.
+   L'alumnat només necessita el PIN, com en producció.
+2. Eximir la IP del centre (`satisfy any` + `allow <IP del centre>`): només
+   servix si tot l'alumnat es connecta des de la xarxa del centre.
+3. Llevar la protecció només durant la prova i tornar-la a posar després.
+
 ## Sembra de dades d'exemple
 
 El seed és `src/scripts/seed-stage-data.js` (`npm run seed:stage`; desfer amb
