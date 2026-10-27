@@ -38,7 +38,30 @@ en `main`.
 ## Comprovar quina versió hi ha
 
 La imatge porta les etiquetes OCI `org.opencontainers.image.version` (nom de
-l'etiqueta) i `org.opencontainers.image.revision` (commit).
+l'etiqueta) i `org.opencontainers.image.revision` (commit). Des del navegador,
+el peu de pàgina (o `GET /api/version`) mostra la versió de `package.json`.
+
+## Accés del professorat en stage
+
+El xip d'EduTicTac de `/create/` consulta la sessió en
+`https://commons.edutictac.es/api/auth/session`. Perquè funcione, **Commons ha
+de permetre l'origen `https://eduhoot-stage.edutictac.es`** (CORS amb
+credencials), com ja fa amb el de producció. Si no, el xip mostra «Sense
+connexió» i no es pot entrar. Per a comprovar-ho (ha d'aparéixer
+`access-control-allow-origin: https://eduhoot-stage.edutictac.es`):
+
+```bash
+curl -s -D - -o /dev/null -H "Origin: https://eduhoot-stage.edutictac.es" \
+  https://commons.edutictac.es/api/auth/session | grep -i access-control
+```
+
+Mentrestant, l'Authentik propi de stage es pot provar sense passar pel xip:
+`https://eduhoot-stage.edutictac.es/api/auth/authentik/start?next=/create/`.
+
+EduHoot decidix el rol docent per la claim `groups`. Si en tornar d'Authentik
+apareix `/create/?authentik=error`, cal revisar que `AUTHENTIK_SCOPE` (en
+`/opt/eduhoot-stage/eduhoot-stage.env`) incloga `groups`, o que Authentik
+envie els grups dins de `profile`.
 
 ## Sembra de dades d'exemple
 
