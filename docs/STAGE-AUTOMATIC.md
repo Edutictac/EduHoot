@@ -29,12 +29,12 @@ Només poden publicar les persones indicades en el workflow; per a la resta,
 el workflow s'omet. Es pot publicar qualsevol commit: l'etiqueta no ha d'estar
 en `main`.
 
-> **Atenció amb el nivell de codi.** No etiqueteu des de `main` mentres `main`
-> no incloga el refactor de la branca `fork_edumillan3t` (`MONGO_DB` i
-> `seed:stage`). Eixe refactor és el que permet apuntar a `eduhoot_stage` i
-> sembrar dades; sense ell, `server.js` fixa `DB_NAME = 'kahootDB'` i
-> l'entrypoint falla. Feu l'etiqueta des d'un commit que fusione eixa branca
-> amb `main` (per exemple una branca `stage-integration`).
+> **Atenció amb el nivell de codi.** Les etiquetes han d'eixir d'una branca
+> que fusione `fork_edumillan3t` amb `main`, no de `main` directament (a
+> `main` només publica l'administració). El motiu és que `main` encara no
+> inclou el refactor que permet apuntar a `eduhoot_stage` i sembrar dades;
+> sense ell, `server.js` fixa `DB_NAME = 'kahootDB'` i l'entrypoint falla.
+> Exemple: una branca `stage-integration`.
 
 ## Què no fa
 
