@@ -61,7 +61,14 @@ test('listado, favorito, valoración, jugar y resultado', async ({ page }) => {
     await geografiaAfterReload.locator('.rating-star[data-value="5"]').click();
     await expect(geografiaAfterReload.locator('.rating-summary')).toContainText('3');
 
-    await geografiaAfterReload.locator('.btn-primary').click();
+    // La valoración propia (5) se guarda en localStorage y sobrevive a un
+    // reload, aunque el mock del listado siga devolviendo ratingAvg: 4
+    // (redondearía a 4 estrellas si no se recordara la valoración del usuario).
+    await page.reload();
+    await expect(cards.filter({ hasText: 'Geografia' }).locator('.rating-star.is-filled')).toHaveCount(5);
+
+    const geografiaAfterRating = cards.filter({ hasText: 'Geografia' });
+    await geografiaAfterRating.locator('.btn-primary').click();
     await expect(page.locator('#selected-title')).toHaveText('Geografia');
     await page.locator('#start-btn').click();
     await expect(page.locator('#question-text')).toHaveText(question.question);
