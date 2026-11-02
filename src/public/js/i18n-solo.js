@@ -1,0 +1,348 @@
+(function(){
+    var lang = EduhootLang.init();
+
+    var i18n = {
+        es: {
+            back: 'Volver',
+            eyebrow: 'Modo individual',
+            title: 'EduHoot',
+            subtitle: 'Elige un quiz público, responde las preguntas y entra en el ranking global.',
+            langLabel: 'Idioma',
+            publicListEyebrow: 'Catálogo público',
+            publicListTitle: 'Juegos públicos',
+            publicListDesc: 'Solo se muestran quizzes públicos. Pulsa “Jugar en solitario” para arrancar.',
+            searchPlaceholder: 'Buscar por nombre o etiqueta',
+            filterTagLabel: 'Etiquetas',
+            filterTagSelectAll: 'Seleccionar todas',
+            filterTagClear: 'Limpiar',
+            filterTagShowMore: 'Mostrar etiquetas',
+            filterTagShowLess: 'Ocultar etiquetas',
+            filterQuestionsLabel: 'Preguntas',
+            filterMinPlaceholder: 'mín',
+            filterMaxPlaceholder: 'máx',
+            filterOnlyImage: 'Solo con imagen',
+            sortLabel: 'Ordenar por',
+            sortPlays: 'Más jugados',
+            sortLeastPlays: 'Menos jugados',
+            sortRating: 'Mejor valorados',
+            sortNewest: 'Más recientes',
+            sortAlphaAsc: 'A-Z',
+            sortAlphaDesc: 'Z-A',
+            playsShort: 'partidas',
+            playersShort: 'jugadores',
+            ratingSummary: '{avg} · {count} votos',
+            ratingEmpty: 'Sin valoraciones',
+            ratingStarLabel: '{stars} estrellas',
+            favoriteAdd: 'Guardar en favoritos',
+            favoriteRemove: 'Quitar de favoritos',
+            soloEyebrow: 'Modo individual',
+            soloTitle: 'Elige un juego para empezar',
+            nameLabel: 'Tu nombre (opcional)',
+            nameTitle: 'Identifícate para el ranking',
+            nameDesc: 'Solo se pedirá si entras al Top 10. Usa 3 letras o números.',
+            nameSave: 'Guardar',
+            nameSkip: 'Omitir',
+            namePlaceholder: 'AAA',
+            questionCountLabel: 'Preguntas a responder',
+            questionCountTotal: 'de {total}',
+            questionTimeLabel: 'Tiempo por pregunta (segundos)',
+            questionTimePlaceholder: 'Auto',
+            startButton: 'Jugar en solitario',
+        startHint: 'El tiempo por pregunta se respeta si el quiz lo define.',
+        questionOf: 'Pregunta {current} de {total}',
+        score: 'Puntos',
+        timer: 'Tiempo',
+        correctText: '¡Correcto!',
+        wrongText: 'Respuesta incorrecta',
+        pollThanks: '¡Gracias por responder!',
+        partialText: 'Respuesta parcialmente correcta: has sumado puntos.',
+        correctLabel: 'Respuesta correcta:',
+        timeup: 'Tiempo agotado',
+        finishTitle: 'Partida terminada',
+        playAgain: 'Repetir quiz',
+        pickAnother: 'Elegir otro quiz',
+        rankingTitle: 'Top 10 global',
+            rankingHint: 'Solo se muestra al finalizar la partida.',
+        resultSummary: 'Acertadas {correct}/{total} · {score} pts',
+        pollSummary: 'Encuestas: {total} · sin puntuación',
+        publicEmpty: 'No hay juegos públicos disponibles.',
+        loading: 'Cargando...',
+        startSelect: 'Selecciona un juego público para empezar.',
+        saving: 'Guardando puntuación...',
+        rankingError: 'No se pudo cargar el ranking.',
+        startError: 'No se pudo cargar el quiz.',
+        playCta: 'Jugar en solitario',
+        byline: 'Preguntas: {count}',
+        scoreLabel: 'Puntos',
+        timerLabel: 'Tiempo',
+        selectedMeta: 'Preguntas: {count} · Etiquetas: {tags}',
+        topName: 'Nombre',
+        topScore: 'Puntos',
+        bgMusicTitle: 'Música de fondo',
+        bgMusicChoose: 'Elige un tema',
+        bgMusicPlay: 'Reproducir música',
+        bgMusicPause: 'Pausar música',
+            bgMusicPrev: 'Anterior',
+            bgMusicNext: 'Siguiente',
+        bgMusicVolume: 'Volumen',
+        viewRanking: 'Ver ranking',
+        rankingClose: 'Cerrar ranking',
+        rankingEmpty: 'Aún no hay puntuaciones.',
+        submitAnswers: 'Enviar respuestas',
+        freeTextPlaceholder: 'Escribe tu respuesta',
+        freeNumberPlaceholder: 'Introduce un número',
+        submitFreeAnswer: 'Enviar',
+        footerLicense: 'EduHoot · Licencia GNU Affero General Public License v3.0 (AGPL-3.0)',
+        footerPrivacy: 'Privacidad',
+        footerSource: 'Código fuente',
+        footerContactLabel: 'Incidencias'
+    },
+        en: {
+            back: 'Back',
+            eyebrow: 'Solo mode',
+            title: 'EduHoot',
+            subtitle: 'Pick a public quiz, answer, and try to get into the global ranking.',
+            langLabel: 'Language',
+            publicListEyebrow: 'Public catalog',
+            publicListTitle: 'Public games',
+            publicListDesc: 'Only public quizzes are listed. Hit “Play solo” to start.',
+            searchPlaceholder: 'Search by name or tag',
+            filterTagLabel: 'Tags',
+            filterTagSelectAll: 'Select all',
+            filterTagClear: 'Clear',
+            filterTagShowMore: 'Show tags',
+            filterTagShowLess: 'Hide tags',
+            filterQuestionsLabel: 'Questions',
+            filterMinPlaceholder: 'min',
+            filterMaxPlaceholder: 'max',
+            filterOnlyImage: 'Only with image',
+            sortLabel: 'Sort by',
+            sortPlays: 'Most played',
+            sortLeastPlays: 'Least played',
+            sortRating: 'Top rated',
+            sortNewest: 'Newest',
+            sortAlphaAsc: 'A-Z',
+            sortAlphaDesc: 'Z-A',
+            playsShort: 'plays',
+            playersShort: 'players',
+            ratingSummary: '{avg} · {count} votes',
+            ratingEmpty: 'No ratings yet',
+            ratingStarLabel: '{stars} stars',
+            favoriteAdd: 'Save as favorite',
+            favoriteRemove: 'Remove favorite',
+            soloEyebrow: 'Solo mode',
+            soloTitle: 'Pick a game to start',
+            nameLabel: 'Your name (optional)',
+            nameTitle: 'Set your name for the ranking',
+            nameDesc: 'Only asked if you reach the Top 10. Use 3 letters or numbers.',
+            nameSave: 'Save',
+            nameSkip: 'Skip',
+            namePlaceholder: 'AAA',
+            questionCountLabel: 'Questions to answer',
+            questionCountTotal: 'of {total}',
+            questionTimeLabel: 'Time per question (seconds)',
+            questionTimePlaceholder: 'Auto',
+            startButton: 'Play solo',
+            startHint: 'Per-question timers are respected if set on the quiz.',
+            questionOf: 'Question {current} of {total}',
+            score: 'Score',
+            timer: 'Time',
+            correctText: 'Correct!',
+            wrongText: 'Wrong answer',
+            pollThanks: 'Thanks for responding!',
+            partialText: 'Partially correct: you earned points.',
+            correctLabel: 'Correct answer:',
+            timeup: 'Time is up',
+            finishTitle: 'Game finished',
+            playAgain: 'Play again',
+            pickAnother: 'Pick another quiz',
+            rankingTitle: 'Global Top 10',
+            rankingHint: 'Only visible after finishing.',
+            resultSummary: 'Correct {correct}/{total} · {score} pts',
+            pollSummary: 'Polls: {total} · unscored',
+            publicEmpty: 'No public games available.',
+            loading: 'Loading...',
+            startSelect: 'Select a public game to start.',
+            saving: 'Saving score...',
+            rankingError: 'Could not load ranking.',
+            startError: 'Could not load the quiz.',
+            playCta: 'Play solo',
+            byline: 'Questions: {count}',
+            scoreLabel: 'Score',
+            timerLabel: 'Time',
+            selectedMeta: 'Questions: {count} · Tags: {tags}',
+            topName: 'Name',
+            topScore: 'Score',
+            bgMusicTitle: 'Background music',
+            bgMusicChoose: 'Choose a track',
+            bgMusicPlay: 'Play music',
+            bgMusicPause: 'Pause music',
+            bgMusicPrev: 'Prev',
+            bgMusicNext: 'Next',
+            bgMusicVolume: 'Volume',
+            viewRanking: 'View ranking',
+            rankingClose: 'Close ranking',
+            rankingEmpty: 'No rankings yet.',
+            submitAnswers: 'Submit answers',
+                freeTextPlaceholder: 'Type your answer',
+                freeNumberPlaceholder: 'Enter a number',
+                submitFreeAnswer: 'Submit',
+            footerLicense: 'EduHoot · GNU Affero General Public License v3.0 (AGPL-3.0)',
+            footerPrivacy: 'Privacy',
+            footerSource: 'Source code',
+            footerContactLabel: 'Issues'
+    },
+        ca: {
+            back: 'Tornar',
+            eyebrow: 'Mode individual',
+            title: 'EduHoot',
+            subtitle: 'Tria un quiz públic, respon i entra al rànquing global.',
+            langLabel: 'Idioma',
+            publicListEyebrow: 'Catàleg públic',
+            publicListTitle: 'Jocs públics',
+            publicListDesc: 'Només es mostren quizzes públics. Prem “Jugar en solitari” per començar.',
+            searchPlaceholder: 'Cerca per nom o etiqueta',
+            filterTagLabel: 'Etiquetes',
+            filterTagSelectAll: 'Seleccionar totes',
+            filterTagClear: 'Netejar',
+            filterTagShowMore: 'Mostrar etiquetes',
+            filterTagShowLess: 'Ocultar etiquetes',
+            filterQuestionsLabel: 'Preguntes',
+            filterMinPlaceholder: 'mín',
+            filterMaxPlaceholder: 'màx',
+            filterOnlyImage: 'Només amb imatge',
+            sortLabel: 'Ordenar per',
+            sortPlays: 'Més jugats',
+            sortLeastPlays: 'Menys jugats',
+            sortRating: 'Més ben valorats',
+            sortNewest: 'Més recents',
+            sortAlphaAsc: 'A-Z',
+            sortAlphaDesc: 'Z-A',
+            playsShort: 'partides',
+            playersShort: 'jugadors',
+            ratingSummary: '{avg} · {count} vots',
+            ratingEmpty: 'Sense valoracions',
+            ratingStarLabel: '{stars} estrelles',
+            favoriteAdd: 'Desar a favorits',
+            favoriteRemove: 'Treure de favorits',
+            soloEyebrow: 'Mode individual',
+            soloTitle: 'Tria un joc per començar',
+            nameLabel: 'El teu nom (opcional)',
+            nameTitle: 'Identifica\'t per al rànquing',
+            nameDesc: 'Només es demana si entres al Top 10. Usa 3 lletres o números.',
+            nameSave: 'Desar',
+            nameSkip: 'Ometre',
+            namePlaceholder: 'AAA',
+            questionCountLabel: 'Preguntes a respondre',
+            questionCountTotal: 'de {total}',
+            questionTimeLabel: 'Temps per pregunta (segons)',
+            questionTimePlaceholder: 'Auto',
+            startButton: 'Jugar en solitari',
+            startHint: 'El temps per pregunta es respecta si el quiz el defineix.',
+            questionOf: 'Pregunta {current} de {total}',
+            score: 'Punts',
+            timer: 'Temps',
+            correctText: 'Correcte!',
+            wrongText: 'Resposta incorrecta',
+            pollThanks: 'Gràcies per respondre!',
+            partialText: 'Resposta parcialment correcta: has sumat punts.',
+            correctLabel: 'Resposta correcta:',
+            timeup: 'Temps exhaurit',
+            finishTitle: 'Partida acabada',
+            playAgain: 'Tornar a jugar',
+            pickAnother: 'Triar un altre quiz',
+            rankingTitle: 'Top 10 global',
+            rankingHint: 'Només es mostra al final.',
+            resultSummary: 'Encerts {correct}/{total} · {score} pts',
+            pollSummary: 'Enquestes: {total} · sense puntuació',
+            publicEmpty: 'No hi ha jocs públics disponibles.',
+            loading: 'Carregant...',
+            startSelect: 'Selecciona un joc públic per començar.',
+            saving: 'Desant puntuació...',
+            rankingError: 'No s\'ha pogut carregar el rànquing.',
+            startError: 'No s\'ha pogut carregar el quiz.',
+            playCta: 'Jugar en solitari',
+            byline: 'Preguntes: {count}',
+            scoreLabel: 'Punts',
+            timerLabel: 'Temps',
+            selectedMeta: 'Preguntes: {count} · Etiquetes: {tags}',
+            topName: 'Nom',
+            topScore: 'Punts',
+            bgMusicTitle: 'Música de fons',
+            bgMusicChoose: 'Tria una pista',
+            bgMusicPlay: 'Reprodueix música',
+            bgMusicPause: 'Atura la música',
+            bgMusicPrev: 'Anterior',
+            bgMusicNext: 'Següent',
+            bgMusicVolume: 'Volum',
+            viewRanking: 'Veure rànquing',
+            rankingClose: 'Tancar rànquing',
+            rankingEmpty: 'Encara no hi ha puntuacions.',
+            submitAnswers: 'Enviar respostes',
+            freeTextPlaceholder: 'Escriu la teva resposta',
+            freeNumberPlaceholder: 'Introdueix un número',
+            submitFreeAnswer: 'Enviar',
+            footerLicense: 'EduHoot · Llicència GNU Affero General Public License v3.0 (AGPL-3.0)',
+            footerPrivacy: 'Privacitat',
+            footerSource: 'Codi font',
+            footerContactLabel: 'Incidències'
+        },
+        va: {
+            freeTextPlaceholder: 'Escriu la teua resposta'
+        }
+    };
+
+    function t(key){
+        var chain = lang === 'va' ? ['va', 'ca', 'es'] : [lang, 'es'];
+        for(var i = 0; i < chain.length; i++){
+            var dict = i18n[chain[i]];
+            if(dict && dict[key]) return dict[key];
+        }
+        return key;
+    }
+
+    function format(str, data){
+        if(!str) return '';
+        return str.replace(/{(\w+)}/g, function(_, k){ return data[k] !== undefined ? data[k] : ''; });
+    }
+
+    function applyStaticText(){
+        document.querySelectorAll('[data-i18n]').forEach(function(el){
+            var key = el.getAttribute('data-i18n');
+            if(el.classList && el.classList.contains('is-icon')){
+                var label = t(key);
+                el.setAttribute('aria-label', label);
+                var sr = el.querySelector('.sr-only');
+                if(sr) sr.textContent = label;
+            }else{
+                el.textContent = t(key);
+            }
+        });
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(function(el){
+            var key = el.getAttribute('data-i18n-placeholder');
+            el.placeholder = t(key);
+        });
+        var langSelect = document.getElementById('lang-select');
+        if(langSelect){
+            langSelect.value = lang;
+        }
+    }
+
+    function setLang(newLang){
+        lang = newLang || lang;
+        EduhootLang.persist(lang);
+        applyStaticText();
+    }
+
+    window.getSoloTranslation = function(key){
+        return t(key);
+    };
+
+    window.formatSoloTranslation = function(str, data){
+        return format(str, data);
+    };
+
+    window.applySoloTranslations = function(newLang){
+        setLang(newLang);
+    };
+})();
