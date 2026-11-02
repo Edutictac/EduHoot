@@ -85,7 +85,10 @@ problemes d'estil, variables sense usar, etc.
 - **`test/browser/`** — tests de navegador amb Playwright: `language.spec.js`
   (canvi d'idioma), `auth-state.spec.js` (estat de sessió i pont amb el xip),
   `solo-poll.spec.js` (les preguntes d'enquesta en mode Solo no compten com a
-  error ni puntuen) i `chip-footer.spec.js` (xip de compte i peu comú).
+  error ni puntuen), `chip-footer.spec.js` (xip de compte i peu comú),
+  `solo-library.spec.js` (llistat, favorit, valoració i partida en `/solo/`) i
+  `create-library.spec.js` (llistat, cerca, etiqueta, CSV i esborrat en
+  `/create/`).
 
 ### Scripts puntuals que NO són part del flux de test estàndard
 

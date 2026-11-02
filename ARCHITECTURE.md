@@ -101,7 +101,9 @@ src/
 │   ├── player/              # vista de l'alumnat (+ game/)
 │   ├── solo/                 # mode individual
 │   ├── multiplayer/           # mode pantalla compartida
-│   ├── js/                     # tot el JS del frontend
+│   ├── js/                     # tot el JS del frontend; create.js i solo.js
+│   │                           # repartits en create-*.js / solo-*.js i
+│   │                           # i18n-create.js / i18n-solo.js
 │   └── css/, icons/, fonts/, svg/, effects/, music/
 ├── test/
 │   ├── unit/, integration/, browser/   (vore TESTING.md)
@@ -110,10 +112,10 @@ src/
 
 Els fitxers més grans, per si cal ubicar alguna cosa ràpid: en el
 backend, `routes/quizzes.js` (~1.100 línies), `sockets/hostEvents.js`
-(~440) i `sockets/gameHelpers.js` (~370); en el frontend, `create.js` (~4.184
-línies / 174 KB), `solo.js` (~94 KB), `multiplayer.js` (~83 KB),
-`quizCreator.js` (~71 KB), `hostGame.js` (~52 KB) i `playerGame.js`
-(~35 KB).
+(~440) i `sockets/gameHelpers.js` (~370); en el frontend, `multiplayer.js` (~82 KB),
+`quizCreator.js` (~70 KB), `hostGame.js` (~51 KB), `i18n-create.js`
+(~41 KB, només traduccions) i `playerGame.js` (~35 KB). `create.js` i
+`solo.js` ja estan repartits en fitxers més menuts (cap passa de ~35 KB).
 
 ## Model de dades (MongoDB)
 
@@ -217,8 +219,9 @@ consulta `GET /api/version` (`src/server/server.js:183`, versió de
 - ~~`server.js` concentrava tot el backend (5.123 línies).~~
   **Corregit** (Subfase A de `docs/MIGRATING.md`): dividit en `data/`,
   `services/`, `routes/` i `sockets/`; `server.js` és ara un punt
-  d'entrada de ~355 línies. Queda pendent el mateix en el frontend:
-  `src/public/js/create.js` (4.184 línies) té un problema equivalent.
+  d'entrada de ~355 línies. En el frontend s'ha fet el
+  mateix amb `create.js` i `solo.js`; queden sense repartir
+  `multiplayer.js`, `quizCreator.js` i `hostGame.js`.
 - Els routers i els handlers de Socket.IO reben moltes dependències per
   injecció des de `server.js` (`routes/quizzes.js` en rep més de 30).
   Funciona i és explícit, però moltes d'eixes dependències són mòduls
@@ -319,8 +322,8 @@ fila d'alumne).
 
 Cada qüestionari de la biblioteca (`/create/`) té, junt al botó de
 descàrrega en CSV, un botó amb la icona de Moodle
-(`src/public/js/create.js:2046`, funció `downloadMoodleXml()` en la
-línia 2396) que descarrega eixe mateix qüestionari convertit al format
+(`src/public/js/create-library.js:704`, funció `downloadMoodleXml()` en
+`create-export.js:362`) que descarrega eixe mateix qüestionari convertit al format
 Moodle XML, llest per a importar-lo al banc de preguntes de Moodle/AULES
 i muntar ahí un "Qüestionari" natiu.
 
@@ -349,7 +352,7 @@ d'ells està pensat per a una classe amb un dispositiu per alumne:
 
 | Mode (botó) | Funció / destí | Per a què servix |
 |---|---|---|
-| **"Jugar a l'aula"** | `startGame(quiz.id)` → `/host/` (`create.js:2249-2251`) | El mode clàssic tipus Kahoot: es genera un PIN/QR, cada alumne s'uneix des del seu propi mòbil/tablet via `/join`, i el professorat projecta les preguntes des de `/host/`. **És el mode a usar amb un grup d'alumnes, cada un amb el seu dispositiu.** És *host-paced*: el professorat controla el ritme (vore secció següent). |
+| **"Jugar a l'aula"** | `startGame(quiz.id)` → `/host/` (`create-quiz-actions.js:2-4`) | El mode clàssic tipus Kahoot: es genera un PIN/QR, cada alumne s'uneix des del seu propi mòbil/tablet via `/join`, i el professorat projecta les preguntes des de `/host/`. **És el mode a usar amb un grup d'alumnes, cada un amb el seu dispositiu.** És *host-paced*: el professorat controla el ritme (vore secció següent). |
 | **"Multijugador"** | `startMultiplayer(quiz.id)` → `/multiplayer/` | Pensat per a 2-4 jugadors compartint **una sola pantalla/dispositiu** ("Juega en la misma pantalla", `src/public/multiplayer/index.html:18-19`). No servix per a una classe amb un dispositiu per alumne. |
 | **"Solo"** | `startSolo(quiz.id)` → `/solo/` | Mode individual, per a practicar fora de classe (vore també els [enllaços directes al mode Solo](README.md) del README). No és un mode de grup. |
 
@@ -413,17 +416,17 @@ autoritme (self-paced)" i "Mode 'presentació' híbrid").
 
 Les preguntes de tipus `poll` (sense resposta correcta) queden **fora
 del càlcul de puntuació** en el mode Solo
-(`src/public/js/solo.js:1932-1936`, `getScoredQuestionCount()` les
+(`src/public/js/solo-game.js:500-504`, `getScoredQuestionCount()` les
 filtra). En concret:
 
-- Cap opció marcada apareix com a «incorrecta» (`solo.js:1831`): es
+- Cap opció marcada apareix com a «incorrecta» (`solo-game.js:380`): es
   passa a la pregunta següent igual que si fora un encert
-  (`solo.js:1888`), sense obrir el diàleg d'error.
+  (`solo-game.js:456`), sense obrir el diàleg d'error.
 - El resum final separa els encerts puntuats de les enquestes
   respostes (p. ex. «Encerts 1/1 · Enquestes: 1 · sense puntuació»,
-  `solo.js:1915-1923`).
+  `solo-game.js:484-491`).
 - Si **tot** el qüestionari és d'enquestes, no s'envia cap puntuació al
-  rànquing global (`solo.js:1929`, `prepareScoreSubmission()` només es
+  rànquing global (`solo-game.js:497`, `prepareScoreSubmission()` només es
   crida si `getScoredQuestionCount() > 0`).
 
 Cobert per `src/test/browser/solo-poll.spec.js` (vore `TESTING.md`).

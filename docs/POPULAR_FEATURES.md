@@ -555,9 +555,9 @@ un suggeriment ajornable:
   abans d'afegir els tipus nous de la Fase 2 — fet, i més enllà del mínim:
   tot el backend s'ha migrat a `data/`, `services/`, `routes/` i `sockets/`,
   i `server.js` queda com a punt d'entrada (vore `ARCHITECTURE.md`).
-- Migrar el frontend: dividir els fitxers més grans (`create.js`, `solo.js`)
+- ✅ Migrar el frontend: dividir els fitxers més grans (`create.js`, `solo.js`)
   en mòduls per responsabilitat, en JS vanilla i sense build step. Vore
-  `docs/MIGRATING.md` (Subfase A) — pendent.
+  `docs/MIGRATING.md` (Subfase A) — fet (vore `ARCHITECTURE.md`).
 
 ### Fase 1a — Millores cosmètiques/aïllades, sense tocar la lògica de joc
 
