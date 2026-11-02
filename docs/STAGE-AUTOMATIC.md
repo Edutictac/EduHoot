@@ -1,9 +1,9 @@
 # Publicar en stage amb una etiqueta
 
-L'entorn de preproducció és https://eduhoot-stage.edutictac.es. Està protegit
-amb usuari i contrasenya (demaneu-los a l'administració d'EduTicTac) i no
-l'indexen els cercadors. Té la seua pròpia base de dades i el seu propi
-proveïdor d'Authentik: el que s'hi faça no afecta producció.
+L'entorn de preproducció és https://eduhoot-stage.edutictac.es. Té la seua
+pròpia base de dades i el seu propi proveïdor d'Authentik: el que s'hi faça no
+afecta producció. No l'indexen els cercadors i la part docent està protegida
+amb usuari i contrasenya.
 
 ## Com es publica
 
@@ -29,6 +29,13 @@ Només poden publicar les persones indicades en el workflow; per a la resta,
 el workflow s'omet. Es pot publicar qualsevol commit: l'etiqueta no ha d'estar
 en `main`.
 
+> **Atenció amb el nivell de codi.** Les etiquetes han d'eixir d'una branca
+> que fusione `fork_edumillan3t` amb `main`, no de `main` directament (a
+> `main` només publica l'administració). El motiu és que `main` encara no
+> inclou el refactor que permet apuntar a `eduhoot_stage` i sembrar dades;
+> sense ell, `server.js` fixa `DB_NAME = 'kahootDB'` i l'entrypoint falla.
+> Exemple: una branca `stage-integration`.
+
 ## Què no fa
 
 - No desplega mai en producció. Producció continua amb el procediment manual.
@@ -41,21 +48,29 @@ La imatge porta les etiquetes OCI `org.opencontainers.image.version` (nom de
 l'etiqueta) i `org.opencontainers.image.revision` (commit). Des del navegador,
 el peu de pàgina (o `GET /api/version`) mostra la versió de `package.json`.
 
-## Accés del professorat en stage
+## Accés: docents i alumnat
 
-El xip d'EduTicTac de `/create/` consulta la sessió en
-`https://commons.edutictac.es/api/auth/session`. Perquè funcione, **Commons ha
-de permetre l'origen `https://eduhoot-stage.edutictac.es`** (CORS amb
-credencials), com ja fa amb el de producció. Si no, el xip mostra «Sense
-connexió» i no es pot entrar. Per a comprovar-ho (ha d'aparéixer
-`access-control-allow-origin: https://eduhoot-stage.edutictac.es`):
+### Docents
+
+El personal docent entra amb l'autenticació bàsica del nginx del VPS (usuari
+`stage`; la contrasenya la guarda l'administració d'EduTicTac). Dins de
+l'aplicació, l'únic accés és el xip de compte d'EduTicTac: `/create/` carrega
+`https://commons.edutictac.es/assets/account-widget.js`, que consulta la
+sessió en `https://commons.edutictac.es/api/auth/session`.
+
+Perquè el xip funcione, **Commons ha de permetre l'origen
+`https://eduhoot-stage.edutictac.es`** (CORS amb credencials) en
+`EDUTICTAC_ID_ALLOWED_ORIGINS` del seu `id-api`. Ja està configurat; per a
+comprovar-ho (ha d'aparéixer `access-control-allow-origin:
+https://eduhoot-stage.edutictac.es`):
 
 ```bash
 curl -s -D - -o /dev/null -H "Origin: https://eduhoot-stage.edutictac.es" \
   https://commons.edutictac.es/api/auth/session | grep -i access-control
 ```
 
-Mentrestant, l'Authentik propi de stage es pot provar sense passar pel xip:
+Si el xip no estiguera disponible, l'Authentik propi de stage es pot provar
+sense passar per ell:
 `https://eduhoot-stage.edutictac.es/api/auth/authentik/start?next=/create/`.
 
 EduHoot decidix el rol docent per la claim `groups`. Si en tornar d'Authentik
@@ -63,23 +78,26 @@ apareix `/create/?authentik=error`, cal revisar que `AUTHENTIK_SCOPE` (en
 `/opt/eduhoot-stage/eduhoot-stage.env`) incloga `groups`, o que Authentik
 envie els grups dins de `profile`.
 
-## Proves amb alumnat
+### Alumnat
 
-Stage demana usuari i contrasenya al navegador (autenticació bàsica de
-l'nginx del VPS, fora d'este repositori). Es pot provar amb alumnat, però
-cada dispositiu hauria d'introduir eixes credencials abans de vore la
-pantalla del PIN; és incòmode en mòbils i, una vegada donades a un grup,
-deixen de protegir res i caldria canviar-les.
+Les rutes que necessita l'alumnat estan **obertes sense autenticació bàsica**,
+de manera permanent, perquè només calga el PIN com en producció:
 
-Alternatives, totes en l'nginx del VPS:
+- `/join.html`, `/player/`, `/socket.io/`, `/api/`, `/js/`, `/css/`,
+  `/fonts/`, `/icons/`, `/uploads/`, `/sw.js` i `/manifest.webmanifest`.
 
-1. **Recomanada**: deixar sense contrasenya només les rutes de l'alumnat
-   (`/join.html`, `/player/`, `/socket.io/` i els estàtics que carreguen:
-   `/js/`, `/css/`, icones...) i mantindre-la en `/create/` i `/host/`.
-   L'alumnat només necessita el PIN, com en producció.
-2. Eximir la IP del centre (`satisfy any` + `allow <IP del centre>`): només
-   servix si tot l'alumnat es connecta des de la xarxa del centre.
-3. Llevar la protecció només durant la prova i tornar-la a posar després.
+Continuen protegides amb usuari i contrasenya: `/`, `/create/`, `/host/`,
+`/multiplayer/`, `/solo/` i `/admin-stats.html`.
+
+Les cabeceres de proxy d'eixes rutes són a
+`/etc/nginx/snippets/eduhoot-stage-proxy.conf`, i cada `location` oberta hi
+fa `include` amb `auth_basic off`. Per a tornar a protegir-ho tot, lleveu
+eixos blocs `location` del vhost i feu `systemctl reload nginx`; el vhost
+original està guardat al costat amb el sufix `.bak-<data>`.
+
+Conseqüència assumida: `/api/` oberta inclou també els endpoints de creació,
+però exigixen sessió d'EduHoot i la base és d'exemple (`eduhoot_stage`), no
+la de producció.
 
 ## Sembra de dades d'exemple
 
@@ -91,9 +109,9 @@ idempotent per `devSeedKey` i es nega a executar-se si `NODE_ENV` no és
 
 ### Instal·lació real al VPS
 
-El stage de producció **no** utilitza el disseny systemd de
-`docs/STAGE_SETUP.md` (pensat per a una instal·lació manual). Corre amb Docker
-a `/opt/eduhoot-stage/`:
+El stage de producció **no** utilitza el disseny systemd de `STAGE_SETUP.md`
+(pensat per a una instal·lació manual i ja obsolet). Corre amb Docker a
+`/opt/eduhoot-stage/`:
 
 - `compose.yml`: serveis `mongo` (`eduhoot-stage-mongo`, volum `mongo_data`,
   base `eduhoot_stage`) i `app` (`eduhoot-stage`, imatge

@@ -1,5 +1,13 @@
 # Entorn Stage en servidor
 
+> **OBSOLET.** La instal·lació real de stage és amb Docker a
+> `/opt/eduhoot-stage/` (compose, `eduhoot-stage.env`, desplegament automàtic
+> des de `ghcr.io/edutictac/eduhoot-stage`). No hi ha `/opt/eduhoot-stage/src`,
+> ni `/etc/eduhoot/stage.env`, ni `eduhoot-stage-server.service`. El document
+> vigent és [docs/STAGE-AUTOMATIC.md](docs/STAGE-AUTOMATIC.md); este es
+> conserva només com a referència històrica d'una instal·lació systemd manual
+> que no s'usa.
+
 Este document definix una preproducció (stage) aïllada per a validar canvis abans de passar a producció.
 
 ## Objectiu
