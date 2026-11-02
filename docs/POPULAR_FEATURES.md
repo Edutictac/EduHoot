@@ -13,7 +13,7 @@
 - [Resum per dificultat](#resum-per-dificultat)
 - [Full de ruta d'implementació](#full-de-ruta-dimplementació)
   - [Troballes que condicionen l'orde](#troballes-que-condicionen-lorde)
-  - [Fase 0 — Habilitadors (requisits, no una recomanació)](#fase-0--habilitadors-requisits-no-una-recomanació)
+  - [✅ Fase 0 — Habilitadors (requisits, no una recomanació)](#-fase-0--habilitadors-requisits-no-una-recomanació)
   - [Fase 1a — Millores cosmètiques/aïllades, sense tocar la lògica de joc](#fase-1a--millores-cosmètiquesaïllades-sense-tocar-la-lògica-de-joc)
   - [Fase 1b — Mecàniques de Solo/amfitrió, sense tocar l'arquitectura del cicle de partida](#fase-1b--mecàniques-de-soloamfitrió-sense-tocar-larquitectura-del-cicle-de-partida)
   - [Fase 2 — Mecàniques de joc de major abast, però autocontingudes](#fase-2--mecàniques-de-joc-de-major-abast-però-autocontingudes)
@@ -476,17 +476,16 @@ realista, no només una llista d'idees.
   i 14 (so de feedback) queden aparcades — encara que algunes d'elles
   siguen populars en Kahoot/Wayground. La proposta 4 (power-ups) continua,
   però sense el sub-ítem "robar punts".
-- **Accés docent: fallada corregida, migració encara oberta.**
-  La migració a Authentik (`docs/PLA-MIGRACIO-AUTHENTIK-2026-10.md`)
-  continua oberta, sense una nova data de tancament encara. La fallada
-  real de detecció del rol docent detectada el 12 d'octubre de 2026 ja
-  està corregida eixe mateix dia (vore «Vinculació real i botó
-  d'eixida» al pla de migració), però mentre la migració no es tanque,
-  convé seguir coordinant-se abans de tocar el codi d'accés/sessió
-  (`services/oauth.js`, `services/authMiddleware.js`, `routes/auth.js`)
-  per un altre motiu, i no donar per fet que propostes
-  que depenguen d'una integració d'identitat docent estable (21,
-  Google Classroom) ja es poden abordar sense restriccions.
+- **Accés docent: Authentik ja és l'única entrada; falta tancar la
+  migració.** Comprovat el 2 de novembre de 2026: en producció Google
+  directe, la contrasenya local i l'alta/reset local estan desactivats, i
+  el professorat entra només pel xip d'EduTicTac (Authentik), també amb
+  Google des de dins (prova real feta). Per a donar la migració per
+  acabada falta confirmar que tots els comptes existents estan vinculats
+  i conserven contingut i permisos, i comunicar-ho (vore
+  `docs/PLA-MIGRACIO-AUTHENTIK-2026-10.md`). Mentrestant, les propostes
+  que depenen d'una identitat docent estable (21, Google Classroom) ja
+  tenen la base, però convé esperar eixa confirmació.
 - **✅ El codi ja està reorganitzat en fitxers per responsabilitat.**
   `src/server/server.js` (que havia arribat a 5.122 línies) queda en ~355
   i la resta està en `data/`, `services/`, `routes/` i `sockets/`; en el
@@ -548,7 +547,7 @@ realista, no només una llista d'idees.
   tampoc s'escriu en staging; el correu del docent només apareix al log
   en desenvolupament.
 
-### Fase 0 — Habilitadors (requisits, no una recomanació)
+### ✅ Fase 0 — Habilitadors (requisits, no una recomanació)
 
 Separar responsabilitats de `server.js` i tindre recàrrega automàtica en
 desenvolupament haurien de ser **requisits per a començar la següent fase**, no
@@ -665,10 +664,8 @@ la numeració 1-32 de dalt.
   dedicat, no lligada a cap funcionalitat concreta de la llista
   anterior.
 - **W3 — Internacionalització a més idiomes.** Ja hi ha una base de
-  **4 idiomes implementats** (`ca`/`va`/`es`/`en` — català i valencià
-  són variants separades, `quizCreator.js:16`, `i18n-create.js:3`,
-  `hostGame.js:39`, `i18n-solo.js:4`, `multiplayer.js:191`); esta proposta
-  és ampliar-los més enllà d'estos 4 (francés, alemany, holandés, i
+  **4 idiomes implementats** (català, valencià, castellà i anglès —
+  català i valencià són variants separades); esta proposta és ampliar-los més enllà d'estos 4 (francés, alemany, holandés, i
   altres a decidir).
 - **W4 — Paquet SCORM per al mode Solo, amb pas automàtic de la nota a
   Moodle/AULES.** El professorat puja un paquet SCORM al seu curs
