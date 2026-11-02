@@ -1,6 +1,6 @@
 // IMPORTANTE: cuando cambiemos JS/CSS y queramos evitar servir una versión antigua,
 // incrementa esta versión para invalidar el precache.
-const CACHE_NAME = 'eduh-pwa-v1.1.20';
+const CACHE_NAME = 'eduh-pwa-v1.1.21';
 
 // App shell: recursos críticos para que la app cargue incluso sin red.
 // El resto de recursos se cachean en runtime con stale-while-revalidate.
@@ -52,6 +52,24 @@ const ASSETS = [
   '/js/music-player.js',
   '/js/playerGame.js',
   '/js/host.js',
+  '/js/env-badge.js',
+  '/js/pwa-install.js',
+  '/js/libs/jqueryLibrary.js',
+  '/js/libs/deparam.js',
+  '/js/i18n-solo.js',
+  '/js/solo-storage.js',
+  '/js/solo-questions.js',
+  '/js/solo-library.js',
+  '/js/solo-music.js',
+  '/js/solo-game.js',
+  '/js/solo-ranking.js',
+  '/js/i18n-create.js',
+  '/js/create-admin.js',
+  '/js/create-export.js',
+  '/js/create-ia.js',
+  '/js/create-auth.js',
+  '/js/create-quiz-actions.js',
+  '/js/create-library.js',
   '/js/hostGame.js',
   '/js/create.js',
   '/js/quizCreator.js',
