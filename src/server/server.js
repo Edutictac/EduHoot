@@ -280,8 +280,11 @@ const uploadRate = new Map(); // clave: ip -> { count, windowStart }
 const authRate = new Map(); // clave: ip:endpoint -> { count, windowStart }
 
 function uploadRateLimiter(req, res, next) {
+  // Permite suspender temporalmente el límite durante talleres con IP compartida.
+  if (process.env.UPLOAD_CSV_RATE_LIMIT_DISABLED === 'true') return next();
   const windowMs = 10 * 60 * 1000; // 10 minutos
-  const max = 10; // máximo subidas por IP en la ventana
+  const configuredMax = Number.parseInt(process.env.UPLOAD_CSV_RATE_LIMIT_MAX, 10);
+  const max = Number.isInteger(configuredMax) && configuredMax > 0 ? configuredMax : 10;
   const now = Date.now();
   const key = req.ip || req.connection.remoteAddress || 'unknown';
   const entry = uploadRate.get(key) || { count: 0, windowStart: now };
