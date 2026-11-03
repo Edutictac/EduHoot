@@ -147,6 +147,13 @@ body{
 #host-options input[type="checkbox"]{
     transform: scale(1.05);
 }
+.opt-hint{
+    flex-basis: 100%;
+    font-weight: 400;
+    font-size: 0.8em;
+    opacity: 0.75;
+    margin-top: 2px;
+}
 #opt-time{
     width: 80px;
     padding: 6px 8px;

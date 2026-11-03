@@ -27,6 +27,7 @@ module.exports = function createHostEvents({
     scheduleGameCleanup,
     getCurrentQuestionPayload,
     buildQuestions,
+    buildStudentPlayerPayload,
     scheduleQuestionCountdown,
     logGames
   } = helpers;
@@ -97,7 +98,7 @@ module.exports = function createHostEvents({
             options: {
               randomQuestions: false,
               randomAnswers: true,
-              sendToMobile: true,
+              sendToStudents: true,
               showScoresBetween: true
             }
           });
@@ -174,16 +175,15 @@ module.exports = function createHostEvents({
           io.to(game.pin).emit('hostReconnected');
           if (!game.gameData.questionPending) {
             io.to(game.pin).emit('questionMedia', { image: currentQuestion.image || '', video: currentQuestion.video || '' });
-          }
-          if (!game.gameData.questionPending && (!game.gameData.options || game.gameData.options.sendToMobile !== false)) {
-            io.to(game.pin).emit('playerQuestion', {
+            const fullPlayerPayload = {
               question: currentQuestion.question,
               answers: currentQuestion.answers,
               type: currentQuestion.type || 'quiz',
               image: currentQuestion.image || '',
               video: currentQuestion.video || '',
               pointsMultiplier: Number(currentQuestion.pointsMultiplier) > 1 ? 2 : 1
-            });
+            };
+            io.to(game.pin).emit('playerQuestion', buildStudentPlayerPayload(fullPlayerPayload, game.gameData.options));
           }
         } catch (err) {
           console.error('host-join-game error', err);
@@ -355,7 +355,7 @@ module.exports = function createHostEvents({
       const options = Object.assign({
         randomQuestions: false,
         randomAnswers: true,
-        sendToMobile: true,
+        sendToStudents: true,
         showScoresBetween: true
       }, opts || {});
       if (options.timePerQuestion !== undefined && options.timePerQuestion !== null && String(options.timePerQuestion).trim() !== '') {

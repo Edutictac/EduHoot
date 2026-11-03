@@ -362,29 +362,40 @@ d'ells està pensat per a una classe amb un dispositiu per alumne:
 Per a una classe amb molts alumnes, cada un amb el seu propi dispositiu,
 l'única opció correcta hui és **"Jugar a l'aula"**.
 
-### Opció "Enviar pregunta als mòbils" (pantalla `/host/`)
+### Opció "Mostra la pregunta a l'alumnat" (pantalla `/host/`)
 
-Casella en `#host-options` (`src/public/host/index.html:46`), marcada
-per defecte, que decideix si el mòbil de cada alumne rep el contingut
-de la pregunta (text, imatge/vídeo i respostes) a banda de la pantalla
-compartida del professorat:
+Casella en `#host-options` (`src/public/host/index.html:46`, opció
+`sendToStudents` dins `game.gameData.options`), marcada per defecte,
+que decideix si el dispositiu de cada alumne (mòbil, tauleta o PC —
+no és exclusiu de mòbils) rep el **text** de la pregunta i de les
+respostes, a banda de la pantalla compartida del professorat:
 
-- **Marcada**: el servidor emet `playerQuestion` a cada jugador amb la
-  pregunta completa (`src/server/sockets/gameHelpers.js:290-292`); el
-  mòbil pinta el text i els botons de resposta
-  (`src/public/js/playerGame.js:752-770`).
-- **Desmarcada** (`sendToMobile: false`): eixe emit no s'envia. Verificat
-  simulant una partida amb clients de Socket.IO: el mòbil només rep
-  `questionCountdown` i `questionMedia` (imatge/vídeo), mai
-  `playerQuestion`.
+- **Marcada**: el servidor emet `playerQuestion` amb la pregunta
+  completa (`src/server/sockets/gameHelpers.js:281-295`,
+  `buildStudentPlayerPayload()`); el dispositiu pinta el text i els
+  botons de resposta amb el seu contingut
+  (`src/public/js/playerGame.js:768-800`).
+- **Desmarcada**: el mateix event `playerQuestion` es segueix enviant,
+  però amb un payload "a cegues" — `{ blind: true, answerCount, type,
+  pointsMultiplier, time }`, sense text de la pregunta ni de les
+  respostes. El dispositiu mostra un avís ("Mira la pantalla per a
+  veure la pregunta", clau `blind_hint`) i pinta només els `answerCount`
+  botons actius amb la seua forma/color fixos per CSS (triangle verd,
+  romb taronja, cercle blau, quadrat roig —
+  `src/public/css/playerGameView.css:321-348`), sense text visible.
+  Cada botó porta un `aria-label` amb el nom de la forma (p. ex.
+  "Opció A: triangle") perquè seguisca sent accessible sense text
+  (vore `docs/ACCESSIBILITY.md`).
 
-**Efecte real**: com `updatePlayerAnswerButtons()` només s'invoca dins
-del handler de `playerQuestion` (`src/public/js/playerGame.js:465-498`),
-desmarcar esta casella deixa els botons de resposta buits/ocults al
-mòbil — l'alumne no pot respondre des del seu dispositiu. No hi ha cap
-camí alternatiu (p. ex. formes de colors sense text, a l'estil Kahoot
-clàssic) que ompli els botons sense eixe event. Si la intenció original
-era un mode "mira la pantalla i respon per formes", falta eixa peça.
+L'alumnat sempre pot respondre prement un botó, en els dos casos
+(`answerSubmitted(num)` només depén de l'índex del botó, mai del seu
+text). La imatge/vídeo de la pregunta, si en té, seguix mostrant-se
+igual en els dos casos (event `questionMedia`, independent d'esta
+opció). **Decisió de disseny**: en mode "a cegues", el dispositiu de
+l'alumne mai rep el text — ni durant la pregunta ni en el resum
+posterior ("Resposta correcta: X" queda buit en este mode) — el repàs
+de respostes es fa sempre a la pantalla compartida, igual que en el
+Kahoot clàssic.
 
 ## Avanç de pregunta: automàtic o manual?
 

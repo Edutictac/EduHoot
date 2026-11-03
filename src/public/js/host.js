@@ -384,7 +384,7 @@ function startGame(){
     var opts = {
         randomQuestions: document.getElementById('opt-rand-q') ? document.getElementById('opt-rand-q').checked : false,
         randomAnswers: document.getElementById('opt-rand-a') ? document.getElementById('opt-rand-a').checked : true,
-        sendToMobile: document.getElementById('opt-send-mobile') ? document.getElementById('opt-send-mobile').checked : true,
+        sendToStudents: document.getElementById('opt-send-students') ? document.getElementById('opt-send-students').checked : true,
         showScoresBetween: document.getElementById('opt-show-scores') ? document.getElementById('opt-show-scores').checked : true,
         pin: (function(){
             try{

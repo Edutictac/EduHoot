@@ -53,7 +53,13 @@ Ja implementat, no cal tornar a proposar-ho:
   altres 10 pàgines no tenen `lang`, tot i que l'app és multiidioma.
 - **Botons de resposta del jugador sense `aria-label`**: depenen només
   de color + forma visual; un lector de pantalla no té cap pista de
-  quina resposta és quina.
+  quina resposta és quina. **Parcialment resolt**: quan l'amfitrió
+  desactiva "Mostra la pregunta a l'alumnat" (mode "a cegues", vore
+  `ARCHITECTURE.md`), els botons ja porten `aria-label` amb el nom de
+  la forma (`src/public/js/playerGame.js`, `updatePlayerAnswerButtons`).
+  Quan la casella està activada i el botó mostra el text de la
+  resposta, seguix sense `aria-label` (el lector de pantalla llig el
+  text visible, que ja és suficient en eixe cas).
 - **Imatges de pregunta amb `alt=""` buit**, sense camp a l'editor de
   quiz perquè el professorat afija una descripció.
 - **Vídeos de pregunta sense subtítols** (`<video>` sense `<track>`,
@@ -117,8 +123,9 @@ quan es decidisca incorporar-les al document principal:
 
 **Esforç baix (canvis localitzats, sense tocar `server.js`):**
 - `lang` correcte a cada pàgina (fixe, o dinàmic segons l'idioma actiu).
-- `aria-label` als botons de resposta del jugador amb el nom de la
-  forma (triangle/romb/cercle/quadrat), no només el color.
+- ~~`aria-label` als botons de resposta del jugador amb el nom de la
+  forma (triangle/romb/cercle/quadrat), no només el color.~~ **Fet**
+  per al mode "a cegues" (vore "Buits detectats" més amunt).
 - `prefers-reduced-motion` per a desactivar/suavitzar les animacions
   del compte enrere.
 - Estendre `.sr-only` i els patrons ARIA ja usats a `solo`/`multiplayer`

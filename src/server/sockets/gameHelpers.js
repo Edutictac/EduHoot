@@ -278,6 +278,23 @@ module.exports = function createGameHelpers({ io, games, players, cleanImportedT
     };
   }
 
+  // Decidix si el jugador rep la pregunta completa o un payload "a cegues"
+  // (sense text, només el nombre de respostes actives) quan l'amfitrió ha
+  // desmarcat "Mostra la pregunta a l'alumnat" (options.sendToStudents).
+  function buildStudentPlayerPayload(playerPayload, options) {
+    const sendFull = !options || options.sendToStudents !== false;
+    if (sendFull) return playerPayload;
+    const answerCount = (playerPayload.answers || [])
+      .filter((a) => a && String(a).trim()).length;
+    return {
+      blind: true,
+      answerCount,
+      type: playerPayload.type,
+      pointsMultiplier: playerPayload.pointsMultiplier,
+      time: playerPayload.time
+    };
+  }
+
   function startCurrentQuestion(game) {
     if (!game || !game.gameData || game.gameOver) return;
     clearQuestionStartTimer(game);
@@ -288,9 +305,7 @@ module.exports = function createGameHelpers({ io, games, players, cleanImportedT
     game.gameData.questionStartedAt = Date.now();
     io.to(game.hostId).emit('gameQuestions', payload.hostPayload);
     io.to(game.pin).emit('questionMedia', { image: payload.image, video: payload.video });
-    if (!game.gameData.options || game.gameData.options.sendToMobile !== false) {
-      io.to(game.pin).emit('playerQuestion', payload.playerPayload);
-    }
+    io.to(game.pin).emit('playerQuestion', buildStudentPlayerPayload(payload.playerPayload, game.gameData.options));
   }
 
   function scheduleQuestionCountdown(game, delaySeconds = QUESTION_COUNTDOWN_SECONDS) {
@@ -358,6 +373,7 @@ module.exports = function createGameHelpers({ io, games, players, cleanImportedT
     buildQuestions,
     getCurrentQuestionPayload,
     startCurrentQuestion,
+    buildStudentPlayerPayload,
     scheduleQuestionCountdown,
     emitQuestionOverPayload,
     emitQuestionOverPayloadDeferred,
