@@ -362,6 +362,30 @@ d'ells està pensat per a una classe amb un dispositiu per alumne:
 Per a una classe amb molts alumnes, cada un amb el seu propi dispositiu,
 l'única opció correcta hui és **"Jugar a l'aula"**.
 
+### Opció "Enviar pregunta als mòbils" (pantalla `/host/`)
+
+Casella en `#host-options` (`src/public/host/index.html:46`), marcada
+per defecte, que decideix si el mòbil de cada alumne rep el contingut
+de la pregunta (text, imatge/vídeo i respostes) a banda de la pantalla
+compartida del professorat:
+
+- **Marcada**: el servidor emet `playerQuestion` a cada jugador amb la
+  pregunta completa (`src/server/sockets/gameHelpers.js:290-292`); el
+  mòbil pinta el text i els botons de resposta
+  (`src/public/js/playerGame.js:752-770`).
+- **Desmarcada** (`sendToMobile: false`): eixe emit no s'envia. Verificat
+  simulant una partida amb clients de Socket.IO: el mòbil només rep
+  `questionCountdown` i `questionMedia` (imatge/vídeo), mai
+  `playerQuestion`.
+
+**Efecte real**: com `updatePlayerAnswerButtons()` només s'invoca dins
+del handler de `playerQuestion` (`src/public/js/playerGame.js:465-498`),
+desmarcar esta casella deixa els botons de resposta buits/ocults al
+mòbil — l'alumne no pot respondre des del seu dispositiu. No hi ha cap
+camí alternatiu (p. ex. formes de colors sense text, a l'estil Kahoot
+clàssic) que ompli els botons sense eixe event. Si la intenció original
+era un mode "mira la pantalla i respon per formes", falta eixa peça.
+
 ## Avanç de pregunta: automàtic o manual?
 
 **Hui no existix cap opció perquè les preguntes avancen soles.** No hi
