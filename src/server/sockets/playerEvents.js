@@ -242,7 +242,7 @@ module.exports = function createPlayerEvents({
               player.gameData.wrongCount = (Number(player.gameData.wrongCount) || 0) + 1;
               socket.emit('answerResult', { outcome: 'incorrect' });
             }
-            recordPlayerAnswerHistory(player, game, gameQuestion, normalizedSubmission, isCorrect);
+            recordPlayerAnswerHistory(player, game, gameQuestion, normalizedSubmission, isCorrect, scoreRatio);
 
           if (game.gameData.playersAnswered === playerNum.length) {
             game.gameData.questionLive = false;

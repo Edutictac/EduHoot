@@ -67,7 +67,7 @@ function allowAnswer(socket, hostId) {
   return true;
 }
 
-function recordPlayerAnswerHistory(player, game, questionNumber, submission, isCorrect) {
+function recordPlayerAnswerHistory(player, game, questionNumber, submission, isCorrect, scoreRatio) {
   if (!player || !player.gameData) return;
   if (!Array.isArray(player.gameData.answerHistory)) {
     player.gameData.answerHistory = [];
@@ -78,6 +78,7 @@ function recordPlayerAnswerHistory(player, game, questionNumber, submission, isC
     questionNumber: Number(questionNumber) || 0,
     submission,
     isCorrect: !!isCorrect,
+    scoreRatio: Number(scoreRatio) || 0,
     answeredAt: Date.now(),
     elapsedMs
   };

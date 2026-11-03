@@ -200,9 +200,13 @@ module.exports = function createSessionReportService({ players }) {
         const historyEntry = historyByQuestion.get(questionNumber);
         const playerAnswer = historyEntry ? formatSubmissionForCsv(meta, question, historyEntry.submission) : '';
         const correctAnswer = formatCorrectForCsv(meta, question);
-        const result = historyEntry
-          ? (historyEntry.isCorrect ? 'correcta' : 'incorrecta')
-          : 'sin responder';
+        const result = !historyEntry
+          ? 'sin responder'
+          : meta.type === 'poll'
+            ? 'encuesta'
+            : historyEntry.isCorrect
+              ? 'correcta'
+              : (Number(historyEntry.scoreRatio) > 0 ? 'parcial' : 'incorrecta');
         const responseMs = historyEntry && typeof historyEntry.elapsedMs === 'number'
           ? Math.max(0, Math.round(historyEntry.elapsedMs))
           : '';

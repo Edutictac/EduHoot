@@ -311,7 +311,10 @@ El CSV mescla dos nivells d'informació en el mateix fitxer:
   `enunciado`, `tiempoLimiteSegundos`, `respuestaJugador`,
   `respuestaCorrecta`, `resultado`, `tiempoRespuestaMs`): una fila per
   cada pregunta responguda per cada alumne, amb el que va respondre, si
-  va ser correcte, i quant va tardar.
+  va ser correcte, i quant va tardar. `resultado` pot ser `correcta`,
+  `incorrecta`, `parcial` (encert parcial en preguntes de resposta
+  múltiple), `encuesta` (preguntes `poll`, sense valoració) o
+  `sin responder` (`src/server/services/sessionReport.js:203-209`).
 
 **No hi ha una columna de "% d'encerts" ja calculada.** Per a obtindre'l
 cal calcular-lo a partir d'`aciertos` / `preguntasTotales` en un full de
