@@ -116,7 +116,7 @@ async function reportCommonsScores(game, playersInGame) {
   if (!EDUTICTAC_ID_API_URL || !EDUTICTAC_ID_APP_TOKEN || !game || !game.gameData) return;
   const activityId = game.gameData.gameid ? String(game.gameData.gameid) : '';
   if (!activityId) return;
-  const totalQuestions = Number(game.gameData.totalQuestions) || 0;
+  const totalQuestions = Number(game.gameData.scoredQuestionsCount ?? game.gameData.totalQuestions) || 0;
   const quizName = game.gameData.quizName || '';
   const reports = (Array.isArray(playersInGame) ? playersInGame : [])
     .filter((player) => player && player.gameData && player.gameData.identity && player.gameData.identity.id)

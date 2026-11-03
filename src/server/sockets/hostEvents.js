@@ -379,6 +379,7 @@ module.exports = function createHostEvents({
         return;
       }
       game.gameData.totalQuestions = (game.gameData.questions || []).length;
+      game.gameData.scoredQuestionsCount = (game.gameData.questions || []).filter((q) => q.type !== 'poll').length;
       game.gameData.question = 1;
       game.gameData.playersAnswered = 0;
       game.gameData.questionLive = false;
