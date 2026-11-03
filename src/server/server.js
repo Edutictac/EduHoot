@@ -68,6 +68,7 @@ const ephemeralQuizzes = createEphemeralQuizzesService({
   getEphemeralCollection,
   coerceDate,
   cleanImportedText,
+  cleanMetaText,
   normalizeQuestions,
   normalizeTags,
   normalizeVisibility,

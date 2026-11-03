@@ -113,6 +113,9 @@ module.exports = function createQuizzesRouter({
         questions: normalizeQuestions(questions),
         visibility: currentVisibility(quiz),
         allowClone: normalizeAllowClone(quiz.allowClone),
+        language: quiz.language || '',
+        license: quiz.license || '',
+        description: quiz.description || '',
         ownerId: quiz.ownerId,
         ownerEmail: quiz.ownerEmail || '',
         sourceQuizName: quiz.sourceQuizName || '',
@@ -642,6 +645,9 @@ module.exports = function createQuizzesRouter({
     const tags = normalizeTags(req.body.tags || []);
     const visibility = normalizeVisibility(req.body.visibility);
     const allowClone = normalizeAllowClone(req.body.allowClone);
+    const language = cleanMetaText(req.body.language, 40);
+    const license = cleanMetaText(req.body.license, 120);
+    const description = cleanMetaText(req.body.description, 1000);
     const ownerToken = ownerTokenFromReq(req);
     if (ownerToken) req.user = { ...(req.user || {}), ownerToken };
     if (!name) {
@@ -664,6 +670,9 @@ module.exports = function createQuizzesRouter({
           questions,
           visibility,
           allowClone,
+          language,
+          license,
+          description,
           updatedAt: new Date()
         };
         await persistEphemeralQuiz(updated);
@@ -689,6 +698,9 @@ module.exports = function createQuizzesRouter({
             tags,
             visibility,
             allowClone,
+            language,
+            license,
+            description,
             updatedAt: new Date()
           }
         }
@@ -1026,16 +1038,19 @@ module.exports = function createQuizzesRouter({
       const tags = normalizeTags(req.body.tags || []);
       const visibility = normalizeVisibility(req.body.visibility);
       const allowClone = normalizeAllowClone(req.body.allowClone);
+      const language = cleanMetaText(req.body.language, 40);
+      const license = cleanMetaText(req.body.license, 120);
+      const description = cleanMetaText(req.body.description, 1000);
       if (!name) return res.status(400).json({ error: 'Falta nombre.' });
       if (!tags.length) return res.status(400).json({ error: 'Añade al menos una etiqueta.' });
       if (!questions.length) return res.status(400).json({ error: 'Añade preguntas.' });
       const ownerToken = (req.body.ownerToken || req.headers['x-owner-token'] || '').toString().trim();
       if (req.user) {
-        const { quiz } = await buildQuizDoc({ name, tags, questions, visibility, allowClone, user: req.user, ownerToken });
+        const { quiz } = await buildQuizDoc({ name, tags, questions, visibility, allowClone, user: req.user, ownerToken, language, license, description });
         return res.json({ ok: true, id: quiz.id, count: questions.length });
       }
       if (visibility === 'private') {
-        const saved = await saveEphemeralQuiz({ name, questions, tags, visibility, allowClone, ownerToken });
+        const saved = await saveEphemeralQuiz({ name, questions, tags, visibility, allowClone, ownerToken, language, license, description });
         return res.json({ ok: true, id: saved.id, count: questions.length });
       }
       const collection = await getGamesCollection();
@@ -1045,6 +1060,9 @@ module.exports = function createQuizzesRouter({
         name,
         questions,
         tags,
+        language,
+        license,
+        description,
         playsCount: 0,
         playersCount: 0,
         visibility,
