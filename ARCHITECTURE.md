@@ -439,12 +439,14 @@ autoritme (self-paced)" i "Mode 'presentació' híbrid").
   (`aciertos`/`fallos`/`sinResponder`) només com a dada informativa a
   banda.
 
-### Preguntes d'enquesta («opinió») en mode Solo
+### Preguntes d'enquesta («opinió»): com es comporten en cada mode
 
 Les preguntes de tipus `poll` (sense resposta correcta) queden **fora
-del càlcul de puntuació** en el mode Solo
-(`src/public/js/solo-game.js:500-504`, `getScoredQuestionCount()` les
-filtra). En concret:
+del càlcul de puntuació** en tots els modes, però cada un ho implementa
+a la seua manera:
+
+**Mode Solo** (`src/public/js/solo-game.js:500-504`,
+`getScoredQuestionCount()` les filtra):
 
 - Cap opció marcada apareix com a «incorrecta» (`solo-game.js:380`): es
   passa a la pregunta següent igual que si fora un encert
@@ -457,3 +459,28 @@ filtra). En concret:
   crida si `getScoredQuestionCount() > 0`).
 
 Cobert per `src/test/browser/solo-poll.spec.js` (vore `TESTING.md`).
+
+**Mode "Jugar a l'aula"** (host + mòbils, `/host/` i `/player/`):
+
+- El servidor calcula `scoreRatio = 0` i `isCorrect = false` per a
+  qualsevol resposta a una pregunta `poll`
+  (`getSubmissionScoreRatio`, `src/server/services/scoring.js:21`), però
+  no la compta com a fallada: en el handler de resposta
+  (`src/server/sockets/playerEvents.js:228-240`) les `poll` tenen la
+  seua pròpia branca (`isPoll`) que emet `answerResult: { outcome: 'poll' }`
+  en lloc d'incrementar `wrongCount`.
+- Al mòbil (`src/public/js/playerGame.js:553-557`), eixe resultat pinta
+  la pantalla de color gris i mostra «¡Gracias por responder!» — no es
+  marca com a encert ni com a error.
+- El comptador de progrés "Pregunta X de N" (`totalQuestions`) sí que
+  inclou les `poll`, perquè seguixen formant part normal de la partida.
+  El que **no** les inclou és el comptador que es reporta a Commons
+  (`scoredQuestionsCount`, `src/server/sockets/hostEvents.js:381-382` i
+  `src/server/services/commons.js:119`).
+- En l'informe CSV ixen amb `resultado = encuesta`
+  (`src/server/services/sessionReport.js:203-209`), no com a
+  `incorrecta`.
+
+El mode "Multijugador" (pantalla compartida, `src/public/js/multiplayer.js`)
+no té una branca pròpia per a `poll` fora del cas de resposta múltiple
+(`multiplayer.js:488-492`); no s'ha revisat este mode en detall ací.
