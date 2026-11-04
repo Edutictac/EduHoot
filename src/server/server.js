@@ -48,7 +48,8 @@ const {
   liveSessionToCsv,
   cacheFinishedSessionReport,
   finishedSessionReports,
-  FINISHED_SESSION_REPORT_DIR
+  FINISHED_SESSION_REPORT_DIR,
+  buildReportFileName
 } = require('./services/sessionReport')({ players });
 const { sessions, parseCookies } = require('./services/sessions');
 const createCommonsService = require('./services/commons');
@@ -249,7 +250,7 @@ if (require.main === module) {
   });
 }
 
-app.use(createGamesRouter({ games, finishedSessionReports, liveSessionToCsv, FINISHED_SESSION_REPORT_DIR }));
+app.use(createGamesRouter({ games, finishedSessionReports, liveSessionToCsv, FINISHED_SESSION_REPORT_DIR, buildReportFileName }));
 
 app.use('/api/player-auth', createPlayerAuthRouter({ commons, authRateLimiter }));
 
@@ -406,5 +407,6 @@ module.exports = {
   players,
   finishedSessionReports,
   liveSessionToCsv,
-  cacheFinishedSessionReport
+  cacheFinishedSessionReport,
+  buildReportFileName
 };

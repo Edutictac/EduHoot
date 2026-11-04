@@ -14,6 +14,33 @@ function escapeCsvField(value) {
   return str;
 }
 
+// Convierte un texto libre (nombre de quiz, con acentos/espacios/emojis) en un
+// fragmento seguro para un nombre de fichero: sin acentos, solo [a-z0-9-].
+function slugifyForFilename(value, maxLength = 60) {
+  const normalized = String(value || '')
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return normalized.slice(0, maxLength).replace(/-+$/, '');
+}
+
+// Timestamp compacto y ordenable para nombres de fichero: 20261104-153045 (hora UTC).
+function formatTimestampForFilename(ms) {
+  const iso = new Date(ms || Date.now()).toISOString();
+  return iso.slice(0, 19).replace(/[-:]/g, '').replace('T', '-');
+}
+
+function buildReportFileName({ quizName, pin, timestampMs }) {
+  const quizSlug = slugifyForFilename(quizName);
+  const parts = ['informe'];
+  if (quizSlug) parts.push(quizSlug);
+  parts.push(formatTimestampForFilename(timestampMs));
+  parts.push(String(pin || '').replace(/[^a-z0-9-_]+/gi, '_'));
+  return `${parts.join('-')}.csv`;
+}
+
 function quizToCsv(quiz) {
   const header = 'tipo;pregunta;r1;r2;r3;r4;tiempo;correcta;imagen;video;texto;numero;tolerancia';
   const lines = (quiz.questions || []).map((q) => {
@@ -288,15 +315,18 @@ module.exports = function createSessionReportService({ players }) {
 
       const csv = liveSessionToCsv(game, playersOverride);
       const hostIdAtFinish = String(game.hostId || '');
+      const quizNameAtFinish = String((game.gameData && game.gameData.quizName) || '');
+      const finishedAt = Date.now();
       console.log('[cacheFinishedSessionReport] csv length=' + csv.length);
 
       try {
         fs.mkdirSync(FINISHED_SESSION_REPORT_DIR, { recursive: true });
         fs.writeFileSync(reportPath, csv, 'utf8');
-        // Guardamos el hostId vigente en el momento del GameOver junto al CSV para poder
-        // verificar la autoría del informe también cuando se sirve desde disco (partida
-        // ya fuera de memoria), sin depender de que finishedSessionReports siga viva.
-        fs.writeFileSync(metaPath, JSON.stringify({ hostId: hostIdAtFinish }), 'utf8');
+        // Guardamos el hostId, el nombre del quiz y el instante de fin junto al CSV para
+        // poder verificar la autoría y nombrar el fichero descargado también cuando se
+        // sirve desde disco (partida ya fuera de memoria), sin depender de que
+        // finishedSessionReports siga viva.
+        fs.writeFileSync(metaPath, JSON.stringify({ hostId: hostIdAtFinish, quizName: quizNameAtFinish, finishedAt }), 'utf8');
         console.log('[cacheFinishedSessionReport] file written successfully');
       } catch (diskErr) {
         console.error('[cacheFinishedSessionReport] write disk error', diskErr);
@@ -326,7 +356,8 @@ module.exports = function createSessionReportService({ players }) {
       finishedSessionReports.set(pinKey, {
         csv,
         hostId: hostIdAtFinish,
-        createdAt: Date.now(),
+        quizName: quizNameAtFinish,
+        createdAt: finishedAt,
         cleanupTimer
       });
     } catch (err) {
@@ -339,6 +370,7 @@ module.exports = function createSessionReportService({ players }) {
     liveSessionToCsv,
     cacheFinishedSessionReport,
     finishedSessionReports,
-    FINISHED_SESSION_REPORT_DIR
+    FINISHED_SESSION_REPORT_DIR,
+    buildReportFileName
   };
 };

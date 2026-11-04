@@ -2,7 +2,7 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 
-module.exports = function createGamesRouter({ games, finishedSessionReports, liveSessionToCsv, FINISHED_SESSION_REPORT_DIR }) {
+module.exports = function createGamesRouter({ games, finishedSessionReports, liveSessionToCsv, FINISHED_SESSION_REPORT_DIR, buildReportFileName }) {
   const router = express.Router();
 
   router.get('/api/validate-pin/:pin', (req, res) => {
@@ -24,6 +24,8 @@ module.exports = function createGamesRouter({ games, finishedSessionReports, liv
 
     const game = games.getGameByPin(pin);
     let csv = '';
+    let quizName = '';
+    let timestampMs = Date.now();
     const cached = finishedSessionReports.get(pin);
     if (cached && cached.csv) {
       // Partida ya finalizada: usamos siempre la foto congelada en cacheFinishedSessionReport,
@@ -42,12 +44,15 @@ module.exports = function createGamesRouter({ games, finishedSessionReports, liv
         return res.status(403).json({ error: 'No autorizado para descargar este informe.' });
       }
       csv = cached.csv;
+      quizName = cached.quizName || '';
+      timestampMs = cached.createdAt || timestampMs;
     } else if (game) {
       console.log('[report.csv] game found in memory, sin cache aun: generando en vivo');
       if (game.hostId !== hostId) {
         return res.status(403).json({ error: 'No autorizado para descargar este informe.' });
       }
       csv = liveSessionToCsv(game);
+      quizName = (game.gameData && game.gameData.quizName) || '';
     } else {
       console.log('[report.csv] game NOT in memory, checking disk');
       const pinSafe = String(pin).replace(/[^a-z0-9-_]+/gi, '_');
@@ -65,9 +70,11 @@ module.exports = function createGamesRouter({ games, finishedSessionReports, liv
       try {
         const meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
         storedHostId = String((meta && meta.hostId) || '');
+        quizName = String((meta && meta.quizName) || '');
+        if (meta && meta.finishedAt) timestampMs = meta.finishedAt;
       } catch (metaErr) {
         // Informe escrito antes de introducir el sidecar, o sidecar ya expirado: no podemos
-        // verificar la autoría, así que lo dejamos pasar como hasta ahora.
+        // verificar la autoría ni recuperar quiz/fecha, así que lo dejamos pasar como hasta ahora.
         storedHostId = '';
       }
       if (storedHostId && storedHostId !== hostId) {
@@ -75,8 +82,7 @@ module.exports = function createGamesRouter({ games, finishedSessionReports, liv
       }
     }
 
-    const safePin = String(pin).replace(/[^a-z0-9-_]+/gi, '_');
-    const fileName = `informe-partida-${safePin}.csv`;
+    const fileName = buildReportFileName({ quizName, pin, timestampMs });
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
     return res.send('﻿' + csv);

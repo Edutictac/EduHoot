@@ -364,7 +364,7 @@ async function downloadSessionReportCsv(){
         }
         var disposition = res.headers.get('Content-Disposition') || '';
         var match = disposition.match(/filename="?([^";]+)"?/i);
-        var fileName = (match && match[1]) ? match[1] : ('informe-partida-' + params.pin + '.csv');
+        var fileName = (match && match[1]) ? match[1] : ('informe-' + params.pin + '.csv');
         var blob = await res.blob();
         var fileUrl = window.URL.createObjectURL(blob);
         var a = document.createElement('a');

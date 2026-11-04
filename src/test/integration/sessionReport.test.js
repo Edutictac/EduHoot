@@ -172,4 +172,38 @@ test('GET /report.csv devuelve el informe cacheado aunque la partida siga en mem
   const csv = await res.text();
   assert.ok(csv.includes('Fran'), 'la ganadora real no debe desaparecer del informe descargado');
   assert.ok(csv.includes('Gema'));
+
+  const disposition = res.headers.get('content-disposition') || '';
+  assert.match(disposition, /filename="informe-quiz-de-prueba-\d{8}-\d{6}-900003\.csv"/,
+    'el nombre del fichero debe incluir el slug del quiz, un timestamp y el pin, no solo "informe-partida-<pin>"');
+});
+
+test('GET /report.csv, releído de disco (partida ya purgada de memoria), también nombra el fichero con quiz+timestamp', async () => {
+  const hostId = 'host-csv-4';
+  const pin = 900005;
+  const game = games.addGame(pin, hostId, true, {
+    gameid: 'quiz-disk',
+    quizName: 'Repàs de matemàtiques',
+    totalQuestions: 0,
+    questions: [],
+    options: {}
+  });
+
+  const snapshot = [addPlayer(hostId, 't1', 'Hugo', 40)];
+  cacheFinishedSessionReport(game, snapshot);
+
+  // Forzamos la rama de disco: ya no hay caché en memoria ni partida activa,
+  // igual que ocurriría pasado el tiempo de scheduleGameCleanup.
+  finishedSessionReports.delete(String(pin));
+  games.removeGame(hostId);
+  players.removePlayer('t1');
+
+  const res = await fetch(`${baseUrl}/api/live-games/${pin}/report.csv?hostId=${hostId}`);
+  assert.equal(res.status, 200);
+  const csv = await res.text();
+  assert.ok(csv.includes('Hugo'));
+
+  const disposition = res.headers.get('content-disposition') || '';
+  assert.match(disposition, /filename="informe-repas-de-matematiques-\d{8}-\d{6}-900005\.csv"/,
+    'el meta.json escrito en disco debe conservar el nombre del quiz para nombrar el fichero');
 });
