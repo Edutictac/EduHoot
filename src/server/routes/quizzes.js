@@ -80,6 +80,7 @@ module.exports = function createQuizzesRouter({
   commons,
   quizToCsv,
   quizToMoodleXml,
+  slugifyForFilename,
   GLOBAL_OWNER_ID,
   GLOBAL_OWNER_EMAIL,
   PUBLIC_IMPORT_SOURCE_URL
@@ -140,7 +141,7 @@ module.exports = function createQuizzesRouter({
         return res.status(403).json({ error: 'No autorizado para descargar este quiz.' });
       }
       const csv = quizToCsv(quiz);
-      const fileName = `${(quiz.name || 'quiz').replace(/[^a-z0-9-_]+/gi, '_')}.csv`;
+      const fileName = `${slugifyForFilename(quiz.name) || 'quiz'}.csv`;
       res.setHeader('Content-Type', 'text/csv; charset=utf-8');
       res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
       return res.send(csv);
@@ -161,7 +162,7 @@ module.exports = function createQuizzesRouter({
         return res.status(403).json({ error: 'No autorizado para descargar este quiz.' });
       }
       const xml = quizToMoodleXml(quiz);
-      const fileName = `${(quiz.name || 'quiz').replace(/[^a-z0-9-_]+/gi, '_')}.xml`;
+      const fileName = `${slugifyForFilename(quiz.name) || 'quiz'}.xml`;
       res.setHeader('Content-Type', 'application/xml; charset=utf-8');
       res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
       return res.send(xml);

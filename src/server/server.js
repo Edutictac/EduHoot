@@ -49,7 +49,8 @@ const {
   cacheFinishedSessionReport,
   finishedSessionReports,
   FINISHED_SESSION_REPORT_DIR,
-  buildReportFileName
+  buildReportFileName,
+  slugifyForFilename
 } = require('./services/sessionReport')({ players });
 const { sessions, parseCookies } = require('./services/sessions');
 const createCommonsService = require('./services/commons');
@@ -304,6 +305,7 @@ app.use(createQuizzesRouter({
   commons,
   quizToCsv,
   quizToMoodleXml,
+  slugifyForFilename,
   GLOBAL_OWNER_ID,
   GLOBAL_OWNER_EMAIL,
   PUBLIC_IMPORT_SOURCE_URL

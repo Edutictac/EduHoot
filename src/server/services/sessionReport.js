@@ -19,7 +19,7 @@ function escapeCsvField(value) {
 function slugifyForFilename(value, maxLength = 60) {
   const normalized = String(value || '')
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
+    .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
@@ -371,6 +371,7 @@ module.exports = function createSessionReportService({ players }) {
     cacheFinishedSessionReport,
     finishedSessionReports,
     FINISHED_SESSION_REPORT_DIR,
-    buildReportFileName
+    buildReportFileName,
+    slugifyForFilename
   };
 };
