@@ -191,6 +191,31 @@ Esdeveniments principals que rep el servidor (registrats en
 | `requestDbNames` | Client | Demanar llistat de noms/qüestionaris (ús administratiu). |
 | `disconnect` | Socket.IO (automàtic) | Neteja quan cau la connexió d'un jugador/amfitrió. |
 
+## Cicle de vida d'una partida: PIN, lobby i temps d'espera
+
+`host-join` (`src/server/sockets/hostEvents.js:36-125`) crea la partida en
+memòria amb un PIN nou i `gameLive: false` (sala d'espera). Eixe PIN ja és
+vàlid: l'alumnat pot entrar-hi (`/join.html?pin=...`) i quedar-se esperant
+abans que el professorat pulse "Començar". `startGame`
+(`hostEvents.js:334-400`) posa `gameLive: true` i arranca la primera
+pregunta.
+
+No hi ha cap col·lecció de base de dades per a "partides" — tot açò viu
+només en l'array en memòria de `src/server/utils/liveGames.js`, i es
+borra sol segons uns temps fixats a `src/server/sockets/gameHelpers.js:9-12`:
+
+- **100 s** després d'acabar la partida (`GameOver`), abans d'esborrar-la.
+- **30 min** sense cap activitat.
+- **30 s** de marge per a que el professorat reconnecte si es desconnecta
+  (p. ex. si tanca el navegador per error).
+- **40 s** de marge per a que un alumne reconnecte.
+
+Hui en dia estos quatre temps estan fixats al codi: no es poden ajustar
+ni per variable d'entorn ni des d'un panell, i tampoc hi ha manera de
+crear o programar una partida amb antelació — naix quan el professorat
+obri el host i mor quan es neteja per algun dels motius de dalt. Millora
+de fer-los configurables (global + per partida) plantejada per al futur.
+
 ## Distintiu visual d'entorn (dev/stage)
 
 Per a no confondre un entorn de desenvolupament o stage amb producció,
