@@ -74,6 +74,8 @@ de preguntes, informe CSV...)? Consulta [ARCHITECTURE.md](ARCHITECTURE.md).
 - Landing principal redissenyada amb accessos separats, selector d’idioma i footer comú amb el logo d’EduTicTac.
 - Biblioteca amb ordenació per data i alfabètica, tags rellevants i estadístiques de partides.
 - El mode Solo ara registra partides i mostra estadístiques visibles al ranking i un feedback més clar.
+- Mode "a cegues": l'amfitrió pot ocultar l'enunciat i mostrar només botons amb forma/color a l'alumnat, en qualsevol dispositiu.
+- Camps `idioma`, `llicència` i `descripció` en crear o editar un qüestionari.
 
 ### Enllaços directes al mode Solo
 
@@ -205,6 +207,8 @@ juego, avance de preguntas, informe CSV...)? Consulta [ARCHITECTURE.md](ARCHITEC
 - Landing principal renovada con accesos diferenciados, selector de idioma y footer compartido con el logo de EduTicTac.
 - Biblioteca con orden por fecha y alfabético, etiquetas relevantes y estadísticas visibles en cada ficha.
 - Modo Solo registra partidas y mejora el ranking/feedback, además de mostrar estadísticas de partidas jugadas.
+- Modo "a ciegas": el profesorado puede ocultar el enunciado y mostrar solo botones con forma/color al alumnado, en cualquier dispositivo.
+- Campos de `idioma`, `licencia` y `descripción` al crear o editar un cuestionario.
 
 ### Enlaces directos al modo Solo
 
@@ -295,6 +299,8 @@ advancing, CSV report...)? See [ARCHITECTURE.md](ARCHITECTURE.md).
 - Redesigned landing with separate entry points, language selector, and shared footer pointing to EduTicTac.
 - Library now supports ordering by date/alpha, shows only related tags, and surfaces quiz stats.
 - Solo mode logs plays so the ranking/counts include solo sessions, plus brighter feedback and stats.
+- "Blind" mode: the host can hide the question text and show students only shape/color buttons, on any device.
+- `Language`, `license`, and `description` fields when creating or editing a quiz.
 
 ### Solo Deep Links
 

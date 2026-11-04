@@ -313,6 +313,11 @@ informe complet dels resultats:
   Això permet descarregar l'informe encara que el servidor s'haja
   reiniciat després que acabara la partida (abans de la versió 1.0.5
   això retornava un 404).
+- **Nom del fitxer**: `informe-<quiz>-<timestamp>-<pin>.csv`
+  (`buildReportFileName`, `sessionReport.js`), amb el nom del
+  qüestionari sanejat i acotat a 60 caràcters. Abans era sempre
+  `informe-partida-<PIN>.csv`; com el PIN es reutilitza entre partides,
+  dos sessions distintes podien generar el mateix nom i sobreescriure's.
 
 ### Columnes del CSV
 

@@ -33,9 +33,18 @@ intacte com la nota de versió més detallada.
 - Authentik simulat en `docker compose` (servei `oidc`,
   `src/scripts/dev-oidc.js`): prova el flux OIDC real en local amb usuaris de
   prova (docents del seed, un docent nou i un alumne sense rol docent).
+- Camps `idioma`, `llicència` i `descripció` en crear o editar un qüestionari.
+- El peu de pàgina i el distintiu d'entorn mostren també l'etiqueta de
+  desplegament quan l'app s'executa en stage.
 
 ### Canviat
 - El títol de la pestanya del creador de qüestionaris mostra el seu nom o correu.
+- Les enquestes («opinió») ja no compten en el total de preguntes puntuables
+  en mode aula (abans només quedaven excloses en mode Solo).
+- El mode "a cegues" (desmarcar "Mostra la pregunta a l'alumnat") ja no deixa
+  el dispositiu sense cap botó: ara pinta botons amb forma/color i
+  `aria-label`, sense el text de la resposta. Funciona en qualsevol
+  dispositiu, no només mòbils (la casella es deia abans "Enviar als mòbils").
 
 ### Corregit
 - Les preguntes d'enquesta («opinió») en el mode Solo ja no es compten com a
@@ -47,6 +56,14 @@ intacte com la nota de versió més detallada.
   apareixia si no n'hi havia cap). Els botons de jugar, editar, eliminar,
   clonar i compartir sense permís ara apareixen deshabilitats amb un
   missatge explicatiu, en lloc de quedar clicables sense cap avís previ.
+- El CSV d'informe de partida ja distingix entre resposta incorrecta,
+  parcial i enquesta, en lloc de marcar-ho tot indistintament com
+  "incorrecta".
+- El nom del CSV d'informe de partida ara inclou el nom del qüestionari i un
+  moment exacte, no només el PIN (que es reutilitza entre partides i podia
+  produir dos fitxers amb el mateix nom). El mateix criteri de nom de fitxer
+  (sense accents, longitud acotada) s'aplica ara també en exportar un
+  qüestionari a CSV o a Moodle XML.
 
 ## [1.0.13] - 2026-10-25
 
