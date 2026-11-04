@@ -212,8 +212,8 @@ test('resposta múltiple: les seleccions errònies resten i marcar-ho tot no pun
   assert.equal(getSubmissionScoreRatio({ type: 'poll', correctAnswers: [] }, [1]), 0);
 });
 
-test('GET /api/version retorna la versió del package.json', async () => {
+test('GET /api/version retorna la versió del package.json i la tag (buida si no ve de stage)', async () => {
   const res = await request('/api/version');
   assert.equal(res.status, 200);
-  assert.deepEqual(await res.json(), { version: require('../../package.json').version });
+  assert.deepEqual(await res.json(), { version: require('../../package.json').version, tag: '' });
 });

@@ -180,10 +180,11 @@ app.use(express.urlencoded({ extended: true, limit: BODY_LIMIT }));
 app.get('/api/env', (req, res) => {
   res.json({ env: process.env.NODE_ENV || '' });
 });
-// Versió de la imatge desplegada (package.json), per al peu de pàgina.
+// Versió de la imatge desplegada (package.json) i, si en té, la tag amb
+// la qual es va publicar (p. ex. stage-2026.11.04-1), per al peu de pàgina.
 app.get('/api/version', (req, res) => {
   res.set('Cache-Control', 'no-cache');
-  res.json({ version: APP_VERSION });
+  res.json({ version: APP_VERSION, tag: process.env.APP_TAG || '' });
 });
 app.get('/manifest.webmanifest', (req, res) => {
   res.type('application/manifest+json');
