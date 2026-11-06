@@ -8,6 +8,7 @@ COMPOSE_FILE=$COMPOSE_DIR/compose.yml
 HEADER_FILE=$COMPOSE_DIR/deploy-readiness.header
 MAINTENANCE_FLAG=/var/www/eduhoot-maintenance/ON
 STATE_DIR=/opt/eduhoot/production-update-state
+STATUS_FILE=/var/www/eduhoot-deployment/current.json
 REMOTE_IMAGE=ghcr.io/edutictac/eduhoot:prod-latest
 SERVICE=eduhoot
 STAGE_CONTAINER=eduhoot-stage
@@ -136,6 +137,9 @@ docker compose -f "$COMPOSE_FILE" up -d --no-deps --force-recreate "$SERVICE"
 wait_healthy || { log 'La nova imatge no ha passat la comprovació de salut.'; exit 1; }
 [[ $(docker inspect "$SERVICE" --format '{{.Image}}') == "$candidate_id" ]] || { log 'La imatge en execució no coincidix.'; exit 1; }
 printf '%s %s\n' "$stage_tag" "$candidate_id" > "$STATE_DIR/deployed"
+printf '{"tag":"%s","imageId":"%s","updatedAt":"%s"}\n' \
+  "$stage_tag" "$candidate_id" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" |
+  sudo -n install -o root -g root -m 0644 /dev/stdin "$STATUS_FILE"
 sudo -n rm -f "$MAINTENANCE_FLAG"
 maintenance=false
 completed=true

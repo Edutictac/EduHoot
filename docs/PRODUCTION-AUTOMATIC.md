@@ -26,33 +26,23 @@ La restauració automàtica canvia la imatge del contenidor. La còpia de MongoD
 queda disponible per a una restauració manual si una versió ha modificat les
 dades de manera incompatible.
 
-## Instal·lació inicial
+## Estat de la instal·lació (6-11-2026)
 
-**No activar el timer fins que l'endpoint de drenatge estiga en producció i
-validat.** La imatge actual `eduhoot:1.0.13-claustro-20261102` encara no el
-porta. Cal integrar la branca `feat/delegated-deploy-readiness` amb el treball
-d'Eduardo, provar-la en stage i fer un primer desplegament manual amb còpia i
-comprovació dels canvis de codi. `main` encara no conté tota la seua branca.
+El timer `eduhoot-production-update.timer` està actiu al VPS. La clau privada
+del drenatge està en `/opt/eduhoot/docker/eduhoot.env` i en
+`deploy-readiness.header` (mode 600); GitHub no la té. nginx retorna 404 a
+Internet per a les dos rutes internes. El VPS les consulta directament en
+`127.0.0.1:3000`.
 
-Després del primer desplegament manual, al VPS:
+La primera versió `stage-2026.11.06-1` es va desplegar manualment amb còpia
+prèvia en `/home/samgua/backups/eduhoot-bootstrap-20261106T171614Z-425312`.
+Es va provar tornar a `eduhoot:1.0.13-claustro-20261102` i reinstal·lar la
+nova imatge: les dos van arrancar sanes. La portada, l'API pública i
+Socket.IO van donar HTTP 200; les rutes internes, 404 des d'Internet.
 
-1. Crear una clau aleatòria de 32 bytes com a mínim. Guardar-la en
-   `EDUHOOT_DEPLOY_READINESS_TOKEN` de `/opt/eduhoot/docker/eduhoot.env` i
-   en `/opt/eduhoot/docker/deploy-readiness.header` com a línia
-   `X-EduHoot-Deploy-Token: <clau>`, amb mode 600 i propietari `samgua`.
-   No mostrar-la en la terminal, en els logs ni en GitHub.
-2. Configurar nginx perquè `/api/internal/deploy-readiness` i
-   `/api/internal/deploy-drain` retornen 404 a Internet. L'actualitzador
-   consulta el port local 3000 directament.
-3. Instal·lar `ops/production/eduhoot-update.sh` com
-   `/usr/local/sbin/eduhoot-update.sh`, propietari root i mode 755. Instal·lar
-   els dos fitxers systemd de `ops/production/` en `/etc/systemd/system/`.
-4. Executar `sudo -u samgua /usr/local/sbin/eduhoot-update.sh --check` amb
-   una candidata publicada i comprovar que identifica la mateixa imatge que
-   stage. Provar també la negativa quan stage no coincidix o hi ha partida.
-5. Fer `systemctl daemon-reload` i activar
-   `eduhoot-production-update.timer`. Comprovar els logs després del primer
-   cicle i fer una prova de restauració controlada abans d'usar-lo en classe.
+`main` encara no inclou tot el treball de la branca d'Eduardo. Les futures
+etiquetes de stage han de continuar eixint de la seua branca sincronitzada
+amb `main`, fins que faça el PR corresponent.
 
 ## Publicar després de la instal·lació
 
@@ -60,9 +50,11 @@ Després del primer desplegament manual, al VPS:
    [STAGE-AUTOMATIC.md](STAGE-AUTOMATIC.md).
 2. En **Actions → Prepara una imatge per a producció → Run workflow**, triar
    `main` i escriure l'etiqueta exacta de stage.
-3. Esperar el resultat del workflow i del servei
-   `eduhoot-production-update.service` al VPS. Si hi ha partides actives, el
-   VPS ajornarà el canvi fins que acaben.
+3. Esperar el resultat del workflow i consultar
+   `https://eduhoot.edutictac.es/.well-known/eduhoot-deployment.json` per a
+   vore l'etiqueta que executa producció. El timer comprova cada dos minuts;
+   si hi ha partides actives, ajorna el canvi fins que acaben. El registre
+   detallat queda en `eduhoot-production-update.service` al VPS.
 
 El desplegament reinicia el contenidor i les sessions en memòria. Cal evitar
 promocions durant activitats del centre i revisar els canvis de dades abans
