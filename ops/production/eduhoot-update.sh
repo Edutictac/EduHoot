@@ -23,8 +23,13 @@ flock -n 9 || exit 0
 log() { printf '%s\n' "$*" >&2; }
 healthy() { [[ $(docker inspect "$SERVICE" --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' 2>/dev/null) == healthy ]]; }
 ready() {
-  curl --silent --show-error --fail --max-time 5 -H "@$HEADER_FILE" "$READY_URL" |
-    python3 -c 'import json,sys; s=json.load(sys.stdin); sys.exit(0 if s.get("ready") is True and s.get("activeGames") == 0 else 1)'
+  curl --silent --fail --max-time 5 -H "@$HEADER_FILE" "$READY_URL" |
+    python3 -c 'import json,sys
+try:
+    state=json.load(sys.stdin)
+except (ValueError, UnicodeError):
+    raise SystemExit(1)
+raise SystemExit(0 if isinstance(state, dict) and state.get("ready") is True and state.get("activeGames") == 0 else 1)'
 }
 drain() {
   local enabled=$1
