@@ -2,11 +2,6 @@ name: Prepara una imatge per a producció
 
 on:
   workflow_dispatch:
-    inputs:
-      stage_tag:
-        description: Etiqueta stage-* que ja està desplegada i provada
-        required: true
-        type: string
 
 permissions:
   contents: read
@@ -24,21 +19,23 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Valida l'etiqueta
-        env:
-          STAGE_TAG: ${{ inputs.stage_tag }}
+      - name: Detecta la versió activa de stage
+        id: stage
         run: |
           set -euo pipefail
-          [[ "$STAGE_TAG" =~ ^stage-[0-9]{4}\.[0-9]{2}\.[0-9]{2}-[0-9]+$ ]]
+          response=$(curl --fail --silent --show-error --max-time 15 https://eduhoot-stage.edutictac.es/api/version)
+          stage_tag=$(jq -r '.tag // empty' <<< "$response")
+          [[ "$stage_tag" =~ ^stage-[0-9]{4}\.[0-9]{2}\.[0-9]{2}-[0-9]+$ ]]
+          echo "tag=$stage_tag" >> "$GITHUB_OUTPUT"
 
       - uses: actions/checkout@v7.0.1
         with:
-          ref: refs/tags/${{ inputs.stage_tag }}
+          ref: refs/tags/${{ steps.stage.outputs.tag }}
           persist-credentials: false
 
       - name: Verifica i publica la mateixa imatge
         env:
-          STAGE_TAG: ${{ inputs.stage_tag }}
+          STAGE_TAG: ${{ steps.stage.outputs.tag }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_USER: ${{ github.actor }}
         run: |

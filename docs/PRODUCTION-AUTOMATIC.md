@@ -3,8 +3,8 @@
 ## Funcionament
 
 Eduardo (`eduardomillan`) i Samuel (`sasogu`) poden executar manualment el
-workflow **Prepara una imatge per a producció** des de `main`, indicant una
-etiqueta `stage-AAAA.MM.DD-N` existent. El workflow verifica que la imatge
+workflow **Prepara una imatge per a producció** des de `main`. El workflow
+detecta l'etiqueta `stage-AAAA.MM.DD-N` que executa stage i verifica que la imatge
 publicada en stage correspon al commit de l'etiqueta i copia exactament les
 mateixes capes a `ghcr.io/edutictac/eduhoot:prod-latest`. No té accés al VPS.
 
@@ -61,7 +61,8 @@ amb `main`, fins que faça el PR corresponent.
    l'usuari va restaurar la versió anterior. Pot apuntar al mateix commit si
    es vol publicar eixe codi més avant.
 2. En **Actions → Prepara una imatge per a producció → Run workflow**, triar
-   `main` i escriure l'etiqueta exacta de stage.
+   `main` i executar-lo. El workflow llig la versió activa de stage; no cal
+   copiar cap etiqueta.
 3. Esperar el resultat del workflow i consultar
    `https://eduhoot.edutictac.es/.well-known/eduhoot-deployment.json` per a
    vore l'etiqueta que executa producció. El timer comprova cada dos minuts;
