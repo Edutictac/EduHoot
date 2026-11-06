@@ -79,6 +79,7 @@ test('GET /api/validate-pin rechaza un PIN inexistente', async () => {
 
 test('deploy readiness requiere clave y refleja las partidas activas', async () => {
   const path = '/api/internal/deploy-readiness';
+  const drainPath = '/api/internal/deploy-drain';
   const headers = { 'X-EduHoot-Deploy-Token': 'test-deploy-readiness-token' };
   assert.equal((await request(path)).status, 404);
   assert.equal((await request(path, { headers: { 'X-EduHoot-Deploy-Token': 'wrong' } })).status, 404);
@@ -91,12 +92,25 @@ test('deploy readiness requiere clave y refleja las partidas activas', async () 
   }
   const idle = await request(path, { headers });
   assert.equal(idle.headers.get('cache-control'), 'no-store');
-  assert.deepEqual(await idle.json(), { ready: true, activeGames: 0 });
+  assert.deepEqual(await idle.json(), { ready: true, activeGames: 0, draining: false });
+  assert.equal((await request(drainPath, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"enabled":true}' })).status, 404);
+  assert.equal((await request(drainPath, { method: 'POST', headers, body: '{}' })).status, 400);
+  const drain = await request(drainPath, {
+    method: 'POST',
+    headers: { ...headers, 'Content-Type': 'application/json' },
+    body: '{"enabled":true}'
+  });
+  assert.deepEqual(await drain.json(), { ready: true, activeGames: 0, draining: true });
   games.addGame(1234, 'deploy-test-host', true, {});
   try {
-    assert.deepEqual(await (await request(path, { headers })).json(), { ready: false, activeGames: 1 });
+    assert.deepEqual(await (await request(path, { headers })).json(), { ready: false, activeGames: 1, draining: true });
   } finally {
     games.removeGame('deploy-test-host');
+    await request(drainPath, {
+      method: 'POST',
+      headers: { ...headers, 'Content-Type': 'application/json' },
+      body: '{"enabled":false}'
+    });
   }
 });
 

@@ -43,6 +43,7 @@ const io = socketIO(server, {
   transports: ['websocket', 'polling']
 });
 const games = new LiveGames();
+let deploymentDraining = false;
 const players = new Players();
 const {
   quizToCsv,
@@ -187,9 +188,8 @@ app.get('/api/version', (req, res) => {
   res.set('Cache-Control', 'no-cache');
   res.json({ version: APP_VERSION, tag: process.env.APP_TAG || '' });
 });
-// El desplegador consulta l'estat viu abans de reiniciar el contenidor.
-// Sense una clau configurada, esta ruta no està disponible.
-app.get('/api/internal/deploy-readiness', (req, res) => {
+// El desplegador deté noves partides i consulta l'estat viu abans del reinici.
+function requireDeployToken(req, res, next) {
   const expected = process.env.EDUHOOT_DEPLOY_READINESS_TOKEN || '';
   const provided = req.get('X-EduHoot-Deploy-Token') || '';
   const expectedBytes = Buffer.from(expected);
@@ -198,9 +198,20 @@ app.get('/api/internal/deploy-readiness', (req, res) => {
       !crypto.timingSafeEqual(expectedBytes, providedBytes)) {
     return res.sendStatus(404);
   }
+  return next();
+}
+function sendDeploymentState(res) {
   const activeGames = games.games.length;
   res.set('Cache-Control', 'no-store');
-  return res.json({ ready: activeGames === 0, activeGames });
+  return res.json({ ready: activeGames === 0, activeGames, draining: deploymentDraining });
+}
+app.get('/api/internal/deploy-readiness', requireDeployToken, (req, res) => {
+  return sendDeploymentState(res);
+});
+app.post('/api/internal/deploy-drain', requireDeployToken, (req, res) => {
+  if (typeof req.body?.enabled !== 'boolean') return res.sendStatus(400);
+  deploymentDraining = req.body.enabled;
+  return sendDeploymentState(res);
 });
 app.get('/manifest.webmanifest', (req, res) => {
   res.type('application/manifest+json');
@@ -326,6 +337,7 @@ app.use(createQuizzesRouter({
 
 registerSocketHandlers(io, {
   games,
+  isDeploymentDraining: () => deploymentDraining,
   players,
   sessions,
   parseCookies,

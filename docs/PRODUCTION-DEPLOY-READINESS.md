@@ -4,7 +4,10 @@ El desplegament de producció reinicia el contenidor i talla les connexions de
 les partides en curs. Un desplegador automatitzat ha de consultar l'estat viu
 de l'aplicació just abans del reinici.
 
-`GET /api/internal/deploy-readiness` retorna `ready` i `activeGames`. La ruta
+`GET /api/internal/deploy-readiness` retorna `ready`, `activeGames` i
+`draining`. `POST /api/internal/deploy-drain` amb `{"enabled":true}` deté la
+creació de partides noves, però permet reconnectar amb una partida existent.
+Amb `{"enabled":false}` torna a permetre-les. Les dos rutes
 només respon si `EDUHOOT_DEPLOY_READINESS_TOKEN` està configurat i la petició
 inclou el mateix valor en la capçalera `X-EduHoot-Deploy-Token`. Si falta la
 configuració o la clau és incorrecta, retorna 404. La resposta no es guarda
@@ -20,7 +23,8 @@ Esta ruta és una peça prèvia al permís de desplegament. Encara cal preparar 
 provar un desplegador que:
 
 1. Promoga una imatge immutable que ja estiga desplegada i sana en stage.
-2. Bloquege noves partides i comprove `ready` immediatament abans del canvi.
+2. Active el drenatge, comprove `ready` immediatament abans del canvi i el
+   desactive si avorta el desplegament.
 3. Faça còpia de MongoDB, imatges pujades i configuració de Docker.
 4. Comprove la salut i l'HTTP després del canvi i restaure la imatge anterior
    si falla.

@@ -4,6 +4,7 @@ const { getGamesCollection } = require('../data/repositories');
 module.exports = function createHostEvents({
   io,
   games,
+  isDeploymentDraining,
   players,
   helpers,
   findGameById,
@@ -86,6 +87,10 @@ module.exports = function createHostEvents({
             return;
           }
 
+          if (isDeploymentDraining()) {
+            socket.emit('hostError', { error: 'El servicio se está actualizando. Inténtalo más tarde.' });
+            return;
+          }
           games.addGame(gamePin, socket.id, false, {
             playersAnswered: 0,
             questionLive: false,

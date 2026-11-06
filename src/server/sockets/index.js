@@ -10,6 +10,7 @@ const createPlayerEvents = require('./playerEvents');
 module.exports = function registerSocketHandlers(io, deps) {
   const {
     games,
+    isDeploymentDraining,
     players,
     sessions,
     parseCookies,
@@ -41,6 +42,7 @@ module.exports = function registerSocketHandlers(io, deps) {
   const registerHostEvents = createHostEvents({
     io,
     games,
+    isDeploymentDraining,
     players,
     helpers,
     findGameById,
