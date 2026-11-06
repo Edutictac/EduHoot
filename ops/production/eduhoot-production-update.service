@@ -1,0 +1,12 @@
+[Unit]
+Description=Promou a producció la imatge d'EduHoot provada en stage
+Wants=network-online.target
+After=network-online.target docker.service
+
+[Service]
+Type=oneshot
+User=samgua
+Group=samgua
+ExecStart=/usr/local/sbin/eduhoot-update.sh
+TimeoutStartSec=10min
+
