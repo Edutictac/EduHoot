@@ -37,8 +37,17 @@ Internet per a les dos rutes internes. El VPS les consulta directament en
 La primera versió `stage-2026.11.06-1` es va desplegar manualment amb còpia
 prèvia en `/home/samgua/backups/eduhoot-bootstrap-20261106T171614Z-425312`.
 Es va provar tornar a `eduhoot:1.0.13-claustro-20261102` i reinstal·lar la
-nova imatge: les dos van arrancar sanes. La portada, l'API pública i
-Socket.IO van donar HTTP 200; les rutes internes, 404 des d'Internet.
+nova imatge: les dos van arrancar sanes. A petició de l'usuari, es va deixar
+**la imatge antiga en producció**. Còpia immediatament anterior a la
+restauració: `/home/samgua/backups/eduhoot-before-restore-20261106T172628Z-443348`.
+La candidata `stage-2026.11.06-1` queda ignorada per l'actualitzador; no es
+reinstal·larà sola.
+
+La imatge antiga no té l'API de drenatge. Només per al primer desplegament
+futur des d'eixa imatge, l'actualitzador exigeix que l'última instantània de
+partides estiga buida (o que no n'hi haja des de l'arrancada) **i** que no hi
+haja connexions TCP al port 3000. Activa manteniment i repetix la comprovació
+abans del reinici. Després, la nova imatge ja disposarà de l'API de drenatge.
 
 `main` encara no inclou tot el treball de la branca d'Eduardo. Les futures
 etiquetes de stage han de continuar eixint de la seua branca sincronitzada
@@ -48,6 +57,9 @@ amb `main`, fins que faça el PR corresponent.
 
 1. Publicar i provar una etiqueta `stage-*` segons
    [STAGE-AUTOMATIC.md](STAGE-AUTOMATIC.md).
+   Cal una **etiqueta nova**: `stage-2026.11.06-1` està ignorada perquè
+   l'usuari va restaurar la versió anterior. Pot apuntar al mateix commit si
+   es vol publicar eixe codi més avant.
 2. En **Actions → Prepara una imatge per a producció → Run workflow**, triar
    `main` i escriure l'etiqueta exacta de stage.
 3. Esperar el resultat del workflow i consultar

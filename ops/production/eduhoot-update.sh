@@ -14,6 +14,7 @@ SERVICE=eduhoot
 STAGE_CONTAINER=eduhoot-stage
 READY_URL=http://127.0.0.1:3000/api/internal/deploy-readiness
 DRAIN_URL=http://127.0.0.1:3000/api/internal/deploy-drain
+LEGACY_IMAGE_ID=sha256:98b6956d4b56ed99a3f21873829f85a3258ec1b7a445d09c9711a121484497c6
 CHECK_ONLY=false
 [[ ${1:-} == --check ]] && CHECK_ONLY=true
 [[ $# -le 1 && ( $# -eq 0 || $CHECK_ONLY == true ) ]] || { echo 'Ús: eduhoot-update.sh [--check]' >&2; exit 2; }
@@ -36,6 +37,22 @@ drain() {
   local enabled=$1
   curl --silent --show-error --fail --max-time 5 -H "@$HEADER_FILE" \
     -H 'Content-Type: application/json' --data "{\"enabled\":$enabled}" "$DRAIN_URL" >/dev/null
+}
+legacy_idle() {
+  # Excepció limitada a la imatge antiga: no té l'API de drenatge.
+  # Sense connexions al port 3000 no pot haver-hi una partida en curs.
+  python3 - <<'PY'
+import subprocess
+import sys
+logs = subprocess.run(['docker', 'logs', 'eduhoot'], capture_output=True, text=True, check=True)
+snapshots = [line for line in (logs.stdout + '\n' + logs.stderr).splitlines() if 'Active games:' in line]
+connections = subprocess.run(['ss', '-H', '-tn', 'state', 'established', '(', 'sport', '=', ':3000', ')'], capture_output=True, text=True, check=True)
+idle = not connections.stdout.strip() and (not snapshots or snapshots[-1].strip().endswith('Active games: none'))
+sys.exit(0 if idle else 1)
+PY
+}
+safe_to_switch() {
+  if [[ $current_id == "$LEGACY_IMAGE_ID" ]]; then legacy_idle; else ready; fi
 }
 wait_healthy() {
   local attempt
@@ -79,12 +96,16 @@ if [[ -f $STATE_DIR/failed && $(<"$STATE_DIR/failed") == "$candidate_id" ]]; the
   log 'La imatge candidata ja va fallar; espera una nova publicació.'
   exit 0
 fi
+if [[ -f $STATE_DIR/ignored && $(<"$STATE_DIR/ignored") == "$candidate_id" ]]; then
+  # L'usuari va restaurar la imatge anterior; cal una nova publicació explícita.
+  exit 0
+fi
 stage_id=$(docker inspect "$STAGE_CONTAINER" --format '{{.Image}}')
 stage_health=$(docker inspect "$STAGE_CONTAINER" --format '{{.State.Health.Status}}')
 [[ $stage_health == healthy && $stage_id == "$candidate_id" ]] || { log 'La candidata no és la imatge activa i sana de stage.'; exit 1; }
 stage_tag=$(docker image inspect "$REMOTE_IMAGE" --format '{{index .Config.Labels "org.opencontainers.image.version"}}')
 [[ $stage_tag =~ ^stage-[0-9]{4}\.[0-9]{2}\.[0-9]{2}-[0-9]+$ ]] || { log 'La candidata no porta una etiqueta stage vàlida.'; exit 1; }
-ready || { log 'La comprovació de partides no està disponible o hi ha una partida activa.'; exit 1; }
+safe_to_switch || { log 'La comprovació de partides no està disponible o hi ha una partida activa.'; exit 1; }
 if $CHECK_ONLY; then
   log "Preparada per a promoure $stage_tag ($candidate_id)."
   exit 0
@@ -116,11 +137,13 @@ cleanup() {
 }
 trap cleanup EXIT
 
-drain true
-drained=true
+if [[ $current_id != "$LEGACY_IMAGE_ID" ]]; then
+  drain true
+  drained=true
+fi
 sudo -n touch "$MAINTENANCE_FLAG"
 maintenance=true
-ready || { log 'Hi ha partides actives després de bloquejar-ne de noves.'; exit 75; }
+safe_to_switch || { log 'Hi ha partides actives després de bloquejar-ne de noves.'; exit 75; }
 
 backup_dir=/home/samgua/backups/eduhoot-production-$(date -u +%Y%m%dT%H%M%SZ)-$$
 mkdir -m 700 "$backup_dir"
@@ -128,7 +151,7 @@ cp "$COMPOSE_FILE" "$backup_dir/compose.yml"
 cp "$COMPOSE_DIR/eduhoot.env" "$backup_dir/eduhoot.env"
 mongodump --db kahootDB --gzip --archive="$backup_dir/mongo.archive.gz" >/dev/null
 tar -C /opt/eduhoot/src/public -czf "$backup_dir/uploads.tgz" uploads
-ready || { log 'Ha començat una partida abans del reinici.'; exit 75; }
+safe_to_switch || { log 'Ha començat una partida abans del reinici.'; exit 75; }
 
 docker tag "$REMOTE_IMAGE" "eduhoot-prod:$stage_tag"
 set_compose_image "eduhoot-prod:$stage_tag"
