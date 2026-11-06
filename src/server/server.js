@@ -1,6 +1,7 @@
 const path = require('path');
 const fs = require('fs');
 const http = require('http');
+const crypto = require('crypto');
 const express = require('express');
 const socketIO = require('socket.io');
 const helmet = require('helmet');
@@ -185,6 +186,21 @@ app.get('/api/env', (req, res) => {
 app.get('/api/version', (req, res) => {
   res.set('Cache-Control', 'no-cache');
   res.json({ version: APP_VERSION, tag: process.env.APP_TAG || '' });
+});
+// El desplegador consulta l'estat viu abans de reiniciar el contenidor.
+// Sense una clau configurada, esta ruta no està disponible.
+app.get('/api/internal/deploy-readiness', (req, res) => {
+  const expected = process.env.EDUHOOT_DEPLOY_READINESS_TOKEN || '';
+  const provided = req.get('X-EduHoot-Deploy-Token') || '';
+  const expectedBytes = Buffer.from(expected);
+  const providedBytes = Buffer.from(provided);
+  if (!expected || expectedBytes.length !== providedBytes.length ||
+      !crypto.timingSafeEqual(expectedBytes, providedBytes)) {
+    return res.sendStatus(404);
+  }
+  const activeGames = games.games.length;
+  res.set('Cache-Control', 'no-store');
+  return res.json({ ready: activeGames === 0, activeGames });
 });
 app.get('/manifest.webmanifest', (req, res) => {
   res.type('application/manifest+json');

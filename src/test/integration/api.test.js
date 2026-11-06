@@ -7,13 +7,15 @@ let httpServer;
 let baseUrl;
 let app;
 let mongoClient;
+let games;
 
 before(async () => {
   mongod = await MongoMemoryServer.create();
   process.env.MONGO_URL = mongod.getUri();
   process.env.EDUHOOT_RESOURCES_TOKEN = 'test-catalogue-token';
+  process.env.EDUHOOT_DEPLOY_READINESS_TOKEN = 'test-deploy-readiness-token';
   process.env.PUBLIC_IMPORT_SOURCE_URL = 'https://catalogue.example';
-  ({ app, mongoClient } = require('../../server/server.js'));
+  ({ app, mongoClient, games } = require('../../server/server.js'));
   httpServer = app.listen(0);
   await new Promise((resolve) => httpServer.on('listening', resolve));
   baseUrl = `http://127.0.0.1:${httpServer.address().port}`;
@@ -73,6 +75,29 @@ test('GET /api/validate-pin rechaza un PIN inexistente', async () => {
   const res = await request('/api/validate-pin/000000');
   assert.equal(res.status, 200);
   assert.deepEqual(await res.json(), { valid: false });
+});
+
+test('deploy readiness requiere clave y refleja las partidas activas', async () => {
+  const path = '/api/internal/deploy-readiness';
+  const headers = { 'X-EduHoot-Deploy-Token': 'test-deploy-readiness-token' };
+  assert.equal((await request(path)).status, 404);
+  assert.equal((await request(path, { headers: { 'X-EduHoot-Deploy-Token': 'wrong' } })).status, 404);
+  const configuredToken = process.env.EDUHOOT_DEPLOY_READINESS_TOKEN;
+  delete process.env.EDUHOOT_DEPLOY_READINESS_TOKEN;
+  try {
+    assert.equal((await request(path, { headers })).status, 404);
+  } finally {
+    process.env.EDUHOOT_DEPLOY_READINESS_TOKEN = configuredToken;
+  }
+  const idle = await request(path, { headers });
+  assert.equal(idle.headers.get('cache-control'), 'no-store');
+  assert.deepEqual(await idle.json(), { ready: true, activeGames: 0 });
+  games.addGame(1234, 'deploy-test-host', true, {});
+  try {
+    assert.deepEqual(await (await request(path, { headers })).json(), { ready: false, activeGames: 1 });
+  } finally {
+    games.removeGame('deploy-test-host');
+  }
 });
 
 test('GET /api/auth/google/config reporta Google desactivado', async () => {
