@@ -2,8 +2,8 @@
 
 L'entorn de preproducció és https://eduhoot-stage.edutictac.es. Té la seua
 pròpia base de dades i el seu propi proveïdor d'Authentik: el que s'hi faça no
-afecta producció. No l'indexen els cercadors i la part docent està protegida
-amb usuari i contrasenya.
+afecta producció. L'accés web és públic i no demana cap contrasenya del VPS.
+Els cercadors poden indexar-lo.
 
 ## Com es publica
 
@@ -38,7 +38,8 @@ en `main`.
 
 ## Què no fa
 
-- No desplega mai en producció. Producció continua amb el procediment manual.
+- Una etiqueta de stage no desplega en producció. La promoció a producció
+  requerix executar expressament el workflow corresponent de GitHub.
 - GitHub no té cap credencial del servidor: és el servidor qui descarrega
   la imatge pública.
 
@@ -52,9 +53,11 @@ el peu de pàgina (o `GET /api/version`) mostra la versió de `package.json`.
 
 ### Docents
 
-El personal docent entra amb l'autenticació bàsica del nginx del VPS (usuari
-`stage`; la contrasenya la guarda l'administració d'EduTicTac). Dins de
-l'aplicació, l'únic accés és el xip de compte d'EduTicTac: `/create/` carrega
+Qualsevol persona pot entrar a `/create/`, crear un qüestionari local i
+organitzar una partida sense compte. Les proves de stage s'emmagatzemen en la
+seua base de dades independent. Per a guardar qüestionaris en una biblioteca
+personal, recuperar-los des d'un altre dispositiu o administrar-los, cal
+iniciar sessió amb EduTicTac. El xip de compte de `/create/` carrega
 `https://commons.edutictac.es/assets/account-widget.js`, que consulta la
 sessió en `https://commons.edutictac.es/api/auth/session`.
 
@@ -78,26 +81,19 @@ apareix `/create/?authentik=error`, cal revisar que `AUTHENTIK_SCOPE` (en
 `/opt/eduhoot-stage/eduhoot-stage.env`) incloga `groups`, o que Authentik
 envie els grups dins de `profile`.
 
-### Alumnat
+### Alumnat i accés públic
 
-Les rutes que necessita l'alumnat estan **obertes sense autenticació bàsica**,
-de manera permanent, perquè només calga el PIN com en producció:
+La portada `/`, `/join.html`, `/player/`, `/solo/`, `/multiplayer/` i la resta
+de rutes de stage estan obertes sense autenticació HTTP. L'alumnat entra a la
+partida amb el PIN, com en producció. Les operacions de compte de l'API
+continuen exigint una sessió d'EduHoot; la creació de qüestionaris locals és
+pública. La base de dades és `eduhoot_stage`, separada de producció.
 
-- `/join.html`, `/player/`, `/socket.io/`, `/api/`, `/js/`, `/css/`,
-  `/fonts/`, `/icons/`, `/uploads/`, `/sw.js` i `/manifest.webmanifest`.
-
-Continuen protegides amb usuari i contrasenya: `/`, `/create/`, `/host/`,
-`/multiplayer/`, `/solo/` i `/admin-stats.html`.
-
-Les cabeceres de proxy d'eixes rutes són a
-`/etc/nginx/snippets/eduhoot-stage-proxy.conf`, i cada `location` oberta hi
-fa `include` amb `auth_basic off`. Per a tornar a protegir-ho tot, lleveu
-eixos blocs `location` del vhost i feu `systemctl reload nginx`; el vhost
-original està guardat al costat amb el sufix `.bak-<data>`.
-
-Conseqüència assumida: `/api/` oberta inclou també els endpoints de creació,
-però exigixen sessió d'EduHoot i la base és d'exemple (`eduhoot_stage`), no
-la de producció.
+El vhost és `/etc/nginx/sites-available/eduhoot-stage.edutictac.es` i la
+configuració anterior es va guardar en
+`/etc/nginx/sites-available/eduhoot-stage.edutictac.es.bak-public-20261106T184253Z`.
+El fitxer de contrasenyes HTTP anterior es va eliminar. `robots.txt` permet
+l'accés i el vhost no envia `X-Robots-Tag: noindex`.
 
 ## Sembra de dades d'exemple
 
