@@ -8,7 +8,8 @@ detecta l'etiqueta `stage-AAAA.MM.DD-N` que executa stage i verifica que la imat
 publicada en stage correspon al commit de l'etiqueta i copia exactament les
 mateixes capes a `ghcr.io/edutictac/eduhoot:prod-latest`. No té accés al VPS.
 
-El VPS consulta eixa etiqueta cada dos minuts. Només accepta la imatge si el
+El workflow també comprova que el commit etiquetat en stage ja està en
+`main`. El VPS consulta eixa etiqueta cada dos minuts. Només accepta la imatge si el
 contenidor `eduhoot-stage` està sa **i executa exactament la mateixa imatge**.
 Per tant, si stage canvia entre la petició i la comprovació del VPS, no es
 desplega la candidata. L'actualitzador també exigeix la comprovació de
@@ -49,17 +50,19 @@ partides estiga buida (o que no n'hi haja des de l'arrancada) **i** que no hi
 haja connexions TCP al port 3000. Activa manteniment i repetix la comprovació
 abans del reinici. Després, la nova imatge ja disposarà de l'API de drenatge.
 
-`main` encara no inclou tot el treball de la branca d'Eduardo. Les futures
-etiquetes de stage han de continuar eixint de la seua branca sincronitzada
-amb `main`, fins que faça el PR corresponent.
+`main` encara no inclou tot el treball de la branca d'Eduardo. El primer pas
+és integrar en la seua branca `feat/delegated-deploy-readiness`, obrir un PR a
+`main` i fusionar-lo després que passe el job `tests`. Eduardo pot fusionar
+els seus propis PR; el push directe a `main` continua bloquejat. Després
+d'això, les noves etiquetes de stage han d'eixir de `main`.
 
 ## Publicar després de la instal·lació
 
-1. Publicar i provar una etiqueta `stage-*` segons
-   [STAGE-AUTOMATIC.md](STAGE-AUTOMATIC.md).
-   Cal una **etiqueta nova**: `stage-2026.11.06-1` està ignorada perquè
-   l'usuari va restaurar la versió anterior. Pot apuntar al mateix commit si
-   es vol publicar eixe codi més avant.
+1. Fusionar a `main` un PR amb els canvis desitjats, quan el job `tests`
+   estiga verd. Crear des de `main` una **etiqueta nova** `stage-*` i comprovar
+   que es desplega bé en stage segons [STAGE-AUTOMATIC.md](STAGE-AUTOMATIC.md).
+   `stage-2026.11.06-1` està ignorada perquè l'usuari va restaurar la versió
+   anterior.
 2. En **Actions → Prepara una imatge per a producció → Run workflow**, triar
    `main` i executar-lo. El workflow llig la versió activa de stage; no cal
    copiar cap etiqueta.

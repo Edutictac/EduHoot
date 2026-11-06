@@ -31,6 +31,7 @@ jobs:
       - uses: actions/checkout@v7.0.1
         with:
           ref: refs/tags/${{ steps.stage.outputs.tag }}
+          fetch-depth: 0
           persist-credentials: false
 
       - name: Verifica i publica la mateixa imatge
@@ -46,6 +47,10 @@ jobs:
           revision=$(docker image inspect "$stage" --format '{{index .Config.Labels "org.opencontainers.image.revision"}}')
           version=$(docker image inspect "$stage" --format '{{index .Config.Labels "org.opencontainers.image.version"}}')
           [[ "$revision" == "$(git rev-parse HEAD)" && "$version" == "$STAGE_TAG" ]]
+          git merge-base --is-ancestor "$revision" origin/main || {
+            echo 'El commit de stage encara no està en main. Fusiona el PR i publica una nova etiqueta de stage des de main.' >&2
+            exit 1
+          }
           docker tag "$stage" "$production:prod-$STAGE_TAG"
           docker tag "$stage" "$production:prod-latest"
           export DOCKER_CONFIG
