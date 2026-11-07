@@ -21,12 +21,7 @@
                 <div class="top-actions">
                     <label class="lang-switch">
                         <span data-i18n="langLabel">Idioma</span>
-                        <select id="lang-select">
-                            <option value="ca" data-i18n="langCa">Català</option>
-                            <option value="va" data-i18n="langVa">Valencià</option>
-                            <option value="es" data-i18n="langEs">Español</option>
-                            <option value="en" data-i18n="langEn">English</option>
-                        </select>
+                        <select id="lang-select" data-lang-options="name"></select>
                     </label>
                     <button id="open-account" type="button" class="btn btn-ghost btn-small hidden" data-i18n="btnAccount">Preferencias</button>
                 </div>
@@ -348,6 +343,15 @@
         <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+        <script src="/js/languages.js"></script>
+        <script src="/js/env-badge.js"></script>
+        <script src="../js/i18n-create.js"></script>
+        <script src="../js/create-admin.js"></script>
+        <script src="../js/create-export.js"></script>
+        <script src="../js/create-ia.js"></script>
+        <script src="../js/create-auth.js"></script>
+        <script src="../js/create-quiz-actions.js"></script>
+        <script src="../js/create-library.js"></script>
         <script src = "../js/create.js"></script>
         <script src="/js/app-version.js"></script>
     </body>

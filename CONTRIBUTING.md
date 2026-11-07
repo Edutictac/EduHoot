@@ -51,7 +51,7 @@ abans de fusionar-lo.
 ### Després de fusionar-se
 
 El canvi es valida en l'entorn de preproducció descrit en
-[`STAGE_SETUP.md`](STAGE_SETUP.md) abans de promocionar-se a producció.
+[`docs/STAGE_SETUP.md`](docs/STAGE_SETUP.md) abans de promocionar-se a producció.
 
 ### Llicència
 
@@ -109,7 +109,7 @@ antes de fusionarlo.
 ### Después de fusionarse
 
 El cambio se valida en el entorno de preproducción descrito en
-[`STAGE_SETUP.md`](STAGE_SETUP.md) antes de promocionarse a producción.
+[`docs/STAGE_SETUP.md`](docs/STAGE_SETUP.md) antes de promocionarse a producción.
 
 ### Licencia
 
@@ -167,7 +167,7 @@ before merging it.
 ### After merging
 
 The change is validated in the pre-production environment described in
-[`STAGE_SETUP.md`](STAGE_SETUP.md) before being promoted to production.
+[`docs/STAGE_SETUP.md`](docs/STAGE_SETUP.md) before being promoted to production.
 
 ### License
 

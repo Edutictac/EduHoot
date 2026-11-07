@@ -7,6 +7,7 @@ Wants=network-online.target
 Type=simple
 WorkingDirectory=/opt/eduhoot-stage/src
 EnvironmentFile=-/etc/eduhoot/stage.env
+ExecStartPre=/bin/sh -c '[ "$AUTO_SEED_STAGE" = "1" ] && node /opt/eduhoot-stage/src/scripts/seed-stage-data.js || true'
 ExecStart=/usr/bin/env node /opt/eduhoot-stage/src/server/server.js
 Restart=always
 RestartSec=2

@@ -40,15 +40,14 @@ sudo chmod 640 /etc/eduhoot/stage.env
 Ajusta com a mínim:
 - `PORT=3100`
 - `MONGO_URL=mongodb://127.0.0.1:27017/eduhoot_stage`
+- `MONGO_DB=eduhoot_stage`
 - `PUBLIC_BASE_URL=https://stage.tu-dominio`
 
-> **Avís:** hui este `/eduhoot_stage` no té cap efecte real. El nom de
-> base de dades està fix en el codi (`DB_NAME` en `server.js`), que
-> ignora el nom que porte `MONGO_URL` — stage llig i escriu la mateixa
-> base `kahootDB` que producció, en compartir el mateix mongod. Vore
-> `ARCHITECTURE.md` → "Deute tècnic conegut" per al detall i la
-> solució recomanada (`MONGO_DB=eduhoot_stage` una vegada `DB_NAME`
-> siga configurable).
+> **Important:** cal definir `MONGO_DB=eduhoot_stage` (ja present en
+> `install-files/stage.env.example`). `DB_NAME` en `server.js` ara és
+> configurable (`process.env.MONGO_DB || 'kahootDB'`), però si
+> s'oblida esta variable, stage tornaria a llegir i escriure la base
+> `kahootDB` real de producció en compartir el mateix mongod.
 
 ## 3) Servici systemd de stage
 
@@ -86,7 +85,41 @@ Per a provar-ho sense copiar fitxers:
 DRY_RUN=1 ./scripts/deploy-stage.sh
 ```
 
-## 6) Checklist de validació fiable
+## 6) Sembrar quizzes d'exemple
+
+Hi ha un script independent (`src/scripts/seed-stage-data.js`) que insertix
+50 quizzes d'exemple de primària i secundària (música, informàtica,
+matemàtiques, llengües, ciències, anglés, educació física...) en la BD de
+stage, sense crear cap usuari (l'autenticació en stage ja va per Authentik
+d'EduTicTac). És idempotent (no duplica si ja existixen) i es pot desfer amb
+`--remove`. Mai s'executa si `NODE_ENV` no és `staging` o si `MONGO_DB` val
+`kahootDB` (el nom de la BD de producció).
+
+**Important**: el VPS de stage no accepta connexions SSH entrants de ningú
+(el disseny és *pull-only*: el propi VPS consulta `ghcr.io` cada pocs
+minuts i es desplega a si mateix; vore `docs/STAGE-AUTOMATIC.md`). No hi ha,
+per tant, cap manera d'executar el seed per SSH des d'un equip extern.
+
+**Qui ho pot llançar**: qui puga editar `/etc/eduhoot/stage.env` o obrir una
+consola directa en el VPS a través del tauler del proveïdor de hosting
+(no per SSH remot) — en la pràctica, qui administre hui eixa màquina.
+
+**Com, automàtic (recomanat)** — definix `AUTO_SEED_STAGE=1` en
+`/etc/eduhoot/stage.env` (vore `install-files/stage.env.example`); el mateix
+`eduhoot-stage-server.service` siembra en cada arrancada o reinici del
+servici (via `ExecStartPre`), tant si el reinici ve del desplegament
+automàtic per etiqueta com si és manual. Mentres eixa variable no estiga
+definida, no fa res.
+
+**Com, puntual** — des d'una sessió de consola oberta directament en el
+VPS (no SSH remot), en `/opt/eduhoot-stage/src`:
+
+```bash
+npm run seed:stage
+npm run unseed:stage
+```
+
+## 7) Checklist de validació fiable
 
 ```bash
 curl -I http://127.0.0.1:3100/
@@ -102,7 +135,7 @@ Validacions recomanades per cada canvi:
 - Revisió visual ràpida de landing/create/host/player.
 - `npm run lint` abans de desplegar.
 
-## 7) Promoció a producció
+## 8) Promoció a producció
 
 Promociona només si stage està en verd:
 - Lint OK.

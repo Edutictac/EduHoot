@@ -6,7 +6,12 @@ const {
   normalizeCorrectAnswers,
   splitAcceptedAnswers,
   parseLenientNumber,
-  normalizeQuestionMeta
+  normalizeQuestionMeta,
+  normalizeFreeText,
+  isFreeAnswerType,
+  looksLikeFreeTypeQuestion,
+  isSubmissionCorrect,
+  buildAnswerFields
 } = require('../../server/questionUtils');
 
 test('normalizeQuestionType reconoce los tipos canónicos', () => {
@@ -76,4 +81,83 @@ test('normalizeQuestionMeta recorta true-false a 2 opciones', () => {
   const meta = normalizeQuestionMeta({ type: 'true-false', correct: '2' });
   assert.equal(meta.type, 'true-false');
   assert.deepEqual(meta.correctAnswers, [2]);
+});
+
+test('normalizeFreeText quita acentos, mayúsculas y puntuación', () => {
+  assert.equal(normalizeFreeText('  Río, Ñandú!  '), 'rio nandu');
+  assert.equal(normalizeFreeText(''), '');
+  assert.equal(normalizeFreeText(null), '');
+});
+
+test('isFreeAnswerType distingue los tipos de respuesta libre', () => {
+  assert.equal(isFreeAnswerType('short-answer'), true);
+  assert.equal(isFreeAnswerType('numeric'), true);
+  assert.equal(isFreeAnswerType('quiz'), false);
+  assert.equal(isFreeAnswerType('multiple'), false);
+  assert.equal(isFreeAnswerType('true-false'), false);
+  assert.equal(isFreeAnswerType('poll'), false);
+});
+
+test('looksLikeFreeTypeQuestion detecta señales de tipo libre aunque el type venga corrupto', () => {
+  assert.equal(looksLikeFreeTypeQuestion({ acceptedAnswers: ['gos'] }), true);
+  assert.equal(looksLikeFreeTypeQuestion({ acceptedAnswers: '' }), false);
+  assert.equal(looksLikeFreeTypeQuestion({ numericAnswer: 3 }), true);
+  assert.equal(looksLikeFreeTypeQuestion({ numero: '3,5' }), true);
+  assert.equal(looksLikeFreeTypeQuestion({ tolerancia: '0,5' }), true);
+  assert.equal(looksLikeFreeTypeQuestion({ tolerance: 0.5 }), true);
+  assert.equal(looksLikeFreeTypeQuestion({}), false);
+  assert.equal(looksLikeFreeTypeQuestion(null), false);
+});
+
+test('isSubmissionCorrect en short-answer ignora acentos/mayúsculas y accepta acceptedAnswers como string', () => {
+  const meta = { type: 'short-answer', correctAnswers: [1], acceptedAnswers: ['Perro', 'Gato'] };
+  assert.equal(isSubmissionCorrect(meta, 'PERRO'), true);
+  assert.equal(isSubmissionCorrect(meta, { text: 'perro' }), true);
+  assert.equal(isSubmissionCorrect(meta, 'loro'), false);
+  const metaStringAccepted = { type: 'short-answer', correctAnswers: [1], acceptedAnswers: 'perro, gato' };
+  assert.equal(isSubmissionCorrect(metaStringAccepted, 'gato'), true);
+});
+
+test('isSubmissionCorrect en numeric respeta la tolerancia', () => {
+  const meta = { type: 'numeric', correctAnswers: [1], numericAnswer: 10, tolerance: 0.5 };
+  assert.equal(isSubmissionCorrect(meta, 10.4), true);
+  assert.equal(isSubmissionCorrect(meta, 10.6), false);
+});
+
+test('isSubmissionCorrect en multiple exige el mismo conjunto exacto', () => {
+  const meta = { type: 'multiple', correctAnswers: [1, 3] };
+  assert.equal(isSubmissionCorrect(meta, [1, 3]), true);
+  assert.equal(isSubmissionCorrect(meta, [3, 1]), true);
+  assert.equal(isSubmissionCorrect(meta, [1]), false);
+  assert.equal(isSubmissionCorrect(meta, [1, 2, 3]), false);
+});
+
+test('isSubmissionCorrect en tipos de índice único y casos sin correctAnswers', () => {
+  const meta = { type: 'quiz', correctAnswers: [2] };
+  assert.equal(isSubmissionCorrect(meta, 2), true);
+  assert.equal(isSubmissionCorrect(meta, 1), false);
+  assert.equal(isSubmissionCorrect({ type: 'quiz', correctAnswers: [] }, 1), false);
+});
+
+test('buildAnswerFields en numeric devuelve numericAnswer y tolerance', () => {
+  const meta = { type: 'numeric', numericAnswer: 7, tolerance: 0.5 };
+  assert.deepEqual(buildAnswerFields({}, meta, { hasVideo: false }), { numericAnswer: 7, tolerance: 0.5 });
+});
+
+test('buildAnswerFields en tipos no indexats no afig cap camp extra', () => {
+  assert.deepEqual(buildAnswerFields({}, { type: 'quiz' }, { hasVideo: false }), {});
+  assert.deepEqual(buildAnswerFields({}, { type: 'multiple' }, { hasVideo: false }), {});
+  assert.deepEqual(buildAnswerFields({}, { type: 'true-false' }, { hasVideo: false }), {});
+  assert.deepEqual(buildAnswerFields({}, { type: 'poll' }, { hasVideo: false }), {});
+});
+
+test('buildAnswerFields (caracterització): recupera acceptedAnswers des del camp video retrocompatible', () => {
+  const meta = { type: 'short-answer', acceptedAnswers: [] };
+  const item = { video: 'resposta1, resposta2' };
+  assert.deepEqual(buildAnswerFields(item, meta, { hasVideo: false }).acceptedAnswers, ['resposta1', 'resposta2']);
+  // Si ja hi ha un vídeo real, no s'interpreta eixe camp com a text de resposta.
+  assert.deepEqual(buildAnswerFields(item, meta, { hasVideo: true }).acceptedAnswers, []);
+  // Si ja hi ha acceptedAnswers del propi meta, no cal recuperar res del vídeo.
+  const metaAmbAccepted = { type: 'short-answer', acceptedAnswers: ['ja existent'] };
+  assert.deepEqual(buildAnswerFields(item, metaAmbAccepted, { hasVideo: false }).acceptedAnswers, ['ja existent']);
 });

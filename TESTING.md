@@ -76,11 +76,19 @@ problemes d'estil, variables sense usar, etc.
   (`questionUtils.test.js`), partides en directe (`liveGames.test.js`).
 - **`test/integration/`** — alça el servidor Express real (amb Mongo en
   memòria) i prova l'API HTTP d'extrem a extrem: `api.test.js`,
-  `sessionReport.test.js`, i els més recents `auth-migration.test.js` i
-  `authentik.test.js` (migració de comptes a Authentik).
+  `sessionReport.test.js`, `auth-migration.test.js` i `authentik.test.js`
+  (migració de comptes a Authentik), `commonsUrl.test.js` (el xip apunta al
+  Commons de `EDUTICTAC_COMMONS_URL`), i `devLogin.test.js` /
+  `devLoginOff.test.js` (`/dev/login` funciona en desenvolupament i dona 404
+  fora d'ell), i `devOidc.test.js` (flux d'Authentik complet contra l'OIDC
+  simulat de dev: rol del seed, rebuig sense rol docent i PKCE).
 - **`test/browser/`** — tests de navegador amb Playwright: `language.spec.js`
-  (canvi d'idioma) i el més recent `auth-state.spec.js` (estat de sessió
-  després de la migració a Authentik).
+  (canvi d'idioma), `auth-state.spec.js` (estat de sessió i pont amb el xip),
+  `solo-poll.spec.js` (les preguntes d'enquesta en mode Solo no compten com a
+  error ni puntuen), `chip-footer.spec.js` (xip de compte i peu comú),
+  `solo-library.spec.js` (llistat, favorit, valoració i partida en `/solo/`) i
+  `create-library.spec.js` (llistat, cerca, etiqueta, CSV i esborrat en
+  `/create/`).
 
 ### Scripts puntuals que NO són part del flux de test estàndard
 
@@ -94,10 +102,18 @@ per a tasques concretes d'administració/migració, no proves automàtiques:
 - `scripts/normalize-tags.js` (`npm run normalize-tags`) — normalitza
   etiquetes de qüestionaris existents en la base de dades.
 
-## Proves manuals en el navegador
+## Proves de caixa negra (al navegador)
 
-Per a comprovar un canvi "a ull" després d'arrancar el servidor
-(vore [Arrancar l'app](#arrancar-lapp-per-a-provar-la-a-mà)):
+Proves fetes "des de fora", com ho faria una persona usuària real,
+**sense mirar el codi** — a diferència de les automàtiques i de
+`npm run lint`, que sí coneixen l'estructura interna. Totes es fan amb
+l'app alçada (vore [Arrancar l'app](#arrancar-lapp-per-a-provar-la-a-mà)
+o `docs/DEV_DOCKER_SETUP.md` si vols partir ja amb 5 qüestionaris i 5
+usuaris de mostra carregats). Sobre si estes proves es poden
+automatitzar i amb què, vore `docs/TESTING_BLACKBOX.md`.
+
+**Accés ràpid a cada mode**, per a comprovar un canvi puntual sense fer
+el recorregut complet de baix:
 
 - **Crear/editar un qüestionari**: `http://localhost:3000/create/`
 - **Jugar a l'aula** (amfitrió + diversos dispositius/pestanyes com a
@@ -109,15 +125,57 @@ Per a comprovar un canvi "a ull" després d'arrancar el servidor
   "Multijugador" → `/multiplayer/`.
 - **Solo** (mode individual): botó "Solo" → `/solo/`, o enllaços directes
   com `/solo/?id=<quizId>` o `/solo/?tag=musica` (vore `README.md`).
+- Per a provar canvis d'idioma: selector d'idioma de la interfície, o
+  afegir `?lang=va|es|en` a la URL.
 
-Per a provar canvis d'idioma, usar el selector d'idioma de la interfície o
-afegir `?lang=va|es|en` a la URL.
+**Recorregut complet**, per a validar tot el projecte de dalt a baix
+abans de publicar un canvi gran o etiquetar una versió — capta
+regressions que cap test automàtic ni comprovació puntual cobrix:
+
+1. **Biblioteca i creació** (`/create/`):
+   - Crear un qüestionari nou amb almenys una pregunta de cada tipus
+     (`quiz`, `multiple`, `true-false`, `short-answer`, `numeric`,
+     `poll`) — vore `ARCHITECTURE.md` si cal recordar què és cada u.
+   - Editar-lo, afegir etiquetes, canviar la visibilitat
+     (privat/no llistat/públic), clonar-lo i esborrar el clon.
+   - Pujar un qüestionari per CSV (vore `README.md`).
+2. **Jugar a l'aula** (mode classe, amb PIN): llançar la partida des de
+   la biblioteca, unir-se amb almenys dos dispositius/pestanyes com a
+   alumnat des de `/join`, respondre totes les preguntes (cada tipus
+   inclòs), comprovar el compte arrere, l'avanç manual entre preguntes,
+   el rànquing final i la celebració d'encert/fallada col·lectiva.
+3. **Multijugador** (pantalla compartida, 2-4 jugadors): jugar una
+   partida sencera des d'un sol dispositiu.
+4. **Solo**: jugar amb un enllaç directe (`/solo/?id=<quizId>` o
+   `/solo/?tag=...`), comprovar que les preguntes d'enquesta no obrin
+   el diàleg d'error ni puntuen, i que l'estadística final i el
+   rànquing global es mostren bé.
+5. **Informe i exportació**: des de "Jugar a l'aula", descarregar
+   l'informe CSV de la partida i comprovar que les columnes tenen
+   sentit; exportar el qüestionari a Moodle XML i comprovar que
+   s'importa sense error en un Moodle/AULES de prova (si n'hi ha a
+   l'abast).
+6. **Idiomes**: canviar entre els 4 idiomes disponibles (català,
+   valencià, castellà, anglés) amb el selector de la interfície, i
+   comprovar que el canvi persistix en recarregar i en navegar entre
+   `/create/`, `/host/`, `/join`, `/solo/` i `/multiplayer/`.
+7. **Sessió i accés**: tancar sessió i tornar a entrar; si hi ha Google
+   o Authentik configurats en l'entorn de prova, provar també eixos
+   fluxos d'inici de sessió.
+8. **Accessibilitat bàsica**: comprovar que les respostes es distingixen
+   per forma a més de color, i navegar almenys una pantalla amb només
+   el teclat — vore `docs/ACCESSIBILITY.md` per a l'abast complet.
+
+Si algun pas d'estos falla o es comporta de manera inesperada, és un
+senyal fiable encara que els tests automàtics donen tots en verd — el
+recorregut complet és el que capta regressions que cap test aïllat
+cobrix.
 
 ## Abans d'etiquetar una versió (checklist)
 
-Equivalent a allò que feien les seccions "Comprovacions" de
-`RELEASE-1.0.2.md`/`RELEASE-1.0.5.md`, però com a referència única i
-reutilitzable per a qualsevol versió futura:
+Fins a la versió 1.0.5, cada nota de versió repetia esta llista de
+comprovacions; ara viu només ací, com a referència única i reutilitzable
+per a qualsevol versió futura:
 
 ```bash
 cd src

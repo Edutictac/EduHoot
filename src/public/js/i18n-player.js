@@ -33,6 +33,12 @@
       correct_answer: 'Respuesta correcta:',
       partial: 'Respuesta parcialmente correcta: has sumado puntos.',
       poll_thanks: '¡Gracias por responder!',
+      blind_hint: 'Mira la pantalla para ver la pregunta',
+      answer_option: 'Opción',
+      shape_triangle: 'triángulo',
+      shape_diamond: 'rombo',
+      shape_circle: 'círculo',
+      shape_square: 'cuadrado',
       submitted: 'Respuesta enviada. Esperando al resto...',
       submit_multiple: 'Enviar respuestas',
       status_pending: 'Responde ahora',
@@ -95,6 +101,12 @@
       correct_answer: 'Resposta correcta:',
       partial: 'Resposta parcialment correcta: has sumat punts.',
       poll_thanks: 'Gràcies per respondre!',
+      blind_hint: 'Mira la pantalla per a veure la pregunta',
+      answer_option: 'Opció',
+      shape_triangle: 'triangle',
+      shape_diamond: 'romb',
+      shape_circle: 'cercle',
+      shape_square: 'quadrat',
       submitted: 'Resposta enviada. Esperant la resta...',
       submit_multiple: 'Envia les respostes',
       status_pending: 'Respon ara',
@@ -163,6 +175,12 @@
       correct_answer: 'Correct answer:',
       partial: 'Partially correct: you earned points.',
       poll_thanks: 'Thanks for responding!',
+      blind_hint: 'Look at the screen to see the question',
+      answer_option: 'Option',
+      shape_triangle: 'triangle',
+      shape_diamond: 'diamond',
+      shape_circle: 'circle',
+      shape_square: 'square',
       submitted: 'Answer Submitted! Waiting on other players...',
       submit_multiple: 'Submit answers',
       status_pending: 'Answer now',
@@ -195,57 +213,7 @@
     }
   };
 
-  const LANG_KEYS = ['lang-player', 'lang', 'lang-host', 'edutictac-portal-lang', 'edutictac-lang'];
-
-  function normalizeLang(raw) {
-    const value = String(raw || '').toLowerCase();
-    if (value.indexOf('valencia') !== -1) return 'va';
-    const base = value.split('-')[0];
-    return translations[base] ? base : '';
-  }
-
-  function queryLang() {
-    try {
-      return normalizeLang(new URLSearchParams(window.location.search).get('lang'));
-    } catch (e) {
-      return '';
-    }
-  }
-
-  function storedLang() {
-    for (const key of LANG_KEYS) {
-      const value = normalizeLang(window.localStorage.getItem(key));
-      if (value) return value;
-    }
-    return '';
-  }
-
-  function persistLang(value) {
-      try {
-          var url = new URL(window.location.href);
-          if (url.searchParams.has('lang')) {
-              url.searchParams.set('lang', value);
-              window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
-          }
-      } catch (e) {}
-    for (const key of LANG_KEYS) {
-      try { window.localStorage.setItem(key, value); } catch (e) {}
-    }
-  }
-
-  function detectLang() {
-    const fromQuery = queryLang();
-    if (fromQuery) return fromQuery;
-    const stored = storedLang();
-    if (stored) return stored;
-    const nav = (navigator.language || navigator.userLanguage || 'es').toLowerCase();
-    const browserLang = normalizeLang(nav);
-    if (browserLang) return browserLang;
-    return 'en';
-  }
-
-  const lang = detectLang();
-  persistLang(lang);
+  const lang = EduhootLang.init({ preferKey: 'lang-player', fallback: 'en' });
   if (document && document.documentElement) {
     document.documentElement.setAttribute('lang', lang);
   }
@@ -275,10 +243,15 @@
 
   function setLang(newLang) {
     if (translations[newLang]) {
-      persistLang(newLang);
+      EduhootLang.persist(newLang);
       window.location.reload();
     }
   }
+
+  document.addEventListener('click', (event) => {
+    const button = event.target.closest('#lang-switcher button[data-lang]');
+    if (button) setLang(button.getAttribute('data-lang'));
+  });
 
   window.i18nPlayer = { t, lang, setLang };
   document.addEventListener('DOMContentLoaded', applyTranslations);

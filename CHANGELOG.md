@@ -8,10 +8,72 @@ i este projecte segueix, de manera flexible, el
 
 Les versions de l'1.0.0 a l'1.0.7 són una reconstrucció retroactiva a partir
 de l'historial de Git (missatges de commit i el camp `version` de
-`src/package.json`), ja que este fitxer no existia abans d'ara. Quan ja
-existia una nota `RELEASE-X.Y.Z.md` pròpia per a una versió (1.0.2, 1.0.5), el
-seu contingut es resumeix ací i s'hi enllaça; el fitxer original es manté
-intacte com la nota de versió més detallada.
+`src/package.json`), ja que este fitxer no existia abans d'ara.
+
+Les versions 1.0.2 i 1.0.5 van tindre en el seu moment una nota de versió
+pròpia (`RELEASE-X.Y.Z.md`); el seu contingut ja està integrat ací i als
+fitxers corresponents, i els originals es van eliminar.
+
+## [1.1.0] - 2026-11-07
+
+### Afegit
+- Entorn de desenvolupament amb Docker (`docker compose up`): alça EduHoot
+  amb recàrrega automàtica, sense instal·lar Node ni MongoDB en local.
+  Documentat en [`docs/DEV_DOCKER_SETUP.md`](docs/DEV_DOCKER_SETUP.md).
+- L'entorn de desenvolupament carrega automàticament 5 qüestionaris públics
+  de mostra i 5 usuaris de prova (1 administrador, 4 editors), de forma
+  idempotent i reversible (`npm run seed:dev` / `unseed:dev`).
+- Distintiu visual d'entorn: quan l'app s'executa en desenvolupament o en
+  stage, totes les pantalles principals mostren un distintiu fix a la part
+  superior, un tint de fons i un prefix al títol de la pestanya, per a no
+  confondre estos entorns amb producció. No fa res quan l'entorn és
+  producció.
+- `/dev/login` (només amb `NODE_ENV=development`): entrar com a qualsevol
+  usuari de prova del seed amb un clic, ara que `/create/` només té l'accés
+  pel xip d'EduTicTac. El distintiu de desenvolupament hi enllaça.
+- Authentik simulat en `docker compose` (servei `oidc`,
+  `src/scripts/dev-oidc.js`): prova el flux OIDC real en local amb usuaris de
+  prova (docents del seed, un docent nou i un alumne sense rol docent).
+- Camps `idioma`, `llicència` i `descripció` en crear o editar un qüestionari.
+- El peu de pàgina i el distintiu d'entorn mostren també l'etiqueta de
+  desplegament quan l'app s'executa en stage.
+
+### Canviat
+- El distintiu verd de stage ara és clicable: porta a la portada del
+  mateix origen, igual que el de desenvolupament porta a `/dev/login`.
+- En stage i desenvolupament s'amaga l'enllaç "Inici" del xip de compte
+  (porta a `edutictac.es` sense manera evident de tornar i confonia a
+  qui prova l'entorn); en producció es manté visible.
+- El títol de la pestanya del creador de qüestionaris mostra el seu nom o correu.
+- Les enquestes («opinió») ja no compten en el total de preguntes puntuables
+  en mode aula (abans només quedaven excloses en mode Solo).
+- El mode "a cegues" (desmarcar "Mostra la pregunta a l'alumnat") ja no deixa
+  el dispositiu sense cap botó: ara pinta botons amb forma/color i
+  `aria-label`, sense el text de la resposta. Funciona en qualsevol
+  dispositiu, no només mòbils (la casella es deia abans "Enviar als mòbils").
+
+### Corregit
+- Les preguntes d'enquesta («opinió») en el mode Solo ja no es compten com a
+  errors: ja no obrin el diàleg d'error, queden excloses del total puntuat
+  del rànquing, i una partida només d'enquestes no demana entrada al
+  rànquing.
+- L'avís de falta de permisos en la biblioteca de qüestionaris ara s'obri
+  sempre que cal, encara que l'usuari tinga sessió iniciada (abans només
+  apareixia si no n'hi havia cap). Els botons de jugar, editar, eliminar,
+  clonar i compartir sense permís ara apareixen deshabilitats amb un
+  missatge explicatiu, en lloc de quedar clicables sense cap avís previ.
+- El CSV d'informe de partida ja distingix entre resposta incorrecta,
+  parcial i enquesta, en lloc de marcar-ho tot indistintament com
+  "incorrecta".
+- El nom del CSV d'informe de partida ara inclou el nom del qüestionari i un
+  moment exacte, no només el PIN (que es reutilitza entre partides i podia
+  produir dos fitxers amb el mateix nom). El mateix criteri de nom de fitxer
+  (sense accents, longitud acotada) s'aplica ara també en exportar un
+  qüestionari a CSV o a Moodle XML.
+- El panell d'administració (`/admin/stats`) ara usa el mateix accés per
+  xip d'EduTicTac/Authentik que la resta de l'app, en lloc del formulari
+  antic de correu+contrasenya/Google, que ja no funcionava en producció
+  des que l'accés docent és únicament per Authentik.
 
 ## [1.0.13] - 2026-10-25
 
@@ -104,8 +166,8 @@ passar directament d'1.0.5 a 1.0.7.
 
 ## [1.0.5] - 2026-09-19
 
-Consulta també [RELEASE-1.0.5.md](RELEASE-1.0.5.md) per a la nota de versió
-original, basada en feedback real d'ús a l'aula.
+Lot de millores basat en feedback real d'ús a l'aula (Daniel Sàez Buedo
+i el seu alumnat).
 
 ### Afegit
 - Icones de forma (triangle, rombe, cercle, quadrat) en cada opció de
@@ -158,8 +220,9 @@ original, basada en feedback real d'ús a l'aula.
 
 ## [1.0.2] - 2026-09-15
 
-Consulta també [RELEASE-1.0.2.md](RELEASE-1.0.2.md) per a la nota de versió
-original, amb les comprovacions i el tag d'imatge Docker.
+Imatge Docker: `registry.edutictac.es/edutictac/eduhoot:1.0.2` — el tag
+passa del prototip `0.1.0` a seguir la versió del paquet Node; no calia
+migrar la base `kahootDB`.
 
 ### Afegit
 - Integració amb EduTicTac Commons 0.1.1-alpha.
@@ -265,6 +328,6 @@ original, amb les comprovacions i el tag d'imatge Docker.
   d'imatge/vídeo en preguntes.
 - Estadístiques bàsiques de partides i modes de joc preferits.
 
-[Sense publicar]: https://github.com/Edutictac/EduHoot/compare/v1.0.7...HEAD
+[1.1.0]: https://github.com/Edutictac/EduHoot/compare/v1.0.13...v1.1.0
 [1.0.7]: https://github.com/Edutictac/EduHoot/compare/v1.0.5...v1.0.7
 [1.0.2]: https://github.com/Edutictac/EduHoot/releases/tag/v1.0.2

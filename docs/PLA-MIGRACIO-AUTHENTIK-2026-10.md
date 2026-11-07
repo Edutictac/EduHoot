@@ -1,6 +1,6 @@
 # Migració d’EduHoot al compte únic EduTicTac
 
-Data del pla: 12 d’octubre de 2026. Estat: doble accés actiu i avís inicial enviat; recordatori i retirada automàtica desactivats després de les incidències de la prova real.
+Data del pla: 12 d’octubre de 2026. Estat (2 de novembre de 2026): Authentik és l’única entrada docent en producció i l’accés amb Google des d’Authentik funciona; falta confirmar les vinculacions dels comptes existents i comunicar el final. Detall a «Estat comprovat (2 de novembre de 2026)», al final.
 
 Este pla substituïx la convivència permanent de Google i Authentik prevista en `PLAN-AUTHENTIK.md`: hi haurà 14 dies de convivència i, després, només Authentik. Google continuarà disponible dins d’Authentik.
 
@@ -132,3 +132,12 @@ Documentació oficial d’Authentik sobre OIDC, PKCE i callbacks: https://docs.g
 - La capçalera mostra «Salir» / «Eixir» quan hi ha una sessió, i executa logout real en clicar. «Cuenta» / «Compte» manté l’accés al perfil. Sense sessió, torna a «Entrar».
 - Quatre proves de navegador superades, es/va en desktop/mobile, inclòs logout POST i recàrrega després de l’eixida. Lint OK. Publicats només els dos fitxers estàtics; no s’ha reiniciat el servei.
 - Recordatori i retirada automàtica continuen desactivats.
+
+
+## Estat comprovat (2 de novembre de 2026)
+
+- Els endpoints públics de producció (i de stage) indiquen el tall fet: `/api/auth/migration` retorna `authentikOnly: true` amb `end: null` (és a dir, `AUTHENTIK_ONLY=true` en l’entorn, no per data), `/api/auth/google/config` retorna `enabled: false` i `/api/auth/authentik/config` retorna `enabled: true, teacherOnly: true`.
+- Amb eixe valor, el servidor desactiva Google directe, la contrasenya local, el bootstrap, la creació d’usuaris i el reset, i només accepta sessions d’Authentik.
+- Des del 25 d’octubre (commit `701aa99`), la interfície de `/create/` ja no mostra els formularis antics: l’única entrada és el xip de compte d’EduTicTac.
+- Prova humana feta el 2 de novembre: entrar pel xip amb Google des d’Authentik arriba a EduHoot i mostra els qüestionaris anteriors del compte.
+- **Pendent per a tancar la migració** (criteris de dalt): comprovar en la base de dades de producció que els comptes existents estan vinculats a Authentik i conserven contingut i permisos, i resoldre els que tinguen un correu diferent; deshabilitar el client OAuth directe de Google només si no és el que usa la font Google d’Authentik; actualitzar el tauler docent i comunicar la finalització.

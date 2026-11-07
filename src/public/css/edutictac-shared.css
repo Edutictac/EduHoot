@@ -46,6 +46,15 @@ html.account-fallback edutictac-account.site-account {
   display: none !important;
 }
 
+/* Stage i desenvolupament: amaga "Inici" del xip (confonia al
+ * professorat en les proves; en producció es manté). Si Commons canvia
+ * la classe interna del widget, esta regla simplement deixa
+ * d'aplicar-se (no trenca res). */
+html.env-staging edutictac-account a.eta-home,
+html.env-development edutictac-account a.eta-home {
+  display: none !important;
+}
+
 /* El peu comú va sempre sobre el tema fosc d'EduHoot. */
 .ett-footer {
   --ett-footer-ink: rgba(255, 255, 255, .78);

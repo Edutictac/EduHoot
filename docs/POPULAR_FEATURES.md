@@ -13,7 +13,7 @@
 - [Resum per dificultat](#resum-per-dificultat)
 - [Full de ruta d'implementació](#full-de-ruta-dimplementació)
   - [Troballes que condicionen l'orde](#troballes-que-condicionen-lorde)
-  - [Fase 0 — Habilitadors (requisits, no una recomanació)](#fase-0--habilitadors-requisits-no-una-recomanació)
+  - [✅ Fase 0 — Habilitadors (requisits, no una recomanació)](#-fase-0--habilitadors-requisits-no-una-recomanació)
   - [Fase 1a — Millores cosmètiques/aïllades, sense tocar la lògica de joc](#fase-1a--millores-cosmètiquesaïllades-sense-tocar-la-lògica-de-joc)
   - [Fase 1b — Mecàniques de Solo/amfitrió, sense tocar l'arquitectura del cicle de partida](#fase-1b--mecàniques-de-soloamfitrió-sense-tocar-larquitectura-del-cicle-de-partida)
   - [Fase 2 — Mecàniques de joc de major abast, però autocontingudes](#fase-2--mecàniques-de-joc-de-major-abast-però-autocontingudes)
@@ -208,7 +208,7 @@ el context, que ja estan en la taula).
 5. 🟩 **Ambdues** — Avatars de personatge personalitzables — 🟡 Mitjana
    Ja existix un selector de 29 icones/emojis fixos (`join.html:44-73`,
    `join.js:2,33-52,191-193`, persistit com `avatar_icon` en
-   `server.js:438,2337,2367,3459`); la proposta seria ampliar-lo (color,
+   `sockets/playerEvents.js:83` i `services/commons.js:165`); la proposta seria ampliar-lo (color,
    accessoris, galeria més àmplia), no crear-lo des de zero.
    → **Criteri pedagògic:** ✖️ Aprenentatge: Cap · 🙂 Clima: Segur ·
    ➖ Inclusió: Neutra → **Aparcada** (no es descarta el que ja existix,
@@ -279,7 +279,7 @@ el context, que ja estan en la taula).
     XML de Moodle i la resta de formats que accepta Moodle/AULES — 🟡 Mitjana
     Redefinida després de la revisió pedagògica d'este llistat. Abans
     era "Generador de preguntes amb IA natiu"; eixa part amb risc de
-    dades se separa com a proposta 32. `create.js` (línies ~2923-3760) ja
+    dades se separa com a proposta 32. `create-ia.js` ja
     té un "Generador IA" que construïx un prompt, el docent el pega en la
     seua pròpia IA externa, i puja el **CSV** resultant — EduHoot mai
     crida a cap proveïdor en eixe flux. Esta proposta estén eixe mateix
@@ -345,7 +345,7 @@ el context, que ja estan en la taula).
 
 23. 🟨 **Kahoot** — Pantalla "¡Prepara't!" amb compte arrere 3-2-1 — 🟢 Baixa
     Ja implementada en el mode "Jugar a l'aula" des del commit `9b8c345`
-    (`server.js:76,2107-2120`, esdeveniment `questionCountdown`). No
+    (`sockets/gameHelpers.js:295`, esdeveniment `questionCountdown`). No
     existix en Solo; l'únic pendent és portar `showQuestionCountdown`.
     → **Criteri pedagògic:** ✖️ Aprenentatge: Cap · 🙂 Clima: Segur ·
     ➖ Inclusió: Neutra → sense valor pedagògic directe, però s'implementa
@@ -476,23 +476,23 @@ realista, no només una llista d'idees.
   i 14 (so de feedback) queden aparcades — encara que algunes d'elles
   siguen populars en Kahoot/Wayground. La proposta 4 (power-ups) continua,
   però sense el sub-ítem "robar punts".
-- **Accés docent: fallada corregida, migració encara oberta.**
-  La migració a Authentik (`docs/PLA-MIGRACIO-AUTHENTIK-2026-10.md`)
-  continua oberta, sense una nova data de tancament encara. La fallada
-  real de detecció del rol docent detectada el 12 d'octubre de 2026 ja
-  està corregida eixe mateix dia (vore «Vinculació real i botó
-  d'eixida» al pla de migració), però mentre la migració no es tanque,
-  convé seguir coordinant-se abans de tocar el codi d'accés/sessió
-  (`server.js`) per un altre motiu, i no donar per fet que propostes
-  que depenguen d'una integració d'identitat docent estable (21,
-  Google Classroom) ja es poden abordar sense restriccions.
-- **El codi del servidor ha crescut sense reorganitzar-se.**
-  `src/server/server.js` ha passat de 3.588 a 5.122 línies des de
-  l'auditoria d'abril (`REVISION_MEJORAS.md`), i `src/public/js/create.js`
-  de 3.898 a 4.184. Abans d'apilar diverses propostes de dificultat 🔴
-  ahí dins, convé anar separant responsabilitats en fitxers propis (p.
-  ex. la lògica de tipus de pregunta, abans d'afegir els tipus nous de la
-  Fase 2) per a no seguir agreujant eixe problema.
+- **Accés docent: Authentik ja és l'única entrada; falta tancar la
+  migració.** Comprovat el 2 de novembre de 2026: en producció Google
+  directe, la contrasenya local i l'alta/reset local estan desactivats, i
+  el professorat entra només pel xip d'EduTicTac (Authentik), també amb
+  Google des de dins (prova real feta). Per a donar la migració per
+  acabada falta confirmar que tots els comptes existents estan vinculats
+  i conserven contingut i permisos, i comunicar-ho (vore
+  `docs/PLA-MIGRACIO-AUTHENTIK-2026-10.md`). Mentrestant, les propostes
+  que depenen d'una identitat docent estable (21, Google Classroom) ja
+  tenen la base, però convé esperar eixa confirmació.
+- **✅ El codi ja està reorganitzat en fitxers per responsabilitat.**
+  `src/server/server.js` (que havia arribat a 5.122 línies) queda en ~355
+  i la resta està en `data/`, `services/`, `routes/` i `sockets/`; en el
+  frontend, `create.js` (3.860 → 560) i `solo.js` (2.341 → 346) s'han
+  repartit en `create-*.js` i `solo-*.js` (vore `ARCHITECTURE.md`). Les
+  propostes noves es poden afegir en el fitxer del seu tema. Queden sense
+  repartir `multiplayer.js`, `quizCreator.js` i `hostGame.js`.
 - **Base ja sòlida per a mecàniques de joc en directe.** El pla
   d'estabilitat de sessió (`PLAN_ESTABILIDAD_SESION.md`) està complet en
   el codi (reconnexió, periode de gràcia, Wake Lock), encara que el propi
@@ -511,20 +511,23 @@ realista, no només una llista d'idees.
   Comprovat contra el codi actual:
   - **5 (avatars)** — ja existix un selector de 29 icones/emojis fixos
     (`src/public/join.html:44-73`, `join.js:2,33-52,191-193`, persistit
-    com `avatar_icon` en `server.js:438,2337,2367,3459`).
+    com `avatar_icon` en `sockets/playerEvents.js:83` i
+    `services/commons.js:165`).
   - **9 (música per fases)** — `music-player.js` (377 línies) ja és un
     reproductor de pista de fons amb selector/volum/rotació, més un
     efecte de gong al tancar cada pregunta (`effects/gong.mp3`,
     `hostGame.js:599-648`). Encara no distingix música per fases.
   - **23 (compte arrere 3-2-1)** — ja implementada abans de cada
     pregunta en el mode "Jugar a l'aula" (commit `9b8c345`,
-    `server.js:76,2107-2120`, esdeveniment `questionCountdown`). **No
+    `sockets/gameHelpers.js:295`, `scheduleQuestionCountdown()`,
+    esdeveniment `questionCountdown`). **No
     existix en Solo**: ahí només faltaria portar `showQuestionCountdown`.
   - **4 (power-ups)** — el submecanisme de "doble puntuació" ja existix
-    (commit `ef9cb40`, `server.js:144-146,2747-2778`), però només
+    (commit `ef9cb40`, `services/scoring.js:16` i
+    `services/kahootImport.js:83-86`), però només
     s'activa automàticament en importar un qüestionari de Kahoot que ja
     ho portava marcat; no hi ha control manual en el creador propi.
-  - **15 (importació ampliada)** — `create.js` (línies ~2923-3760) ja té
+  - **15 (importació ampliada)** — `create-ia.js` ja té
     un "Generador IA" que construïx un prompt, el docent el pega en la
     seua pròpia IA externa, i puja el **CSV** resultant — és dir, EduHoot
     mai crida a un proveïdor d'IA en eixe flux. La proposta 15 estén eixe
@@ -544,15 +547,20 @@ realista, no només una llista d'idees.
   tampoc s'escriu en staging; el correu del docent només apareix al log
   en desenvolupament.
 
-### Fase 0 — Habilitadors (requisits, no una recomanació)
+### ✅ Fase 0 — Habilitadors (requisits, no una recomanació)
 
 Separar responsabilitats de `server.js` i tindre recàrrega automàtica en
 desenvolupament haurien de ser **requisits per a començar la següent fase**, no
 un suggeriment ajornable:
 
 - ✅ Entorn de desenvolupament amb recàrrega automàtica (`docs/DEV_DOCKER_SETUP.md`) — fet.
-- Separar del monòlit `server.js` almenys la lògica de tipus de pregunta,
-  abans d'afegir els tipus nous de la Fase 2.
+- ✅ Separar del monòlit `server.js` almenys la lògica de tipus de pregunta,
+  abans d'afegir els tipus nous de la Fase 2 — fet, i més enllà del mínim:
+  tot el backend s'ha migrat a `data/`, `services/`, `routes/` i `sockets/`,
+  i `server.js` queda com a punt d'entrada (vore `ARCHITECTURE.md`).
+- ✅ Migrar el frontend: dividir els fitxers més grans (`create.js`, `solo.js`)
+  en mòduls per responsabilitat, en JS vanilla i sense build step. Vore
+  `docs/MIGRATING.md` (Subfase A) — fet (vore `ARCHITECTURE.md`).
 
 ### Fase 1a — Millores cosmètiques/aïllades, sense tocar la lògica de joc
 
@@ -656,10 +664,8 @@ la numeració 1-32 de dalt.
   dedicat, no lligada a cap funcionalitat concreta de la llista
   anterior.
 - **W3 — Internacionalització a més idiomes.** Ja hi ha una base de
-  **4 idiomes implementats** (`ca`/`va`/`es`/`en` — català i valencià
-  són variants separades, `quizCreator.js:16`, `create.js:208`,
-  `hostGame.js:39`, `solo.js:220`, `multiplayer.js:191`); esta proposta
-  és ampliar-los més enllà d'estos 4 (francés, alemany, holandés, i
+  **4 idiomes implementats** (català, valencià, castellà i anglès —
+  català i valencià són variants separades); esta proposta és ampliar-los més enllà d'estos 4 (francés, alemany, holandés, i
   altres a decidir).
 - **W4 — Paquet SCORM per al mode Solo, amb pas automàtic de la nota a
   Moodle/AULES.** El professorat puja un paquet SCORM al seu curs
@@ -675,6 +681,11 @@ la numeració 1-32 de dalt.
   ajustos d'accessibilitat per alumne o grup concret (lectura en veu
   alta, alt contrast, tipografia per a dislèxia...), a l'estil de les
   "Accommodations" de Wayground.
+- **W6 — Imatge destacada del qüestionari.** A l'estil de les entrades
+  de WordPress: que la persona creadora puga pujar una imatge de
+  portada/destacada per al qüestionari, que aparega en diversos llocs
+  (p. ex. la llista pública de qüestionaris o la pantalla d'entrada a
+  un d'ells).
 
 ## Nota sobre drets d'autor
 

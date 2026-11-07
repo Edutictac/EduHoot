@@ -10,6 +10,7 @@ var name;
 var score = 0;
 var token = null;
 var lastAnswers = [];
+var currentBlindCount = null;
 var rankingTimeout = null;
 var timerTotal = 20;
 var timerLeft = 20;
@@ -329,7 +330,7 @@ function restoreAnswerControlsAfterReject(messageText){
             el.style.visibility = 'visible';
         }
     }
-    updatePlayerAnswerButtons(lastAnswers || [], currentQuestionType);
+    updatePlayerAnswerButtons(lastAnswers || [], currentQuestionType, currentBlindCount === null ? undefined : currentBlindCount);
     setAnswerStatus('pending');
     var msg = document.getElementById('message');
     if(msg){
@@ -462,7 +463,10 @@ function submitMultiAnswers(){
     submitAnswerPayload(multiSelections.slice());
 }
 
-function updatePlayerAnswerButtons(answers, type){
+var ANSWER_SHAPE_KEYS = ['shape_triangle', 'shape_diamond', 'shape_circle', 'shape_square'];
+var ANSWER_LETTERS = ['A', 'B', 'C', 'D'];
+
+function updatePlayerAnswerButtons(answers, type, blindCount){
     currentQuestionType = type || 'quiz';
     multiSelections = [];
     updateMultiSelectionStyles();
@@ -481,13 +485,25 @@ function updatePlayerAnswerButtons(answers, type){
         }
     }
 
+    var isBlind = typeof blindCount === 'number';
     for(var i = 1; i <= 4; i++){
         var btn = document.getElementById('answer' + i);
         if(!btn) continue;
-        var text = answers[i - 1] || '';
-        setRichText(btn, text);
-        btn.style.display = (!isFreeAnswerType() && text && text.trim()) ? 'inline-block' : 'none';
-        btn.style.visibility = 'visible';
+        if(isBlind){
+            setRichText(btn, '');
+            var active = i <= blindCount;
+            btn.style.display = (!isFreeAnswerType() && active) ? 'inline-block' : 'none';
+            btn.style.visibility = 'visible';
+            btn.setAttribute('aria-label', active
+                ? (tPlayer('answer_option') + ' ' + ANSWER_LETTERS[i - 1] + ': ' + tPlayer(ANSWER_SHAPE_KEYS[i - 1]))
+                : '');
+        }else{
+            var text = answers[i - 1] || '';
+            setRichText(btn, text);
+            btn.style.display = (!isFreeAnswerType() && text && text.trim()) ? 'inline-block' : 'none';
+            btn.style.visibility = 'visible';
+            btn.removeAttribute('aria-label');
+        }
     }
     var submitBtn = document.getElementById('multiSubmitBtn');
     if(submitBtn){
@@ -761,20 +777,31 @@ socket.on('playerQuestion', function(data){
         msg.style.display = "none";
         msg.textContent = '';
     }
-    if(data.question){
+    if(data.blind){
+        setRichText(document.getElementById('questionText'), tPlayer('blind_hint', 'Mira la pantalla para ver la pregunta'));
+    }else if(data.question){
         setRichText(document.getElementById('questionText'), data.question);
     }
     currentPointsMultiplier = Number(data && data.pointsMultiplier) > 1 ? Number(data.pointsMultiplier) : 1;
     updatePlayerPointsBadge(currentPointsMultiplier);
-    updatePlayerAnswerButtons(data.answers || [], data.type);
-    lastAnswers = (data.answers || []).slice(0, 4);
+    if(data.blind){
+        currentBlindCount = Math.max(0, Number(data.answerCount) || 0);
+        updatePlayerAnswerButtons([], data.type, currentBlindCount);
+        lastAnswers = [];
+    }else{
+        currentBlindCount = null;
+        updatePlayerAnswerButtons(data.answers || [], data.type);
+        lastAnswers = (data.answers || []).slice(0, 4);
+    }
     if(typeof data.time === 'number'){
         timerTotal = Math.max(5, Math.min(120, data.time));
     }else{
         timerTotal = 20;
     }
     resetTimer();
-    setMedia(data.image, data.video);
+    if(!data.blind){
+        setMedia(data.image, data.video);
+    }
 
     if(data && (data.type === 'short-answer' || data.type === 'numeric')){
         var freeInput = document.getElementById('freeAnswerInput');

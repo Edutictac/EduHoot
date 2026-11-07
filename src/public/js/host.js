@@ -182,8 +182,7 @@ var hostLobbyMusicI18n = {
 };
 
 function getHostLobbyLang(){
-    var l = null;
-    try{ l = localStorage.getItem('lang-host') || localStorage.getItem('lang') || localStorage.getItem('edutictac-portal-lang') || localStorage.getItem('edutictac-lang'); }catch(e){}
+    var l = EduhootLang.fromStorage('lang-host');
     if(l && hostLobbyMusicI18n[l]) return l;
     return 'es';
 }
@@ -272,13 +271,7 @@ function showHostError(msg){
 
 function syncLangStorage(val){
     if(!val) return;
-    try{
-        localStorage.setItem('lang-host', val);
-        localStorage.setItem('lang', val); // reutiliza la misma clave que usa la vista de juego
-        localStorage.setItem('lang-player', val);
-        localStorage.setItem('edutictac-portal-lang', val);
-        localStorage.setItem('edutictac-lang', val);
-    }catch(e){}
+    EduhootLang.persist(val);
 }
 
 // Mostrar botón de reanudar si hay partida activa guardada
@@ -292,7 +285,7 @@ try{
         updateJoinQr();
     }
     // inicializar selector de idioma con preferencia previa
-    var storedLang = localStorage.getItem('lang-host') || localStorage.getItem('lang') || localStorage.getItem('edutictac-portal-lang') || localStorage.getItem('edutictac-lang');
+    var storedLang = EduhootLang.fromStorage('lang-host');
     if(hostLangSelect && storedLang){
         hostLangSelect.value = storedLang;
         syncLangStorage(storedLang);
@@ -391,7 +384,7 @@ function startGame(){
     var opts = {
         randomQuestions: document.getElementById('opt-rand-q') ? document.getElementById('opt-rand-q').checked : false,
         randomAnswers: document.getElementById('opt-rand-a') ? document.getElementById('opt-rand-a').checked : true,
-        sendToMobile: document.getElementById('opt-send-mobile') ? document.getElementById('opt-send-mobile').checked : true,
+        sendToStudents: document.getElementById('opt-send-students') ? document.getElementById('opt-send-students').checked : true,
         showScoresBetween: document.getElementById('opt-show-scores') ? document.getElementById('opt-show-scores').checked : true,
         pin: (function(){
             try{

@@ -6,6 +6,11 @@ LABEL org.opencontainers.image.source="https://git.edutictac.es/Edutictac/eduhoo
 
 ENV NODE_ENV=production
 
+# Tag amb la qual es va publicar esta imatge (p. ex. stage-2026.11.04-1),
+# buida per defecte perquè dev i producció no es veuen afectats.
+ARG APP_TAG=""
+ENV APP_TAG=$APP_TAG
+
 WORKDIR /app
 
 COPY src/package.json src/package-lock.json ./

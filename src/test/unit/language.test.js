@@ -4,7 +4,9 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
 
-const source = fs.readFileSync(path.join(__dirname, '../../public/js/i18n-player.js'), 'utf8');
+const jsDir = path.join(__dirname, '../../public/js');
+const languagesSource = fs.readFileSync(path.join(jsDir, 'languages.js'), 'utf8');
+const source = fs.readFileSync(path.join(jsDir, 'i18n-player.js'), 'utf8');
 
 function browser(href, values = new Map()) {
     const window = {
@@ -22,9 +24,12 @@ function browser(href, values = new Map()) {
             }
         }
     };
-    const document = { documentElement: { setAttribute() {} }, addEventListener() {} };
+    const document = { documentElement: { setAttribute() {} }, addEventListener() {}, querySelectorAll: () => [] };
     function boot() {
-        vm.runInNewContext(source, { window, document, navigator: { language: 'es' }, URL, URLSearchParams });
+        const context = vm.createContext({ window, document, navigator: { language: 'es' }, URL, URLSearchParams });
+        vm.runInContext(languagesSource, context);
+        context.EduhootLang = window.EduhootLang;
+        vm.runInContext(source, context);
         return window.i18nPlayer;
     }
     return { window, boot, values };

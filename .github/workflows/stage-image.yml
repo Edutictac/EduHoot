@@ -52,6 +52,7 @@ jobs:
           [[ "$TAG" =~ ^stage-[A-Za-z0-9._-]+$ ]]
           image="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/eduhoot-stage"
           docker build \
+            --build-arg APP_TAG="${TAG}" \
             --label org.opencontainers.image.source="https://github.com/${GITHUB_REPOSITORY}" \
             --label org.opencontainers.image.revision="${GITHUB_SHA}" \
             --label org.opencontainers.image.version="${TAG}" \

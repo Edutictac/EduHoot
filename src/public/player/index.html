@@ -18,11 +18,7 @@
         <h3 id = "title2" data-i18n="lobby_check">Do you see your name on the screen?</h3>
         <div class="loader"></div>
         <br/>
-        <div id="lang-switcher">
-            <button type="button" data-lang="ca" onclick="window.i18nPlayer && window.i18nPlayer.setLang('ca')">CA</button>
-            <button type="button" data-lang="va" onclick="window.i18nPlayer && window.i18nPlayer.setLang('va')">VA</button>
-            <button type="button" data-lang="es" onclick="window.i18nPlayer && window.i18nPlayer.setLang('es')">ES</button>
-            <button type="button" data-lang="en" onclick="window.i18nPlayer && window.i18nPlayer.setLang('en')">EN</button>
+        <div id="lang-switcher" data-lang-buttons>
         </div>
         <footer class="ett-footer ett-footer--bottom">
             <p class="ett-footer__id">
@@ -38,6 +34,8 @@
                 <a href="https://git.edutictac.es/Edutictac/eduhoot/src/branch/main/LICENSE" target="_blank" rel="noopener">AGPL-3.0</a>
             </div>
         </footer>
+        <script src="/js/languages.js"></script>
+        <script src="/js/env-badge.js"></script>
         <script src="../js/i18n-player.js"></script>
         <script src="/js/app-version.js"></script>
     </body>

@@ -8,40 +8,7 @@ try{
 }
 var questionNum = 0; // Se incrementa cuando se añaden tarjetas
 var editingId = null;
-var LANG_KEYS = ['lang', 'lang-player', 'lang-host', 'edutictac-portal-lang', 'edutictac-lang'];
-function normalizeLang(raw){
-    var value = String(raw || '').toLowerCase();
-    if(value.indexOf('valencia') !== -1) return 'va';
-    var base = value.split('-')[0];
-    return ['ca','va','es','en'].indexOf(base) !== -1 ? base : '';
-}
-function getQueryLang(){
-    try{ return normalizeLang(new URLSearchParams(window.location.search).get('lang')); }catch(e){ return ''; }
-}
-function getStoredLang(){
-    for(var i = 0; i < LANG_KEYS.length; i++){
-        try{
-            var value = normalizeLang(localStorage.getItem(LANG_KEYS[i]));
-            if(value) return value;
-        }catch(e){}
-    }
-    return '';
-}
-function persistLang(value){
-    try {
-        var url = new URL(window.location.href);
-        if (url.searchParams.has('lang')) {
-            url.searchParams.set('lang', value);
-            window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
-        }
-    } catch (e) {}
-    for(var i = 0; i < LANG_KEYS.length; i++){
-        try{ localStorage.setItem(LANG_KEYS[i], value); }catch(e){}
-    }
-}
-var browserLang = normalizeLang(navigator.language || 'es');
-var lang = getQueryLang() || getStoredLang() || browserLang || 'es';
-persistLang(lang);
+var lang = EduhootLang.init();
 var knownTags = [];
 var isUserAuthenticated = false;
 var moodleExportPendingQuiz = null;
@@ -86,6 +53,9 @@ var i18n = {
         visibilityPublic: 'Público en la biblioteca',
         publicWarning: 'Al publicar el quiz se guardará como parte de la biblioteca global y no podrás editarlo después sin sesión.',
         allowCloneLabel: 'Permitir copia',
+        languageLabel: 'Idioma del contenido (opcional)',
+        licenseLabel: 'Licencia (opcional)',
+        descriptionLabel: 'Descripción (opcional)',
         suggestedTags: 'Etiquetas usadas (toca para añadir)',
         questionsEyebrow: 'Preguntas',
         questionsTitle: 'Construye las preguntas',
@@ -118,6 +88,9 @@ var i18n = {
         videoLabel: 'Video (URL opcional)',
         namePlaceholder: 'Ej: Repaso de energía',
         tagsPlaceholder: 'ej: física, 2ºESO, energía',
+        languagePlaceholder: 'ej: español, català, english',
+        licensePlaceholder: 'ej: CC BY-SA 4.0',
+        descriptionPlaceholder: 'Breve descripción del quiz',
         urlPlaceholder: 'https://...',
         playErrorName: 'Ponle un nombre',
         playErrorTags: 'Añade al menos una etiqueta',
@@ -158,6 +131,9 @@ var i18n = {
         visibilityPublic: 'Public in library',
         publicWarning: 'Public quizzes become part of the global library and cannot be edited later unless you sign in.',
         allowCloneLabel: 'Allow copy',
+        languageLabel: 'Content language (optional)',
+        licenseLabel: 'License (optional)',
+        descriptionLabel: 'Description (optional)',
         suggestedTags: 'Suggested tags (tap to add)',
         questionsEyebrow: 'Questions',
         questionsTitle: 'Build the questions',
@@ -190,6 +166,9 @@ var i18n = {
         videoLabel: 'Video (optional URL)',
         namePlaceholder: 'e.g. Energy review',
         tagsPlaceholder: 'e.g. physics, grade8, energy',
+        languagePlaceholder: 'e.g. english, español, català',
+        licensePlaceholder: 'e.g. CC BY-SA 4.0',
+        descriptionPlaceholder: 'Brief description of the quiz',
         urlPlaceholder: 'https://...',
         playErrorName: 'Give it a name',
         playErrorTags: 'Add at least one tag',
@@ -230,6 +209,9 @@ var i18n = {
         visibilityPublic: 'Públic a la biblioteca',
         publicWarning: 'Els quizzes públics passen a formar part de la biblioteca global i no es poden editar després sense iniciar sessió.',
         allowCloneLabel: 'Permetre còpia',
+        languageLabel: 'Idioma del contingut (opcional)',
+        licenseLabel: 'Llicència (opcional)',
+        descriptionLabel: 'Descripció (opcional)',
         suggestedTags: 'Etiquetes usades (toca per afegir)',
         questionsEyebrow: 'Preguntes',
         questionsTitle: 'Construeix les preguntes',
@@ -262,6 +244,9 @@ var i18n = {
         videoLabel: 'Vídeo (URL opcional)',
         namePlaceholder: 'Ex: Repàs d\'energia',
         tagsPlaceholder: 'ex: física, 2nESO, energia',
+        languagePlaceholder: 'ex: català, español, english',
+        licensePlaceholder: 'ex: CC BY-SA 4.0',
+        descriptionPlaceholder: 'Breu descripció del quiz',
         urlPlaceholder: 'https://...',
         playErrorName: 'Posa-li un nom',
         playErrorTags: 'Afegeix almenys una etiqueta',
@@ -532,6 +517,12 @@ function applyI18n(){
     if(nameInput) nameInput.placeholder = t('namePlaceholder');
     var tagsInput = document.getElementById('tags');
     if(tagsInput) tagsInput.placeholder = t('tagsPlaceholder');
+    var languageInput = document.getElementById('language');
+    if(languageInput) languageInput.placeholder = t('languagePlaceholder');
+    var licenseInput = document.getElementById('license');
+    if(licenseInput) licenseInput.placeholder = t('licensePlaceholder');
+    var descriptionInput = document.getElementById('description');
+    if(descriptionInput) descriptionInput.placeholder = t('descriptionPlaceholder');
     var langSelect = document.getElementById('lang-select');
     if(langSelect) langSelect.value = lang;
     renderTagSuggestions();
@@ -549,19 +540,26 @@ function updateVisibilityWarning(){
     warning.classList.toggle('hidden', !show);
 }
 
+function updateTitleUserId(name){
+    var base = document.title.replace(/ \[[^\]]*\]$/, '');
+    document.title = name ? (base + ' [' + name + ']') : base;
+}
+
 function refreshAuthStatus(){
     fetch('/api/auth/me', { credentials: 'include' })
         .then(function(res){
             if(!res.ok) throw new Error();
             return res.json();
         })
-        .then(function(){
+        .then(function(user){
             isUserAuthenticated = true;
             updateVisibilityWarning();
+            updateTitleUserId(user && (user.nickname || user.email));
         })
         .catch(function(){
             isUserAuthenticated = false;
             updateVisibilityWarning();
+            updateTitleUserId(null);
         });
 }
 
@@ -601,6 +599,9 @@ function buildQuizPayload(){
     var tags = parseTagsInput();
     var visibility = document.getElementById('visibility') ? document.getElementById('visibility').value : 'private';
     var allowClone = document.getElementById('allow-clone') ? document.getElementById('allow-clone').checked : false;
+    var language = document.getElementById('language') ? document.getElementById('language').value.trim() : '';
+    var license = document.getElementById('license') ? document.getElementById('license').value.trim() : '';
+    var description = document.getElementById('description') ? document.getElementById('description').value.trim() : '';
     for(var i = 1; i <= questionNum; i++){
         var question = document.getElementById('q' + i).value;
         var answer1 = document.getElementById(i + 'a1').value;
@@ -705,6 +706,9 @@ function buildQuizPayload(){
         tags: tags,
         visibility: visibility,
         allowClone: allowClone,
+        language: language,
+        license: license,
+        description: description,
         questions: questions
     };
 }
@@ -740,6 +744,9 @@ async function saveLocal(){
                 tags: quiz.tags,
                 visibility: quiz.visibility,
                 allowClone: quiz.allowClone,
+                language: quiz.language,
+                license: quiz.license,
+                description: quiz.description,
                 ownerToken: getAnonOwnerToken()
             })
         });
@@ -1668,7 +1675,10 @@ async function saveExistingQuiz(id, quiz){
                 questions: quiz.questions,
                 tags: quiz.tags,
                 visibility: quiz.visibility,
-                allowClone: quiz.allowClone
+                allowClone: quiz.allowClone,
+                language: quiz.language,
+                license: quiz.license,
+                description: quiz.description
             })
         });
         var result = await res.json();
@@ -1702,6 +1712,15 @@ async function loadQuiz(id){
         }
         if(document.getElementById('allow-clone')){
             document.getElementById('allow-clone').checked = !!quiz.allowClone;
+        }
+        if(document.getElementById('language')){
+            document.getElementById('language').value = quiz.language || '';
+        }
+        if(document.getElementById('license')){
+            document.getElementById('license').value = quiz.license || '';
+        }
+        if(document.getElementById('description')){
+            document.getElementById('description').value = quiz.description || '';
         }
         var container = document.getElementById('allQuestions');
         container.innerHTML = '';
@@ -1813,7 +1832,7 @@ if(langSelector){
     langSelector.value = lang;
     langSelector.addEventListener('change', function(){
         lang = langSelector.value;
-        persistLang(lang);
+        EduhootLang.persist(lang);
         applyI18n();
     });
 }

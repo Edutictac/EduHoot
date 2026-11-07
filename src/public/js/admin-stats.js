@@ -2,11 +2,15 @@
   var cardsEl = document.getElementById('cards');
   var breakdownEl = document.getElementById('breakdown');
   var errorEl = document.getElementById('stats-error');
-  var loginForm = document.getElementById('login-form');
-  var loginEmail = document.getElementById('login-email');
-  var loginPass = document.getElementById('login-pass');
-  var loginGoogle = document.getElementById('login-google');
+  var loginFallbackBtn = document.getElementById('login-fallback');
   var loginStatus = document.getElementById('login-status');
+  var accountChip = document.querySelector('edutictac-account');
+
+  var authState = { user: null, checked: false };
+  var authentikAuthEnabled = false;
+  var authBridgeFailed = false;
+  var AUTH_BRIDGE_KEY = 'eduh_auth_bridge_admin';
+  var AUTH_BRIDGE_RETRY_MS = 2 * 60 * 1000;
 
   function safeJson(res){
     return res.json().catch(function(){ return {}; });
@@ -14,6 +18,107 @@
 
   function setLoginStatus(msg){
     if(loginStatus) loginStatus.textContent = msg || '';
+  }
+
+  // Puente de sesión con el xip de EduTicTac/Authentik. Versión reducida de
+  // create-auth.js: solo las partes genéricas, sin biblioteca/sockets/nicknames,
+  // con su propia clave de sessionStorage para no interferir con /create/.
+  function loginWithAuthentik(){
+    var next = window.location.pathname + window.location.search;
+    window.location.href = '/api/auth/authentik/start?next=' + encodeURIComponent(next || '/admin/stats');
+  }
+
+  function bridgeRecentlyTried(){
+    try{
+      var last = Number(sessionStorage.getItem(AUTH_BRIDGE_KEY) || 0);
+      return !!last && (Date.now() - last) < AUTH_BRIDGE_RETRY_MS;
+    }catch(e){
+      return true;
+    }
+  }
+
+  function logoutLite(){
+    return fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
+      .then(fetchMeLite)
+      .then(loadStats)
+      .catch(function(){});
+  }
+
+  // Alinea la sesión de EduHoot con la del xip. Sin respuesta de Commons no se toca nada.
+  function applyCentralSession(central){
+    if(!central || !authState.checked) return;
+    var centralTeacher = !!central.authenticated && central.kind === 'oidc';
+    if(centralTeacher && !authState.user){
+      if(!authentikAuthEnabled || authBridgeFailed || bridgeRecentlyTried()) return;
+      try{ sessionStorage.setItem(AUTH_BRIDGE_KEY, String(Date.now())); }catch(e){ return; }
+      loginWithAuthentik();
+    }else if(!central.authenticated && authState.user){
+      logoutLite();
+    }
+  }
+
+  // Solo cuando EduHoot y Commons son el mismo sitio: eduhoot.edutictac.es y
+  // commons.edutictac.es, o el mismo host de un Commons local (edutictac.local, IP).
+  function sameSiteAsPage(base){
+    try{
+      var baseHost = new URL(base).hostname;
+      var host = window.location.hostname;
+      if(/^[0-9.]+$|^\[|:/.test(baseHost) || baseHost.split('.').length < 3) return host === baseHost;
+      var site = baseHost.split('.').slice(-2).join('.');
+      return host === site || host.slice(-(site.length + 1)) === '.' + site;
+    }catch(e){
+      return false;
+    }
+  }
+
+  function syncCentralSession(){
+    if(!accountChip || !authState.checked) return;
+    var base = (accountChip.getAttribute('data-base') || '').replace(/\/+$/, '');
+    if(!base || !sameSiteAsPage(base)) return;
+    fetch(base + '/api/auth/session', { credentials: 'include', cache: 'no-store', headers: { Accept: 'application/json' } })
+      .then(function(res){ return res.ok ? res.json() : null; })
+      .then(applyCentralSession)
+      .catch(function(){});
+  }
+
+  function updateFallbackButton(){
+    if(!loginFallbackBtn) return;
+    var chipMounted = document.documentElement.classList.contains('has-account-chip');
+    loginFallbackBtn.style.display = (authentikAuthEnabled && !authState.user && !chipMounted) ? '' : 'none';
+  }
+
+  function fetchMeLite(){
+    return fetch('/api/auth/me', { credentials: 'include' })
+      .then(function(res){
+        if(!res.ok) throw new Error();
+        return res.json();
+      })
+      .then(function(user){
+        authState.user = user;
+        authState.checked = true;
+        try{ sessionStorage.removeItem(AUTH_BRIDGE_KEY); }catch(e){}
+        updateFallbackButton();
+      })
+      .catch(function(){
+        authState.user = null;
+        authState.checked = true;
+        updateFallbackButton();
+      });
+  }
+
+  function handleAuthentikReturnParam(){
+    try{
+      var url = new URL(window.location.href);
+      var result = url.searchParams.get('authentik');
+      if(result && result !== 'ok'){
+        authBridgeFailed = true;
+        setLoginStatus('No se pudo completar el acceso con EduTicTac. Inténtalo de nuevo.');
+      }
+      if(result){
+        url.searchParams.delete('authentik');
+        window.history.replaceState({}, '', url.pathname + url.search + url.hash);
+      }
+    }catch(e){}
   }
 
   function renderCards(data){
@@ -104,70 +209,39 @@
         renderCards(payload.data);
         renderBreakdown(payload.data);
         if(errorEl) errorEl.textContent = '';
+        updateFallbackButton();
       })
       .catch(function(err){
         console.error(err);
         if(err && err.status === 403){
           showError('Tu cuenta está autenticada, pero no tiene rol admin.');
+          updateFallbackButton();
           return;
         }
         if(err && err.status === 401){
           showError('Necesitas iniciar sesión para ver estadísticas.');
+          updateFallbackButton();
           return;
         }
         showError('No se pudieron cargar las estadísticas. ¿Tienes sesión de admin iniciada?');
+        updateFallbackButton();
       });
   }
 
-  (function handleGoogleReturn(){
-    try{
-      var url = new URL(window.location.href);
-      var result = url.searchParams.get('google');
-      if(result === 'ok'){
-        setLoginStatus('Google: sesión iniciada');
-      }else if(result === 'error'){
-        setLoginStatus('Google: no se pudo iniciar sesión');
-      }
-      if(result){
-        url.searchParams.delete('google');
-        window.history.replaceState({}, '', url.pathname + url.search + url.hash);
-      }
-    }catch(e){}
-  })();
-
+  handleAuthentikReturnParam();
   loadStats();
+  fetchMeLite().then(syncCentralSession);
 
-  if(loginForm){
-    loginForm.addEventListener('submit', function(e){
-      e.preventDefault();
-      if(!loginEmail || !loginPass) return;
-      setLoginStatus('...');
-      fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          email: (loginEmail.value || '').trim(),
-          password: loginPass.value
-        })
-      }).then(function(res){ return safeJson(res).then(function(body){ return { ok: res.ok, body: body }; }); })
-      .then(function(result){
-        if(!result.ok){
-          setLoginStatus(result.body.error || 'Login fallido');
-          return;
-        }
-        setLoginStatus('Ok');
-        loginPass.value = '';
-        loadStats();
-      })
-      .catch(function(){
-        setLoginStatus('Error de red');
-      });
-    });
-  }
-  if(loginGoogle){
-    loginGoogle.addEventListener('click', function(){
-      window.location.href = '/api/auth/google/start?next=' + encodeURIComponent('/admin/stats');
-    });
+  fetch('/api/auth/authentik/config', { credentials: 'include' })
+    .then(function(res){ return res.ok ? res.json() : { enabled: false }; })
+    .then(function(cfg){
+      authentikAuthEnabled = !!cfg.enabled;
+      updateFallbackButton();
+      syncCentralSession();
+    })
+    .catch(function(){});
+
+  if(loginFallbackBtn){
+    loginFallbackBtn.addEventListener('click', loginWithAuthentik);
   }
 })();

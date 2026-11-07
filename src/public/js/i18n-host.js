@@ -4,7 +4,8 @@
       join_title: 'Únete a esta partida con el PIN:',
       opt_rand_q: 'Preguntas aleatorias',
       opt_rand_a: 'Respuestas aleatorias',
-      opt_send_mobile: 'Enviar pregunta a los móviles',
+      opt_send_students: 'Mostrar pregunta al alumnado',
+      opt_send_students_hint: 'Si se desactiva, el alumnado solo verá formas y colores para responder; deberá mirar la pantalla compartida para leer la pregunta.',
       opt_show_scores: 'Mostrar puntuaciones entre preguntas',
       opt_time: 'Tiempo por pregunta (s)',
       opt_time_help: 'Déjalo vacío para usar el tiempo definido en cada pregunta del quiz.',
@@ -23,7 +24,8 @@
       join_title: 'Join this game with the PIN:',
       opt_rand_q: 'Shuffle questions',
       opt_rand_a: 'Shuffle answers',
-      opt_send_mobile: 'Send questions to mobiles',
+      opt_send_students: 'Show question to students',
+      opt_send_students_hint: 'If disabled, students only see colored shapes to answer; they must look at the shared screen to read the question.',
       opt_show_scores: 'Show scores between questions',
       opt_time: 'Time per question (s)',
       opt_time_help: 'Leave empty to use each quiz question time.',
@@ -42,7 +44,8 @@
       join_title: 'Uneix-te a la partida amb el PIN:',
       opt_rand_q: 'Preguntes aleatòries',
       opt_rand_a: 'Respostes aleatòries',
-      opt_send_mobile: 'Envia preguntes als mòbils',
+      opt_send_students: 'Mostra la pregunta a l\'alumnat',
+      opt_send_students_hint: 'Si es desactiva, l\'alumnat només veu formes i colors per a respondre; haurà de mirar la pantalla compartida per a llegir la pregunta.',
       opt_show_scores: 'Mostra puntuacions entre preguntes',
       opt_time: 'Temps per pregunta (s)',
       opt_time_help: 'Deixa-ho buit per usar el temps definit a cada pregunta del qüestionari.',
@@ -62,57 +65,7 @@
     }
   };
 
-  var LANG_KEYS = ['lang-host', 'lang', 'lang-player', 'edutictac-portal-lang', 'edutictac-lang'];
-
-  function normalizeLang(raw){
-    var value = String(raw || '').toLowerCase();
-    if(value.indexOf('valencia') !== -1) return 'va';
-    var base = value.split('-')[0];
-    return translations[base] ? base : '';
-  }
-
-  function queryLang(){
-    try{
-      return normalizeLang(new URLSearchParams(window.location.search).get('lang'));
-    }catch(e){
-      return '';
-    }
-  }
-
-  function storedLang(){
-    for(var i = 0; i < LANG_KEYS.length; i++){
-      var value = normalizeLang(localStorage.getItem(LANG_KEYS[i]));
-      if(value) return value;
-    }
-    return '';
-  }
-
-  function persistLang(value){
-      try {
-          var url = new URL(window.location.href);
-          if (url.searchParams.has('lang')) {
-              url.searchParams.set('lang', value);
-              window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
-          }
-      } catch (e) {}
-    for(var i = 0; i < LANG_KEYS.length; i++){
-      try{ localStorage.setItem(LANG_KEYS[i], value); }catch(e){}
-    }
-  }
-
-  function detectLang(){
-    var fromQuery = queryLang();
-    if(fromQuery) return fromQuery;
-    var stored = storedLang();
-    if(stored) return stored;
-    var nav = (navigator.language || 'es').toLowerCase();
-    var browserLang = normalizeLang(nav);
-    if(browserLang) return browserLang;
-    return 'en';
-  }
-
-  var lang = detectLang();
-  persistLang(lang);
+  var lang = EduhootLang.init({ preferKey: 'lang-host', fallback: 'en' });
 
   function t(key){
     var chain = lang === 'va' ? ['va', 'ca', 'en'] : [lang, 'en'];
@@ -158,7 +111,7 @@
   function setLang(newLang){
     if(translations[newLang]){
       lang = newLang;
-      persistLang(newLang);
+      EduhootLang.persist(newLang);
       apply();
     }
   }

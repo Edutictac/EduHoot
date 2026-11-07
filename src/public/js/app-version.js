@@ -3,7 +3,11 @@
     function render(data){
         var el = document.getElementById('app-version');
         if(!el || !data || !data.version) return;
-        el.textContent = 'v' + data.version;
+        var text = 'v' + data.version;
+        if(data.tag){
+            text += ' · ' + data.tag;
+        }
+        el.textContent = text;
     }
 
     function init(){

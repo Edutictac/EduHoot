@@ -71,6 +71,12 @@ services:
       - ./src:/app
       - eduhoot_node_modules:/app/node_modules
     command: sh -c "npm install; npm run seed:dev; npm run dev"
+    develop:
+      watch:
+        - action: rebuild
+          path: ./src/package.json
+        - action: rebuild
+          path: ./src/package-lock.json
 
 volumes:
   eduhoot_mongo_data:
@@ -78,6 +84,17 @@ volumes:
 ```
 
 No es mapeja el port `27017` de Mongo a l'amfitrió per defecte (es pot descomentar) per a no xocar amb un Mongo natiu que ja tingues corrent segons el `README.md`.
+
+El bloc `develop.watch` **no** és el mecanisme de recàrrega — eixe ja el
+donen el bind mount (`./src:/app`) i `node --watch` (vore punt 3 més avall)
+per al codi normal. Sense `develop.watch`, l'opció "w: Watch" del menú
+interactiu de `docker compose up` avisa que "watch is not yet configured",
+encara que tot funcione bé. El bloc només cobrix allò que el bind mount no
+fa: si canvia `package.json`/`package-lock.json`, reconstruïx la imatge
+(torna a executar `npm install` dins, en lloc de fer-ho només en arrancar)
+i recrea el contenidor sense parar i tornar a alçar l'entorn a mà. Per a
+activar-ho cal `docker compose watch` (o prémer `w` en `docker compose up`)
+en una terminal a banda, mentres l'entorn ja està alçat.
 
 ### 2. `Dockerfile.dev`
 
@@ -160,6 +177,20 @@ També insereix **5 usuaris locals de prova** (email + contrasenya), per a prova
 | `docent2@exemple.local` | `editor` |
 | `docent3@exemple.local` | `editor` |
 | `docent4@exemple.local` | `editor` |
+
+**Entrar com a docent en dev**: `/create/` ja no té formulari de contrasenya (l'únic accés és el xip d'EduTicTac amb Authentik). Per a usar estos usuaris, obri `http://localhost:3000/dev/login` (o fes clic al distintiu «Entorn: desenvolupament») i tria'n un; et porta a `/create/` amb la sessió iniciada. La pàgina només existix amb `NODE_ENV=development` (404 en stage i producció).
+
+Les sessions viuen en memòria: cada vegada que `node --watch` reinicia el servidor (en guardar un fitxer) es tanquen totes, i cal tornar a passar per `/dev/login`.
+
+**Authentik simulat**: `docker compose` alça també el servei `oidc` (`src/scripts/dev-oidc.js`, sense dependències), que fa d'Authentik en `http://localhost:8081` (`OIDC_PORT`). Des de `/dev/login`, «Entrar amb l'OIDC simulat» passa pel flux real (`/api/auth/authentik/start` → callback → rol per `groups`) i permet triar entre:
+
+| Usuari | `groups` | Resultat |
+|---|---|---|
+| `admin@exemple.local`, `docent1..4@exemple.local` | `professorat` | Es vincula a l'usuari del seed i conserva el seu rol |
+| `docent.nou@exemple.local` | `professorat` | Es crea un compte nou amb rol `editor` |
+| `alumne@exemple.local` | `alumnat` | Rebutjat (`/create/?authentik=error`) |
+
+Per a desactivar-lo, posa `AUTHENTIK_CLIENT_ID=` buit en `.env`. La primera vegada cal `docker compose up -d` (o parar i tornar a alçar) perquè es cree el servei `oidc` i `app` reba les variables noves.
 
 - **Idempotent**: cada qüestionari i cada usuari porta un camp propi `devSeedKey` (`eduhoot-seed-demo-1`..`5` i `eduhoot-seed-user-1`..`5` respectivament); l'script només insereix els que encara no existisquen.
 - **Reversible**: `node scripts/seed-dev-data.js --remove` (o `npm run unseed:dev`) esborra només els documents amb eixe marcador, mai cap altre qüestionari o usuari.
@@ -251,4 +282,4 @@ gh pr create --repo Edutictac/EduHoot --base main \
 
 Una vegada fusionat a `main`, el següent pas del mateix camí (abans de
 producció) és validar-ho en l'entorn de preproducció descrit en
-[`STAGE_SETUP.md`](../STAGE_SETUP.md).
+[`STAGE_SETUP.md`](STAGE_SETUP.md).

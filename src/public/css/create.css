@@ -706,6 +706,10 @@ details.panel[open] .panel-toggle__chevron{
     cursor: pointer;
     transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
 }
+.btn:disabled{
+    opacity: 0.4;
+    cursor: not-allowed;
+}
 .btn.btn-with-icon{
     display: inline-flex;
     align-items: center;
