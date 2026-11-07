@@ -1,0 +1,67 @@
+name: Prepara una imatge per a producció
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: eduhoot-production-promotion
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    # L'actualitzador del VPS comprova a més que és exactament la imatge
+    # activa i sana de stage; GitHub no disposa d'accés al servidor.
+    if: github.ref == 'refs/heads/main' && contains(fromJSON('["sasogu","eduardomillan"]'), github.actor)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Detecta la versió activa de stage
+        id: stage
+        run: |
+          set -euo pipefail
+          response=$(curl --fail --silent --show-error --max-time 15 https://eduhoot-stage.edutictac.es/api/version)
+          stage_tag=$(jq -r '.tag // empty' <<< "$response")
+          [[ "$stage_tag" =~ ^stage-[0-9]{4}\.[0-9]{2}\.[0-9]{2}-[0-9]+$ ]]
+          echo "tag=$stage_tag" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: refs/tags/${{ steps.stage.outputs.tag }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verifica i publica la mateixa imatge
+        env:
+          STAGE_TAG: ${{ steps.stage.outputs.tag }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_USER: ${{ github.actor }}
+        run: |
+          set -euo pipefail
+          stage="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/eduhoot-stage:$STAGE_TAG"
+          production="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/eduhoot"
+          docker pull "$stage"
+          revision=$(docker image inspect "$stage" --format '{{index .Config.Labels "org.opencontainers.image.revision"}}')
+          version=$(docker image inspect "$stage" --format '{{index .Config.Labels "org.opencontainers.image.version"}}')
+          [[ "$revision" == "$(git rev-parse HEAD)" && "$version" == "$STAGE_TAG" ]]
+          git merge-base --is-ancestor "$revision" origin/main || {
+            echo 'El commit de stage encara no està en main. Fusiona el PR i publica una nova etiqueta de stage des de main.' >&2
+            exit 1
+          }
+          docker tag "$stage" "$production:prod-$STAGE_TAG"
+          docker tag "$stage" "$production:prod-latest"
+          export DOCKER_CONFIG
+          DOCKER_CONFIG=$(mktemp -d)
+          trap 'rm -rf "$DOCKER_CONFIG"' EXIT
+          docker login ghcr.io -u "$GH_USER" --password-stdin <<< "$GH_TOKEN"
+          docker push "$production:prod-$STAGE_TAG"
+          docker push "$production:prod-latest"
+          {
+            echo "### EduHoot producció"
+            echo "Imatge de stage: \`$STAGE_TAG\`"
+            echo "Commit: \`${revision::12}\`"
+            echo "El VPS només la desplegarà si continua activa i sana en stage."
+          } >> "$GITHUB_STEP_SUMMARY"

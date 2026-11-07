@@ -1,0 +1,11 @@
+[Unit]
+Description=Comprova si hi ha una imatge d'EduHoot aprovada per a producció
+
+[Timer]
+OnBootSec=2min
+OnUnitInactiveSec=2min
+Unit=eduhoot-production-update.service
+
+[Install]
+WantedBy=timers.target
+
