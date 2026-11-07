@@ -26,6 +26,7 @@ funcionament del projecte.
 - [Unió a la partida: nom i icona del jugador](#unió-a-la-partida-nom-i-icona-del-jugador)
 - [Informe de partida (descàrrega en CSV)](#informe-de-partida-descàrrega-en-csv)
 - [Exportació a Moodle XML](#exportació-a-moodle-xml)
+- [Panell d'administració (estadístiques)](#panell-dadministració-estadístiques)
 - [Modes de joc](#modes-de-joc)
 - [Avanç de pregunta: automàtic o manual?](#avanç-de-pregunta-automàtic-o-manual)
 - [Càlcul de la puntuació](#càlcul-de-la-puntuació)
@@ -266,6 +267,30 @@ consulta `GET /api/version` (`src/server/server.js:183`, versió de
   `MONGO_DB=eduhoot_stage`. Cal que `/etc/eduhoot/stage.env` en el VPS
   incloga eixa variable (vore `docs/STAGE_SETUP.md`) perquè l'aïllament de
   base de dades siga efectiu.
+- El panell `/admin/stats` (vore "Panell d'administració") no està
+  integrat amb el xip d'EduTicTac/Authentik com la resta de pàgines
+  (`/create/`, `/`, `/join.html`...): continua mostrant el formulari antic
+  de correu+contrasenya i un botó de Google
+  (`src/public/admin-stats.html:17-23`,
+  `src/public/js/admin-stats.js:140-172`). Amb `AUTHENTIK_ONLY=true` ja
+  actiu en producció (vore `docs/PLA-MIGRACIO-AUTHENTIK-2026-10.md`, estat
+  del 2 de novembre de 2026), `POST /api/auth/login` respon `404` i
+  `GET /api/auth/google/config` diu `enabled:false`
+  (`src/server/routes/auth.js:64,90`): **eixe formulari ja no servix per a
+  entrar en producció, hui.** L'única forma d'accedir-hi és tindre ja una
+  sessió d'Authentik oberta en una altra pestanya/pàgina abans de visitar
+  `/admin/stats` — el backend sí la reconeix, perquè
+  `requireRole('admin')` (`authMiddleware.js:45`) no distingix com es va
+  crear la sessió. Per a arreglar-ho caldria: afegir el xip
+  (`edutictac-account` + `/js/edutictac-chip.js` + `account-widget.js`,
+  com en `src/public/create/index.html:11-16`) a `admin-stats.html`;
+  extraure la lògica de pont de sessió (`fetchMe`, `applyCentralSession`,
+  `syncCentralSession`, `loginWithAuthentik`,
+  `src/public/js/create-auth.js:103-194`), hui només dins de
+  `create-auth.js`, a un mòdul compartit perquè `admin-stats.js` la puga
+  reutilitzar sense duplicar-la; i afegir `/admin/stats` a `CHIP_PAGES`
+  (`src/server/server.js:161-173`) perquè la reescriptura de
+  `EDUTICTAC_COMMONS_URL` (per a un Commons local) també hi funcione.
 
 ## Unió a la partida: nom i icona del jugador
 
@@ -376,6 +401,42 @@ i muntar ahí un "Qüestionari" natiu.
 Esta funció no requerix que el centre habilite res a nivell de servidor
 (a diferència d'una integració LTI): el professorat només necessita
 poder importar un fitxer XML al banc de preguntes del seu propi curs.
+
+## Panell d'administració (estadístiques)
+
+- **Accés**: `/admin/stats` (`/admin`, `/admin/` i `/admin-stats.html`
+  redirigixen ahí). Pàgina: `src/public/admin-stats.html` + lògica en
+  `src/public/js/admin-stats.js`.
+- **Rol necessari**: `admin` (no `editor`). El propi HTML es servix a
+  qualsevol visitant (`router.get('/admin/stats', ...)` en
+  `src/server/routes/admin.js:349` no té `requireRole`); és la crida a
+  l'endpoint de dades la que exigix el rol. Segons `README.md:36/115`,
+  el primer usuari que entra amb Google es crea com `admin`; la resta
+  entra com `editor`.
+- **Endpoint de dades**: `GET /api/admin/stats`
+  (`src/server/routes/admin.js:299-347`, protegit amb
+  `requireRole('admin')`, vore `src/server/services/authMiddleware.js:45`).
+  Si no hi ha sessió respon `401`; si hi ha sessió però el rol és
+  insuficient, `403`.
+- **Login des de la mateixa pàgina**: si la petició falla amb 401/403,
+  `admin-stats.js` mostra un formulari (email/contrasenya via
+  `POST /api/auth/login`, o Google via
+  `/api/auth/google/start?next=/admin/stats`) i torna a carregar les
+  estadístiques en iniciar sessió amb èxit.
+- **Dades que mostra** (totes agregades, cap dada identificativa
+  d'alumnat):
+  - Total de quizzes i de preguntes, i mitjana de preguntes per quiz.
+  - Partides jugades i jugadors totals (històric, camps `playsCount` /
+    `playersCount` de cada quiz).
+  - Partides i jugadors actius **en directe** (llegits de l'array en
+    memòria `games.games`, no de la base de dades).
+  - Desglossament de visibilitat (`public` / `unlisted` / `private`).
+  - Quizzes i preguntes "efímers" (col·lecció de
+    `getEphemeralCollection`, qüestionaris `local-*` sense compte, que
+    caduquen).
+- **El mateix router (`admin.js`) també allotja** ferramentes afins
+  sense interfície pròpia (només API): exportar/importar quizzes en
+  bloc, i rèplica ("mirror") d'imàtgens de Kahoot o externes.
 
 ## Modes de joc
 
