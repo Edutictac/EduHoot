@@ -230,9 +230,22 @@ principals (`index`, `join`, `create`, `create/quiz-creator`, `host`,
   dalt de la pàgina ("🛠️ Entorn: desenvolupament" / "🧪 Entorn: stage"),
   un tint de fons (taronja/verd) i un prefix al títol de la pestanya
   (`🛠️ DEV — ` / `🧪 STAGE — `). En desenvolupament, el distintiu és un
-  enllaç a `/dev/login`.
+  enllaç a `/dev/login`; en stage, a `/` (la portada del mateix origen —
+  per exemple `https://eduhoot-stage.edutictac.es/`).
 - En qualsevol altre valor (`production`, buit...) no fa absolutament
   res: cap petició ni canvi visual addicional.
+- També afig una classe `env-development`/`env-staging` a `<html>`
+  (`src/public/js/env-badge.js`). D'ahí es penja una regla d'
+  `edutictac-shared.css` que amaga l'enllaç "Inici" del xip de compte
+  (`<edutictac-account>`, widget extern servit per Commons: classe
+  `.eta-home`, vista només en els mocks de test de
+  `chip-footer.spec.js`/`auth-state.spec.js`, no documentada per
+  Commons). El motiu: eixe enllaç porta a `https://edutictac.es` sense
+  cap manera evident de tornar, i confonia al professorat en proves
+  d'stage/dev. En producció es manté visible. És una dependència fràgil
+  d'una classe interna no documentada del widget extern: si Commons la
+  canvia, la regla simplement deixa d'aplicar-se i "Inici" torna a
+  mostrar-se (no trenca res més).
 - Vore `docs/STAGE-AUTOMATIC.md` per a com es configura `NODE_ENV` i
   `AUTO_SEED_STAGE` al VPS de stage.
 

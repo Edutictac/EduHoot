@@ -6,14 +6,17 @@
             badgeBg: 'rgba(249,115,22,0.9)',
             badgeColor: '#fff7ed',
             tint: 'rgba(124,45,18,0.16)',
-            href: '/dev/login'
+            href: '/dev/login',
+            linkTitle: 'Entrar amb un usuari de prova'
         },
         staging: {
             label: '🧪 Entorn: stage',
             titlePrefix: '🧪 STAGE — ',
             badgeBg: 'rgba(22,163,74,0.9)',
             badgeColor: '#f0fdf4',
-            tint: 'rgba(20,83,45,0.16)'
+            tint: 'rgba(20,83,45,0.16)',
+            href: '/',
+            linkTitle: 'Anar a la portada de stage'
         }
     };
 
@@ -35,7 +38,7 @@
         }
         if(cfg.href){
             badge.href = cfg.href;
-            badge.title = 'Entrar amb un usuari de prova';
+            badge.title = cfg.linkTitle || '';
         }else{
             badge.setAttribute('aria-hidden', 'true');
         }
@@ -77,6 +80,7 @@
         }).then(function(data){
             var cfg = data && ENVS[data.env];
             if(!cfg) return;
+            document.documentElement.classList.add('env-' + data.env);
             if(data.env !== 'staging'){
                 applyBadge(cfg);
                 return;
