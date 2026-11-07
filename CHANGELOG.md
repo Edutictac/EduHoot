@@ -13,7 +13,7 @@ existia una nota `RELEASE-X.Y.Z.md` pròpia per a una versió (1.0.2, 1.0.5), el
 seu contingut es resumeix ací i s'hi enllaça; el fitxer original es manté
 intacte com la nota de versió més detallada.
 
-## [Sense publicar]
+## [1.1.0] - 2026-11-07
 
 ### Afegit
 - Entorn de desenvolupament amb Docker (`docker compose up`): alça EduHoot
@@ -38,6 +38,11 @@ intacte com la nota de versió més detallada.
   desplegament quan l'app s'executa en stage.
 
 ### Canviat
+- El distintiu verd de stage ara és clicable: porta a la portada del
+  mateix origen, igual que el de desenvolupament porta a `/dev/login`.
+- En stage i desenvolupament s'amaga l'enllaç "Inici" del xip de compte
+  (porta a `edutictac.es` sense manera evident de tornar i confonia a
+  qui prova l'entorn); en producció es manté visible.
 - El títol de la pestanya del creador de qüestionaris mostra el seu nom o correu.
 - Les enquestes («opinió») ja no compten en el total de preguntes puntuables
   en mode aula (abans només quedaven excloses en mode Solo).
@@ -64,6 +69,10 @@ intacte com la nota de versió més detallada.
   produir dos fitxers amb el mateix nom). El mateix criteri de nom de fitxer
   (sense accents, longitud acotada) s'aplica ara també en exportar un
   qüestionari a CSV o a Moodle XML.
+- El panell d'administració (`/admin/stats`) ara usa el mateix accés per
+  xip d'EduTicTac/Authentik que la resta de l'app, en lloc del formulari
+  antic de correu+contrasenya/Google, que ja no funcionava en producció
+  des que l'accés docent és únicament per Authentik.
 
 ## [1.0.13] - 2026-10-25
 
@@ -317,6 +326,6 @@ original, amb les comprovacions i el tag d'imatge Docker.
   d'imatge/vídeo en preguntes.
 - Estadístiques bàsiques de partides i modes de joc preferits.
 
-[Sense publicar]: https://github.com/Edutictac/EduHoot/compare/v1.0.7...HEAD
+[1.1.0]: https://github.com/Edutictac/EduHoot/compare/v1.0.13...v1.1.0
 [1.0.7]: https://github.com/Edutictac/EduHoot/compare/v1.0.5...v1.0.7
 [1.0.2]: https://github.com/Edutictac/EduHoot/releases/tag/v1.0.2

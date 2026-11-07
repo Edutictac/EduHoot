@@ -21,6 +21,7 @@ funcionament del projecte.
 - [Model de dades (MongoDB)](#model-de-dades-mongodb)
 - [Autenticació i sessions](#autenticació-i-sessions)
 - [Comunicació en temps real (Socket.IO)](#comunicació-en-temps-real-socketio)
+- [Cicle de vida d'una partida: PIN, lobby i temps d'espera](#cicle-de-vida-duna-partida-pin-lobby-i-temps-despera)
 - [Distintiu visual d'entorn (dev/stage)](#distintiu-visual-dentorn-devstage)
 - [Deute tècnic conegut](#deute-tècnic-conegut)
 - [Unió a la partida: nom i icona del jugador](#unió-a-la-partida-nom-i-icona-del-jugador)

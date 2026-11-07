@@ -1,6 +1,6 @@
 # EduHoot
 
-Versió actual del paquet: [1.0.7](CHANGELOG.md), amb proves automàtiques
+Historial de versions: [CHANGELOG](CHANGELOG.md). Proves automàtiques
 d'idiomes (`cd src` i `npm run test:i18n`; preparació en les notes de versió).
 
 Imatge Docker i publicació en GitHub: [documentació](docs/DOCKER.md).
