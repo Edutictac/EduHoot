@@ -173,9 +173,9 @@ cobrix.
 
 ## Abans d'etiquetar una versió (checklist)
 
-Equivalent a allò que feien les seccions "Comprovacions" de
-`RELEASE-1.0.2.md`/`RELEASE-1.0.5.md`, però com a referència única i
-reutilitzable per a qualsevol versió futura:
+Fins a la versió 1.0.5, cada nota de versió repetia esta llista de
+comprovacions; ara viu només ací, com a referència única i reutilitzable
+per a qualsevol versió futura:
 
 ```bash
 cd src

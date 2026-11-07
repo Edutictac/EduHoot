@@ -8,10 +8,11 @@ i este projecte segueix, de manera flexible, el
 
 Les versions de l'1.0.0 a l'1.0.7 són una reconstrucció retroactiva a partir
 de l'historial de Git (missatges de commit i el camp `version` de
-`src/package.json`), ja que este fitxer no existia abans d'ara. Quan ja
-existia una nota `RELEASE-X.Y.Z.md` pròpia per a una versió (1.0.2, 1.0.5), el
-seu contingut es resumeix ací i s'hi enllaça; el fitxer original es manté
-intacte com la nota de versió més detallada.
+`src/package.json`), ja que este fitxer no existia abans d'ara.
+
+Les versions 1.0.2 i 1.0.5 van tindre en el seu moment una nota de versió
+pròpia (`RELEASE-X.Y.Z.md`); el seu contingut ja està integrat ací i als
+fitxers corresponents, i els originals es van eliminar.
 
 ## [1.1.0] - 2026-11-07
 
@@ -165,8 +166,8 @@ passar directament d'1.0.5 a 1.0.7.
 
 ## [1.0.5] - 2026-09-19
 
-Consulta també [RELEASE-1.0.5.md](RELEASE-1.0.5.md) per a la nota de versió
-original, basada en feedback real d'ús a l'aula.
+Lot de millores basat en feedback real d'ús a l'aula (Daniel Sàez Buedo
+i el seu alumnat).
 
 ### Afegit
 - Icones de forma (triangle, rombe, cercle, quadrat) en cada opció de
@@ -219,8 +220,9 @@ original, basada en feedback real d'ús a l'aula.
 
 ## [1.0.2] - 2026-09-15
 
-Consulta també [RELEASE-1.0.2.md](RELEASE-1.0.2.md) per a la nota de versió
-original, amb les comprovacions i el tag d'imatge Docker.
+Imatge Docker: `registry.edutictac.es/edutictac/eduhoot:1.0.2` — el tag
+passa del prototip `0.1.0` a seguir la versió del paquet Node; no calia
+migrar la base `kahootDB`.
 
 ### Afegit
 - Integració amb EduTicTac Commons 0.1.1-alpha.
