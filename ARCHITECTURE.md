@@ -267,30 +267,22 @@ consulta `GET /api/version` (`src/server/server.js:183`, versió de
   `MONGO_DB=eduhoot_stage`. Cal que `/etc/eduhoot/stage.env` en el VPS
   incloga eixa variable (vore `docs/STAGE_SETUP.md`) perquè l'aïllament de
   base de dades siga efectiu.
-- El panell `/admin/stats` (vore "Panell d'administració") no està
-  integrat amb el xip d'EduTicTac/Authentik com la resta de pàgines
-  (`/create/`, `/`, `/join.html`...): continua mostrant el formulari antic
-  de correu+contrasenya i un botó de Google
-  (`src/public/admin-stats.html:17-23`,
-  `src/public/js/admin-stats.js:140-172`). Amb `AUTHENTIK_ONLY=true` ja
-  actiu en producció (vore `docs/PLA-MIGRACIO-AUTHENTIK-2026-10.md`, estat
-  del 2 de novembre de 2026), `POST /api/auth/login` respon `404` i
-  `GET /api/auth/google/config` diu `enabled:false`
-  (`src/server/routes/auth.js:64,90`): **eixe formulari ja no servix per a
-  entrar en producció, hui.** L'única forma d'accedir-hi és tindre ja una
-  sessió d'Authentik oberta en una altra pestanya/pàgina abans de visitar
-  `/admin/stats` — el backend sí la reconeix, perquè
-  `requireRole('admin')` (`authMiddleware.js:45`) no distingix com es va
-  crear la sessió. Per a arreglar-ho caldria: afegir el xip
-  (`edutictac-account` + `/js/edutictac-chip.js` + `account-widget.js`,
-  com en `src/public/create/index.html:11-16`) a `admin-stats.html`;
-  extraure la lògica de pont de sessió (`fetchMe`, `applyCentralSession`,
-  `syncCentralSession`, `loginWithAuthentik`,
-  `src/public/js/create-auth.js:103-194`), hui només dins de
-  `create-auth.js`, a un mòdul compartit perquè `admin-stats.js` la puga
-  reutilitzar sense duplicar-la; i afegir `/admin/stats` a `CHIP_PAGES`
-  (`src/server/server.js:161-173`) perquè la reescriptura de
-  `EDUTICTAC_COMMONS_URL` (per a un Commons local) també hi funcione.
+- ~~El panell `/admin/stats` no estava integrat amb el xip
+  d'EduTicTac/Authentik com la resta de pàgines, i el seu formulari antic
+  de correu+contrasenya/Google havia quedat trencat en producció amb
+  `AUTHENTIK_ONLY=true`.~~ **Corregit.** Ara usa el mateix xip que
+  `/create/` (vore "Panell d'administració"). S'ha triat **no** extraure
+  un mòdul compartit amb `src/public/js/create-auth.js`: eixes funcions
+  no són un mòdul independent, operen sobre variables globals de
+  `create.js` (`authState`, `adminPanel`, etc.), i tocar-ho per a
+  parametritzar-les suposaria arriscar codi en producció de `/create/`
+  (biblioteca, IA, sockets) per a cap benefici real en `/admin/stats`
+  (que no comparteix res d'això). En lloc d'això, `admin-stats.js` porta
+  la seua pròpia còpia reduïda (~50 línies) de només les parts 100%
+  genèriques (`loginWithAuthentik`, `sameSiteAsPage`,
+  `syncCentralSession`, `applyCentralSession`), amb una clau de
+  `sessionStorage` pròpia (`eduh_auth_bridge_admin`) perquè no interferisca
+  amb la de `/create/`.
 
 ## Unió a la partida: nom i icona del jugador
 
@@ -418,11 +410,18 @@ poder importar un fitxer XML al banc de preguntes del seu propi curs.
   `requireRole('admin')`, vore `src/server/services/authMiddleware.js:45`).
   Si no hi ha sessió respon `401`; si hi ha sessió però el rol és
   insuficient, `403`.
-- **Login des de la mateixa pàgina**: si la petició falla amb 401/403,
-  `admin-stats.js` mostra un formulari (email/contrasenya via
-  `POST /api/auth/login`, o Google via
-  `/api/auth/google/start?next=/admin/stats`) i torna a carregar les
-  estadístiques en iniciar sessió amb èxit.
+- **Login des de la mateixa pàgina, pel xip EduTicTac/Authentik**: igual
+  que `/create/`, la pàgina carrega `<edutictac-account>` +
+  `/js/edutictac-chip.js` + `account-widget.js` i registra `/admin/stats`
+  en `CHIP_PAGES` (`src/server/server.js:161-174`) perquè la reescriptura
+  d'`EDUTICTAC_COMMONS_URL` també hi funcione. `admin-stats.js` porta una
+  versió reduïda i pròpia (sense dependències de la UI de `/create/`) del
+  pont de sessió de `src/public/js/create-auth.js`: si Commons té sessió
+  docent i EduHoot no, redirigix a
+  `/api/auth/authentik/start?next=/admin/stats`; si la petició a
+  `/api/admin/stats` falla amb 401, es mostra el botó "Entrar con
+  EduTicTac" (`#login-fallback`); amb 403 (sessió vàlida, rol
+  insuficient) el botó es manté amagat perquè no té sentit reintentar.
 - **Dades que mostra** (totes agregades, cap dada identificativa
   d'alumnat):
   - Total de quizzes i de preguntes, i mitjana de preguntes per quiz.

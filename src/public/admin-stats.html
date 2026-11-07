@@ -6,21 +6,23 @@
     <link rel="stylesheet" href="/css/admin.css">
     <link rel="icon" href="/icons/logo.svg" type="image/svg+xml">
     <link href="/css/fonts.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/edutictac-footer.css">
+    <link rel="stylesheet" href="/css/edutictac-shared.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="/js/edutictac-chip.js"></script>
+    <script src="https://commons.edutictac.es/assets/account-widget.js" defer onerror="document.documentElement.classList.add('account-fallback')"></script>
   </head>
   <body>
+    <edutictac-account class="site-account site-account--top" data-base="https://commons.edutictac.es"></edutictac-account>
     <header class="admin-header">
       <div>
         <h1>Panel de estadísticas</h1>
         <p>Datos agregados y anónimos de todos los juegos.</p>
       </div>
-      <form id="login-form" class="login-inline" autocomplete="on">
-        <input type="email" id="login-email" name="email" placeholder="admin@local" autocomplete="username">
-        <input type="password" id="login-pass" name="password" placeholder="••••••" autocomplete="current-password">
-        <button type="submit">Entrar</button>
-        <button type="button" id="login-google" class="google-login">Google</button>
+      <div class="login-inline" id="auth-area">
+        <button type="button" id="login-fallback">Entrar con EduTicTac</button>
         <span id="login-status"></span>
-      </form>
+      </div>
     </header>
     <main class="admin-content">
       <section class="cards" id="cards"></section>

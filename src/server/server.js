@@ -169,7 +169,8 @@ const CHIP_PAGES = {
   '/host/': 'host/index.html',
   '/host/index.html': 'host/index.html',
   '/player/': 'player/index.html',
-  '/player/index.html': 'player/index.html'
+  '/player/index.html': 'player/index.html',
+  '/admin/stats': 'admin-stats.html'
 };
 
 // Body parsers (bump limit to allow quizzes con recursos más pesados)
