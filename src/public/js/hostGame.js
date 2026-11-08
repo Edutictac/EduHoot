@@ -14,6 +14,7 @@ var resultsChartEl = document.getElementById('resultsChart');
 var resultsStepChartEl = document.getElementById('resultsStepChart');
 var resultsStepRankingEl = document.getElementById('resultsStepRanking');
 var downloadReportBtn = null;
+var backToLibraryLink = null;
 
 // Fallback: si faltan id o pin en la URL, usa localStorage
 try{
@@ -96,6 +97,8 @@ var i18n = {
         questionCountdownHint: 'La siguiente empieza en',
         downloadReport: 'Descargar informe (CSV)',
         downloadReportError: 'No se pudo descargar el informe de la sesión.',
+        backToLibrary: 'Volver',
+        backToLibraryTitle: 'Volver a la biblioteca',
         fullscreenEnter: 'Pantalla completa',
         fullscreenExit: 'Salir de pantalla completa',
         groupAllCorrect: '¡Pleno de aciertos!',
@@ -132,6 +135,8 @@ var i18n = {
         questionCountdownHint: 'Next question starts in',
         downloadReport: 'Download report (CSV)',
         downloadReportError: 'Could not download the session report.',
+        backToLibrary: 'Back',
+        backToLibraryTitle: 'Back to the library',
         fullscreenEnter: 'Fullscreen',
         fullscreenExit: 'Exit fullscreen',
         groupAllCorrect: 'Everyone got it right!',
@@ -168,6 +173,8 @@ var i18n = {
         questionCountdownHint: 'La següent comença en',
         downloadReport: 'Descarregar informe (CSV)',
         downloadReportError: 'No s\'ha pogut descarregar l\'informe de la sessió.',
+        backToLibrary: 'Tornar',
+        backToLibraryTitle: 'Tornar a la biblioteca',
         fullscreenEnter: 'Pantalla completa',
         fullscreenExit: 'Eixir de pantalla completa',
         groupAllCorrect: 'Ple d\'encerts!',
@@ -255,6 +262,11 @@ function applyStaticText(){
     if(winnerTitle) winnerTitle.textContent = t('topPlayers');
     var reportBtn = ensureDownloadReportButton();
     if(reportBtn) reportBtn.textContent = t('downloadReport');
+    var libraryLink = ensureBackToLibraryLink();
+    if(libraryLink){
+        libraryLink.textContent = t('backToLibrary');
+        libraryLink.title = t('backToLibraryTitle');
+    }
 
     updateModalNextButtonLabel();
     updateFullscreenToggleUI();
@@ -344,6 +356,22 @@ function ensureDownloadReportButton(){
     row.appendChild(btn);
     downloadReportBtn = btn;
     return downloadReportBtn;
+}
+
+// Enlace a la biblioteca al acabar la partida (issue #17). target="_top"
+// porque esta vista suele abrirse dentro del iframe del lobby (/host/):
+// así se sale del todo y no queda la biblioteca dentro del lobby.
+function ensureBackToLibraryLink(){
+    if(backToLibraryLink) return backToLibraryLink;
+    var row = document.querySelector('.control-row');
+    if(!row) return null;
+    var link = document.createElement('a');
+    link.id = 'backToLibraryBtn';
+    link.href = '/create/';
+    link.target = '_top';
+    row.appendChild(link);
+    backToLibraryLink = link;
+    return backToLibraryLink;
 }
 
 async function downloadSessionReportCsv(){
@@ -1318,6 +1346,12 @@ socket.on('GameOver', function(data){
     if(reportBtn){
         reportBtn.textContent = t('downloadReport');
         reportBtn.style.display = 'inline-block';
+    }
+    var libraryLink = ensureBackToLibraryLink();
+    if(libraryLink){
+        libraryLink.textContent = t('backToLibrary');
+        libraryLink.title = t('backToLibraryTitle');
+        libraryLink.style.display = 'inline-block';
     }
     try{
         localStorage.removeItem(lastHostKey);

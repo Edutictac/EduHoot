@@ -457,7 +457,7 @@ h3[id^="answer"]::before{
     justify-content: center;
     margin: 14px 0;
 }
-#nextQButton, #showRanking, #skipQButton, #downloadReportBtn{
+#nextQButton, #showRanking, #skipQButton, #downloadReportBtn, #backToLibraryBtn{
     display: none;
     background: rgba(15,23,42,0.8);
     border: 1px solid var(--card-stroke);
@@ -471,7 +471,8 @@ h3[id^="answer"]::before{
 }
 #showRanking{ display: inline-block; }
 #downloadReportBtn{ background: rgba(16,185,129,0.22); }
-#nextQButton:hover, #showRanking:hover, #skipQButton:hover, #downloadReportBtn:hover{ transform: translateY(-2px); filter: brightness(1.05); }
+#backToLibraryBtn{ font-size: 13.33px; text-decoration: none; }
+#nextQButton:hover, #showRanking:hover, #skipQButton:hover, #downloadReportBtn:hover, #backToLibraryBtn:hover{ transform: translateY(-2px); filter: brightness(1.05); }
 
 #winnerTitle, #winner1, #winner2, #winner3, #winner4, #winner5{
     text-align: center;

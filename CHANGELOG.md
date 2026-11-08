@@ -16,6 +16,12 @@ fitxers corresponents, i els originals es van eliminar.
 
 ## [Sense publicar]
 
+### Afegit
+- En acabar la partida, la pantalla de l'amfitrió mostra «Tornar» al
+  costat de «Descarregar informe», per a tornar a la biblioteca
+  (`/create/`) sense haver d'usar el botó d'arrere del navegador
+  ([#17](https://github.com/Edutictac/EduHoot/issues/17)).
+
 ### Canviat
 - El lobby de l'amfitrió (`/host/`) és ara una app de Vue 3, sense build
   step: és la prova pilot de la Subfase B de
