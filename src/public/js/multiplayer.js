@@ -189,6 +189,7 @@
     es: {
       back: 'Volver',
       footerPrivacy: 'Privacidad',
+      footerCookies: 'Cookies',
       footerSource: 'Código fuente',
       eyebrow: 'Multiplayer local',
       title: 'Juega en la misma pantalla',
@@ -261,6 +262,7 @@
     en: {
       back: 'Back',
       footerPrivacy: 'Privacy',
+      footerCookies: 'Cookies',
       footerSource: 'Source code',
       eyebrow: 'Local multiplayer',
       title: 'Play on the same screen',
@@ -333,6 +335,7 @@
     ca: {
       back: 'Tornar',
       footerPrivacy: 'Privacitat',
+      footerCookies: 'Galetes',
       footerSource: 'Codi font',
       eyebrow: 'Multiplayer local',
       title: 'Juga a la mateixa pantalla',

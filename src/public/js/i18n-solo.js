@@ -94,6 +94,7 @@
         submitFreeAnswer: 'Enviar',
         footerLicense: 'EduHoot · Licencia GNU Affero General Public License v3.0 (AGPL-3.0)',
         footerPrivacy: 'Privacidad',
+        footerCookies: 'Cookies',
         footerSource: 'Código fuente',
         footerContactLabel: 'Incidencias'
     },
@@ -189,6 +190,7 @@
                 submitFreeAnswer: 'Submit',
             footerLicense: 'EduHoot · GNU Affero General Public License v3.0 (AGPL-3.0)',
             footerPrivacy: 'Privacy',
+            footerCookies: 'Cookies',
             footerSource: 'Source code',
             footerContactLabel: 'Issues'
     },
@@ -284,6 +286,7 @@
             submitFreeAnswer: 'Enviar',
             footerLicense: 'EduHoot · Llicència GNU Affero General Public License v3.0 (AGPL-3.0)',
             footerPrivacy: 'Privacitat',
+            footerCookies: 'Galetes',
             footerSource: 'Codi font',
             footerContactLabel: 'Incidències'
         },

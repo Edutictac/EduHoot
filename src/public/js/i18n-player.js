@@ -67,6 +67,7 @@
       footerLicense: 'EduHoot · Licencia GNU Affero General Public License v3.0 (AGPL-3.0)',
       footerSource: 'Código fuente',
       footerPrivacy: 'Privacidad',
+      footerCookies: 'Cookies',
       footerContactLabel: 'Incidencias'
     },
     ca: {
@@ -135,6 +136,7 @@
       footerLicense: 'EduHoot · Llicència GNU Affero General Public License v3.0 (AGPL-3.0)',
       footerSource: 'Codi font',
       footerPrivacy: 'Privacitat',
+      footerCookies: 'Galetes',
       footerContactLabel: 'Incidències'
     },
     va: {
@@ -209,6 +211,7 @@
       footerLicense: 'EduHoot · GNU Affero General Public License v3.0 (AGPL-3.0)',
       footerSource: 'Source code',
       footerPrivacy: 'Privacy',
+      footerCookies: 'Cookies',
       footerContactLabel: 'Issues'
     }
   };
