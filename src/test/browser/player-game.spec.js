@@ -1,0 +1,286 @@
+const { test, expect } = require('@playwright/test');
+
+if (process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH) {
+    test.use({ launchOptions: { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } });
+}
+
+// Socket.IO falso (mismo patrón que host-lobby.spec.js): guarda lo que la
+// página emite (window.__emits) y deja lanzar eventos del servidor con
+// window.__serverEmit. socket.id fijo para poder comprobar el ranking.
+const FAKE_SOCKET_IO = `
+(function(){
+    window.__emits = [];
+    window.__sockets = [];
+    window.io = function(){
+        var handlers = {};
+        var socket = {
+            id: 'p1',
+            connected: false,
+            on: function(name, fn){ (handlers[name] = handlers[name] || []).push(fn); return socket; },
+            emit: function(name, data){ window.__emits.push({ name: name, data: JSON.parse(JSON.stringify(data === undefined ? null : data)) }); return socket; },
+            connect: function(){ socket.connected = true; return socket; },
+            disconnect: function(){ socket.connected = false; return socket; },
+            __trigger: function(name, args){
+                if(name === 'connect') socket.connected = true;
+                if(name === 'disconnect') socket.connected = false;
+                (handlers[name] || []).forEach(function(fn){ fn.apply(null, args || []); });
+            }
+        };
+        window.__sockets.push(socket);
+        return socket;
+    };
+    // Admite varios argumentos (p. ej. questionOver(playerData, payload)).
+    window.__serverEmit = function(name, args){
+        window.__sockets[0].__trigger(name, args);
+    };
+})();
+`;
+
+async function mockBackend(page) {
+    await page.route(/^https:\/\//, route => route.abort());
+    await page.route('**/socket.io/socket.io.js', route => route.fulfill({
+        contentType: 'application/javascript',
+        body: FAKE_SOCKET_IO
+    }));
+    await page.route('**/api/**', route => route.fulfill({ json: {} }));
+}
+
+async function openGame(page, query) {
+    await mockBackend(page);
+    await page.goto('/player/game/' + (query || '?pin=12345&name=Ana&icon=gat&lang=es'));
+    await page.waitForLoadState('load');
+    await page.evaluate(() => window.__serverEmit('connect'));
+}
+
+function emitsNamed(page, name) {
+    return page.evaluate(n => window.__emits.filter(e => e.name === n).map(e => e.data), name);
+}
+
+function serverEmit(page, name, ...args) {
+    return page.evaluate(x => window.__serverEmit(x.name, x.args), { name, args });
+}
+
+const ANSWERS = ['Paris', 'Londres', 'Roma', 'Berlín'];
+
+// Red de seguridad para la Subfase B (Vue): fija el comportamiento actual de
+// /player/game/ (playerGame.js) para comprobar que sigue igual cuando pase a
+// ser una app de Vue. El spec no debe cambiar en esa conversión.
+test('al conectar se une a la partida con los datos de la URL y los botones quedan visibles', async ({ page }) => {
+    await openGame(page);
+    expect(await emitsNamed(page, 'player-join-game')).toEqual([{ pin: '12345', name: 'Ana', icon: 'gat', lang: 'es' }]);
+    await expect(page.locator('#nameText')).toHaveText('Nombre:');
+    await expect(page.locator('#scoreText')).toHaveText('Puntuación:');
+    for (let i = 1; i <= 4; i++) {
+        await expect(page.locator('#answer' + i)).toBeVisible();
+    }
+});
+
+test('playerGameData y newScore actualizan el nombre y la puntuación', async ({ page }) => {
+    await openGame(page);
+    await serverEmit(page, 'playerGameData', [
+        { playerId: 'p1', name: 'Ana', icon: '🐱', gameData: { score: 150 } },
+        { playerId: 'p2', name: 'Pau', gameData: { score: 50 } }
+    ]);
+    await expect(page.locator('#nameText')).toHaveText('Nombre: 🐱 Ana');
+    await expect(page.locator('#scoreText')).toHaveText('Puntuación: 150');
+
+    await serverEmit(page, 'newScore', 300);
+    await expect(page.locator('#scoreText')).toHaveText('Puntuación: 300');
+});
+
+test('pregunta normal: pinta la pregunta y las respuestas, y al responder se oculta y se envía la respuesta', async ({ page }) => {
+    await openGame(page);
+    await serverEmit(page, 'playerQuestion', { question: 'Capital de Francia?', answers: ANSWERS, type: 'quiz', time: 15 });
+
+    await expect(page.locator('#questionText')).toHaveText('Capital de Francia?');
+    for (let i = 0; i < 4; i++) {
+        await expect(page.locator('#answer' + (i + 1))).toHaveText(ANSWERS[i]);
+    }
+
+    await page.locator('#answer2').click();
+    expect(await emitsNamed(page, 'playerAnswer')).toEqual([2]);
+    for (let i = 1; i <= 4; i++) {
+        await expect(page.locator('#answer' + i)).toBeHidden();
+    }
+    await expect(page.locator('#message')).toHaveText('Respuesta enviada. Esperando al resto...');
+    await expect(page.locator('#playerAnswerStatus')).toHaveText('Respuesta enviada');
+    await expect(page.locator('#playerAnswerStatus')).not.toHaveClass(/hidden/);
+});
+
+test('respuesta múltiple: permite marcar varias opciones y enviarlas juntas', async ({ page }) => {
+    await openGame(page);
+    await serverEmit(page, 'playerQuestion', { question: '¿Cuáles son primos?', answers: ANSWERS, type: 'multiple', time: 20 });
+
+    await page.locator('#answer1').click();
+    await page.locator('#answer3').click();
+    await expect(page.locator('#answer1')).toHaveClass(/multi-selected/);
+    await expect(page.locator('#answer3')).toHaveClass(/multi-selected/);
+    await expect(page.locator('#answer2')).not.toHaveClass(/multi-selected/);
+    await expect(page.locator('#multiSubmitRow')).toBeVisible();
+    expect(await emitsNamed(page, 'playerAnswer')).toEqual([]);
+
+    await page.locator('#multiSubmitBtn').click();
+    expect(await emitsNamed(page, 'playerAnswer')).toEqual([[1, 3]]);
+    await expect(page.locator('#multiSubmitRow')).toBeHidden();
+    for (let i = 1; i <= 4; i++) {
+        await expect(page.locator('#answer' + i)).toBeHidden();
+    }
+});
+
+// Bug anotado en eduhoot-local-context/.local/ISSUES.md: las claves
+// 'text_placeholder' y 'submit_free' no existen en i18n-player.js, así que
+// hoy se ven literales en vez de traducidas. El spec fija el comportamiento
+// real (con el bug), no el ideal.
+test('respuesta libre de texto corto: muestra el campo y la envía como texto', async ({ page }) => {
+    await openGame(page);
+    await serverEmit(page, 'playerQuestion', { question: '¿Capital de Italia?', type: 'short-answer', time: 20 });
+
+    await expect(page.locator('#freeSubmitRow')).toBeVisible();
+    for (let i = 1; i <= 4; i++) {
+        await expect(page.locator('#answer' + i)).toBeHidden();
+    }
+    await expect(page.locator('#freeAnswerInput')).toHaveAttribute('placeholder', 'text_placeholder');
+    await expect(page.locator('#freeSubmitBtn')).toHaveText('submit_free');
+
+    await page.locator('#freeAnswerInput').fill('Roma');
+    await page.locator('#freeSubmitBtn').click();
+    expect(await emitsNamed(page, 'playerAnswer')).toEqual([{ text: 'Roma' }]);
+    await expect(page.locator('#freeSubmitRow')).toBeHidden();
+});
+
+test('respuesta libre numérica: muestra el campo decimal y la envía como number', async ({ page }) => {
+    await openGame(page);
+    await serverEmit(page, 'playerQuestion', { question: '¿Cuánto es 6x7?', type: 'numeric', time: 20 });
+
+    await expect(page.locator('#freeAnswerInput')).toHaveAttribute('placeholder', 'numeric_placeholder');
+    await expect(page.locator('#freeAnswerInput')).toHaveAttribute('inputmode', 'decimal');
+
+    await page.locator('#freeAnswerInput').fill('42');
+    await page.keyboard.press('Enter');
+    expect(await emitsNamed(page, 'playerAnswer')).toEqual([{ number: '42' }]);
+});
+
+test('modo a ciegas: solo se ven las formas activas, sin texto, y se puede responder igual', async ({ page }) => {
+    await openGame(page);
+    await serverEmit(page, 'playerQuestion', { blind: true, type: 'quiz', answerCount: 2, time: 20 });
+
+    await expect(page.locator('#questionText')).toHaveText('Mira la pantalla para ver la pregunta');
+    await expect(page.locator('#answer1')).toBeVisible();
+    await expect(page.locator('#answer1')).toHaveText('');
+    await expect(page.locator('#answer1')).toHaveAttribute('aria-label', 'Opción A: triángulo');
+    await expect(page.locator('#answer2')).toBeVisible();
+    await expect(page.locator('#answer3')).toBeHidden();
+    await expect(page.locator('#answer3')).toHaveAttribute('aria-label', '');
+    await expect(page.locator('#answer4')).toBeHidden();
+
+    await page.locator('#answer1').click();
+    expect(await emitsNamed(page, 'playerAnswer')).toEqual([1]);
+});
+
+test('multiplicador de puntos dobles: muestra la insignia mientras está activo', async ({ page }) => {
+    await openGame(page);
+    await serverEmit(page, 'playerQuestion', { question: 'Bonus', answers: ANSWERS, type: 'quiz', time: 20, pointsMultiplier: 2 });
+    await expect(page.locator('#playerPointsBadge')).toBeVisible();
+    await expect(page.locator('#playerPointsBadge')).toContainText('x2');
+    await expect(page.locator('#playerPointsBadge')).toContainText('Puntos dobles');
+
+    await serverEmit(page, 'playerQuestion', { question: 'Normal', answers: ANSWERS, type: 'quiz', time: 20 });
+    await expect(page.locator('#playerPointsBadge')).toBeHidden();
+});
+
+test('resultado correcto: pinta el mensaje y a los 3 s aparece el ranking', async ({ page }) => {
+    await openGame(page);
+    await serverEmit(page, 'playerQuestion', { question: 'Capital de Francia?', answers: ANSWERS, type: 'quiz', time: 15 });
+    await page.locator('#answer1').click();
+    await serverEmit(page, 'answerResult', { outcome: 'correct' });
+
+    const playerData = [
+        { playerId: 'p1', name: 'Ana', gameData: { score: 500 } },
+        { playerId: 'p2', name: 'Pau', gameData: { score: 100 } }
+    ];
+    await serverEmit(page, 'questionOver', playerData);
+
+    await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(76, 175, 80)');
+    await expect(page.locator('#message')).toHaveText('¡Correcto!');
+    await expect(page.locator('#rankText')).toHaveText('Top 10 - Puesto 1');
+
+    const modal = page.locator('#playerRankingModal');
+    await expect(modal).toHaveClass(/show/, { timeout: 4000 });
+    const items = page.locator('#playerRankingList li');
+    await expect(items).toHaveCount(2);
+    await expect(items.nth(0)).toHaveText('Ana - 500 (Tú)');
+    await expect(items.nth(1)).toHaveText('Pau - 100');
+});
+
+test('resultado incorrecto: muestra la respuesta correcta a partir de las respuestas mostradas', async ({ page }) => {
+    await openGame(page);
+    await serverEmit(page, 'playerQuestion', { question: 'Capital de Francia?', answers: ANSWERS, type: 'quiz', time: 15 });
+    await page.locator('#answer2').click();
+
+    await serverEmit(page, 'questionOver', [{ playerId: 'p1', name: 'Ana', gameData: { score: 0 } }], { type: 'quiz', correctAnswers: [1] });
+
+    await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(249, 74, 30)');
+    await expect(page.locator('#message')).toContainText('¡Incorrecto!');
+    await expect(page.locator('#message .player-correct-answer')).toHaveText('Respuesta correcta: Paris');
+});
+
+test('resultado parcial y de encuesta: fondo y mensaje propios de cada caso', async ({ page }) => {
+    await openGame(page);
+    await serverEmit(page, 'playerQuestion', { question: 'Q1', answers: ANSWERS, type: 'quiz', time: 15 });
+    await page.locator('#answer1').click();
+    await serverEmit(page, 'answerResult', { outcome: 'partial' });
+    await serverEmit(page, 'questionOver', [{ playerId: 'p1', name: 'Ana', gameData: { score: 10 } }]);
+    await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(255, 179, 0)');
+    await expect(page.locator('#message')).toHaveText('Respuesta parcialmente correcta: has sumado puntos.');
+
+    await serverEmit(page, 'nextQuestionPlayer');
+    await serverEmit(page, 'playerQuestion', { question: 'Q2 (encuesta)', answers: ANSWERS, type: 'quiz', time: 15 });
+    await page.locator('#answer1').click();
+    await serverEmit(page, 'questionOver', [{ playerId: 'p1', name: 'Ana', gameData: { score: 10 } }], { type: 'poll' });
+    await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(96, 125, 139)');
+    await expect(page.locator('#message')).toHaveText('¡Gracias por responder!');
+});
+
+// Orden real del servidor (sockets/hostEvents.js:216-217): nextQuestionPlayer
+// primero (limpia el resultado anterior), scheduleQuestionCountdown después
+// (cuenta atrás), y la siguiente playerQuestion al final.
+test('nextQuestionPlayer limpia el resultado anterior, y luego se ve la cuenta atrás', async ({ page }) => {
+    await openGame(page);
+    await serverEmit(page, 'playerQuestion', { question: 'Q1', answers: ANSWERS, type: 'quiz', time: 15 });
+    await page.locator('#answer1').click();
+    await serverEmit(page, 'questionOver', [{ playerId: 'p1', name: 'Ana', gameData: { score: 10 } }], { type: 'quiz', correctAnswers: [] });
+
+    await serverEmit(page, 'nextQuestionPlayer');
+    await expect(page.locator('#message')).toBeHidden();
+    await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+    for (let i = 1; i <= 4; i++) {
+        await expect(page.locator('#answer' + i)).toBeVisible();
+    }
+
+    await serverEmit(page, 'questionCountdown', { seconds: 3 });
+    await expect(page.locator('#questionCountdown')).toHaveClass(/is-visible/);
+    await expect(page.locator('#questionCountdownNumber')).toHaveText('3');
+    for (let i = 1; i <= 4; i++) {
+        await expect(page.locator('#answer' + i)).toBeHidden();
+    }
+});
+
+test('GameOver: muestra el mensaje final y oculta los controles de respuesta', async ({ page }) => {
+    await openGame(page);
+    await serverEmit(page, 'playerQuestion', { question: 'Última', answers: ANSWERS, type: 'quiz', time: 15 });
+    await serverEmit(page, 'GameOver');
+
+    await expect(page.locator('#message')).toHaveText('PARTIDA TERMINADA');
+    for (let i = 1; i <= 4; i++) {
+        await expect(page.locator('#answer' + i)).toBeHidden();
+    }
+});
+
+test('reconexión: al desconectar avisa, y al reconectar vuelve a unirse a la partida', async ({ page }) => {
+    await openGame(page);
+    await serverEmit(page, 'disconnect');
+    await expect(page.locator('#message')).toContainText('Reconectando... te hemos guardado el sitio durante');
+
+    await serverEmit(page, 'connect');
+    expect(await emitsNamed(page, 'player-join-game')).toHaveLength(2);
+});
