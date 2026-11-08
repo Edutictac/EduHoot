@@ -99,13 +99,8 @@
     if(select){
       select.value = lang;
     }
-    var hostError = document.getElementById('host-error');
-    if(hostError){
-      if(hostError.style.display !== 'none'){
-        hostError.textContent = t('host_error');
-      }
-      hostError.setAttribute('data-i18n-host-msg', t('host_error'));
-    }
+    // El lobby (host.js, Vue) traduce sus textos y su error con
+    // getHostTranslation; aquí solo se tocan los textos fuera de él.
   }
 
   function setLang(newLang){

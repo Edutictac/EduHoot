@@ -23,39 +23,48 @@
                 <select id="host-lang-select" data-lang-options="name"></select>
             </label>
         </div>
-        <div class="join-cta">
-            <div class="join-text">
-                <h2 id = "title" data-i18n-host="join_title">Únete a esta partida con el PIN:</h2>
-                <div class="pin-badge">
-                    <span class="pin-label" data-i18n-host="pin_label">PIN</span>
-                    <span id="gamePinText" class="pin-value">—</span>
+        <!-- Lobby: app de Vue (host.js) que es munta ací amb la plantilla de baix. -->
+        <div id="host-lobby"></div>
+        <template id="host-lobby-tpl">
+            <div class="join-cta">
+                <div class="join-text">
+                    <h2 id="title">{{ t('join_title') }}</h2>
+                    <div class="pin-badge">
+                        <span class="pin-label">{{ t('pin_label') }}</span>
+                        <span id="gamePinText" class="pin-value">{{ pin || '—' }}</span>
+                    </div>
+                    <p id="host-error" class="host-error" :style="{ display: errorMessage ? 'block' : 'none' }">{{ errorMessage }}</p>
                 </div>
-                <p id="host-error" class="host-error" style="display:none;"></p>
-            </div>
-            <div class="qr-card">
-                <p class="qr-label" data-i18n-host="scan_qr">Escanea el código QR para entrar</p>
-                <div class="qr-img">
-                    <img id="join-qr" alt="QR eduhoot.edutictac.es" loading="lazy">
+                <div class="qr-card">
+                    <p class="qr-label">{{ t('scan_qr') }}</p>
+                    <div class="qr-img">
+                        <img id="join-qr" :src="qrSrc" :aria-label="joinUrl" alt="QR eduhoot.edutictac.es" loading="lazy">
+                    </div>
+                    <a id="join-url" class="qr-url" :href="joinUrl" target="_blank" rel="noopener">{{ joinLabel }}</a>
                 </div>
-                <a id="join-url" class="qr-url" href="https://eduhoot.edutictac.es/" target="_blank" rel="noopener">eduhoot.edutictac.es</a>
             </div>
-        </div>
-        <div id="host-options">
-            <label><input type="checkbox" id="opt-rand-q"> <span data-i18n-host="opt_rand_q">Preguntas aleatorias</span></label>
-            <label><input type="checkbox" id="opt-rand-a" checked> <span data-i18n-host="opt_rand_a">Respuestas aleatorias</span></label>
-            <label><input type="checkbox" id="opt-send-students" checked> <span data-i18n-host="opt_send_students">Mostrar pregunta al alumnado</span><br><small class="opt-hint" data-i18n-host="opt_send_students_hint">Si se desactiva, el alumnado solo verá formas y colores para responder; deberá mirar la pantalla compartida para leer la pregunta.</small></label>
-            <label><input type="checkbox" id="opt-show-scores" checked> <span data-i18n-host="opt_show_scores">Mostrar puntuaciones entre preguntas</span></label>
-            <label class="opt-inline">
-                <span data-i18n-host="opt_time">Tiempo por pregunta (s)</span>
-                <input type="number" id="opt-time" min="5" max="120" placeholder="Auto">
-            </label>
-            <small data-i18n-host="opt_time_help">Déjalo vacío para usar el tiempo definido en cada pregunta del quiz.</small>
-        </div>
-        <div id="players" class="players-list"></div>
-        <br>
-        <button id = 'start' onclick = "startGame()" data-i18n-host="start_btn">Iniciar partida</button>
-        <br>
-        <br>
+            <div id="host-options">
+                <label><input type="checkbox" id="opt-rand-q" v-model="options.randomQuestions"> <span>{{ t('opt_rand_q') }}</span></label>
+                <label><input type="checkbox" id="opt-rand-a" v-model="options.randomAnswers"> <span>{{ t('opt_rand_a') }}</span></label>
+                <label><input type="checkbox" id="opt-send-students" v-model="options.sendToStudents"> <span>{{ t('opt_send_students') }}</span><br><small class="opt-hint">{{ t('opt_send_students_hint') }}</small></label>
+                <label><input type="checkbox" id="opt-show-scores" v-model="options.showScoresBetween"> <span>{{ t('opt_show_scores') }}</span></label>
+                <label class="opt-inline">
+                    <span>{{ t('opt_time') }}</span>
+                    <input type="number" id="opt-time" min="5" max="120" placeholder="Auto" v-model="options.time">
+                </label>
+                <small>{{ t('opt_time_help') }}</small>
+            </div>
+            <div id="players" class="players-list">
+                <div class="player-item" v-for="(player, index) in players" :key="index">
+                    <span class="player-icon">{{ player.icon || '' }}</span>
+                    <span class="player-name">{{ player.name || '' }}</span>
+                </div>
+            </div>
+            <br>
+            <button id="start" @click="startGame">{{ t('start_btn') }}</button>
+            <br>
+            <br>
+        </template>
 
         <div id="host-lobby-music-player" class="music-player-shell host-lobby-music-player"></div>
 

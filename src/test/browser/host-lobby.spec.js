@@ -161,3 +161,16 @@ test('cambiar de idioma traduce el lobby y el enlace de unión', async ({ page }
     await expect(page.locator('#title')).toHaveText('Join this game with the PIN:');
     await expect(page.locator('#join-url')).toHaveAttribute('href', /pin=12345&lang=en$/);
 });
+
+// Antes, i18n-host.js cambiaba cualquier error visible por el genérico al
+// cambiar de idioma («Falta el quiz…» → «No se pudo iniciar la partida…»).
+test('al cambiar de idioma, el error visible se traduce y no pasa a ser el genérico', async ({ page }) => {
+    const errors = [];
+    page.on('pageerror', e => errors.push(e.message));
+    await openLobby(page, '?lang=es');
+    await expect(page.locator('#host-error')).toHaveText('Falta el quiz para generar la partida. Vuelve a elegirlo.');
+
+    await page.locator('#host-lang-select').selectOption('en');
+    await expect(page.locator('#host-error')).toHaveText('Missing quiz to create the game. Please pick it again.');
+    expect(errors).toEqual([]);
+});

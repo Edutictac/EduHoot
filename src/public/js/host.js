@@ -17,11 +17,6 @@ var baseJoinUrl = (function(){
     }catch(e){}
     return 'https://eduhoot.edutictac.es/join.html';
 })();
-var joinQrImg = document.getElementById('join-qr');
-var joinUrlAnchor = document.getElementById('join-url');
-var gamePinText = document.getElementById('gamePinText');
-var hostError = document.getElementById('host-error');
-var pinLoaded = false;
 var hostErrorTimeout = null;
 var hostStartClicked = false;
 var hostStartGameEmitted = false;
@@ -103,8 +98,7 @@ function emitStartGameWhenGongEnds(opts){
         hostStartWatchdog = setTimeout(function(){
             hostStartGameEmitted = false;
             hostStartWatchdog = null;
-            var msg = (window.getHostTranslation && window.getHostTranslation('host_error')) || 'No se pudo iniciar la partida. Vuelve a intentarlo.';
-            showHostError(msg);
+            lobby.showErrorKey('host_error');
         }, HOST_START_ACK_TIMEOUT_MS);
         socket.emit('startGame', opts);
     }
@@ -224,65 +218,85 @@ function initHostLobbyMusicPlayer(){
     });
 }
 
-function buildJoinUrl(pin){
-    var l = getHostLobbyLang();
-    var qs = [];
-    if(pin){
-        qs.push('pin=' + encodeURIComponent(pin));
-    }
-    if(l){
-        qs.push('lang=' + encodeURIComponent(l));
-    }
-    return qs.length ? baseJoinUrl + '?' + qs.join('&') : baseJoinUrl;
-}
-
-function updateJoinQr(pin){
-    var url = buildJoinUrl(pin);
-    var qrSize = 240;
-    if(joinQrImg){
-        joinQrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=' + qrSize + 'x' + qrSize + '&data=' + encodeURIComponent(url);
-        joinQrImg.setAttribute('aria-label', url);
-    }
-    if(joinUrlAnchor){
-        joinUrlAnchor.href = url;
-        try{
-            var parsed = new URL(url);
-            joinUrlAnchor.textContent = parsed.host + (pin ? (' · PIN ' + pin) : '');
-        }catch(e){
-            joinUrlAnchor.textContent = (pin ? ('PIN ' + pin) : 'Unirse');
-        }
-    }
-}
-
-function setDisplayedPin(pin){
-    var safePin = (pin || '').toString();
-    pinLoaded = !!pin;
-    if(gamePinText){
-        gamePinText.textContent = safePin || '—';
-    }
-    updateJoinQr(safePin);
-}
-
-function showHostError(msg){
-    if(!hostError) return;
-    hostError.textContent = msg || '';
-    hostError.style.display = 'block';
-}
-
 function syncLangStorage(val){
     if(!val) return;
     EduhootLang.persist(val);
 }
 
+// Lobby (Vue): PIN, QR, error, opciones y jugadores salen de estos datos y
+// Vue repinta solo cuando cambian. Los textos se traducen con t(), que lee
+// `lang` para que Vue sepa que debe repintar al cambiar de idioma.
+var lobby = Vue.createApp({
+    template: '#host-lobby-tpl',
+    data: function(){
+        return {
+            lang: getHostLobbyLang(),
+            pin: '',
+            players: [],
+            errorKey: '',
+            errorText: '',
+            options: {
+                randomQuestions: false,
+                randomAnswers: true,
+                sendToStudents: true,
+                showScoresBetween: true,
+                time: ''
+            }
+        };
+    },
+    computed: {
+        joinUrl: function(){
+            var qs = [];
+            if(this.pin){
+                qs.push('pin=' + encodeURIComponent(this.pin));
+            }
+            if(this.lang){
+                qs.push('lang=' + encodeURIComponent(this.lang));
+            }
+            return qs.length ? baseJoinUrl + '?' + qs.join('&') : baseJoinUrl;
+        },
+        joinLabel: function(){
+            try{
+                return new URL(this.joinUrl).host + (this.pin ? (' · PIN ' + this.pin) : '');
+            }catch(e){
+                return this.pin ? ('PIN ' + this.pin) : 'Unirse';
+            }
+        },
+        qrSrc: function(){
+            var qrSize = 240;
+            return 'https://api.qrserver.com/v1/create-qr-code/?size=' + qrSize + 'x' + qrSize + '&data=' + encodeURIComponent(this.joinUrl);
+        },
+        // Se guarda la clave (no el texto) para que el error cambie de idioma
+        // con el resto; los errores que envía el servidor llegan ya escritos.
+        errorMessage: function(){
+            return this.errorKey ? this.t(this.errorKey) : this.errorText;
+        }
+    },
+    methods: {
+        t: function(key){
+            void this.lang;
+            return window.getHostTranslation ? window.getHostTranslation(key) : key;
+        },
+        showErrorKey: function(key){
+            this.errorText = '';
+            this.errorKey = key;
+        },
+        showErrorText: function(text){
+            this.errorKey = '';
+            this.errorText = text || '';
+        },
+        startGame: function(){
+            startGame();
+        }
+    }
+}).mount('#host-lobby');
+
 // Mostrar botón de reanudar si hay partida activa guardada
 try{
-    var savedHost = localStorage.getItem(lastHostKey);
     var storedPin = localStorage.getItem(lastPinKey);
     if(storedPin){
         params.pin = params.pin || storedPin;
-        setDisplayedPin(storedPin);
-    }else{
-        updateJoinQr();
+        lobby.pin = storedPin;
     }
     // inicializar selector de idioma con preferencia previa
     var storedLang = EduhootLang.fromStorage('lang-host');
@@ -298,7 +312,7 @@ if(hostLangSelect){
         if(window.applyHostTranslations){
             window.applyHostTranslations(hostLangSelect.value);
         }
-        updateJoinQr(params.pin || '');
+        lobby.lang = getHostLobbyLang();
         updateHostLobbyMusicLabels();
     });
 }
@@ -312,53 +326,34 @@ socket.on('connect', function() {
         clearTimeout(hostStartWatchdog);
         hostStartWatchdog = null;
     }
-    document.getElementById('players').value = "";
     if(!params.id){
-        showHostError((window.getHostTranslation && window.getHostTranslation('host_error_missing_id')) || 'Falta el quiz para generar la partida. Vuelve a elegirlo.');
+        lobby.showErrorKey('host_error_missing_id');
         return;
     }
     //Tell server that it is host connection
     socket.emit('host-join', params);
     setTimeout(function(){
-        if(!pinLoaded){
+        if(!lobby.pin){
             socket.emit('host-join', params);
         }
     }, 2000);
     clearTimeout(hostErrorTimeout);
     hostErrorTimeout = setTimeout(function(){
-        if(!pinLoaded){
-            showHostError((window.getHostTranslation && window.getHostTranslation('host_error_timeout')) || 'No pudimos obtener el PIN. Revisa la conexión y vuelve a elegir el quiz.');
+        if(!lobby.pin){
+            lobby.showErrorKey('host_error_timeout');
         }
     }, 4000);
 });
 
 socket.on('showGamePin', function(data){
-   setDisplayedPin(data.pin);
+    lobby.pin = (data.pin || '').toString();
     params.pin = data.pin;
-   try{ localStorage.setItem(lastPinKey, data.pin); }catch(e){}
+    try{ localStorage.setItem(lastPinKey, data.pin); }catch(e){}
 });
 
 //Adds player's name to screen and updates player count
 socket.on('updatePlayerLobby', function(data){
-    
-    var container = document.getElementById('players');
-    if(!container) return;
-    container.innerHTML = '';
-    for(var i = 0; i < data.length; i++){
-        var icon = data[i].icon ? data[i].icon : '';
-        var item = document.createElement('div');
-        item.className = 'player-item';
-        var iconEl = document.createElement('span');
-        iconEl.className = 'player-icon';
-        iconEl.textContent = icon;
-        var nameEl = document.createElement('span');
-        nameEl.className = 'player-name';
-        nameEl.textContent = data[i].name || '';
-        item.appendChild(iconEl);
-        item.appendChild(nameEl);
-        container.appendChild(item);
-    }
-    
+    lobby.players = Array.isArray(data) ? data : [];
 });
 
 //Tell server to start game if button is clicked
@@ -381,11 +376,12 @@ function startGame(){
         hostLobbyMusicPlayerInstance.play();
     }
 
+    var options = lobby.options;
     var opts = {
-        randomQuestions: document.getElementById('opt-rand-q') ? document.getElementById('opt-rand-q').checked : false,
-        randomAnswers: document.getElementById('opt-rand-a') ? document.getElementById('opt-rand-a').checked : true,
-        sendToStudents: document.getElementById('opt-send-students') ? document.getElementById('opt-send-students').checked : true,
-        showScoresBetween: document.getElementById('opt-show-scores') ? document.getElementById('opt-show-scores').checked : true,
+        randomQuestions: !!options.randomQuestions,
+        randomAnswers: !!options.randomAnswers,
+        sendToStudents: !!options.sendToStudents,
+        showScoresBetween: !!options.showScoresBetween,
         pin: (function(){
             try{
                 return (params && params.pin) || localStorage.getItem(lastPinKey) || '';
@@ -394,8 +390,8 @@ function startGame(){
             }
         })()
     };
-    var timeInput = document.getElementById('opt-time');
-    var rawTime = timeInput && typeof timeInput.value === 'string' ? timeInput.value.trim() : '';
+    // v-model en un input numérico da un número o '' si está vacío.
+    var rawTime = options.time == null ? '' : String(options.time).trim();
     if(rawTime){
         var parsedTime = parseInt(rawTime, 10);
         if(!isNaN(parsedTime)){
@@ -471,8 +467,7 @@ socket.on('noGameFound', function(){
        clearTimeout(hostStartWatchdog);
        hostStartWatchdog = null;
    }
-   var msg = (window.getHostTranslation && window.getHostTranslation('host_error')) || 'No se pudo iniciar la partida. Vuelve a elegir el quiz y prueba de nuevo.';
-   showHostError(msg);
+   lobby.showErrorKey('host_error');
 });
 
 socket.on('hostError', function(payload){
@@ -481,6 +476,9 @@ socket.on('hostError', function(payload){
         clearTimeout(hostStartWatchdog);
         hostStartWatchdog = null;
     }
-    var msg = payload && payload.error ? payload.error : ((window.getHostTranslation && window.getHostTranslation('host_error')) || 'No se pudo iniciar la partida. Vuelve a elegir el quiz y prueba de nuevo.');
-    showHostError(msg);
+    if(payload && payload.error){
+        lobby.showErrorText(payload.error);
+    }else{
+        lobby.showErrorKey('host_error');
+    }
 });
