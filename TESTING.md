@@ -148,7 +148,8 @@ regressions que cap test automàtic ni comprovació puntual cobrix:
    la biblioteca, unir-se amb almenys dos dispositius/pestanyes com a
    alumnat des de `/join`, respondre totes les preguntes (cada tipus
    inclòs), comprovar el compte arrere, l'avanç manual entre preguntes,
-   el rànquing final i la celebració d'encert/fallada col·lectiva.
+   el rànquing final, la celebració d'encert/fallada col·lectiva i que,
+   en acabar, el botó «Tornar» porta a la biblioteca.
 3. **Multijugador** (pantalla compartida, 2-4 jugadors): jugar una
    partida sencera des d'un sol dispositiu.
 4. **Solo**: jugar amb un enllaç directe (`/solo/?id=<quizId>` o

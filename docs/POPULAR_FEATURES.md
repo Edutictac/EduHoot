@@ -236,7 +236,7 @@ el context, que ja estan en la taula).
    `music-player.js` (377 línies) ja és un reproductor de pista de fons
    amb selector/volum/rotació, usat al vestíbul, a la partida, en
    multijugador i en Solo, més un efecte de gong al tancar cada pregunta
-   (`effects/gong.mp3`, `hostGame.js:599-648`) — base reutilitzable, però
+   (`effects/gong.mp3`, `initGong()`/`playGong()` en `hostGame.js`) — base reutilitzable, però
    encara no distingix música per fases.
    → **Criteri pedagògic:** ✖️ Aprenentatge: Cap · 🙂 Clima: Segur ·
    ➖ Inclusió: Neutra → **Aparcada.**
@@ -516,7 +516,7 @@ realista, no només una llista d'idees.
   - **9 (música per fases)** — `music-player.js` (377 línies) ja és un
     reproductor de pista de fons amb selector/volum/rotació, més un
     efecte de gong al tancar cada pregunta (`effects/gong.mp3`,
-    `hostGame.js:599-648`). Encara no distingix música per fases.
+    `initGong()`/`playGong()` en `hostGame.js`). Encara no distingix música per fases.
   - **23 (compte arrere 3-2-1)** — ja implementada abans de cada
     pregunta en el mode "Jugar a l'aula" (commit `9b8c345`,
     `sockets/gameHelpers.js:295`, `scheduleQuestionCountdown()`,
@@ -561,6 +561,11 @@ un suggeriment ajornable:
 - ✅ Migrar el frontend: dividir els fitxers més grans (`create.js`, `solo.js`)
   en mòduls per responsabilitat, en JS vanilla i sense build step. Vore
   `docs/MIGRATING.md` (Subfase A) — fet (vore `ARCHITECTURE.md`).
+
+Fora d'esta fase (no és requisit): la Subfase B de `docs/MIGRATING.md`
+(Vue 3, també sense build step) està en marxa. La prova pilot en el lobby
+de `/host/` ja està feta i s'ha decidit continuar; la pròxima pantalla és
+`playerGame.js`.
 
 ### Fase 1a — Millores cosmètiques/aïllades, sense tocar la lògica de joc
 

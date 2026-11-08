@@ -356,10 +356,12 @@ Quan un alumne s'uneix a una partida (pantalla de `join`, codi en
   de 40 caràcters.
 - A més del nom, l'alumne tria una **icona/emoji** d'un selector visual
   (`icon-picker`) que l'identifica en la partida.
-- En la vista de l'amfitrió (`src/public/js/host.js:349-369`), cada
-  jugador que s'uneix apareix com una targeta (no una llista de text
-  pla), amb la seua icona i el seu nom, mitjançant l'esdeveniment de
-  Socket.IO `updatePlayerLobby`.
+- En la vista de l'amfitrió (lobby de `/host/`), cada jugador que
+  s'uneix apareix com una targeta (no una llista de text pla), amb la
+  seua icona i el seu nom: el handler de Socket.IO `updatePlayerLobby`
+  (`src/public/js/host.js`) actualitza la llista `players`, i la
+  plantilla de Vue (`v-for` en `src/public/host/index.html`) la pinta
+  (vore "Lobby de l'amfitrió amb Vue").
 
 No hi ha, per tant, cap sistema de comptes d'alumne ni login previ per a
 jugar: el nom que escriu cada alumne és l'únic identificador dins d'esa
@@ -371,8 +373,10 @@ En acabar una partida, el professorat/amfitrió pot descarregar un
 informe complet dels resultats:
 
 - **Botó**: "Descargar informe (CSV)" en la vista de l'amfitrió
-  (`src/public/js/hostGame.js:130`, funció `downloadSessionReportCsv()`
-  en la línia 382).
+  (`src/public/js/hostGame.js`: el botó el crea
+  `ensureDownloadReportButton()` i la descàrrega la fa
+  `downloadSessionReportCsv()`). Al costat ix «Tornar», que porta a la
+  biblioteca (`ensureBackToLibraryLink()`).
 - **Endpoint**: `GET /api/live-games/:pin/report.csv?hostId=...`
   (`src/server/routes/games.js:17`). El servidor comprova que el `hostId`
   que arriba en la petició coincidix amb l'amfitrió real d'esa partida;
@@ -511,7 +515,8 @@ l'única opció correcta hui és **"Jugar a l'aula"**.
 
 ### Opció "Mostra la pregunta a l'alumnat" (pantalla `/host/`)
 
-Casella en `#host-options` (`src/public/host/index.html:46`, opció
+Casella en `#host-options` (plantilla del lobby en
+`src/public/host/index.html`, opció
 `sendToStudents` dins `game.gameData.options`), marcada per defecte,
 que decideix si el dispositiu de cada alumne (mòbil, tauleta o PC —
 no és exclusiu de mòbils) rep el **text** de la pregunta i de les
@@ -562,8 +567,8 @@ El que sí és automàtic és el **tancament d'una pregunta**:
 Però això només obri la pantalla de resultats/rànquing. **Passar a la
 pregunta següent requerix sempre una acció explícita del professorat**:
 prémer el botó "Siguiente pregunta" (o la tecla Enter) en eixe modal
-(`handleResultsModalNext()` → `nextQuestion()`,
-`src/public/js/hostGame.js:983-1007,1263`), el que emet l'esdeveniment
+(`handleResultsModalNext()` → `nextQuestion()`, en
+`src/public/js/hostGame.js`), el que emet l'esdeveniment
 de Socket.IO `nextQuestion`. El servidor només avança la pregunta dins
 d'eixe handler (`socket.on('nextQuestion', ...)`,
 `src/server/sockets/hostEvents.js:199-308`) — no existix cap temporitzador en el
