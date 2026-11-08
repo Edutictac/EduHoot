@@ -1,6 +1,6 @@
 // IMPORTANTE: cuando cambiemos JS/CSS y queramos evitar servir una versión antigua,
 // incrementa esta versión para invalidar el precache.
-const CACHE_NAME = 'eduh-pwa-v1.1.21';
+const CACHE_NAME = 'eduh-pwa-v1.1.22';
 
 // App shell: recursos críticos para que la app cargue incluso sin red.
 // El resto de recursos se cachean en runtime con stale-while-revalidate.
@@ -56,6 +56,7 @@ const ASSETS = [
   '/js/pwa-install.js',
   '/js/libs/jqueryLibrary.js',
   '/js/libs/deparam.js',
+  '/js/libs/vue.global.prod.js',
   '/js/i18n-solo.js',
   '/js/solo-storage.js',
   '/js/solo-questions.js',
