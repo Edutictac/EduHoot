@@ -1272,6 +1272,9 @@ function skipQuestion(){
 function updateTimer(){
     clearInterval(timer);
     time = defaultTime;
+    // Pintar ya el tiempo inicial: si no, hasta el primer segundo se veía el
+    // de la pregunta anterior (o el 20 del HTML) (issue #21).
+    document.getElementById('num').textContent = " " + time;
     timer = setInterval(function(){
         time -= 1;
         document.getElementById('num').textContent = " " + time;

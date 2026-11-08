@@ -89,7 +89,9 @@ problemes d'estil, variables sense usar, etc.
   `solo-library.spec.js` (llistat, favorit, valoració i partida en `/solo/`),
   `create-library.spec.js` (llistat, cerca, etiqueta, CSV i esborrat en
   `/create/`) i `host-lobby.spec.js` (lobby de `/host/`: PIN, QR, jugadors,
-  opcions en iniciar, iframe de la partida i idioma, amb un Socket.IO fals).
+  opcions en iniciar, iframe de la partida i idioma, amb un Socket.IO fals) i
+  `host-game-timer.spec.js` (el temporitzador de l'amfitrió mostra el temps
+  de cada pregunta des del primer moment).
 
 ### Scripts puntuals que NO són part del flux de test estàndard
 
