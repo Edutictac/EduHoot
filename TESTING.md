@@ -86,9 +86,10 @@ problemes d'estil, variables sense usar, etc.
   (canvi d'idioma), `auth-state.spec.js` (estat de sessió i pont amb el xip),
   `solo-poll.spec.js` (les preguntes d'enquesta en mode Solo no compten com a
   error ni puntuen), `chip-footer.spec.js` (xip de compte i peu comú),
-  `solo-library.spec.js` (llistat, favorit, valoració i partida en `/solo/`) i
+  `solo-library.spec.js` (llistat, favorit, valoració i partida en `/solo/`),
   `create-library.spec.js` (llistat, cerca, etiqueta, CSV i esborrat en
-  `/create/`).
+  `/create/`) i `host-lobby.spec.js` (lobby de `/host/`: PIN, QR, jugadors,
+  opcions en iniciar, iframe de la partida i idioma, amb un Socket.IO fals).
 
 ### Scripts puntuals que NO són part del flux de test estàndard
 
