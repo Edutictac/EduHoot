@@ -121,6 +121,31 @@ backend, `routes/quizzes.js` (~1.100 línies), `sockets/hostEvents.js`
 (~41 KB, només traduccions) i `playerGame.js` (~35 KB). `create.js` i
 `solo.js` ja estan repartits en fitxers més menuts (cap passa de ~35 KB).
 
+## Pantalles del frontend
+
+Cada pàgina és un HTML dins de `src/public/` que carrega el seu propi
+JS d'orquestració amb `<script>` clàssics (sense build step):
+
+| Pantalla | JS principal | Per a què servix |
+|---|---|---|
+| `/` (`index.html`) | *(sense JS propi; usa `i18n-player.js`, `pwa-install.js`)* | Portada: triar mode (aula / multijugador / solo), accés professorat, instal·lar com a PWA |
+| `/join.html` | `join.js` | Alumnat: PIN + nom (o login EduTicTac) per a unir-se a una partida del mode "Jugar a l'aula" |
+| `/player/` | `lobby.js` | Alumnat: sala d'espera des que s'uneix fins que el professorat inicia la partida |
+| `/player/game/` | `playerGame.js` | Alumnat: pantalla de joc — pregunta, respostes, resultat, rànquing, reconnexió |
+| `/host/` | `host.js` (ja amb Vue, pilot fet) | Professorat: lobby amb PIN/QR, opcions de partida, llista de jugadors, botó d'inici |
+| `/host/game/` | `hostGame.js` | Professorat: pantalla de joc en directe — pregunta, temporitzador, rànquing, música/gong |
+| `/create/` | `create.js` + mòduls `create-*.js` + `i18n-create.js` (ja repartits, Subfase A) | Professorat: biblioteca de qüestionaris — llistat, filtres, exportació, importació, panell d'admin |
+| `/create/quiz-creator/` | `quizCreator.js` | Professorat: editor d'un qüestionari (preguntes, respostes, tipus) |
+| `/solo/` | `solo.js` + mòduls `solo-*.js` + `i18n-solo.js` (ja repartits, Subfase A) | Mode individual, a ritme propi, fora de classe |
+| `/multiplayer/` | `multiplayer.js` | Mode 2-4 jugadors compartint una sola pantalla |
+| `/admin-stats.html` | `admin-stats.js` | Estadístiques del panell d'administració |
+
+A banda, fitxers transversals que no pertanyen a una sola pantalla:
+`languages.js`, `i18n-host.js`/`i18n-player.js`/`i18n-solo.js`/
+`i18n-create.js`, `env-badge.js`, `edutictac-chip.js`,
+`music-player.js`, `app-version.js`, `pwa-install.js`, i `js/libs/`
+(jQuery, deparam, Vue).
+
 ## Model de dades (MongoDB)
 
 Sis col·leccions, totes en la mateixa base de dades: `kahootDB` per
