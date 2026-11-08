@@ -64,32 +64,54 @@
             <button @click="skipQuestion" id="skipQButton" :style="{ display: skipVisible ? 'inline-block' : 'none' }" :disabled="skipDisabled">{{ t('skip') }}</button>
             <button onclick = "nextQuestion()" id = "nextQButton">Next Question</button>
             <button onclick="toggleRanking()" id="showRanking">{{ t('showRanking') }}</button>
+            <button type="button" id="downloadReportBtn" @click="downloadReport" :style="{ display: downloadReportVisible ? 'inline-block' : 'none' }">{{ t('downloadReport') }}</button>
+            <a id="backToLibraryBtn" href="/create/" target="_top" :style="{ display: backToLibraryVisible ? 'inline-block' : 'none' }" :title="t('backToLibraryTitle')">{{ t('backToLibrary') }}</a>
         </div>
 
-        <div id="rankingModal" class="modal">
+        <div id="rankingModal" class="modal" :style="{ display: rankingVisible ? 'block' : 'none' }">
             <div class="modal-content">
-                <span id="closeRanking" class="close">&times;</span>
-                <div id="resultsStepChart" class="results-step">
-                    <h3 id="resultsTitle">Resultados</h3>
-                    <div id="resultsChart" class="results-chart" aria-label="Resultados por respuesta"></div>
+                <span id="closeRanking" class="close" @click="closeRanking" :style="{ display: closeVisible ? 'block' : 'none' }">&times;</span>
+                <div id="resultsStepChart" class="results-step" v-show="modalStep === 'chart'">
+                    <h3 id="resultsTitle">{{ t('resultsTitle') }}</h3>
+                    <div id="resultsChart" class="results-chart" aria-label="Resultados por respuesta">
+                        <template v-if="resultsMode === 'bars'">
+                            <div v-for="bar in resultsBars" :key="bar.index" :class="'results-bar results-bar--' + bar.index + (bar.correct ? ' results-bar--correct' : '')">
+                                <div class="results-bar-track"><div class="results-bar-fill" :style="{ height: bar.pct + '%' }"></div></div>
+                                <div class="results-bar-meta">
+                                    <div class="results-bar-key">{{ bar.letter }}</div>
+                                    <div v-if="bar.correct" class="results-bar-correct-badge">✓ {{ t('correctOptionBadge') }}</div>
+                                    <div class="results-bar-stats">{{ bar.pct }}% ({{ bar.count }})</div>
+                                    <div v-if="bar.html" class="results-bar-text" v-html="bar.html"></div>
+                                </div>
+                            </div>
+                        </template>
+                        <template v-else-if="resultsMode === 'free'">
+                            <div v-for="(line, idx) in resultsFreeLines" :key="idx" class="results-free-line">{{ line }}</div>
+                        </template>
+                    </div>
                 </div>
-                <div id="resultsStepRanking" class="results-step" style="display:none;">
-                    <h3 id="rankingTitle">Top 10</h3>
-                    <ol id="rankingList"></ol>
+                <div id="resultsStepRanking" class="results-step" v-show="modalStep === 'ranking'">
+                    <h3 id="rankingTitle">{{ t('rankingTitle') }}</h3>
+                    <ol id="rankingList">
+                        <li v-for="(row, idx) in rankingRows" :key="idx" class="ranking-row" :style="{ animationDelay: (idx * 60) + 'ms' }">
+                            <span :class="'ranking-move' + (row.moveClass ? ' ' + row.moveClass : '')">{{ row.moveText }}</span>
+                            <span class="ranking-name">{{ row.name }}</span>
+                        </li>
+                    </ol>
                 </div>
-                <button id="rankingNextBtn" class="ranking-next">Siguiente</button>
+                <button id="rankingNextBtn" class="ranking-next" @click="rankingNext">{{ rankingNextLabel }}</button>
             </div>
         </div>
-        <h2 id = "winnerTitle">Top 5 Players</h4>
-        <h3 id = "winner1">1.</h3>
-        <h3 id = "winner2">2.</h3>
-        <h3 id = "winner3">3.</h3>
-        <h3 id = "winner4">4.</h3>
-        <h3 id = "winner5">5.</h3>
+        <h2 id = "winnerTitle" :style="{ display: winnersVisible ? 'block' : 'none' }">{{ t('topPlayers') }}</h2>
+        <h3 id = "winner1" :style="{ display: winnersVisible ? 'block' : 'none' }">{{ winners[0] }}</h3>
+        <h3 id = "winner2" :style="{ display: winnersVisible ? 'block' : 'none' }">{{ winners[1] }}</h3>
+        <h3 id = "winner3" :style="{ display: winnersVisible ? 'block' : 'none' }">{{ winners[2] }}</h3>
+        <h3 id = "winner4" :style="{ display: winnersVisible ? 'block' : 'none' }">{{ winners[3] }}</h3>
+        <h3 id = "winner5" :style="{ display: winnersVisible ? 'block' : 'none' }">{{ winners[4] }}</h3>
 
-        <div id="groupCelebration" class="group-celebration" aria-live="polite" hidden>
-            <div class="group-celebration__emoji" id="groupCelebrationEmoji">🎉</div>
-            <div class="group-celebration__text" id="groupCelebrationText">¡Pleno de aciertos!</div>
+        <div id="groupCelebration" :class="'group-celebration ' + (groupCelebrationGood ? 'group-celebration--good' : 'group-celebration--bad')" aria-live="polite" :hidden="!groupCelebrationVisible">
+            <div class="group-celebration__emoji" id="groupCelebrationEmoji">{{ groupCelebrationEmoji }}</div>
+            <div class="group-celebration__text" id="groupCelebrationText">{{ groupCelebrationText }}</div>
         </div>
 
         <div id="host-music-player" class="music-player-shell host-music-player"></div>

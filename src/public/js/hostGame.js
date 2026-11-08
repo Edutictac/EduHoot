@@ -10,13 +10,6 @@ var lastHostKey = 'lastHostId';
 var lastPinKey = 'lastGamePin';
 // Aquests elements viuen dins del <template> de Vue: no existixen al DOM
 // real fins que l'app es munta (vore més avall, després de crear `app`).
-var rankingNextBtn = null;
-var resultsChartEl = null;
-var resultsStepChartEl = null;
-var resultsStepRankingEl = null;
-var downloadReportBtn = null;
-var backToLibraryLink = null;
-
 // Fallback: si faltan id o pin en la URL, usa localStorage
 try{
     if(!params.id){
@@ -60,8 +53,6 @@ var hostSharedAudio = (function(){
     return null;
 })();
 var GONG_VOLUME_BOOST = 1.25;
-var hostModalStep = 'chart';
-var hostResultsHasRanking = true;
 var currentPointsMultiplier = 1;
 // playerId -> posición (0 = 1º) del último ranking mostrado, para pintar flechas
 // de avance/retroceso al estilo Kahoot. Se resetea al empezar cada partida.
@@ -222,7 +213,23 @@ var app = Vue.createApp({
             questionType: 'quiz',
             answerHighlight: [null, null, null, null],
             skipVisible: false,
-            skipDisabled: false
+            skipDisabled: false,
+            rankingVisible: false,
+            closeVisible: true,
+            modalStep: 'chart',
+            resultsHasRanking: true,
+            resultsMode: 'bars',
+            resultsBars: [],
+            resultsFreeLines: [],
+            rankingRows: [],
+            groupCelebrationVisible: false,
+            groupCelebrationGood: true,
+            groupCelebrationEmoji: '🎉',
+            groupCelebrationText: '',
+            winnersVisible: false,
+            winners: ['', '', '', '', ''],
+            downloadReportVisible: false,
+            backToLibraryVisible: false
         };
     },
     computed: {
@@ -235,6 +242,12 @@ var app = Vue.createApp({
         },
         questionHtml: function(){
             return formatRichText(this.questionText);
+        },
+        rankingNextLabel: function(){
+            if(this.modalStep === 'chart'){
+                return this.resultsHasRanking ? this.t('resultsNextToRanking') : this.t('resultsNextQuestion');
+            }
+            return this.t('resultsNextQuestion');
         }
     },
     methods: {
@@ -260,6 +273,30 @@ var app = Vue.createApp({
         },
         skipQuestion: function(){
             skipQuestion();
+        },
+        closeRanking: function(){
+            closeRankingModal();
+        },
+        rankingNext: function(){
+            if(this.modalStep === 'chart'){
+                if(this.resultsHasRanking){
+                    this.modalStep = 'ranking';
+                    return;
+                }
+                if(hostQuestionEnded){
+                    nextQuestion();
+                }
+                this.rankingVisible = false;
+                return;
+            }
+            // Paso ranking
+            if(hostQuestionEnded){
+                nextQuestion();
+            }
+            this.rankingVisible = false;
+        },
+        downloadReport: function(){
+            downloadSessionReportCsv();
         }
     }
 }).mount('#host-game');
@@ -272,12 +309,6 @@ var app = Vue.createApp({
 if(window.EduhootLang && typeof window.EduhootLang.render === 'function'){
     window.EduhootLang.render();
 }
-
-// Els elements del bloc 2 (encara estàtics) també ja existixen de veres.
-rankingNextBtn = document.getElementById('rankingNextBtn');
-resultsChartEl = document.getElementById('resultsChart');
-resultsStepChartEl = document.getElementById('resultsStepChart');
-resultsStepRankingEl = document.getElementById('resultsStepRanking');
 
 function decodeBasicEntities(value){
     var txt = document.createElement('textarea');
@@ -327,21 +358,7 @@ function applyStaticText(){
     }
     var nextBtn = document.getElementById('nextQButton');
     if(nextBtn) nextBtn.textContent = t('next');
-    var rankingTitle = document.getElementById('rankingTitle');
-    if(rankingTitle) rankingTitle.textContent = t('rankingTitle');
-    var resultsTitle = document.getElementById('resultsTitle');
-    if(resultsTitle) resultsTitle.textContent = t('resultsTitle');
-    var winnerTitle = document.getElementById('winnerTitle');
-    if(winnerTitle) winnerTitle.textContent = t('topPlayers');
-    var reportBtn = ensureDownloadReportButton();
-    if(reportBtn) reportBtn.textContent = t('downloadReport');
-    var libraryLink = ensureBackToLibraryLink();
-    if(libraryLink){
-        libraryLink.textContent = t('backToLibrary');
-        libraryLink.title = t('backToLibraryTitle');
-    }
 
-    updateModalNextButtonLabel();
     updateFullscreenToggleUI();
 }
 
@@ -377,26 +394,15 @@ document.addEventListener('webkitfullscreenchange', updateFullscreenToggleUI);
 // pregunta. No toca puntuación ni ranking: solo se muestra sobre la pantalla y desaparece sola.
 var groupCelebrationHideTimer = null;
 function showGroupCelebration(kind){
-    var el = document.getElementById('groupCelebration');
-    if(!el) return;
     var isGood = kind === 'allCorrect';
-    el.className = 'group-celebration ' + (isGood ? 'group-celebration--good' : 'group-celebration--bad');
-    document.getElementById('groupCelebrationEmoji').textContent = isGood ? '🎉' : '💀';
-    document.getElementById('groupCelebrationText').textContent = t(isGood ? 'groupAllCorrect' : 'groupAllWrong');
-    el.hidden = false;
+    app.groupCelebrationGood = isGood;
+    app.groupCelebrationEmoji = isGood ? '🎉' : '💀';
+    app.groupCelebrationText = t(isGood ? 'groupAllCorrect' : 'groupAllWrong');
+    app.groupCelebrationVisible = true;
     if(groupCelebrationHideTimer) clearTimeout(groupCelebrationHideTimer);
     groupCelebrationHideTimer = setTimeout(function(){
-        el.hidden = true;
+        app.groupCelebrationVisible = false;
     }, 2600);
-}
-
-function updateModalNextButtonLabel(){
-    if(!rankingNextBtn) return;
-    if(hostModalStep === 'chart'){
-        rankingNextBtn.textContent = hostResultsHasRanking ? t('resultsNextToRanking') : t('resultsNextQuestion');
-        return;
-    }
-    rankingNextBtn.textContent = t('resultsNextQuestion');
 }
 
 function updateQuestionPointsBadge(multiplier){
@@ -411,36 +417,6 @@ function updateQuestionPointsBadge(multiplier){
     app.badgeKey += 1;
 }
 
-function ensureDownloadReportButton(){
-    if(downloadReportBtn) return downloadReportBtn;
-    var row = document.querySelector('.control-row');
-    if(!row) return null;
-    var btn = document.createElement('button');
-    btn.id = 'downloadReportBtn';
-    btn.style.display = 'none';
-    btn.addEventListener('click', function(){
-        downloadSessionReportCsv();
-    });
-    row.appendChild(btn);
-    downloadReportBtn = btn;
-    return downloadReportBtn;
-}
-
-// Enlace a la biblioteca al acabar la partida (issue #17). target="_top"
-// porque esta vista suele abrirse dentro del iframe del lobby (/host/):
-// así se sale del todo y no queda la biblioteca dentro del lobby.
-function ensureBackToLibraryLink(){
-    if(backToLibraryLink) return backToLibraryLink;
-    var row = document.querySelector('.control-row');
-    if(!row) return null;
-    var link = document.createElement('a');
-    link.id = 'backToLibraryBtn';
-    link.href = '/create/';
-    link.target = '_top';
-    row.appendChild(link);
-    backToLibraryLink = link;
-    return backToLibraryLink;
-}
 
 async function downloadSessionReportCsv(){
     if(!params.pin || !params.id){
@@ -476,21 +452,16 @@ async function downloadSessionReportCsv(){
 }
 
 function setHostModalStep(step){
-    hostModalStep = step === 'ranking' ? 'ranking' : 'chart';
-    if(resultsStepChartEl) resultsStepChartEl.style.display = hostModalStep === 'chart' ? 'block' : 'none';
-    if(resultsStepRankingEl) resultsStepRankingEl.style.display = hostModalStep === 'ranking' ? 'block' : 'none';
-    updateModalNextButtonLabel();
+    app.modalStep = step === 'ranking' ? 'ranking' : 'chart';
 }
 
 function renderResultsChart(answerCounts, totalPlayers, correctAnswers){
-    if(!resultsChartEl) return;
-    resultsChartEl.innerHTML = '';
-
     var total = (typeof totalPlayers === 'number' && totalPlayers > 0) ? totalPlayers : 0;
     var denom = total > 0 ? total : 1;
     var visible = getVisibleAnswerFlags();
     var letters = ['A', 'B', 'C', 'D'];
     var correctSet = new Set((Array.isArray(correctAnswers) ? correctAnswers : []).map(Number));
+    var bars = [];
 
     for(var i = 0; i < 4; i++){
         if(!visible[i]) continue;
@@ -500,56 +471,17 @@ function renderResultsChart(answerCounts, totalPlayers, correctAnswers){
         if(pct < 0) pct = 0;
         if(pct > 100) pct = 100;
 
-        var bar = document.createElement('div');
-        bar.className = 'results-bar results-bar--' + (i + 1);
-
-        var track = document.createElement('div');
-        track.className = 'results-bar-track';
-        var fill = document.createElement('div');
-        fill.className = 'results-bar-fill';
-        fill.style.height = pct + '%';
-        track.appendChild(fill);
-
-        var meta = document.createElement('div');
-        meta.className = 'results-bar-meta';
-
-        var key = document.createElement('div');
-        key.className = 'results-bar-key';
-        key.textContent = letters[i];
-
-        var isCorrect = correctSet.has(i + 1);
-        if(isCorrect){
-            bar.classList.add('results-bar--correct');
-        }
-
-        var correctBadge = null;
-        if(isCorrect){
-            correctBadge = document.createElement('div');
-            correctBadge.className = 'results-bar-correct-badge';
-            correctBadge.textContent = '✓ ' + t('correctOptionBadge');
-        }
-
-        var stats = document.createElement('div');
-        stats.className = 'results-bar-stats';
-        stats.textContent = pct + '% (' + count + ')';
-
-        var text = document.createElement('div');
-        text.className = 'results-bar-text';
-        text.innerHTML = formatRichText((currentAnswerTexts[i] || '').trim());
-
-        meta.appendChild(key);
-        if(correctBadge){
-            meta.appendChild(correctBadge);
-        }
-        meta.appendChild(stats);
-        if(text.textContent){
-            meta.appendChild(text);
-        }
-
-        bar.appendChild(track);
-        bar.appendChild(meta);
-        resultsChartEl.appendChild(bar);
+        bars.push({
+            index: i + 1,
+            letter: letters[i],
+            pct: pct,
+            count: count,
+            correct: correctSet.has(i + 1),
+            html: formatRichText((currentAnswerTexts[i] || '').trim())
+        });
     }
+    app.resultsMode = 'bars';
+    app.resultsBars = bars;
 }
 
 function setLang(newLang){
@@ -833,16 +765,11 @@ function pauseHostMusicForRanking(){
 }
 
 function openRankingModal(playGongOnce){
-    var modal = document.getElementById('rankingModal');
-    if(!modal) return;
-    modal.style.display = 'block';
+    app.rankingVisible = true;
 
     // En fin de pregunta, forzamos el flujo Resultados -> Ranking -> Siguiente.
     // Si el host abre manualmente el modal en mitad de la pregunta, permitimos cerrar.
-    var closeBtn = document.getElementById('closeRanking');
-    if(closeBtn){
-        closeBtn.style.display = hostQuestionEnded ? 'none' : 'block';
-    }
+    app.closeVisible = !hostQuestionEnded;
 
     // Solo actuamos (parar música + gong) cuando es fin de pregunta.
     if(!hostQuestionEnded) return;
@@ -854,8 +781,7 @@ function openRankingModal(playGongOnce){
 }
 
 function closeRankingModal(){
-    var modal = document.getElementById('rankingModal');
-    if(modal) modal.style.display = 'none';
+    app.rankingVisible = false;
 }
 
 function maybeAutoplayHostMusicFromLobby(){
@@ -1009,35 +935,10 @@ socket.on('hostSession', function(data){
 });
 
 // Control: botón y tecla Enter para pasar a la siguiente pregunta desde el modal
-function handleResultsModalNext(){
-    if(hostModalStep === 'chart'){
-        if(hostResultsHasRanking){
-            setHostModalStep('ranking');
-            return;
-        }
-        if(hostQuestionEnded){
-            nextQuestion();
-        }
-        closeRankingModal();
-        return;
-    }
-    // Paso ranking
-    if(hostQuestionEnded){
-        nextQuestion();
-    }
-    closeRankingModal();
-}
-
-if(rankingNextBtn){
-    rankingNextBtn.addEventListener('click', function(){
-        handleResultsModalNext();
-    });
-}
-
 document.addEventListener('keydown', function(ev){
-    if(ev.key === 'Enter' && document.getElementById('rankingModal') && document.getElementById('rankingModal').style.display === 'block'){
+    if(ev.key === 'Enter' && app.rankingVisible){
         ev.preventDefault();
-        handleResultsModalNext();
+        app.rankingNext();
     }
 });
 
@@ -1054,44 +955,37 @@ socket.on('questionOver', function(playerData, payload){
     // Tipos libres: no hay buckets 1-4; mostramos resumen simple.
     if(currentQuestionType === 'short-answer' || currentQuestionType === 'numeric'){
         hideAnswerSquares();
-        if(resultsChartEl){
-            var answeredCount = 0;
-            (playerData || []).forEach(function(player){
-                var answer = player && player.gameData ? player.gameData.answer : null;
-                if(!answer) return;
-                if(currentQuestionType === 'short-answer'){
-                    var txt = (answer && typeof answer === 'object') ? (answer.text || '') : String(answer || '');
-                    if(String(txt).trim()) answeredCount += 1;
-                }else{
-                    var n = (answer && typeof answer === 'object') ? answer.number : answer;
-                    if(String(n || '').trim()) answeredCount += 1;
-                }
-            });
-
-            var correctTxt = '';
-            if(payload && payload.type === 'short-answer'){
-                var acc = Array.isArray(payload.acceptedAnswers) ? payload.acceptedAnswers : [];
-                correctTxt = acc.join(', ');
-            }else if(payload && payload.type === 'numeric'){
-                var base = (payload.numericAnswer !== undefined && payload.numericAnswer !== null) ? payload.numericAnswer : '';
-                var tol = (payload.tolerance !== undefined && payload.tolerance !== null) ? payload.tolerance : 0;
-                if(base !== ''){
-                    correctTxt = Number(tol) > 0 ? (String(base) + ' ± ' + String(tol)) : String(base);
-                }
+        var answeredCount = 0;
+        (playerData || []).forEach(function(player){
+            var answer = player && player.gameData ? player.gameData.answer : null;
+            if(!answer) return;
+            if(currentQuestionType === 'short-answer'){
+                var txt = (answer && typeof answer === 'object') ? (answer.text || '') : String(answer || '');
+                if(String(txt).trim()) answeredCount += 1;
+            }else{
+                var n = (answer && typeof answer === 'object') ? answer.number : answer;
+                if(String(n || '').trim()) answeredCount += 1;
             }
+        });
 
-            resultsChartEl.innerHTML = '';
-            var line1 = document.createElement('div');
-            line1.className = 'results-free-line';
-            line1.textContent = t('freeAnswersReceived')(answeredCount, totalPlayers);
-            resultsChartEl.appendChild(line1);
-            if(correctTxt){
-                var line2 = document.createElement('div');
-                line2.className = 'results-free-line';
-                line2.textContent = t('correctAnswerLabel') + ' ' + correctTxt;
-                resultsChartEl.appendChild(line2);
+        var correctTxt = '';
+        if(payload && payload.type === 'short-answer'){
+            var acc = Array.isArray(payload.acceptedAnswers) ? payload.acceptedAnswers : [];
+            correctTxt = acc.join(', ');
+        }else if(payload && payload.type === 'numeric'){
+            var base = (payload.numericAnswer !== undefined && payload.numericAnswer !== null) ? payload.numericAnswer : '';
+            var tol = (payload.tolerance !== undefined && payload.tolerance !== null) ? payload.tolerance : 0;
+            if(base !== ''){
+                correctTxt = Number(tol) > 0 ? (String(base) + ' ± ' + String(tol)) : String(base);
             }
         }
+
+        var freeLines = [t('freeAnswersReceived')(answeredCount, totalPlayers)];
+        if(correctTxt){
+            freeLines.push(t('correctAnswerLabel') + ' ' + correctTxt);
+        }
+        app.resultsMode = 'free';
+        app.resultsFreeLines = freeLines;
     }else{
         highlightCorrectAnswers(payload && payload.correctAnswers);
         var answerCounts = [0, 0, 0, 0];
@@ -1121,11 +1015,8 @@ socket.on('questionOver', function(playerData, payload){
     document.getElementById('nextQButton').style.display = "none";
     app.skipVisible = false;
 
-    hostResultsHasRanking = (window.hostShowScores !== false);
-    if(hostResultsHasRanking){
-        // Update ranking list
-        var rankingList = document.getElementById('rankingList');
-        rankingList.innerHTML = '';
+    app.resultsHasRanking = (window.hostShowScores !== false);
+    if(app.resultsHasRanking){
         var sorted = playerData.slice().sort(function(a, b){
             return (b.gameData.score || 0) - (a.gameData.score || 0);
         });
@@ -1134,43 +1025,38 @@ socket.on('questionOver', function(playerData, payload){
         // pintamos flechas (todo el mundo "sube desde la nada", no aporta información).
         var isFirstRanking = !previousRankingPositions;
         var nextRankingPositions = {};
+        var rows = [];
         for(var r = 0; r < top.length; r++){
-            var li = document.createElement('li');
-            li.className = 'ranking-row';
-            li.style.animationDelay = (r * 60) + 'ms';
             var icon = top[r].icon ? top[r].icon + ' ' : '';
-
-            var moveEl = document.createElement('span');
-            moveEl.className = 'ranking-move';
+            var moveClass = '';
+            var moveText = '';
             if(!isFirstRanking && top[r].playerId){
                 var oldIndex = previousRankingPositions[top[r].playerId];
                 if(oldIndex !== undefined){
                     var delta = oldIndex - r;
                     if(delta > 0){
-                        moveEl.className = 'ranking-move ranking-move--up';
-                        moveEl.textContent = '▲' + delta;
+                        moveClass = 'ranking-move--up';
+                        moveText = '▲' + delta;
                     }else if(delta < 0){
-                        moveEl.className = 'ranking-move ranking-move--down';
-                        moveEl.textContent = '▼' + Math.abs(delta);
+                        moveClass = 'ranking-move--down';
+                        moveText = '▼' + Math.abs(delta);
                     }
                 }else{
-                    moveEl.className = 'ranking-move ranking-move--new';
-                    moveEl.textContent = '★';
+                    moveClass = 'ranking-move--new';
+                    moveText = '★';
                 }
             }
-
-            var nameEl = document.createElement('span');
-            nameEl.className = 'ranking-name';
-            nameEl.textContent = icon + top[r].name + ' - ' + (top[r].gameData.score || 0);
-
-            li.appendChild(moveEl);
-            li.appendChild(nameEl);
-            rankingList.appendChild(li);
+            rows.push({
+                moveClass: moveClass,
+                moveText: moveText,
+                name: icon + top[r].name + ' - ' + (top[r].gameData.score || 0)
+            });
             if(top[r].playerId){
                 nextRankingPositions[top[r].playerId] = r;
             }
         }
         previousRankingPositions = nextRankingPositions;
+        app.rankingRows = rows;
     }
 
     // Abrimos el modal primero en el paso de resultados (gráfica)
@@ -1180,9 +1066,7 @@ socket.on('questionOver', function(playerData, payload){
 });
 
 function toggleRanking(){
-    var modal = document.getElementById('rankingModal');
-    if(!modal) return;
-    if(modal.style.display === 'block'){
+    if(app.rankingVisible){
         closeRankingModal();
         return;
     }
@@ -1192,10 +1076,6 @@ function toggleRanking(){
     // Si es fin de pregunta, solo paramos música (gong ya se habrá disparado en la auto-apertura).
     openRankingModal(false);
 }
-
-document.getElementById('closeRanking').onclick = function() {
-    closeRankingModal();
-};
 
 socket.on('questionMedia', function(data){
     setMedia(data.image, data.video);
@@ -1358,33 +1238,17 @@ socket.on('GameOver', function(data){
     app.questionText = t('gameOver');
     app.playersAnsweredText = "";
     updateQuestionPointsBadge(1);
-    
-    
-    
-    document.getElementById('winner1').style.display = "block";
-    document.getElementById('winner2').style.display = "block";
-    document.getElementById('winner3').style.display = "block";
-    document.getElementById('winner4').style.display = "block";
-    document.getElementById('winner5').style.display = "block";
-    document.getElementById('winnerTitle').style.display = "block";
-    document.getElementById('winnerTitle').textContent = t('topPlayers');
-    
-    document.getElementById('winner1').textContent = "1. " + data.num1;
-    document.getElementById('winner2').textContent = "2. " + data.num2;
-    document.getElementById('winner3').textContent = "3. " + data.num3;
-    document.getElementById('winner4').textContent = "4. " + data.num4; 
-    document.getElementById('winner5').textContent = "5. " + data.num5;
-    var reportBtn = ensureDownloadReportButton();
-    if(reportBtn){
-        reportBtn.textContent = t('downloadReport');
-        reportBtn.style.display = 'inline-block';
-    }
-    var libraryLink = ensureBackToLibraryLink();
-    if(libraryLink){
-        libraryLink.textContent = t('backToLibrary');
-        libraryLink.title = t('backToLibraryTitle');
-        libraryLink.style.display = 'inline-block';
-    }
+
+    app.winnersVisible = true;
+    app.winners = [
+        "1. " + data.num1,
+        "2. " + data.num2,
+        "3. " + data.num3,
+        "4. " + data.num4,
+        "5. " + data.num5
+    ];
+    app.downloadReportVisible = true;
+    app.backToLibraryVisible = true;
     try{
         localStorage.removeItem(lastHostKey);
         localStorage.removeItem(lastPinKey);
