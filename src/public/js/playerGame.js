@@ -47,24 +47,9 @@ function formatRichText(value){
     return safe;
 }
 
-function applyStaticLabels(){
-    var nameLabelEl = document.getElementById('nameText');
-    var scoreLabelEl = document.getElementById('scoreText');
-    if(nameLabelEl){
-        nameLabelEl.textContent = tPlayer('name', 'Name:');
-    }
-    if(scoreLabelEl){
-        scoreLabelEl.textContent = tPlayer('score', 'Score:');
-    }
-}
-
-// Pregunta, respostes, resposta múltiple/lliure, temporitzador i compte
-// arrere (Subfase B, Vue, bloc 1): tot el que depenia de 156 operacions
-// manuals sobre el DOM ara és estat reactiu. La resta de la pantalla
-// (#stats, #message, #playerRankingModal) encara és HTML/JS estàtic sense
-// tocar dins de la mateixa arrel — Vue mai reescriu un node sense
-// directives, així que el codi de baix que encara els pinta a mà seguix
-// funcionant igual (vore ARCHITECTURE.md).
+// Pregunta/respostes (bloc 1) i nom/puntuació/rànquing/missatge (bloc 2):
+// tot el que depenia de 156 operacions manuals sobre el DOM ara és estat
+// reactiu, en una sola app de Vue (Subfase B).
 var app = Vue.createApp({
     template: '#player-game-tpl',
     data: function(){
@@ -84,10 +69,33 @@ var app = Vue.createApp({
             countdownSeconds: 0,
             timerLeft: 20,
             timerTotal: 20,
-            answerStatusState: ''
+            answerStatusState: '',
+            playerName: '',
+            playerIcon: '',
+            playerScore: null,
+            rankText: '',
+            message: '',
+            messageDetailHtml: '',
+            messageVisible: true,
+            rankingVisible: false,
+            rankingList: []
         };
     },
     computed: {
+        nameLabel: function(){
+            return this.t('name', 'Name:');
+        },
+        scoreLabel: function(){
+            return this.t('score', 'Score:');
+        },
+        nameDisplay: function(){
+            if(!this.playerName) return this.nameLabel;
+            var icon = this.playerIcon ? this.playerIcon + ' ' : '';
+            return this.nameLabel + ' ' + icon + this.playerName;
+        },
+        scoreDisplay: function(){
+            return this.playerScore !== null ? (this.scoreLabel + ' ' + this.playerScore) : this.scoreLabel;
+        },
         questionHtml: function(){
             return formatRichText(this.questionText);
         },
@@ -196,18 +204,29 @@ var app = Vue.createApp({
             this.answersVisible = false;
             this.multiSelections = [];
             this.answerStatusState = 'submitted';
-            showSubmittedMessage();
+            showMessage(tPlayer('submitted', 'Answer Submitted! Waiting on other players...'));
+        },
+        hidePlayerRanking: function(){
+            this.rankingVisible = false;
         }
     }
 }).mount('#player-game');
 
-// El missatge gran (#message) encara és estàtic (bloc 2, pendent): ací es
-// pinta a mà igual que abans, encara que l'enviament ja ix d'un mètode de Vue.
-function showSubmittedMessage(){
-    var msgEl = document.getElementById('message');
-    if(!msgEl) return;
-    msgEl.style.display = 'block';
-    msgEl.textContent = tPlayer('submitted', 'Answer Submitted! Waiting on other players...');
+// Mostra/oculta el missatge gran (#message), substituint tot el seu
+// contingut (igual que feia abans `textContent = ...`, que esborrava
+// qualsevol detall afegit amb appendChild).
+function showMessage(text){
+    app.message = text;
+    app.messageVisible = true;
+    app.messageDetailHtml = '';
+}
+
+function hideMessage(clearText){
+    app.messageVisible = false;
+    if(clearText){
+        app.message = '';
+        app.messageDetailHtml = '';
+    }
 }
 
 var params = jQuery.deparam(window.location.search); //Gets the id from url
@@ -307,10 +326,7 @@ function clearReconnectGrace(){
 }
 
 function setReconnectMessage(text){
-    var msg = document.getElementById('message');
-    if(!msg) return;
-    msg.style.display = 'block';
-    msg.textContent = text;
+    showMessage(text);
 }
 
 function tPlayerFormat(key, fallback, vars){
@@ -398,7 +414,6 @@ function releaseWakeLock(){
 }
 
 function emitJoin(){
-    applyStaticLabels();
     var payload = Object.assign({}, params);
     if(token) payload.token = token;
     socket.emit('player-join-game', payload);
@@ -436,18 +451,12 @@ socket.on('playerGracePeriod', function(data){
 });
 
 socket.on('hostReconnecting', function(){
-    var msg = document.getElementById('message');
-    if(msg){
-        msg.style.display = "block";
-        msg.textContent = 'Esperando reconexion del profesor...';
-    }
+    showMessage('Esperando reconexion del profesor...');
 });
 
 socket.on('hostReconnected', function(){
-    var msg = document.getElementById('message');
-    if(msg && !app.playerAnswered){
-        msg.style.display = "none";
-        msg.textContent = '';
+    if(!app.playerAnswered){
+        hideMessage(true);
     }
 });
 
@@ -459,11 +468,7 @@ function restoreAnswerControlsAfterReject(messageText){
     app.playerAnswered = false;
     app.answersVisible = true;
     app.answerStatusState = 'pending';
-    var msg = document.getElementById('message');
-    if(msg){
-        msg.style.display = 'block';
-        msg.textContent = messageText || 'No se pudo enviar la respuesta. Intenta de nuevo.';
-    }
+    showMessage(messageText || 'No se pudo enviar la respuesta. Intenta de nuevo.');
 }
 
 socket.on('tooManyAnswers', function(){
@@ -484,13 +489,8 @@ socket.on('answerResult', function(data){
 });
 
 function updatePlayerRank(playerData){
-    var rankEl = document.getElementById('rankText');
-    if(!rankEl){
-        return;
-    }
     if(!Array.isArray(playerData) || playerData.length === 0){
-        rankEl.textContent = '';
-        rankEl.style.display = 'none';
+        app.rankText = '';
         return;
     }
     var sorted = playerData.slice().sort(function(a, b){
@@ -499,12 +499,9 @@ function updatePlayerRank(playerData){
     var position = sorted.findIndex(function(p){ return p.playerId === socket.id; });
     if(position !== -1 && position < 10){
         var label = window.i18nPlayer ? window.i18nPlayer.t('rank_top') : 'Top 10 - Puesto';
-        rankEl.textContent = label + ' ' + (position + 1);
-        rankEl.style.display = 'block';
+        app.rankText = label + ' ' + (position + 1);
     }else{
-        var outside = window.i18nPlayer ? window.i18nPlayer.t('rank_out') : 'Fuera del Top 10';
-        rankEl.textContent = outside;
-        rankEl.style.display = outside ? 'block' : 'none';
+        app.rankText = window.i18nPlayer ? window.i18nPlayer.t('rank_out') : 'Fuera del Top 10';
     }
 }
 
@@ -515,21 +512,15 @@ socket.on('questionOver', function(playerData, payload){
     app.answersVisible = false;
     if(correct === 'poll' || (payload && payload.type === 'poll')){
         document.body.style.backgroundColor = '#607d8b';
-        var pollMessage = document.getElementById('message');
-        pollMessage.style.display = 'block';
-        pollMessage.textContent = tPlayer('poll_thanks', '¡Gracias por responder!');
+        showMessage(tPlayer('poll_thanks', '¡Gracias por responder!'));
     }else if(correct === 'partial'){
         document.body.style.backgroundColor = '#ffb300';
-        var partialMessage = document.getElementById('message');
-        partialMessage.style.display = 'block';
-        partialMessage.textContent = tPlayer('partial', 'Respuesta parcialmente correcta: has sumado puntos.');
+        showMessage(tPlayer('partial', 'Respuesta parcialmente correcta: has sumado puntos.'));
     }else if(correct == true){
         document.body.style.backgroundColor = "#4CAF50";
-        document.getElementById('message').style.display = "block";
-        document.getElementById('message').textContent = window.i18nPlayer ? window.i18nPlayer.t('correct') : "Correct!";
+        showMessage(window.i18nPlayer ? window.i18nPlayer.t('correct') : "Correct!");
     }else{
         document.body.style.backgroundColor = "#f94a1e";
-        document.getElementById('message').style.display = "block";
         var incorrectMsg = window.i18nPlayer ? window.i18nPlayer.t('incorrect') : "Incorrect!";
         var correctLabel = window.i18nPlayer ? window.i18nPlayer.t('correct_answer') : "Correct answer:";
         var answerTxt = '';
@@ -558,13 +549,9 @@ socket.on('questionOver', function(playerData, payload){
             });
             answerTxt = answerList.join(', ');
         }
-        var messageEl = document.getElementById('message');
-        messageEl.textContent = incorrectMsg;
+        showMessage(incorrectMsg);
         if(answerTxt){
-            var detailEl = document.createElement('span');
-            detailEl.className = 'player-correct-answer';
-            detailEl.innerHTML = escapeHtml(correctLabel + ' ') + formatRichText(answerTxt);
-            messageEl.appendChild(detailEl);
+            app.messageDetailHtml = escapeHtml(correctLabel + ' ') + formatRichText(answerTxt);
         }
     }
     app.answerStatusState = '';
@@ -580,8 +567,7 @@ socket.on('questionOver', function(playerData, payload){
 });
 
 socket.on('newScore', function(data){
-    var label = window.i18nPlayer ? window.i18nPlayer.t('score') : 'Score:';
-    document.getElementById('scoreText').textContent = label + " " + data;
+    app.playerScore = data;
 });
 
 socket.on('nextQuestionPlayer', function(){
@@ -595,11 +581,10 @@ socket.on('nextQuestionPlayer', function(){
     app.multiSelections = [];
     app.answersVisible = true;
 
-    document.getElementById('message').style.display = "none";
+    hideMessage(false);
     document.body.style.backgroundColor = "white";
-    document.getElementById('rankText').textContent = '';
-    document.getElementById('rankText').style.display = 'none';
-    hidePlayerRanking();
+    app.rankText = '';
+    app.hidePlayerRanking();
     stopTimer();
     resetTimer();
     app.answerStatusState = 'pending';
@@ -612,11 +597,9 @@ socket.on('hostDisconnect', function(){
 socket.on('playerGameData', function(data){
    for(var i = 0; i < data.length; i++){
        if(data[i].playerId == socket.id){
-           var nameLabel = window.i18nPlayer ? window.i18nPlayer.t('name') : 'Name:';
-           var scoreLabel = window.i18nPlayer ? window.i18nPlayer.t('score') : 'Score:';
-           var icon = data[i].icon ? data[i].icon + " " : "";
-           document.getElementById('nameText').textContent = nameLabel + " " + icon + data[i].name;
-           document.getElementById('scoreText').textContent = scoreLabel + " " + data[i].gameData.score;
+           app.playerName = data[i].name;
+           app.playerIcon = data[i].icon || '';
+           app.playerScore = data[i].gameData.score;
        }
    }
 });
@@ -648,11 +631,7 @@ function showQuestionCountdown(data){
 
     var seconds = Math.max(0, Math.ceil(Number(data && data.seconds) || 0));
     app.questionText = '';
-    var msg = document.getElementById('message');
-    if(msg){
-        msg.style.display = 'block';
-        msg.textContent = '';
-    }
+    showMessage('');
     app.answerStatusState = 'pending';
     function render(){
         if(seconds <= 0){
@@ -676,11 +655,7 @@ socket.on('playerQuestion', function(data){
     app.playerAnswered = false;
     correct = false;
     document.body.style.backgroundColor = "#FFFFFF";
-    var msg = document.getElementById('message');
-    if(msg){
-        msg.style.display = "none";
-        msg.textContent = '';
-    }
+    hideMessage(true);
     app.questionText = data.blind ? tPlayer('blind_hint', 'Mira la pantalla para ver la pregunta') : (data.question || '');
     app.pointsMultiplier = Number(data && data.pointsMultiplier) > 1 ? Number(data.pointsMultiplier) : 1;
     if(app.pointsMultiplier > 1) app.badgeKey += 1;
@@ -720,8 +695,7 @@ socket.on('GameOver', function(){
     releaseWakeLock();
     document.body.style.backgroundColor = "#FFFFFF";
     app.answersVisible = false;
-    document.getElementById('message').style.display = "block";
-    document.getElementById('message').textContent = window.i18nPlayer ? window.i18nPlayer.t('game_over') : "GAME OVER";
+    showMessage(window.i18nPlayer ? window.i18nPlayer.t('game_over') : "GAME OVER");
     app.pointsMultiplier = 1;
 });
 
@@ -814,19 +788,10 @@ function parseYouTubeId(url){
 }
 
 socket.on('hostSkipped', function(){
-    var skipMsg = window.i18nPlayer ? window.i18nPlayer.t('host_skipped') : 'El anfitrión saltó la pregunta';
-    document.getElementById('message').style.display = "block";
-    document.getElementById('message').textContent = skipMsg;
+    showMessage(window.i18nPlayer ? window.i18nPlayer.t('host_skipped') : 'El anfitrión saltó la pregunta');
 });
 
 function showPlayerRanking(playerData){
-    var modal = document.getElementById('playerRankingModal');
-    var list = document.getElementById('playerRankingList');
-    var title = document.getElementById('playerRankingTitle');
-    if(!modal || !list){
-        return;
-    }
-    list.innerHTML = '';
     var sorted = Array.isArray(playerData) ? playerData.slice().sort(function(a, b){
         return (b.gameData.score || 0) - (a.gameData.score || 0);
     }) : [];
@@ -834,32 +799,12 @@ function showPlayerRanking(playerData){
     var myId = socket.id;
     var youLabel = (window.i18nPlayer && window.i18nPlayer.t('player_ranking_you')) || 'You';
     if(youLabel === 'player_ranking_you') youLabel = 'You';
-    top.forEach(function(p, idx){
+    app.rankingList = top.map(function(p){
         var icon = p.icon ? p.icon + ' ' : '';
         var meMark = p.playerId === myId ? ' (' + youLabel + ')' : '';
-        var li = document.createElement('li');
-        li.textContent = icon + p.name + ' - ' + (p.gameData.score || 0) + meMark;
-        list.appendChild(li);
+        return icon + p.name + ' - ' + (p.gameData.score || 0) + meMark;
     });
-    if(window.i18nPlayer && title){
-        var titleText = window.i18nPlayer.t('player_ranking_title');
-        title.textContent = titleText === 'player_ranking_title' ? 'Top 10' : titleText;
-    }
-    modal.classList.add('show');
-}
-
-function hidePlayerRanking(){
-    var modal = document.getElementById('playerRankingModal');
-    if(modal){
-        modal.classList.remove('show');
-    }
-}
-
-var playerRankingClose = document.getElementById('playerRankingClose');
-if(playerRankingClose){
-    playerRankingClose.addEventListener('click', function(){
-        hidePlayerRanking();
-    });
+    app.rankingVisible = true;
 }
 
 socket.on('time', function(data){

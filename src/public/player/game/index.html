@@ -8,17 +8,14 @@
         <link href="/css/fonts.css" rel="stylesheet">
     </head>
     <body>
-        <!-- Bloc 1 (Subfase B, Vue): pregunta, respostes, temporitzador i
-             compte arrere ja són reactius (playerGame.js). La resta
-             (#stats, #message, #playerRankingModal) encara és HTML/JS
-             estàtic sense tocar, dins del mateix arrel perquè Vue no
-             reescriu mai un node sense directives (vore ARCHITECTURE.md). -->
+        <!-- Subfase B, Vue (playerGame.js): tota la pantalla és una sola
+             app de Vue, feta en dos blocs (vore ARCHITECTURE.md). -->
         <div id="player-game"></div>
         <template id="player-game-tpl">
             <div id = "stats">
-                <h4 id = "nameText">Name:</h4>
-                <h4 id = "scoreText">Score:</h4>
-                <h4 id = "rankText"></h4>
+                <h4 id = "nameText">{{ nameDisplay }}</h4>
+                <h4 id = "scoreText">{{ scoreDisplay }}</h4>
+                <h4 id = "rankText" v-show="rankText">{{ rankText }}</h4>
             </div>
             <h3 id="questionText" v-html="questionHtml"></h3>
             <div id="questionCountdown" class="question-countdown" :class="{ 'is-visible': countdownVisible, 'is-ticking': countdownVisible }" aria-live="polite" :aria-hidden="!countdownVisible">
@@ -44,7 +41,7 @@
                 <video id="playerQuestionVideo" controls></video>
                 <iframe id="playerQuestionIframe" allowfullscreen loading="lazy"></iframe>
             </div>
-            <h2 id = "message"></h2>
+            <h2 id = "message" v-show="messageVisible">{{ message }}<span v-if="messageDetailHtml" class="player-correct-answer" v-html="messageDetailHtml"></span></h2>
             <div id="freeSubmitRow" :style="{ display: freeRowVisible ? 'flex' : 'none' }">
                 <input id="freeAnswerInput" ref="freeAnswerInput" type="text" autocomplete="off" :inputmode="questionType === 'numeric' ? 'decimal' : 'text'" :placeholder="freePlaceholder" v-model="freeAnswerValue" @keydown.enter.prevent="submitFree" />
                 <button type="button" id="freeSubmitBtn" class="button free-submit" @click="submitFree">{{ t('submit_free', 'Enviar') }}</button>
@@ -57,11 +54,13 @@
             <div id="multiSubmitRow" :style="{ display: multiRowVisible ? 'flex' : 'none' }">
                 <button type="button" id="multiSubmitBtn" class="button multi-submit" @click="submitMultiAnswers">{{ t('submit_multiple', 'Submit answers') }}</button>
             </div>
-            <div id="playerRankingModal" class="player-modal">
+            <div id="playerRankingModal" class="player-modal" :class="{ show: rankingVisible }">
                 <div class="player-modal__content">
-                    <h3 id="playerRankingTitle" data-i18n="player_ranking_title">Top 10</h3>
-                    <ol id="playerRankingList"></ol>
-                    <button type="button" id="playerRankingClose" class="player-modal__close" data-i18n="player_ranking_close">Continuar</button>
+                    <h3 id="playerRankingTitle">{{ t('player_ranking_title', 'Top 10') }}</h3>
+                    <ol id="playerRankingList">
+                        <li v-for="(entry, idx) in rankingList" :key="idx">{{ entry }}</li>
+                    </ol>
+                    <button type="button" id="playerRankingClose" class="player-modal__close" @click="hidePlayerRanking">{{ t('player_ranking_close', 'Continuar') }}</button>
                 </div>
             </div>
         </template>
