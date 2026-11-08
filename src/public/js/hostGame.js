@@ -8,11 +8,12 @@ var socket = io({
 var params = jQuery.deparam(window.location.search); //Gets the id from url
 var lastHostKey = 'lastHostId';
 var lastPinKey = 'lastGamePin';
-var pinBadge = document.getElementById('pin-badge');
-var rankingNextBtn = document.getElementById('rankingNextBtn');
-var resultsChartEl = document.getElementById('resultsChart');
-var resultsStepChartEl = document.getElementById('resultsStepChart');
-var resultsStepRankingEl = document.getElementById('resultsStepRanking');
+// Aquests elements viuen dins del <template> de Vue: no existixen al DOM
+// real fins que l'app es munta (vore més avall, després de crear `app`).
+var rankingNextBtn = null;
+var resultsChartEl = null;
+var resultsStepChartEl = null;
+var resultsStepRankingEl = null;
 var downloadReportBtn = null;
 var backToLibraryLink = null;
 
@@ -185,14 +186,98 @@ var i18n = {
     }
 };
 
-function t(key){
-    var chain = lang === 'va' ? ['va', 'ca', 'es'] : [lang, 'es'];
+function t(key, langOverride){
+    var l = langOverride || lang;
+    var chain = l === 'va' ? ['va', 'ca', 'es'] : [l, 'es'];
     for(var i = 0; i < chain.length; i++){
         var dict = i18n[chain[i]];
         if(dict && dict[key]) return dict[key];
     }
     return key;
 }
+
+// Pregunta/respostes, insígnia de punts, comptador de jugadors, temporitzador
+// i compte arrere (Subfase B, Vue, bloc 1): com en playerGame.js, Vue mai
+// reescriu un node sense directives, així que la resta de la pantalla
+// (modal de resultats, rànquing, celebració de grup, GameOver) es queda
+// estàtica dins de la mateixa arrel fins al bloc 2 (vore ARCHITECTURE.md).
+var app = Vue.createApp({
+    template: '#host-game-tpl',
+    data: function(){
+        return {
+            lang: lang,
+            pin: '',
+            questionNumText: '',
+            pointsMultiplier: 1,
+            pointsBadgeText: '',
+            badgeKey: 0,
+            playersAnsweredVisible: true,
+            playersAnsweredText: '',
+            timerVisible: true,
+            timerText: ' ' + time,
+            countdownVisible: false,
+            countdownSeconds: 0,
+            questionText: '',
+            answers: ['', '', '', ''],
+            questionType: 'quiz',
+            answerHighlight: [null, null, null, null],
+            skipVisible: false,
+            skipDisabled: false
+        };
+    },
+    computed: {
+        pinText: function(){
+            return this.pin ? ('PIN ' + this.pin) : '';
+        },
+        badgeVisible: function(){
+            var m = Number(this.pointsMultiplier);
+            return Number.isFinite(m) && m > 1;
+        },
+        questionHtml: function(){
+            return formatRichText(this.questionText);
+        }
+    },
+    methods: {
+        t: function(key){
+            return t(key, this.lang);
+        },
+        answerHasContent: function(i){
+            if(this.questionType === 'short-answer' || this.questionType === 'numeric') return false;
+            if(this.questionType === 'true-false' && i >= 2) return false;
+            var text = this.answers[i];
+            return !!(text && String(text).trim());
+        },
+        answerVisible: function(i){
+            return this.answerHasContent(i);
+        },
+        answerHtml: function(i){
+            var prefix = this.answerHighlight[i] === 'correct' ? '✓ ' : '';
+            return prefix + formatRichText(this.answers[i] || '');
+        },
+        answerFilter: function(i){
+            if(!this.answerVisible(i)) return '';
+            return this.answerHighlight[i] === 'wrong' ? 'grayscale(50%)' : '';
+        },
+        skipQuestion: function(){
+            skipQuestion();
+        }
+    }
+}).mount('#host-game');
+
+// Ara que Vue ha muntat la plantilla, #lang-select ja existix de veres al
+// DOM: cal omplir les seues opcions ara (languages.js ja ha fet la seua
+// crida inicial a render(), abans de muntar, quan encara no hi havia cap
+// <select> real dins de l'arrel de Vue). Si no, applyStaticText() fixaria
+// lang-select.value sobre un <select> encara buit, i es perdria.
+if(window.EduhootLang && typeof window.EduhootLang.render === 'function'){
+    window.EduhootLang.render();
+}
+
+// Els elements del bloc 2 (encara estàtics) també ja existixen de veres.
+rankingNextBtn = document.getElementById('rankingNextBtn');
+resultsChartEl = document.getElementById('resultsChart');
+resultsStepChartEl = document.getElementById('resultsStepChart');
+resultsStepRankingEl = document.getElementById('resultsStepRanking');
 
 function decodeBasicEntities(value){
     var txt = document.createElement('textarea');
@@ -240,24 +325,12 @@ function applyStaticText(){
     if(langSelect){
         langSelect.value = lang;
     }
-    var timeLabel = document.querySelector('#timerText span[data-i18n="timeLeft"]');
-    if(timeLabel){
-        timeLabel.textContent = t('timeLeft') + ' ';
-    }
-    var skipBtn = document.getElementById('skipQButton');
-    if(skipBtn) skipBtn.textContent = t('skip');
     var nextBtn = document.getElementById('nextQButton');
     if(nextBtn) nextBtn.textContent = t('next');
-    var showRanking = document.getElementById('showRanking');
-    if(showRanking) showRanking.textContent = t('showRanking');
     var rankingTitle = document.getElementById('rankingTitle');
     if(rankingTitle) rankingTitle.textContent = t('rankingTitle');
     var resultsTitle = document.getElementById('resultsTitle');
     if(resultsTitle) resultsTitle.textContent = t('resultsTitle');
-    var countdownLabel = document.getElementById('questionCountdownLabel');
-    if(countdownLabel) countdownLabel.textContent = t('questionCountdown');
-    var countdownHint = document.getElementById('questionCountdownHint');
-    if(countdownHint) countdownHint.textContent = t('questionCountdownHint');
     var winnerTitle = document.getElementById('winnerTitle');
     if(winnerTitle) winnerTitle.textContent = t('topPlayers');
     var reportBtn = ensureDownloadReportButton();
@@ -327,20 +400,15 @@ function updateModalNextButtonLabel(){
 }
 
 function updateQuestionPointsBadge(multiplier){
-    var badge = document.getElementById('questionPointsBadge');
-    if(!badge) return;
     var m = Number(multiplier);
     if(!Number.isFinite(m) || m <= 1){
-        badge.style.display = 'none';
-        badge.textContent = '';
-        badge.classList.remove('points-badge-pop');
+        app.pointsMultiplier = 1;
+        app.pointsBadgeText = '';
         return;
     }
-    badge.textContent = 'x' + m + ' · ' + t('pointsDouble');
-    badge.style.display = 'inline-flex';
-    badge.classList.remove('points-badge-pop');
-    void badge.offsetWidth; // reinicia la animación aunque el badge ya estuviera visible
-    badge.classList.add('points-badge-pop');
+    app.pointsMultiplier = m;
+    app.pointsBadgeText = 'x' + m + ' · ' + t('pointsDouble');
+    app.badgeKey += 1;
 }
 
 function ensureDownloadReportButton(){
@@ -486,6 +554,7 @@ function renderResultsChart(answerCounts, totalPlayers, correctAnswers){
 
 function setLang(newLang){
     lang = newLang;
+    app.lang = newLang;
     EduhootLang.persist(lang);
     applyStaticText();
     updateHostMusicLabels();
@@ -507,20 +576,7 @@ function setCurrentAnswerTexts(answers){
     for(var i = 0; i < 4; i++){
         currentAnswerTexts[i] = answers[i] || '';
     }
-    for(var j = 1; j <= 4; j++){
-        var el = document.getElementById('answer' + j);
-        if(!el) continue;
-        var text = currentAnswerTexts[j - 1];
-        setRichText(el, text);
-        if(currentQuestionType === 'short-answer' || currentQuestionType === 'numeric'){
-            el.style.display = 'none';
-        }else if(currentQuestionType === 'true-false' && j > 2){
-            el.style.display = 'none';
-        }else{
-            el.style.display = text && text.trim().length ? 'block' : 'none';
-        }
-        el.style.filter = '';
-    }
+    app.answers = currentAnswerTexts.slice();
 }
 
 function getVisibleAnswerFlags(){
@@ -551,26 +607,20 @@ function hideAnswerSquares(){
 
 function highlightCorrectAnswers(correctAnswers){
     if(currentQuestionType === 'short-answer' || currentQuestionType === 'numeric'){
+        app.answerHighlight = [null, null, null, null];
         return;
     }
     var valid = Array.isArray(correctAnswers) ? correctAnswers : [];
     var correctSet = new Set(valid.map(Number));
     var visibleFlags = getVisibleAnswerFlags();
+    var highlight = [null, null, null, null];
     for(var idx = 1; idx <= 4; idx++){
-        var el = document.getElementById('answer' + idx);
-        if(!el) continue;
-        var visible = visibleFlags[idx - 1];
-        if(!visible){
-            el.style.filter = '';
+        if(!visibleFlags[idx - 1]){
             continue;
         }
-        if(correctSet.has(idx)){
-            el.innerHTML = '✓ ' + formatRichText(currentAnswerTexts[idx - 1] || '');
-            el.style.filter = '';
-        }else{
-            el.style.filter = "grayscale(50%)";
-        }
+        highlight[idx - 1] = correctSet.has(idx) ? 'correct' : 'wrong';
     }
+    app.answerHighlight = highlight;
 }
 
 function updateSquareHeights(counts, total){
@@ -835,7 +885,7 @@ socket.on('connect', function() {
     if(params.pin){
         try{ localStorage.setItem(lastPinKey, params.pin); }catch(e){}
     }
-    setPinBadge(params.pin || '');
+    app.pin = params.pin || '';
 });
 
 socket.on('noGameFound', function(){
@@ -846,7 +896,7 @@ socket.on('noGameFound', function(){
 });
 
 socket.on('disconnect', function(){
-    document.getElementById('playersAnswered').textContent = 'Reconectando con la partida...';
+    app.playersAnsweredText = 'Reconectando con la partida...';
 });
 
 function clearQuestionCountdown(){
@@ -854,28 +904,8 @@ function clearQuestionCountdown(){
         clearInterval(questionCountdownTimer);
         questionCountdownTimer = null;
     }
-    var countdownEl = document.getElementById('questionCountdown');
-    if(countdownEl){
-        countdownEl.classList.remove('is-visible', 'is-ticking');
-        countdownEl.setAttribute('aria-hidden', 'true');
-    }
+    app.countdownVisible = false;
     document.body.classList.remove('is-question-countdown');
-}
-
-function renderQuestionCountdown(seconds){
-    var countdownEl = document.getElementById('questionCountdown');
-    var numberEl = document.getElementById('questionCountdownNumber');
-    var labelEl = document.getElementById('questionCountdownLabel');
-    var hintEl = document.getElementById('questionCountdownHint');
-    if(labelEl) labelEl.textContent = t('questionCountdown');
-    if(hintEl) hintEl.textContent = t('questionCountdownHint');
-    if(numberEl) numberEl.textContent = seconds > 0 ? String(seconds) : '';
-    if(countdownEl){
-        countdownEl.classList.remove('is-ticking');
-        void countdownEl.offsetWidth;
-        countdownEl.classList.add('is-visible', 'is-ticking');
-        countdownEl.setAttribute('aria-hidden', seconds > 0 ? 'false' : 'true');
-    }
 }
 
 function showQuestionCountdown(data){
@@ -885,26 +915,27 @@ function showQuestionCountdown(data){
     hideAnswerSquares();
     setMedia(null, null);
     currentQuestionType = 'quiz';
+    app.questionType = 'quiz';
     currentPointsMultiplier = 1;
-    updateQuestionPointsBadge(1);
+    app.pointsMultiplier = 1;
+    app.pointsBadgeText = '';
     currentAnswerTexts = ['', '', '', ''];
+    app.answers = ['', '', '', ''];
     var seconds = Math.max(0, Math.ceil(Number(data && data.seconds) || 0));
-    var questionEl = document.getElementById('question');
-    var playersEl = document.getElementById('playersAnswered');
-    var timerEl = document.getElementById('timerText');
     document.body.classList.add('is-question-countdown');
-    if(questionEl) questionEl.textContent = '';
-    if(playersEl) playersEl.textContent = t('questionCountdown');
-    if(timerEl) timerEl.style.display = 'none';
+    app.questionText = '';
+    app.playersAnsweredText = t('questionCountdown');
+    app.timerVisible = false;
     if(data && data.questionNumber && data.totalQuestions){
-        document.getElementById('questionNum').textContent = t('questionXofY')(data.questionNumber, data.totalQuestions);
+        app.questionNumText = t('questionXofY')(data.questionNumber, data.totalQuestions);
     }
     function render(){
         if(seconds <= 0){
             clearQuestionCountdown();
             return;
         }
-        renderQuestionCountdown(seconds);
+        app.countdownVisible = true;
+        app.countdownSeconds = seconds;
         seconds -= 1;
     }
     render();
@@ -936,24 +967,26 @@ socket.on('gameQuestions', function(data){
     }
 
     currentQuestionType = data.type || 'quiz';
+    app.questionType = currentQuestionType;
     currentPointsMultiplier = Number(data && data.pointsMultiplier) > 1 ? Number(data.pointsMultiplier) : 1;
     updateQuestionPointsBadge(currentPointsMultiplier);
-    setRichText(document.getElementById('question'), data.q1 || '');
+    app.questionText = data.q1 || '';
     setCurrentAnswerTexts([data.a1, data.a2, data.a3, data.a4]);
+    app.answerHighlight = [null, null, null, null];
     hideAnswerSquares();
     defaultTime = data.time || defaultTime || 20;
     window.hostShowScores = data.showScores !== false;
     setMedia(data.image, data.video);
-    document.getElementById('playersAnswered').textContent = t('playersAnswered')(0, data.playersInGame);
-    document.getElementById('timerText').style.display = "block";
+    app.playersAnsweredText = t('playersAnswered')(0, data.playersInGame);
+    app.timerVisible = true;
     if (data.questionNumber && data.totalQuestions) {
-        document.getElementById('questionNum').textContent = t('questionXofY')(data.questionNumber, data.totalQuestions);
+        app.questionNumText = t('questionXofY')(data.questionNumber, data.totalQuestions);
     }
     updateTimer();
 });
 
 socket.on('updatePlayersAnswered', function(data){
-    document.getElementById('playersAnswered').textContent = t('playersAnswered')(data.playersAnswered, data.playersInGame);
+    app.playersAnsweredText = t('playersAnswered')(data.playersAnswered, data.playersInGame);
 });
 
 socket.on('gamePin', function(data){
@@ -1011,10 +1044,11 @@ document.addEventListener('keydown', function(ev){
 socket.on('questionOver', function(playerData, payload){
     hostQuestionEnded = true;
     clearInterval(timer);
-    document.getElementById('playersAnswered').style.display = "none";
-    document.getElementById('timerText').style.display = "none";
+    app.playersAnsweredVisible = false;
+    app.timerVisible = false;
     setMedia(null, null);
     currentQuestionType = (payload && payload.type) || currentQuestionType;
+    app.questionType = currentQuestionType;
     var totalPlayers = Array.isArray(playerData) ? playerData.length : 0;
 
     // Tipos libres: no hay buckets 1-4; mostramos resumen simple.
@@ -1085,7 +1119,7 @@ socket.on('questionOver', function(playerData, payload){
 
     // El avance se hace desde el modal (Resultados -> Ranking -> Siguiente).
     document.getElementById('nextQButton').style.display = "none";
-    document.getElementById('skipQButton').style.display = "none";
+    app.skipVisible = false;
 
     hostResultsHasRanking = (window.hostShowScores !== false);
     if(hostResultsHasRanking){
@@ -1258,8 +1292,8 @@ function parseYouTubeId(url){
 function nextQuestion(){
     closeRankingModal();
     document.getElementById('nextQButton').style.display = "none";
-    document.getElementById('skipQButton').style.display = "inline-block";
-    document.getElementById('skipQButton').disabled = false;
+    app.skipVisible = true;
+    app.skipDisabled = false;
 
     // Activamos la pantalla de espera de forma optimista, sin esperar al evento
     // 'questionCountdown' del servidor: el modal de ranking es semitransparente
@@ -1272,13 +1306,14 @@ function nextQuestion(){
     hideAnswerSquares();
     setMedia(null, null);
     currentQuestionType = 'quiz';
+    app.questionType = 'quiz';
     currentPointsMultiplier = 1;
     updateQuestionPointsBadge(1);
     setCurrentAnswerTexts(['', '', '', '']);
     document.body.classList.add('is-question-countdown');
-    document.getElementById('question').textContent = '';
-    document.getElementById('playersAnswered').textContent = t('questionCountdown');
-    document.getElementById('timerText').style.display = 'none';
+    app.questionText = '';
+    app.playersAnsweredText = t('questionCountdown');
+    app.timerVisible = false;
 
     // Gesto del usuario: si la música debe sonar, este es el momento más fiable para (re)arrancarla.
     if(hostAutoMusicEnabled && hostAutoMusicShouldPlay){
@@ -1289,7 +1324,7 @@ function nextQuestion(){
 }
 
 function skipQuestion(){
-    document.getElementById('skipQButton').disabled = true;
+    app.skipDisabled = true;
     clearInterval(timer);
     if(hostAutoMusicEnabled && hostAutoMusicShouldPlay){
         ensureHostMusicPlaying();
@@ -1302,10 +1337,10 @@ function updateTimer(){
     time = defaultTime;
     // Pintar ya el tiempo inicial: si no, hasta el primer segundo se veía el
     // de la pregunta anterior (o el 20 del HTML) (issue #21).
-    document.getElementById('num').textContent = " " + time;
+    app.timerText = " " + time;
     timer = setInterval(function(){
         time -= 1;
-        document.getElementById('num').textContent = " " + time;
+        app.timerText = " " + time;
         if(time == 0){
             socket.emit('timeUp');
         }
@@ -1318,13 +1353,10 @@ socket.on('GameOver', function(data){
     document.getElementById('square3').style.display = "none";
     document.getElementById('square4').style.display = "none";
     
-    document.getElementById('answer1').style.display = "none";
-    document.getElementById('answer2').style.display = "none";
-    document.getElementById('answer3').style.display = "none";
-    document.getElementById('answer4').style.display = "none";
-    document.getElementById('timerText').textContent = "";
-    document.getElementById('question').textContent = t('gameOver');
-    document.getElementById('playersAnswered').textContent = "";
+    app.answers = ['', '', '', ''];
+    app.timerText = "";
+    app.questionText = t('gameOver');
+    app.playersAnsweredText = "";
     updateQuestionPointsBadge(1);
     
     
@@ -1360,15 +1392,7 @@ socket.on('GameOver', function(data){
 });
 
 function setPinBadge(pin){
-    if(pinBadge){
-        if(pin){
-            pinBadge.textContent = 'PIN ' + pin;
-            pinBadge.style.display = 'inline-flex';
-        }else{
-            pinBadge.textContent = '';
-            pinBadge.style.display = 'none';
-        }
-    }
+    app.pin = pin || '';
 }
 
 

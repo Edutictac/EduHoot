@@ -10,9 +10,17 @@
         <link href="/css/fonts.css" rel="stylesheet">
     </head>
     <body>
+        <!-- Subfase B, Vue (hostGame.js): tota la pantalla és una sola app de
+             Vue, feta en dos blocs (vore ARCHITECTURE.md). Com en
+             /player/game/, Vue mai reescriu un node sense directives, així
+             que #nextQButton i els #square1-4 (morts: mai es mostren hui,
+             vore ARCHITECTURE.md) i la resta d'elements encara estàtics del
+             bloc 2 poden quedar-se dins de la mateixa arrel. -->
+        <div id="host-game"></div>
+        <template id="host-game-tpl">
         <div class="host-shell">
             <div class="host-top">
-                <div id="pin-badge" class="pin-badge" title="PIN del juego"></div>
+                <div id="pin-badge" class="pin-badge" title="PIN del juego" :style="{ display: pin ? 'inline-flex' : 'none' }">{{ pinText }}</div>
                 <div class="spacer"></div>
                 <button type="button" id="fullscreenToggle" class="fullscreen-toggle" onclick="toggleHostFullscreen()" aria-pressed="false">⛶</button>
                 <label class="lang-switch">
@@ -20,42 +28,42 @@
                     <select id="lang-select" data-lang-options="name"></select>
                 </label>
             </div>
-        <h4 id = "questionNum">Question 1 / x</h4>
-        <div id="questionPointsBadge" class="question-points-badge" style="display:none;"></div>
-        <h4 id = "playersAnswered">Players Answered: 0 / x</h4>
-        <h3 id = "timerText"><span data-i18n="timeLeft">Time Left:</span><span id = "num"> 20</span></h3>
-        <div id="questionCountdown" class="question-countdown" aria-live="polite" aria-hidden="true">
-            <div class="question-countdown__label" id="questionCountdownLabel">Prepara la siguiente pregunta...</div>
-            <div class="question-countdown__dial">
-                <span id="questionCountdownNumber">3</span>
+        <h4 id = "questionNum">{{ questionNumText }}</h4>
+        <div id="questionPointsBadge" class="question-points-badge points-badge-pop" :key="'badge-' + badgeKey" :style="{ display: badgeVisible ? 'inline-flex' : 'none' }">{{ pointsBadgeText }}</div>
+        <h4 id = "playersAnswered" v-show="playersAnsweredVisible">{{ playersAnsweredText }}</h4>
+        <h3 id = "timerText" v-show="timerVisible"><span data-i18n="timeLeft">{{ t('timeLeft') }} </span><span id = "num">{{ timerText }}</span></h3>
+        <div id="questionCountdown" class="question-countdown" :class="{ 'is-visible': countdownVisible, 'is-ticking': countdownVisible }" aria-live="polite" :aria-hidden="!countdownVisible">
+            <div class="question-countdown__label" id="questionCountdownLabel">{{ t('questionCountdown') }}</div>
+            <div class="question-countdown__dial" :key="'dial-' + countdownSeconds">
+                <span id="questionCountdownNumber">{{ countdownSeconds > 0 ? countdownSeconds : '' }}</span>
             </div>
-            <div class="question-countdown__hint" id="questionCountdownHint">La siguiente empieza en</div>
+            <div class="question-countdown__hint" id="questionCountdownHint">{{ t('questionCountdownHint') }}</div>
         </div>
-        
-        
+
+
         <div class = "square" id = "square1"></div>
         <div class = "square" id = "square2"></div>
         <div class = "square" id = "square3"></div>
         <div class = "square" id = "square4"></div>
-        
-        <h2 id = "question">Question</h2>
+
+        <h2 id = "question" v-html="questionHtml"></h2>
         <div id="imageWrap">
             <img id="questionImage" alt="Question image">
             <video id="questionVideo" controls></video>
             <iframe id="questionIframe" allowfullscreen loading="lazy"></iframe>
         </div>
-        <h3 id = "answer1">Answer</h3>
+        <h3 id = "answer1" v-show="answerVisible(0)" :style="{ filter: answerFilter(0) }" v-html="answerHtml(0)"></h3>
         <br>
-        <h3 id = "answer2">Answer</h3>
+        <h3 id = "answer2" v-show="answerVisible(1)" :style="{ filter: answerFilter(1) }" v-html="answerHtml(1)"></h3>
         <br>
-        <h3 id = "answer3">Answer</h3>
+        <h3 id = "answer3" v-show="answerVisible(2)" :style="{ filter: answerFilter(2) }" v-html="answerHtml(2)"></h3>
         <br>
-        <h3 id = "answer4">Answer</h3>
-        
+        <h3 id = "answer4" v-show="answerVisible(3)" :style="{ filter: answerFilter(3) }" v-html="answerHtml(3)"></h3>
+
         <div class="control-row">
-            <button onclick="skipQuestion()" id="skipQButton">Saltar pregunta</button>
+            <button @click="skipQuestion" id="skipQButton" :style="{ display: skipVisible ? 'inline-block' : 'none' }" :disabled="skipDisabled">{{ t('skip') }}</button>
             <button onclick = "nextQuestion()" id = "nextQButton">Next Question</button>
-            <button onclick="toggleRanking()" id="showRanking">Mostrar Top 10</button>
+            <button onclick="toggleRanking()" id="showRanking">{{ t('showRanking') }}</button>
         </div>
 
         <div id="rankingModal" class="modal">
@@ -86,12 +94,14 @@
 
         <div id="host-music-player" class="music-player-shell host-music-player"></div>
         </div>
+        </template>
         <script src = "../../socket.io/socket.io.js"></script>
         <script src = "../../js/libs/jqueryLibrary.js"></script>
         <script src = "../../js/libs/deparam.js"></script>
         <script src = "../../js/music-player.js"></script>
         <script src="/js/languages.js"></script>
         <script src="/js/env-badge.js"></script>
+        <script src = "../../js/libs/vue.global.prod.js"></script>
         <script src = "../../js/hostGame.js"></script>
     </body>
 </html>
