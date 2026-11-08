@@ -851,6 +851,7 @@ function showQuestionCountdown(data){
     document.body.classList.add('is-question-countdown');
     app.questionText = '';
     app.playersAnsweredText = t('questionCountdown');
+    app.playersAnsweredVisible = true;
     app.timerVisible = false;
     if(data && data.questionNumber && data.totalQuestions){
         app.questionNumText = t('questionXofY')(data.questionNumber, data.totalQuestions);
@@ -904,7 +905,10 @@ socket.on('gameQuestions', function(data){
     window.hostShowScores = data.showScores !== false;
     setMedia(data.image, data.video);
     app.playersAnsweredText = t('playersAnswered')(0, data.playersInGame);
+    app.playersAnsweredVisible = true;
     app.timerVisible = true;
+    app.skipVisible = true;
+    app.skipDisabled = false;
     if (data.questionNumber && data.totalQuestions) {
         app.questionNumText = t('questionXofY')(data.questionNumber, data.totalQuestions);
     }
@@ -1193,6 +1197,7 @@ function nextQuestion(){
     document.body.classList.add('is-question-countdown');
     app.questionText = '';
     app.playersAnsweredText = t('questionCountdown');
+    app.playersAnsweredVisible = true;
     app.timerVisible = false;
 
     // Gesto del usuario: si la música debe sonar, este es el momento más fiable para (re)arrancarla.

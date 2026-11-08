@@ -223,23 +223,46 @@ test('celebración de grupo cuando todo el grupo acierta o falla', async ({ page
     await expect(page.locator('#groupCelebrationText')).toHaveText('Nadie ha acertado esta vez');
 });
 
-// #skipQButton empieza oculto por CSS (display:none) y solo nextQuestion()
-// lo muestra: en la práctica, nunca se puede saltar la primera pregunta de
-// la partida, solo a partir de la segunda.
-test('saltar pregunta (a partir de la segunda): desactiva el botón y lo notifica al servidor', async ({ page }) => {
+// #skipQButton empieza oculto por CSS (display:none); gameQuestions lo
+// muestra desde la primera pregunta (corregido: antes solo nextQuestion()
+// lo mostraba, así que nunca se podía saltar la primera pregunta).
+test('saltar pregunta: ya se puede desde la primera, y sigue disponible en las siguientes', async ({ page }) => {
     await openGame(page);
     await serverEmit(page, 'gameQuestions', gameQuestionsPayload());
-    await expect(page.locator('#skipQButton')).toBeHidden();
+    await expect(page.locator('#skipQButton')).toBeVisible();
+    await page.locator('#skipQButton').click();
+    expect(await emitsNamed(page, 'skipQuestion')).toHaveLength(1);
+    await expect(page.locator('#skipQButton')).toBeDisabled();
 
     await serverEmit(page, 'questionOver', PLAYER_DATA, { type: 'quiz', correctAnswers: [1] });
+    await expect(page.locator('#skipQButton')).toBeHidden();
     await page.locator('#rankingNextBtn').click();
     await page.locator('#rankingNextBtn').click();
     await serverEmit(page, 'gameQuestions', gameQuestionsPayload({ questionNumber: 2 }));
 
     await expect(page.locator('#skipQButton')).toBeVisible();
-    await page.locator('#skipQButton').click();
-    expect(await emitsNamed(page, 'skipQuestion')).toHaveLength(1);
-    await expect(page.locator('#skipQButton')).toBeDisabled();
+    await expect(page.locator('#skipQButton')).toBeEnabled();
+});
+
+// #playersAnswered se ocultaba para siempre tras la primera pregunta
+// (questionOver lo oculta y nada lo volvía a mostrar). Corregido:
+// gameQuestions, questionCountdown y nextQuestion() lo muestran de nuevo.
+test('playersAnswered reaparece en cada pregunta nueva, no solo en la primera', async ({ page }) => {
+    await openGame(page);
+    await serverEmit(page, 'gameQuestions', gameQuestionsPayload());
+    await expect(page.locator('#playersAnswered')).toBeVisible();
+
+    await serverEmit(page, 'questionOver', PLAYER_DATA, { type: 'quiz', correctAnswers: [1] });
+    await expect(page.locator('#playersAnswered')).toBeHidden();
+
+    await page.locator('#rankingNextBtn').click();
+    await page.locator('#rankingNextBtn').click();
+    await expect(page.locator('#playersAnswered')).toBeVisible();
+    await expect(page.locator('#playersAnswered')).toHaveText('Prepara la siguiente pregunta...');
+
+    await serverEmit(page, 'gameQuestions', gameQuestionsPayload({ questionNumber: 2 }));
+    await expect(page.locator('#playersAnswered')).toBeVisible();
+    await expect(page.locator('#playersAnswered')).toHaveText('Han respondido 0 / 2');
 });
 
 test('abrir el ranking a mano (sin fin de pregunta) permite cerrarlo', async ({ page }) => {
