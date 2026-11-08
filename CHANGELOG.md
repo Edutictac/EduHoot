@@ -14,6 +14,24 @@ Les versions 1.0.2 i 1.0.5 van tindre en el seu moment una nota de versió
 pròpia (`RELEASE-X.Y.Z.md`); el seu contingut ja està integrat ací i als
 fitxers corresponents, i els originals es van eliminar.
 
+## [Sense publicar]
+
+### Canviat
+- El lobby de l'amfitrió (`/host/`) és ara una app de Vue 3, sense build
+  step: és la prova pilot de la Subfase B de
+  [`docs/MIGRATING.md`](docs/MIGRATING.md). Funciona igual que abans; Vue
+  s'inclou en el propi repositori perquè la pàgina funcione sense
+  connexió.
+
+### Corregit
+- En canviar d'idioma en el lobby de `/host/`, l'error visible (p. ex.
+  «Falta el quiz…») es convertia en el missatge genèric; ara es traduïx.
+- El temporitzador de l'amfitrió en la partida no es repintava fins al
+  primer segon: començava cada pregunta mostrant el valor anterior, i
+  si tot l'alumnat responia de seguida es quedava en «20» encara que el
+  temps per pregunta fora un altre
+  ([#21](https://github.com/Edutictac/EduHoot/issues/21)).
+
 ## [1.1.0] - 2026-11-07
 
 ### Afegit

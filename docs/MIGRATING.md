@@ -363,6 +363,11 @@ Cap d'estos noms és definitiu, igual que en l'arbre de la Subfase A —
 l'objectiu és que els dos arbres es puguen llegir fitxer a fitxer, un
 davall de l'altre, per a veure exactament què canvia i què no.
 
+Nota: la Subfase A va deixar fitxers plans (`create-*.js`, `solo-*.js`),
+no les subcarpetes `create/` i `solo/` d'estos arbres. La prova pilot de
+Vue (lobby de `/host/`) seguix eixe arbre real: es manté `host.js`, i
+el detall està en `ARCHITECTURE.md` → "Lobby de l'amfitrió amb Vue".
+
 ## Taula comparativa entre subfases
 
 | | Subfase A — separar en mòduls plans | Subfase B — Vue sobre eixa separació |

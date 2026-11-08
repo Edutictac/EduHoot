@@ -44,10 +44,12 @@ funcionament del projecte.
   (`createXxx({ dependències })`); la resta són mòduls plans que es
   requereixen directament. Vore `docs/MIGRATING.md` (Subfase A) per al
   perquè d'esta divisió.
-- **Sense build step ni framework de frontend**: el client és JS vanilla
-  servit directament des de `src/public/`, sense React/Vue ni bundler
-  (webpack/vite). Cada pantalla (`create`, `host`, `player`, `solo`,
-  `multiplayer`) carrega els seus propis `<script>` solts.
+- **Sense build step**: el client és JS vanilla servit directament des de
+  `src/public/`, sense bundler (webpack/vite). Cada pantalla (`create`,
+  `host`, `player`, `solo`, `multiplayer`) carrega els seus propis
+  `<script>` solts. Única excepció de framework: el lobby de `/host/`, un
+  pilot amb Vue 3 també sense build step (vore "Lobby de l'amfitrió amb
+  Vue").
 - **Dependències de producció mínimes** (`src/package.json`): `express`,
   `socket.io`, `mongodb` (driver natiu, sense ORM/Mongoose), `helmet`
   (capçaleres de seguretat), `multer` (pujada d'imatges), `moment`.
@@ -218,6 +220,26 @@ crear o programar una partida amb antelació — naix quan el professorat
 obri el host i mor quan es neteja per algun dels motius de dalt. Millora
 de fer-los configurables (global + per partida) plantejada per al futur.
 
+### Lobby de l'amfitrió amb Vue
+
+El lobby de `/host/` és el pilot de la Subfase B de `docs/MIGRATING.md`:
+una app de Vue 3 (Options API) sense build step.
+
+- **Vue**: còpia local en `src/public/js/libs/vue.global.prod.js` (versió
+  amb compilador de plantilles), precachejada en `sw.js`.
+- **Plantilla**: `<template id="host-lobby-tpl">` en
+  `src/public/host/index.html`, muntada en `<div id="host-lobby">`. Només
+  cobrix el bloc central (PIN i QR, opcions, jugadors, botó d'inici); la
+  barra de dalt, la música i el peu queden fora.
+- **Estat** (`src/public/js/host.js`, variable global `lobby`): `pin`,
+  `players`, `options`, l'error i l'idioma. Els handlers de Socket.IO
+  només canvien estes dades i Vue repinta; l'enllaç d'unió i el QR es
+  calculen a partir del PIN i l'idioma.
+- **Textos**: dins de la plantilla, `{{ t('clau') }}` (no
+  `data-i18n-host`); `t()` usa `getHostTranslation` d'`i18n-host.js`. Els
+  errors es guarden per clau perquè canvien d'idioma amb la resta.
+- **Proves**: `src/test/browser/host-lobby.spec.js`, amb un Socket.IO fals.
+
 ## Distintiu visual d'entorn (dev/stage)
 
 Per a no confondre un entorn de desenvolupament o stage amb producció,
@@ -304,8 +326,8 @@ consulta `GET /api/version` (`src/server/server.js:183`, versió de
   (noms de jugador, quizzes importats), el navegador no executaria el
   codi injectat ni enviaria dades a dominis no permesos. Seguiment en
   la [issue #20](https://github.com/Edutictac/EduHoot/issues/20).
-  - **Requisit**: passar a `addEventListener` els 23 atributs `on…=`
-    dels HTML (15 `onclick`, p. ex. `startGame()` en `host/index.html`,
+  - **Requisit**: passar a `addEventListener` els 22 atributs `on…=`
+    dels HTML (14 `onclick`, p. ex. `endGame()` en `host/index.html`,
     i 8 `onerror` del widget de Commons). Sense això caldria
     `'unsafe-inline'` en els scripts, que anul·la quasi tota la
     protecció. En els estils, `'unsafe-inline'` sí és acceptable.
@@ -315,7 +337,7 @@ consulta `GET /api/version` (`src/server/server.js:183`, versió de
     miniatures, quizzes).
   - **Com**: primer amb `reportOnly: true` en dev i stage (només avisa
     en la consola, no bloqueja), després en mode real.
-  - **Vue** (Subfase B de `docs/MIGRATING.md`): el seu compilador de
+  - **Vue**: el lobby de `/host/` ja l'usa, i el seu compilador de
     plantilles necessita també `'unsafe-eval'`. Risc baix mentre les
     plantilles no continguen text d'usuari.
 
