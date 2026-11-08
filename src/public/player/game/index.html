@@ -8,52 +8,63 @@
         <link href="/css/fonts.css" rel="stylesheet">
     </head>
     <body>
-        <div id = "stats">
-            <h4 id = "nameText">Name:</h4>
-            <h4 id = "scoreText">Score:</h4>
-            <h4 id = "rankText"></h4>
-        </div>
-        <h3 id="questionText"></h3>
-        <div id="questionCountdown" class="question-countdown" aria-live="polite" aria-hidden="true">
-            <div class="question-countdown__label" id="questionCountdownLabel">Prepara la siguiente pregunta...</div>
-            <div class="question-countdown__dial">
-                <span id="questionCountdownNumber">3</span>
+        <!-- Bloc 1 (Subfase B, Vue): pregunta, respostes, temporitzador i
+             compte arrere ja són reactius (playerGame.js). La resta
+             (#stats, #message, #playerRankingModal) encara és HTML/JS
+             estàtic sense tocar, dins del mateix arrel perquè Vue no
+             reescriu mai un node sense directives (vore ARCHITECTURE.md). -->
+        <div id="player-game"></div>
+        <template id="player-game-tpl">
+            <div id = "stats">
+                <h4 id = "nameText">Name:</h4>
+                <h4 id = "scoreText">Score:</h4>
+                <h4 id = "rankText"></h4>
             </div>
-            <div class="question-countdown__hint" id="questionCountdownHint">La siguiente empieza en</div>
-        </div>
-        <div id="playerPointsBadge" class="player-points-badge" style="display:none;"></div>
-        <div id="playerStatusRow">
-            <div id="playerTimer">
-                <div id="playerTimerFill"></div>
-                <span id="playerTimerText">20s</span>
+            <h3 id="questionText" v-html="questionHtml"></h3>
+            <div id="questionCountdown" class="question-countdown" :class="{ 'is-visible': countdownVisible, 'is-ticking': countdownVisible }" aria-live="polite" :aria-hidden="!countdownVisible">
+                <div class="question-countdown__label" id="questionCountdownLabel">{{ t('question_countdown', 'Prepara la siguiente pregunta...') }}</div>
+                <!-- Clau per segon: recrea el dial per a repetir l'animació de "tic" cada
+                     segon (com feia l'original amb classList.remove/add + reflow), sense
+                     tocar l'exterior i així no es talla la lluentor contínua del fons. -->
+                <div class="question-countdown__dial" :key="'dial-' + countdownSeconds">
+                    <span id="questionCountdownNumber">{{ countdownSeconds > 0 ? countdownSeconds : '' }}</span>
+                </div>
+                <div class="question-countdown__hint" id="questionCountdownHint">{{ t('question_countdown_hint', 'La siguiente empieza en') }}</div>
             </div>
-            <div id="playerAnswerStatus" class="hidden"></div>
-        </div>
-        <div id="playerImageWrap">
-            <img id="playerQuestionImage" alt="">
-            <video id="playerQuestionVideo" controls></video>
-            <iframe id="playerQuestionIframe" allowfullscreen loading="lazy"></iframe>
-        </div>
-        <h2 id = "message"></h2>
-        <div id="freeSubmitRow">
-            <input id="freeAnswerInput" type="text" autocomplete="off" />
-            <button type="button" id="freeSubmitBtn" class="button free-submit">Enviar</button>
-        </div>
-        <button onclick = "answerSubmitted(1)" id = "answer1" class = "button"></button>
-        <button onclick = "answerSubmitted(2)" id = "answer2" class = "button"></button>
-        <br>
-        <button onclick = "answerSubmitted(3)" id = "answer3" class = "button"></button>
-        <button onclick = "answerSubmitted(4)" id = "answer4" class = "button"></button>
-        <div id="multiSubmitRow">
-            <button type="button" id="multiSubmitBtn" class="button multi-submit" onclick="submitMultiAnswers()">Enviar respuestas</button>
-        </div>
-        <div id="playerRankingModal" class="player-modal">
-            <div class="player-modal__content">
-                <h3 id="playerRankingTitle" data-i18n="player_ranking_title">Top 10</h3>
-                <ol id="playerRankingList"></ol>
-                <button type="button" id="playerRankingClose" class="player-modal__close" data-i18n="player_ranking_close">Continuar</button>
+            <div id="playerPointsBadge" class="player-points-badge points-badge-pop" :key="'badge-' + badgeKey" :style="{ display: badgeVisible ? 'inline-flex' : 'none' }">{{ badgeText }}</div>
+            <div id="playerStatusRow">
+                <div id="playerTimer">
+                    <div id="playerTimerFill" :style="{ width: timerPct + '%', background: timerColor }"></div>
+                    <span id="playerTimerText">{{ timerText }}</span>
+                </div>
+                <div id="playerAnswerStatus" :class="{ hidden: !answerStatusVisible }">{{ answerStatusText }}</div>
             </div>
-        </div>
+            <div id="playerImageWrap">
+                <img id="playerQuestionImage" alt="">
+                <video id="playerQuestionVideo" controls></video>
+                <iframe id="playerQuestionIframe" allowfullscreen loading="lazy"></iframe>
+            </div>
+            <h2 id = "message"></h2>
+            <div id="freeSubmitRow" :style="{ display: freeRowVisible ? 'flex' : 'none' }">
+                <input id="freeAnswerInput" ref="freeAnswerInput" type="text" autocomplete="off" :inputmode="questionType === 'numeric' ? 'decimal' : 'text'" :placeholder="freePlaceholder" v-model="freeAnswerValue" @keydown.enter.prevent="submitFree" />
+                <button type="button" id="freeSubmitBtn" class="button free-submit" @click="submitFree">{{ t('submit_free', 'Enviar') }}</button>
+            </div>
+            <button id = "answer1" class = "button" :class="{ 'multi-selected': isMultiSelected(1) }" v-show="buttonVisible(0)" :aria-label="buttonAriaLabel(0)" v-html="buttonHtml(0)" @click="onAnswerClick(1)"></button>
+            <button id = "answer2" class = "button" :class="{ 'multi-selected': isMultiSelected(2) }" v-show="buttonVisible(1)" :aria-label="buttonAriaLabel(1)" v-html="buttonHtml(1)" @click="onAnswerClick(2)"></button>
+            <br>
+            <button id = "answer3" class = "button" :class="{ 'multi-selected': isMultiSelected(3) }" v-show="buttonVisible(2)" :aria-label="buttonAriaLabel(2)" v-html="buttonHtml(2)" @click="onAnswerClick(3)"></button>
+            <button id = "answer4" class = "button" :class="{ 'multi-selected': isMultiSelected(4) }" v-show="buttonVisible(3)" :aria-label="buttonAriaLabel(3)" v-html="buttonHtml(3)" @click="onAnswerClick(4)"></button>
+            <div id="multiSubmitRow" :style="{ display: multiRowVisible ? 'flex' : 'none' }">
+                <button type="button" id="multiSubmitBtn" class="button multi-submit" @click="submitMultiAnswers">{{ t('submit_multiple', 'Submit answers') }}</button>
+            </div>
+            <div id="playerRankingModal" class="player-modal">
+                <div class="player-modal__content">
+                    <h3 id="playerRankingTitle" data-i18n="player_ranking_title">Top 10</h3>
+                    <ol id="playerRankingList"></ol>
+                    <button type="button" id="playerRankingClose" class="player-modal__close" data-i18n="player_ranking_close">Continuar</button>
+                </div>
+            </div>
+        </template>
         <div id="lang-switcher" data-lang-buttons>
         </div>
         <script src="/js/languages.js"></script>
@@ -62,6 +73,7 @@
         <script src = "../../socket.io/socket.io.js"></script>
         <script src = "../../js/libs/jqueryLibrary.js"></script>
         <script src = "../../js/libs/deparam.js"></script>
+        <script src = "../../js/libs/vue.global.prod.js"></script>
         <script src = "../../js/playerGame.js"></script>
     </body>
 </html>

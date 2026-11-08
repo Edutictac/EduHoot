@@ -65,13 +65,24 @@ const ANSWERS = ['Paris', 'Londres', 'Roma', 'Berlín'];
 // Red de seguridad para la Subfase B (Vue): fija el comportamiento actual de
 // /player/game/ (playerGame.js) para comprobar que sigue igual cuando pase a
 // ser una app de Vue. El spec no debe cambiar en esa conversión.
-test('al conectar se une a la partida con los datos de la URL y los botones quedan visibles', async ({ page }) => {
+test('al conectar se une a la partida con los datos de la URL', async ({ page }) => {
     await openGame(page);
     expect(await emitsNamed(page, 'player-join-game')).toEqual([{ pin: '12345', name: 'Ana', icon: 'gat', lang: 'es' }]);
     await expect(page.locator('#nameText')).toHaveText('Nombre:');
     await expect(page.locator('#scoreText')).toHaveText('Puntuación:');
+});
+
+// Cambio deliberado en la conversión a Vue (Subfase B, bloc 1): antes de
+// recibir cualquier pregunta, los botones vacíos se veían (coloreados, sin
+// texto) porque el código antiguo solo tocaba su `display` dentro de
+// updatePlayerAnswerButtons(), que no se llamaba hasta la primera pregunta.
+// Con la visibilidad ahora atada al contenido (vore ARCHITECTURE.md), se
+// quedan ocultos hasta que llega contenido real; nunca llegan a verse así en
+// el juego real, porque el servidor envía la pregunta casi enseguida.
+test('antes de la primera pregunta, los botones de respuesta están ocultos (sin contenido)', async ({ page }) => {
+    await openGame(page);
     for (let i = 1; i <= 4; i++) {
-        await expect(page.locator('#answer' + i)).toBeVisible();
+        await expect(page.locator('#answer' + i)).toBeHidden();
     }
 });
 

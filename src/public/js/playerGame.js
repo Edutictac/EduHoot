@@ -4,27 +4,21 @@ var socket = io({
     reconnectionDelay: 500,
     reconnectionDelayMax: 3000
 });
-var playerAnswered = false;
 var correct = false;
 var name;
 var score = 0;
 var token = null;
 var lastAnswers = [];
-var currentBlindCount = null;
 var rankingTimeout = null;
-var timerTotal = 20;
-var timerLeft = 20;
 var timerInterval = null;
-var currentQuestionType = 'quiz';
-var multiSelections = [];
-var freeControlsReady = false;
 var questionCountdownTimer = null;
-var currentPointsMultiplier = 1;
 var wakeLock = null;
 var questionActive = false;
 var reconnectGraceTimer = null;
 var reconnectGraceMs = 40000;
 var RECONNECT_GRACE_STORAGE_KEY = 'playerReconnectGrace';
+var ANSWER_SHAPE_KEYS = ['shape_triangle', 'shape_diamond', 'shape_circle', 'shape_square'];
+var ANSWER_LETTERS = ['A', 'B', 'C', 'D'];
 
 function tPlayer(key, fallback){
     return window.i18nPlayer ? window.i18nPlayer.t(key) : (fallback || key);
@@ -53,11 +47,6 @@ function formatRichText(value){
     return safe;
 }
 
-function setRichText(el, value){
-    if(!el) return;
-    el.innerHTML = formatRichText(value);
-}
-
 function applyStaticLabels(){
     var nameLabelEl = document.getElementById('nameText');
     var scoreLabelEl = document.getElementById('scoreText');
@@ -67,6 +56,158 @@ function applyStaticLabels(){
     if(scoreLabelEl){
         scoreLabelEl.textContent = tPlayer('score', 'Score:');
     }
+}
+
+// Pregunta, respostes, resposta múltiple/lliure, temporitzador i compte
+// arrere (Subfase B, Vue, bloc 1): tot el que depenia de 156 operacions
+// manuals sobre el DOM ara és estat reactiu. La resta de la pantalla
+// (#stats, #message, #playerRankingModal) encara és HTML/JS estàtic sense
+// tocar dins de la mateixa arrel — Vue mai reescriu un node sense
+// directives, així que el codi de baix que encara els pinta a mà seguix
+// funcionant igual (vore ARCHITECTURE.md).
+var app = Vue.createApp({
+    template: '#player-game-tpl',
+    data: function(){
+        return {
+            questionText: '',
+            answers: [],
+            questionType: 'quiz',
+            blind: false,
+            blindActiveCount: 0,
+            multiSelections: [],
+            playerAnswered: false,
+            answersVisible: true,
+            freeAnswerValue: '',
+            pointsMultiplier: 1,
+            badgeKey: 0,
+            countdownVisible: false,
+            countdownSeconds: 0,
+            timerLeft: 20,
+            timerTotal: 20,
+            answerStatusState: ''
+        };
+    },
+    computed: {
+        questionHtml: function(){
+            return formatRichText(this.questionText);
+        },
+        freeAnswerType: function(){
+            return this.questionType === 'short-answer' || this.questionType === 'numeric';
+        },
+        freeRowVisible: function(){
+            return this.freeAnswerType && !this.playerAnswered && this.answersVisible;
+        },
+        multiRowVisible: function(){
+            return this.questionType === 'multiple' && !this.playerAnswered && this.answersVisible;
+        },
+        freePlaceholder: function(){
+            return this.questionType === 'numeric'
+                ? this.t('numeric_placeholder', 'Introduce un número')
+                : this.t('text_placeholder', 'Escribe tu respuesta');
+        },
+        badgeVisible: function(){
+            var m = Number(this.pointsMultiplier);
+            return Number.isFinite(m) && m > 1;
+        },
+        badgeText: function(){
+            return 'x' + this.pointsMultiplier + ' · ' + this.t('points_double', 'Double points');
+        },
+        answerStatusVisible: function(){
+            return this.answerStatusState === 'pending' || this.answerStatusState === 'submitted';
+        },
+        answerStatusText: function(){
+            return this.answerStatusState === 'submitted'
+                ? this.t('status_submitted', 'Respuesta enviada')
+                : this.t('status_pending', 'Responde ahora');
+        },
+        timerPct: function(){
+            return Math.max(0, Math.min(100, (this.timerLeft / this.timerTotal) * 100));
+        },
+        timerColor: function(){
+            var pct = this.timerPct;
+            if(pct < 35) return 'linear-gradient(135deg, #f97316, #ef4444)';
+            if(pct < 60) return 'linear-gradient(135deg, #facc15, #f97316)';
+            return 'linear-gradient(135deg, #22c55e, #16a34a)';
+        },
+        timerText: function(){
+            return Math.max(0, Math.ceil(this.timerLeft)) + 's';
+        }
+    },
+    methods: {
+        t: function(key, fallback){
+            return tPlayer(key, fallback);
+        },
+        buttonHasContent: function(i){
+            if(this.blind) return i < this.blindActiveCount;
+            var text = this.answers[i];
+            return !!(text && String(text).trim());
+        },
+        buttonVisible: function(i){
+            return this.answersVisible && this.buttonHasContent(i);
+        },
+        buttonHtml: function(i){
+            return this.blind ? '' : formatRichText(this.answers[i] || '');
+        },
+        buttonAriaLabel: function(i){
+            if(!this.blind) return null;
+            var active = i < this.blindActiveCount;
+            return active
+                ? (this.t('answer_option') + ' ' + ANSWER_LETTERS[i] + ': ' + this.t(ANSWER_SHAPE_KEYS[i]))
+                : '';
+        },
+        isMultiSelected: function(num){
+            return this.multiSelections.indexOf(num) !== -1;
+        },
+        onAnswerClick: function(num){
+            if(this.questionType === 'multiple'){
+                this.toggleMultiAnswer(num);
+                return;
+            }
+            if(this.freeAnswerType) return;
+            this.submitAnswer(num);
+        },
+        toggleMultiAnswer: function(num){
+            if(this.playerAnswered) return;
+            var idx = this.multiSelections.indexOf(num);
+            if(idx === -1){
+                this.multiSelections.push(num);
+            }else{
+                this.multiSelections.splice(idx, 1);
+            }
+        },
+        submitMultiAnswers: function(){
+            if(this.playerAnswered || !this.multiSelections.length) return;
+            this.submitAnswer(this.multiSelections.slice());
+        },
+        submitFree: function(){
+            if(this.playerAnswered) return;
+            if(!this.freeAnswerType) return;
+            var raw = (this.freeAnswerValue || '').toString();
+            if(this.questionType === 'numeric'){
+                this.submitAnswer({ number: raw });
+            }else{
+                this.submitAnswer({ text: raw });
+            }
+        },
+        submitAnswer: function(payload){
+            if(this.playerAnswered) return;
+            this.playerAnswered = true;
+            socket.emit('playerAnswer', payload);
+            this.answersVisible = false;
+            this.multiSelections = [];
+            this.answerStatusState = 'submitted';
+            showSubmittedMessage();
+        }
+    }
+}).mount('#player-game');
+
+// El missatge gran (#message) encara és estàtic (bloc 2, pendent): ací es
+// pinta a mà igual que abans, encara que l'enviament ja ix d'un mètode de Vue.
+function showSubmittedMessage(){
+    var msgEl = document.getElementById('message');
+    if(!msgEl) return;
+    msgEl.style.display = 'block';
+    msgEl.textContent = tPlayer('submitted', 'Answer Submitted! Waiting on other players...');
 }
 
 var params = jQuery.deparam(window.location.search); //Gets the id from url
@@ -267,11 +408,8 @@ socket.on('connect', function() {
     persistJoinState();
     //Tell server that it is host connection from game view
     emitJoin();
-    
-    document.getElementById('answer1').style.visibility = "visible";
-    document.getElementById('answer2').style.visibility = "visible";
-    document.getElementById('answer3').style.visibility = "visible";
-    document.getElementById('answer4').style.visibility = "visible";
+
+    app.answersVisible = true;
 
     // Hide language switcher once in game view
     var langSw = document.getElementById('lang-switcher');
@@ -281,11 +419,6 @@ socket.on('connect', function() {
     clearReconnectGrace();
     if(questionActive){
         requestWakeLock();
-    }
-
-    if(!freeControlsReady){
-        setupFreeAnswerControls();
-        freeControlsReady = true;
     }
 });
 
@@ -312,26 +445,20 @@ socket.on('hostReconnecting', function(){
 
 socket.on('hostReconnected', function(){
     var msg = document.getElementById('message');
-    if(msg && !playerAnswered){
+    if(msg && !app.playerAnswered){
         msg.style.display = "none";
         msg.textContent = '';
     }
 });
 
 socket.on('noGameFound', function(){
-    window.location.href = '../../';//Redirect user to 'join game' page 
+    window.location.href = '../../';//Redirect user to 'join game' page
 });
 
 function restoreAnswerControlsAfterReject(messageText){
-    playerAnswered = false;
-    for(var i = 1; i <= 4; i++){
-        var el = document.getElementById('answer' + i);
-        if(el){
-            el.style.visibility = 'visible';
-        }
-    }
-    updatePlayerAnswerButtons(lastAnswers || [], currentQuestionType, currentBlindCount === null ? undefined : currentBlindCount);
-    setAnswerStatus('pending');
+    app.playerAnswered = false;
+    app.answersVisible = true;
+    app.answerStatusState = 'pending';
     var msg = document.getElementById('message');
     if(msg){
         msg.style.display = 'block';
@@ -346,183 +473,6 @@ socket.on('tooManyAnswers', function(){
 socket.on('answerRejected', function(){
     restoreAnswerControlsAfterReject('La pregunta ya no estaba activa. Vuelve a intentar en cuanto aparezca la siguiente.');
 });
-
-function updateMultiSubmitVisibility(){
-    var row = document.getElementById('multiSubmitRow');
-    if(!row) return;
-    row.style.display = (currentQuestionType === 'multiple' && !playerAnswered) ? 'flex' : 'none';
-}
-
-function isFreeAnswerType(){
-    return currentQuestionType === 'short-answer' || currentQuestionType === 'numeric';
-}
-
-function updateFreeSubmitVisibility(){
-    var row = document.getElementById('freeSubmitRow');
-    if(!row) return;
-    row.style.display = (isFreeAnswerType() && !playerAnswered) ? 'flex' : 'none';
-}
-
-function updatePlayerPointsBadge(multiplier){
-    var badge = document.getElementById('playerPointsBadge');
-    if(!badge) return;
-    var m = Number(multiplier);
-    if(!Number.isFinite(m) || m <= 1){
-        badge.style.display = 'none';
-        badge.textContent = '';
-        badge.classList.remove('points-badge-pop');
-        return;
-    }
-    badge.textContent = 'x' + m + ' · ' + tPlayer('points_double', 'Double points');
-    badge.style.display = 'inline-flex';
-    badge.classList.remove('points-badge-pop');
-    void badge.offsetWidth; // reinicia la animación aunque el badge ya estuviera visible
-    badge.classList.add('points-badge-pop');
-}
-
-function setupFreeAnswerControls(){
-    var input = document.getElementById('freeAnswerInput');
-    var btn = document.getElementById('freeSubmitBtn');
-    if(!input || !btn) return;
-
-    btn.textContent = tPlayer('submit_free', 'Enviar');
-
-    btn.addEventListener('click', function(){
-        if(playerAnswered) return;
-        if(!isFreeAnswerType()) return;
-        var raw = (input.value || '').toString();
-        if(currentQuestionType === 'numeric'){
-            submitAnswerPayload({ number: raw });
-        }else{
-            submitAnswerPayload({ text: raw });
-        }
-    });
-
-    input.addEventListener('keydown', function(ev){
-        if(ev.key === 'Enter'){
-            ev.preventDefault();
-            btn.click();
-        }
-    });
-}
-
-function updateMultiSelectionStyles(){
-    for(var i = 1; i <= 4; i++){
-        var btn = document.getElementById('answer' + i);
-        if(!btn) continue;
-        if(multiSelections.indexOf(i) !== -1){
-            btn.classList.add('multi-selected');
-        }else{
-            btn.classList.remove('multi-selected');
-        }
-    }
-}
-
-function toggleMultiAnswer(num){
-    if(playerAnswered) return;
-    if(currentQuestionType !== 'multiple') return;
-    var idx = multiSelections.indexOf(num);
-    if(idx === -1){
-        multiSelections.push(num);
-    }else{
-        multiSelections.splice(idx, 1);
-    }
-    updateMultiSelectionStyles();
-    updateMultiSubmitVisibility();
-}
-
-function hidePlayerOptionsAfterSubmit(){
-    for(var i = 1; i <= 4; i++){
-        var el = document.getElementById('answer' + i);
-        if(el) el.style.visibility = "hidden";
-    }
-    var msgEl = document.getElementById('message');
-    if(msgEl){
-        msgEl.style.display = "block";
-        var submitted = window.i18nPlayer ? window.i18nPlayer.t('submitted') : "Answer Submitted! Waiting on other players...";
-        msgEl.textContent = submitted;
-    }
-    setAnswerStatus('submitted');
-    var multiRow = document.getElementById('multiSubmitRow');
-    if(multiRow) multiRow.style.display = 'none';
-    var freeRow = document.getElementById('freeSubmitRow');
-    if(freeRow) freeRow.style.display = 'none';
-    multiSelections = [];
-    updateMultiSelectionStyles();
-}
-
-function submitAnswerPayload(payload){
-    if(playerAnswered) return;
-    playerAnswered = true;
-    socket.emit('playerAnswer', payload);
-    hidePlayerOptionsAfterSubmit();
-}
-
-function submitMultiAnswers(){
-    if(playerAnswered || !multiSelections.length) return;
-    submitAnswerPayload(multiSelections.slice());
-}
-
-var ANSWER_SHAPE_KEYS = ['shape_triangle', 'shape_diamond', 'shape_circle', 'shape_square'];
-var ANSWER_LETTERS = ['A', 'B', 'C', 'D'];
-
-function updatePlayerAnswerButtons(answers, type, blindCount){
-    currentQuestionType = type || 'quiz';
-    multiSelections = [];
-    updateMultiSelectionStyles();
-
-    var freeInput = document.getElementById('freeAnswerInput');
-    if(freeInput){
-        freeInput.value = '';
-        if(currentQuestionType === 'numeric'){
-            freeInput.type = 'text';
-            freeInput.inputMode = 'decimal';
-            freeInput.placeholder = tPlayer('numeric_placeholder', 'Introduce un número');
-        }else{
-            freeInput.type = 'text';
-            freeInput.inputMode = 'text';
-            freeInput.placeholder = tPlayer('text_placeholder', 'Escribe tu respuesta');
-        }
-    }
-
-    var isBlind = typeof blindCount === 'number';
-    for(var i = 1; i <= 4; i++){
-        var btn = document.getElementById('answer' + i);
-        if(!btn) continue;
-        if(isBlind){
-            setRichText(btn, '');
-            var active = i <= blindCount;
-            btn.style.display = (!isFreeAnswerType() && active) ? 'inline-block' : 'none';
-            btn.style.visibility = 'visible';
-            btn.setAttribute('aria-label', active
-                ? (tPlayer('answer_option') + ' ' + ANSWER_LETTERS[i - 1] + ': ' + tPlayer(ANSWER_SHAPE_KEYS[i - 1]))
-                : '');
-        }else{
-            var text = answers[i - 1] || '';
-            setRichText(btn, text);
-            btn.style.display = (!isFreeAnswerType() && text && text.trim()) ? 'inline-block' : 'none';
-            btn.style.visibility = 'visible';
-            btn.removeAttribute('aria-label');
-        }
-    }
-    var submitBtn = document.getElementById('multiSubmitBtn');
-    if(submitBtn){
-        submitBtn.textContent = tPlayer('submit_multiple') || 'Submit answers';
-    }
-    updateMultiSubmitVisibility();
-    updateFreeSubmitVisibility();
-}
-
-function answerSubmitted(num){
-    if(currentQuestionType === 'multiple'){
-        toggleMultiAnswer(num);
-        return;
-    }
-    if(isFreeAnswerType()){
-        return;
-    }
-    submitAnswerPayload(num);
-}
 
 //Get results on last question
 socket.on('answerResult', function(data){
@@ -562,10 +512,7 @@ socket.on('questionOver', function(playerData, payload){
     questionActive = false;
     releaseWakeLock();
     setMedia(null, null);
-    var multiRow = document.getElementById('multiSubmitRow');
-    if(multiRow) multiRow.style.display = 'none';
-    var freeRow = document.getElementById('freeSubmitRow');
-    if(freeRow) freeRow.style.display = 'none';
+    app.answersVisible = false;
     if(correct === 'poll' || (payload && payload.type === 'poll')){
         document.body.style.backgroundColor = '#607d8b';
         var pollMessage = document.getElementById('message');
@@ -620,11 +567,7 @@ socket.on('questionOver', function(playerData, payload){
             messageEl.appendChild(detailEl);
         }
     }
-    setAnswerStatus('over');
-    document.getElementById('answer1').style.visibility = "hidden";
-    document.getElementById('answer2').style.visibility = "hidden";
-    document.getElementById('answer3').style.visibility = "hidden";
-    document.getElementById('answer4').style.visibility = "hidden";
+    app.answerStatusState = '';
     updatePlayerRank(playerData);
     stopTimer();
     if(rankingTimeout){
@@ -643,21 +586,15 @@ socket.on('newScore', function(data){
 
 socket.on('nextQuestionPlayer', function(){
     correct = false;
-    playerAnswered = false;
+    app.playerAnswered = false;
     if(rankingTimeout){
         clearTimeout(rankingTimeout);
         rankingTimeout = null;
     }
-    currentQuestionType = 'quiz';
-    multiSelections = [];
-    updateMultiSelectionStyles();
-    updateMultiSubmitVisibility();
-    updateFreeSubmitVisibility();
-    
-    document.getElementById('answer1').style.visibility = "visible";
-    document.getElementById('answer2').style.visibility = "visible";
-    document.getElementById('answer3').style.visibility = "visible";
-    document.getElementById('answer4').style.visibility = "visible";
+    app.questionType = 'quiz';
+    app.multiSelections = [];
+    app.answersVisible = true;
+
     document.getElementById('message').style.display = "none";
     document.body.style.backgroundColor = "white";
     document.getElementById('rankText').textContent = '';
@@ -665,8 +602,7 @@ socket.on('nextQuestionPlayer', function(){
     hidePlayerRanking();
     stopTimer();
     resetTimer();
-    setAnswerStatus('pending');
-    
+    app.answerStatusState = 'pending';
 });
 
 socket.on('hostDisconnect', function(){
@@ -694,27 +630,7 @@ function clearQuestionCountdown(){
         clearInterval(questionCountdownTimer);
         questionCountdownTimer = null;
     }
-    var countdownEl = document.getElementById('questionCountdown');
-    if(countdownEl){
-        countdownEl.classList.remove('is-visible', 'is-ticking');
-        countdownEl.setAttribute('aria-hidden', 'true');
-    }
-}
-
-function renderQuestionCountdown(seconds){
-    var countdownEl = document.getElementById('questionCountdown');
-    var labelEl = document.getElementById('questionCountdownLabel');
-    var hintEl = document.getElementById('questionCountdownHint');
-    var numberEl = document.getElementById('questionCountdownNumber');
-    if(labelEl) labelEl.textContent = tPlayer('question_countdown', 'Prepara la siguiente pregunta...');
-    if(hintEl) hintEl.textContent = tPlayer('question_countdown_hint', 'La siguiente empieza en');
-    if(numberEl) numberEl.textContent = seconds > 0 ? String(seconds) : '';
-    if(countdownEl){
-        countdownEl.classList.remove('is-ticking');
-        void countdownEl.offsetWidth;
-        countdownEl.classList.add('is-visible', 'is-ticking');
-        countdownEl.setAttribute('aria-hidden', seconds > 0 ? 'false' : 'true');
-    }
+    app.countdownVisible = false;
 }
 
 function showQuestionCountdown(data){
@@ -723,40 +639,28 @@ function showQuestionCountdown(data){
     releaseWakeLock();
     stopTimer();
     setMedia(null, null);
-    playerAnswered = true;
+    app.playerAnswered = true;
     correct = false;
-    currentQuestionType = 'quiz';
-    currentPointsMultiplier = 1;
-    updatePlayerPointsBadge(1);
-    multiSelections = [];
-    updateMultiSelectionStyles();
-    for(var i = 1; i <= 4; i++){
-        var btn = document.getElementById('answer' + i);
-        if(btn){
-            btn.style.visibility = 'hidden';
-            btn.style.display = 'none';
-        }
-    }
-    var multiRow = document.getElementById('multiSubmitRow');
-    if(multiRow) multiRow.style.display = 'none';
-    var freeRow = document.getElementById('freeSubmitRow');
-    if(freeRow) freeRow.style.display = 'none';
+    app.questionType = 'quiz';
+    app.pointsMultiplier = 1;
+    app.multiSelections = [];
+    app.answersVisible = false;
 
     var seconds = Math.max(0, Math.ceil(Number(data && data.seconds) || 0));
-    var questionEl = document.getElementById('questionText');
+    app.questionText = '';
     var msg = document.getElementById('message');
-    if(questionEl) questionEl.textContent = '';
     if(msg){
         msg.style.display = 'block';
         msg.textContent = '';
     }
-    setAnswerStatus('pending');
+    app.answerStatusState = 'pending';
     function render(){
         if(seconds <= 0){
             clearQuestionCountdown();
             return;
         }
-        renderQuestionCountdown(seconds);
+        app.countdownVisible = true;
+        app.countdownSeconds = seconds;
         seconds -= 1;
     }
     render();
@@ -769,7 +673,7 @@ socket.on('playerQuestion', function(data){
     clearQuestionCountdown();
     questionActive = true;
     requestWakeLock();
-    playerAnswered = false;
+    app.playerAnswered = false;
     correct = false;
     document.body.style.backgroundColor = "#FFFFFF";
     var msg = document.getElementById('message');
@@ -777,26 +681,27 @@ socket.on('playerQuestion', function(data){
         msg.style.display = "none";
         msg.textContent = '';
     }
+    app.questionText = data.blind ? tPlayer('blind_hint', 'Mira la pantalla para ver la pregunta') : (data.question || '');
+    app.pointsMultiplier = Number(data && data.pointsMultiplier) > 1 ? Number(data.pointsMultiplier) : 1;
+    if(app.pointsMultiplier > 1) app.badgeKey += 1;
+    app.questionType = data.type || 'quiz';
+    app.multiSelections = [];
+    app.freeAnswerValue = '';
     if(data.blind){
-        setRichText(document.getElementById('questionText'), tPlayer('blind_hint', 'Mira la pantalla para ver la pregunta'));
-    }else if(data.question){
-        setRichText(document.getElementById('questionText'), data.question);
-    }
-    currentPointsMultiplier = Number(data && data.pointsMultiplier) > 1 ? Number(data.pointsMultiplier) : 1;
-    updatePlayerPointsBadge(currentPointsMultiplier);
-    if(data.blind){
-        currentBlindCount = Math.max(0, Number(data.answerCount) || 0);
-        updatePlayerAnswerButtons([], data.type, currentBlindCount);
+        app.blind = true;
+        app.blindActiveCount = Math.max(0, Number(data.answerCount) || 0);
+        app.answers = [];
         lastAnswers = [];
     }else{
-        currentBlindCount = null;
-        updatePlayerAnswerButtons(data.answers || [], data.type);
+        app.blind = false;
+        app.blindActiveCount = 0;
+        app.answers = (data.answers || []).slice(0, 4);
         lastAnswers = (data.answers || []).slice(0, 4);
     }
     if(typeof data.time === 'number'){
-        timerTotal = Math.max(5, Math.min(120, data.time));
+        app.timerTotal = Math.max(5, Math.min(120, data.time));
     }else{
-        timerTotal = 20;
+        app.timerTotal = 20;
     }
     resetTimer();
     if(!data.blind){
@@ -804,10 +709,9 @@ socket.on('playerQuestion', function(data){
     }
 
     if(data && (data.type === 'short-answer' || data.type === 'numeric')){
-        var freeInput = document.getElementById('freeAnswerInput');
-        if(freeInput && !playerAnswered){
-            try{ freeInput.focus(); }catch(e){}
-        }
+        Vue.nextTick(function(){
+            try{ app.$refs.freeAnswerInput.focus(); }catch(e){}
+        });
     }
 });
 
@@ -815,17 +719,10 @@ socket.on('GameOver', function(){
     questionActive = false;
     releaseWakeLock();
     document.body.style.backgroundColor = "#FFFFFF";
-    document.getElementById('answer1').style.visibility = "hidden";
-    document.getElementById('answer2').style.visibility = "hidden";
-    document.getElementById('answer3').style.visibility = "hidden";
-    document.getElementById('answer4').style.visibility = "hidden";
-    var multiRow = document.getElementById('multiSubmitRow');
-    if(multiRow) multiRow.style.display = 'none';
-    var freeRow = document.getElementById('freeSubmitRow');
-    if(freeRow) freeRow.style.display = 'none';
+    app.answersVisible = false;
     document.getElementById('message').style.display = "block";
     document.getElementById('message').textContent = window.i18nPlayer ? window.i18nPlayer.t('game_over') : "GAME OVER";
-    updatePlayerPointsBadge(1);
+    app.pointsMultiplier = 1;
 });
 
 function normalizeSvgDataUrlForImg(url){
@@ -967,19 +864,16 @@ if(playerRankingClose){
 
 socket.on('time', function(data){
     if(typeof data.time === 'number'){
-        timerLeft = Math.max(0, Math.min(timerTotal, data.time));
-        updateTimerUi();
+        app.timerLeft = Math.max(0, Math.min(app.timerTotal, data.time));
     }
 });
 
 function resetTimer(){
-    timerLeft = timerTotal;
-    updateTimerUi();
+    app.timerLeft = app.timerTotal;
     if(timerInterval) clearInterval(timerInterval);
     timerInterval = setInterval(function(){
-        if(timerLeft > 0){
-            timerLeft -= 1;
-            updateTimerUi();
+        if(app.timerLeft > 0){
+            app.timerLeft -= 1;
         }
     }, 1000);
 }
@@ -988,39 +882,6 @@ function stopTimer(){
     if(timerInterval){
         clearInterval(timerInterval);
         timerInterval = null;
-    }
-}
-
-function updateTimerUi(){
-    var bar = document.getElementById('playerTimerFill');
-    var txt = document.getElementById('playerTimerText');
-    var pct = Math.max(0, Math.min(100, (timerLeft / timerTotal) * 100));
-    if(bar){
-        bar.style.width = pct + '%';
-        if(pct < 35){
-            bar.style.background = 'linear-gradient(135deg, #f97316, #ef4444)';
-        }else if(pct < 60){
-            bar.style.background = 'linear-gradient(135deg, #facc15, #f97316)';
-        }else{
-            bar.style.background = 'linear-gradient(135deg, #22c55e, #16a34a)';
-        }
-    }
-    if(txt){
-        txt.textContent = Math.max(0, Math.ceil(timerLeft)) + 's';
-    }
-}
-
-function setAnswerStatus(state){
-    var statusEl = document.getElementById('playerAnswerStatus');
-    if(!statusEl) return;
-    if(state === 'submitted'){
-        statusEl.textContent = (window.i18nPlayer && window.i18nPlayer.t('status_submitted')) || 'Respuesta enviada';
-        statusEl.classList.remove('hidden');
-    }else if(state === 'pending'){
-        statusEl.textContent = (window.i18nPlayer && window.i18nPlayer.t('status_pending')) || 'Responde ahora';
-        statusEl.classList.remove('hidden');
-    }else{
-        statusEl.classList.add('hidden');
     }
 }
 
