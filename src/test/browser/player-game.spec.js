@@ -276,6 +276,25 @@ test('nextQuestionPlayer limpia el resultado anterior, y luego se ve la cuenta a
     }
 });
 
+// Caso real de la primera pregunta de cada partida (sockets/gameHelpers.js:
+// scheduleQuestionCountdown + startCurrentQuestion): el servidor nunca manda
+// nextQuestionPlayer antes de la pregunta 1, solo questionCountdown y luego
+// playerQuestion. Encontrado jugando una partida real contra el contenedor
+// de dev: sin este caso, los botones se quedaban ocultos en toda la primera
+// pregunta (ninguna de las otras pruebas pasa primero por un countdown).
+test('primera pregunta de la partida: tras el countdown (sin nextQuestionPlayer antes), los botones se ven', async ({ page }) => {
+    await openGame(page);
+    await serverEmit(page, 'questionCountdown', { seconds: 3 });
+    for (let i = 1; i <= 4; i++) {
+        await expect(page.locator('#answer' + i)).toBeHidden();
+    }
+
+    await serverEmit(page, 'playerQuestion', { question: 'Q1', answers: ANSWERS, type: 'quiz', time: 15 });
+    for (let i = 1; i <= 4; i++) {
+        await expect(page.locator('#answer' + i)).toBeVisible();
+    }
+});
+
 test('GameOver: muestra el mensaje final y oculta los controles de respuesta', async ({ page }) => {
     await openGame(page);
     await serverEmit(page, 'playerQuestion', { question: 'Última', answers: ANSWERS, type: 'quiz', time: 15 });

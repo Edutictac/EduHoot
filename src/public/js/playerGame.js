@@ -662,6 +662,11 @@ socket.on('playerQuestion', function(data){
     app.questionType = data.type || 'quiz';
     app.multiSelections = [];
     app.freeAnswerValue = '';
+    // updatePlayerAnswerButtons() original sempre tornava visibility='visible'
+    // als 4 botons en pintar qualsevol pregunta (a cegues o no) — sense això,
+    // la primera pregunta de cada partida es queda invisible (l'únic cas on
+    // no hi ha un nextQuestionPlayer/connect previ que ja ho faça).
+    app.answersVisible = true;
     if(data.blind){
         app.blind = true;
         app.blindActiveCount = Math.max(0, Number(data.answerCount) || 0);
