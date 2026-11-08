@@ -297,6 +297,27 @@ consulta `GET /api/version` (`src/server/server.js:183`, versió de
   `syncCentralSession`, `applyCentralSession`), amb una clau de
   `sessionStorage` pròpia (`eduh_auth_bridge_admin`) perquè no interferisca
   amb la de `/create/`.
+- La **CSP** (*Content Security Policy*) està desactivada
+  (`contentSecurityPolicy: false`, `src/server/server.js:178`); Helmet
+  només posa la resta de capçaleres. Activar-la afegiria una segona
+  barrera contra XSS: si algun `innerHTML` deixa passar text d'usuari
+  (noms de jugador, quizzes importats), el navegador no executaria el
+  codi injectat ni enviaria dades a dominis no permesos. Seguiment en
+  la [issue #20](https://github.com/Edutictac/EduHoot/issues/20).
+  - **Requisit**: passar a `addEventListener` els 23 atributs `on…=`
+    dels HTML (15 `onclick`, p. ex. `startGame()` en `host/index.html`,
+    i 8 `onerror` del widget de Commons). Sense això caldria
+    `'unsafe-inline'` en els scripts, que anul·la quasi tota la
+    protecció. En els estils, `'unsafe-inline'` sí és acceptable.
+  - **Orígens a permetre hui**: `cdn.jsdelivr.net` (llibreries de
+    `/create/`), `commons.edutictac.es` (widget i API),
+    `www.youtube-nocookie.com` (vídeos) i imatges `https:`/`data:` (QR,
+    miniatures, quizzes).
+  - **Com**: primer amb `reportOnly: true` en dev i stage (només avisa
+    en la consola, no bloqueja), després en mode real.
+  - **Vue** (Subfase B de `docs/MIGRATING.md`): el seu compilador de
+    plantilles necessita també `'unsafe-eval'`. Risc baix mentre les
+    plantilles no continguen text d'usuari.
 
 ## Unió a la partida: nom i icona del jugador
 

@@ -327,6 +327,9 @@ Com s'integraria, sense build step:
 - La lògica que hui ja existix (crides `fetch` als endpoints, listeners
   de Socket.IO) es mou als mateixos mòduls que ja proposa la Subfase A
   — no se'n creen de nous només pel canvi de framework.
+- Compilar les plantilles en el navegador necessita `'unsafe-eval'` si
+  algun dia s'activa la CSP (hui està desactivada; vore `ARCHITECTURE.md`
+  → "Deute tècnic conegut").
 
 Per a que es puga comparar directament amb la Subfase A, l'arbre
 d'ací baix manté **exactament els mateixos fitxers i la mateixa forma**
