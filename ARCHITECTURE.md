@@ -265,6 +265,66 @@ una app de Vue 3 (Options API) sense build step.
   errors es guarden per clau perquè canvien d'idioma amb la resta.
 - **Proves**: `src/test/browser/host-lobby.spec.js`, amb un Socket.IO fals.
 
+### Pantalla de joc de l'alumnat amb Vue
+
+Segona pantalla de la Subfase B: `/player/game/`
+(`src/public/js/playerGame.js`), feta en dos blocs (un commit cada un).
+A diferència del lobby de l'amfitrió, ací **tota la pàgina** és l'arrel
+de Vue (`<div id="player-game">` + `<template id="player-game-tpl">`
+en `src/public/player/game/index.html`); només `#lang-switcher` queda
+fora (es oculta just en connectar).
+
+- **Bloc 1**: pregunta, respostes (normal/múltiple/a cegues), resposta
+  lliure, temporitzador i compte arrere.
+- **Bloc 2**: nom/icona/puntuació/rànquing (`#stats`), el missatge gran
+  de resultat (`#message`, amb el detall de la resposta correcta via
+  `v-html`) i el modal de rànquing.
+- **`#stats`, `#message` i `#playerRankingModal` van dins de la mateixa
+  arrel des del bloc 1**, com a HTML estàtic sense directives de Vue:
+  Vue mai torna a tocar un node sense bindings encara que la resta del
+  component es repinte, així que el codi (encara imperatiu, fins al
+  bloc 2) que els pintava a mà seguia funcionant igual mentre no
+  s'afegien els bindings. Açò va permetre fer els dos blocs sense
+  moure ni duplicar l'arrel.
+- **`document.body.style.backgroundColor` (el flaix de color en
+  encertar/fallar) i el `wakeLock`/temporitzadors d'interval queden
+  fora de Vue**, com a crides directes dins dels mètodes/handlers de
+  Socket.IO — mateix patró que `host.js` amb l'àudio del gong.
+- **Visibilitat dels botons de resposta**: un únic booleà
+  (`answersVisible`) substituïx les dos propietats CSS que tocava el
+  codi antic (`style.visibility` i `style.display`) als mateixos punts
+  (connectar, pregunta nova, enviar resposta, resultat, `GameOver`,
+  compte arrere). **Important**: `playerQuestion` l'ha de tornar a
+  `true` sempre (a cegues o no) — és l'únic cas (la primera pregunta de
+  cada partida) on no hi ha un `connect`/`nextQuestionPlayer` previ que
+  ja ho faça; oblidar-ho va deixar la primera pregunta de cada partida
+  sense botons visibles, trobat jugant una partida real contra el
+  contenidor de dev (vore `test/browser/player-game.spec.js`, cas
+  "primera pregunta de la partida").
+- **`showMessage()`/`hideMessage()`**: el codi antic feia
+  `messageEl.textContent = X`, que esborra qualsevol `<span>` afegit
+  abans amb `appendChild` (el detall de "Resposta correcta: ..."). Els
+  dos helpers repliquen eixe mateix esborrat (`messageDetailHtml = ''`)
+  cada vegada que canvia el text, per no deixar un detall ranci visible.
+- **Compte arrere i insígnia de punts dobles**: en lloc del truc manual
+  de `classList.remove/add` + reflow per a repetir l'animació CSS cada
+  segon, es fa amb `:key` sobre el node que porta l'animació (Vue el
+  recrea i el navegador la reprodueix en inserir-se). Només la part
+  interna que fa l'efecte de "tic" (el rellotge) es recrea; el
+  contenidor exterior (la lluentor contínua de fons) no, perquè no es
+  talle.
+- **Tipus de pregunta provats en una partida real**: `quiz` i
+  `multiple`, en mode normal i a cegues. `short-answer`/`numeric` no
+  s'han pogut provar amb una partida real de "Jugar a l'aula": el
+  servidor les filtra sempre (vore "Deute tècnic conegut" →
+  [issue #24](https://github.com/Edutictac/EduHoot/issues/24)), així
+  que avui només hi arriben en mode Solo. El seu codi a
+  `playerGame.js` queda verificat pel Socket.IO fals de l'spec, no per
+  una partida real.
+- **Proves**: `src/test/browser/player-game.spec.js`, amb un Socket.IO
+  fals que admet diversos arguments per esdeveniment (p. ex.
+  `questionOver(playerData, payload)`).
+
 ## Distintiu visual d'entorn (dev/stage)
 
 Per a no confondre un entorn de desenvolupament o stage amb producció,
@@ -351,10 +411,11 @@ consulta `GET /api/version` (`src/server/server.js:183`, versió de
   (noms de jugador, quizzes importats), el navegador no executaria el
   codi injectat ni enviaria dades a dominis no permesos. Seguiment en
   la [issue #20](https://github.com/Edutictac/EduHoot/issues/20).
-  - **Requisit**: passar a `addEventListener` els 22 atributs `on…=`
-    dels HTML (14 `onclick`, p. ex. `endGame()` en `host/index.html`,
-    i 8 `onerror` del widget de Commons). Sense això caldria
-    `'unsafe-inline'` en els scripts, que anul·la quasi tota la
+  - **Requisit**: passar a `addEventListener` els 17 atributs `on…=`
+    que queden (9 `onclick`, p. ex. `endGame()` en `host/index.html`,
+    i 8 `onerror` del widget de Commons; `player/game/index.html` ja no
+    en té cap, convertits a `@click` de Vue en la Subfase B). Sense açò
+    caldria `'unsafe-inline'` en els scripts, que anul·la quasi tota la
     protecció. En els estils, `'unsafe-inline'` sí és acceptable.
   - **Orígens a permetre hui**: `cdn.jsdelivr.net` (llibreries de
     `/create/`), `commons.edutictac.es` (widget i API),
@@ -362,9 +423,31 @@ consulta `GET /api/version` (`src/server/server.js:183`, versió de
     miniatures, quizzes).
   - **Com**: primer amb `reportOnly: true` en dev i stage (només avisa
     en la consola, no bloqueja), després en mode real.
-  - **Vue**: el lobby de `/host/` ja l'usa, i el seu compilador de
-    plantilles necessita també `'unsafe-eval'`. Risc baix mentre les
-    plantilles no continguen text d'usuari.
+  - **Vue**: el lobby de `/host/` i la pantalla de joc de `/player/game/`
+    ja l'usen, i el seu compilador de plantilles necessita també
+    `'unsafe-eval'`. Risc baix mentre les plantilles no continguen text
+    d'usuari.
+- **Reconnexió trencada a `/player/game/` després de la primera**
+  (trobat provant en real la Subfase B de `playerGame.js`, 2026-11-08;
+  [issue #23](https://github.com/Edutictac/EduHoot/issues/23)):
+  `Players.tokens` (`src/server/utils/players.js:3,8-11,25-29`) guarda
+  `{hostId, playerId}` quan es crea el jugador i mai s'actualitza quan
+  `playerId` canvia en una reconnexió posterior (`player.playerId =
+  socket.id` a `sockets/playerEvents.js`, als tres llocs on es
+  reassigna). `getByToken()` seguix buscant pel `playerId` antic, que ja
+  no coincidix amb cap jugador, així que la segona reconnexió (p. ex.
+  recarregar la pestanya una segona vegada) rep `noGameFound` i torna a
+  la portada. La primera reconnexió (el pas de `/player/` a
+  `/player/game/`) funciona per casualitat: encara no s'havia reassignat
+  `playerId` quan es consulta. No és cosa de la Subfase B (Vue): el
+  mateix passaria amb el codi anterior.
+- **`short-answer`/`numeric` sempre filtrades de "Jugar a l'aula"**
+  ([issue #24](https://github.com/Edutictac/EduHoot/issues/24)):
+  `isMultiplayerFreeTypeQuestion` les lleva dos vegades (en crear la
+  partida, `hostEvents.js:80`, i en `buildQuestions`,
+  `gameHelpers.js:159`), encara que `playerGame.js`/`hostGame.js` tenen
+  codi per a pintar-les. Pot ser intencionat o un oblit; pendent de
+  decidir.
 
 ## Unió a la partida: nom i icona del jugador
 

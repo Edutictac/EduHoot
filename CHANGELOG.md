@@ -28,6 +28,10 @@ fitxers corresponents, i els originals es van eliminar.
   [`docs/MIGRATING.md`](docs/MIGRATING.md). Funciona igual que abans; Vue
   s'inclou en el propi repositori perquè la pàgina funcione sense
   connexió.
+- La pantalla de joc de l'alumnat (`/player/game/`) també és ara una app
+  de Vue 3, seguint el mateix patró: pregunta, respostes, temporitzador,
+  compte arrere, nom/puntuació/rànquing i missatges de resultat. Funciona
+  igual que abans.
 
 ### Corregit
 - En canviar d'idioma en el lobby de `/host/`, l'error visible (p. ex.
