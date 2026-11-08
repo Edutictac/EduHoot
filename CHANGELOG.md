@@ -32,6 +32,11 @@ fitxers corresponents, i els originals es van eliminar.
   de Vue 3, seguint el mateix patró: pregunta, respostes, temporitzador,
   compte arrere, nom/puntuació/rànquing i missatges de resultat. Funciona
   igual que abans.
+- La pantalla de joc de l'amfitrió (`/host/game/`) també és ara una app
+  de Vue 3: pregunta, respostes, temporitzador, comptador de jugadors,
+  insígnia de punts dobles, compte arrere, modal de resultats i
+  rànquing, celebració de grup i fi de partida. Funciona igual que
+  abans.
 
 ### Corregit
 - En canviar d'idioma en el lobby de `/host/`, l'error visible (p. ex.
@@ -41,6 +46,9 @@ fitxers corresponents, i els originals es van eliminar.
   si tot l'alumnat responia de seguida es quedava en «20» encara que el
   temps per pregunta fora un altre
   ([#21](https://github.com/Edutictac/EduHoot/issues/21)).
+- A la pantalla de l'amfitrió (`/host/game/`), el comptador «Han
+  respost X / Y» es quedava ocult per sempre a partir de la segona
+  pregunta, i no es podia saltar la primera pregunta de cada partida.
 
 ## [1.1.0] - 2026-11-07
 

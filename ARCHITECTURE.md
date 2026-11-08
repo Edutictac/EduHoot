@@ -325,6 +325,55 @@ fora (es oculta just en connectar).
   fals que admet diversos arguments per esdeveniment (p. ex.
   `questionOver(playerData, payload)`).
 
+### Pantalla de joc de l'amfitrió amb Vue
+
+Tercera pantalla de la Subfase B: `/host/game/`
+(`src/public/js/hostGame.js`), mateix patró que `/player/game/` (tota
+la pàgina és l'arrel de Vue, dos blocs, un commit cada un).
+
+- **Bloc 1**: pregunta, respostes (amb el ressaltat de correcta/
+  incorrecta), temporitzador, comptador "Han respost X/Y", insígnia de
+  punts dobles i compte arrere. A diferència de `/player/game/`,
+  canviar d'idioma ací **no recarrega la pàgina** (`setLang()` només
+  repinta), així que cal un camp `lang` reactiu i un mètode `t()` que
+  en depenga — mateix patró que `lobby` a `host.js`. Només els textos
+  que ja canviaven en calent abans de Vue (botons saltar/següent/
+  mostra-rànquing, l'etiqueta "Temps restant:", el compte arrere) s'han
+  fet reactius a `lang`; la resta (número de pregunta, comptador de
+  jugadors, insígnia) seguixen "congelats" en el text que tenien quan
+  es van pintar per última vegada — és el comportament real d'abans de
+  Vue (`applyStaticText()` no els tocava), no una millora.
+- **Bloc 2**: el modal de resultats (gràfica de barres o resum per a
+  tipus lliures, rànquing en dos passos amb fletxes), la celebració de
+  grup i `GameOver` (top 5, botó de descarregar informe, enllaç
+  «Tornar»). `#downloadReportBtn`/`#backToLibraryBtn` eren botons
+  creats per JS en temps d'execució (`ensureDownloadReportButton()`/
+  `ensureBackToLibraryLink()`); ara són marcatge estàtic de la
+  plantilla i les dos funcions s'han eliminat.
+- **Trobada real durant la conversió** (abans de la prova real, el
+  spec ja ho va detectar): `v-show` només alterna cap al valor
+  *original* de l'estil en línia de l'element (buit si no en tenia cap
+  al muntar), no cap a un valor concret. Per a elements amagats per
+  defecte per CSS compartida amb elements encara no convertits
+  (`#skipQButton`, que compartix regla amb `#nextQButton`), cal
+  `:style="{ display: ... }"` amb el valor exacte ('inline-block'),
+  no `v-show`.
+- **Regressió real trobada per `language.spec.js`** (no pel spec nou
+  d'esta pantalla): en moure `#lang-select` dins de l'arrel de Vue,
+  `languages.js` ja no podia omplir-ne les opcions en la seua primera
+  passada (l'element encara no existia, atrapat dins del `<template>`
+  inert): es perdia l'idioma inicial de la URL. Corregit cridant
+  `EduhootLang.render()` just després de muntar Vue.
+- **Troballes d'un comportament real pre-existent, corregides**
+  (`#playersAnswered` es quedava ocult per sempre després de la
+  primera pregunta; no es podia saltar la primera pregunta de cada
+  partida) **i de codi mort, sense tocar** (`#nextQButton`/
+  `.square1-4`): vore "Deute tècnic conegut" més avall.
+- **Proves**: `src/test/browser/host-game.spec.js`, amb el mateix
+  Socket.IO fals (diversos arguments per esdeveniment) que
+  `player-game.spec.js`. Complementa `host-game-timer.spec.js`
+  (issue #21) i `host-game-end.spec.js` (issue #17), ja existents.
+
 ## Distintiu visual d'entorn (dev/stage)
 
 Per a no confondre un entorn de desenvolupament o stage amb producció,
@@ -411,12 +460,14 @@ consulta `GET /api/version` (`src/server/server.js:183`, versió de
   (noms de jugador, quizzes importats), el navegador no executaria el
   codi injectat ni enviaria dades a dominis no permesos. Seguiment en
   la [issue #20](https://github.com/Edutictac/EduHoot/issues/20).
-  - **Requisit**: passar a `addEventListener` els 17 atributs `on…=`
-    que queden (9 `onclick`, p. ex. `endGame()` en `host/index.html`,
-    i 8 `onerror` del widget de Commons; `player/game/index.html` ja no
-    en té cap, convertits a `@click` de Vue en la Subfase B). Sense açò
-    caldria `'unsafe-inline'` en els scripts, que anul·la quasi tota la
-    protecció. En els estils, `'unsafe-inline'` sí és acceptable.
+  - **Requisit**: passar a `addEventListener` els 16 atributs `on…=`
+    que queden (8 `onclick`, p. ex. `endGame()` en `host/index.html` i
+    `nextQuestion()`/`toggleRanking()`/`toggleHostFullscreen()` en
+    `host/game/index.html` — este últim encara estàtic, Subfase B —, i
+    8 `onerror` del widget de Commons; `player/game/index.html` ja no
+    en té cap). Sense açò caldria `'unsafe-inline'` en els scripts, que
+    anul·la quasi tota la protecció. En els estils, `'unsafe-inline'`
+    sí és acceptable.
   - **Orígens a permetre hui**: `cdn.jsdelivr.net` (llibreries de
     `/create/`), `commons.edutictac.es` (widget i API),
     `www.youtube-nocookie.com` (vídeos) i imatges `https:`/`data:` (QR,
@@ -448,6 +499,24 @@ consulta `GET /api/version` (`src/server/server.js:183`, versió de
   `gameHelpers.js:159`), encara que `playerGame.js`/`hostGame.js` tenen
   codi per a pintar-les. Pot ser intencionat o un oblit; pendent de
   decidir.
+- ~~`#playersAnswered` (`/host/game/`) es quedava ocult per sempre
+  després de la primera pregunta.~~ **Corregit** (trobat auditant
+  `hostGame.js` en preparar la Subfase B, 2026-11-09): `questionOver`
+  l'oculta (`app.playersAnsweredVisible = false`), però ara
+  `gameQuestions`, `questionCountdown` i `nextQuestion()` també
+  tornen `app.playersAnsweredVisible = true`, no només el text. El
+  professorat ja no perd el comptador "Han respost X/Y" a partir de la
+  segona pregunta.
+- ~~No es podia saltar la primera pregunta de cada partida.~~
+  **Corregit** (mateixa auditoria): `#skipQButton` només es mostrava
+  dins de `nextQuestion()` (mai a la primera pregunta); ara
+  `gameQuestions` també el mostra. `#nextQButton` seguix sent codi
+  mort (mai arriba a mostrar-se enlloc del fitxer; l'avanç real es fa
+  des del modal de resultats), i els 4 `.square` (barres de recompte
+  substituïdes fa temps pel modal de resultats) també ho són
+  (`updateSquareHeights()` ni es crida mai) — estos dos, sense
+  comportament visible, no s'han tocat. Vore
+  `test/browser/host-game.spec.js`.
 
 ## Unió a la partida: nom i icona del jugador
 
