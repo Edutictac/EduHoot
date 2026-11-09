@@ -21,6 +21,9 @@ fitxers corresponents, i els originals es van eliminar.
   costat de «Descarregar informe», per a tornar a la biblioteca
   (`/create/`) sense haver d'usar el botó d'arrere del navegador
   ([#17](https://github.com/Edutictac/EduHoot/issues/17)).
+- En desenvolupament, el distintiu «Entorn: desenvolupament» mostra
+  davall el nom del professorat loguejat, si en té, en totes les
+  pantalles.
 
 ### Canviat
 - El lobby de l'amfitrió (`/host/`) és ara una app de Vue 3, sense build

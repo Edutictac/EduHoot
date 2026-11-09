@@ -81,6 +81,19 @@
             var cfg = data && ENVS[data.env];
             if(!cfg) return;
             document.documentElement.classList.add('env-' + data.env);
+            if(data.env === 'development'){
+                // Sota el distintiu, mostra el professorat loguejat (si en té),
+                // el mateix nom que ja ix entre claudàtors al títol de la pestanya
+                // (create-auth.js/quizCreator.js, updateTitleUserId()).
+                fetch('/api/auth/me', { credentials: 'include' }).then(function(res){
+                    return res.ok ? res.json() : null;
+                }).then(function(user){
+                    applyBadge(cfg, user ? (user.nickname || user.email) : '');
+                }).catch(function(){
+                    applyBadge(cfg);
+                });
+                return;
+            }
             if(data.env !== 'staging'){
                 applyBadge(cfg);
                 return;

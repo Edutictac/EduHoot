@@ -403,6 +403,18 @@ principals (`index`, `join`, `create`, `create/quiz-creator`, `host`,
   d'una classe interna no documentada del widget extern: si Commons la
   canvia, la regla simplement deixa d'aplicar-se i "Inici" torna a
   mostrar-se (no trenca res més).
+- El distintiu pot portar una segona línia, més menuda, davall del
+  text principal (`applyBadge(cfg, tag)`): en stage, la tag amb què es
+  va publicar la imatge (`GET /api/version`); **en desenvolupament**,
+  el professorat loguejat (`nickname` o, si no en té, l'email, via
+  `GET /api/auth/me`) — el mateix nom que ja ix entre claudàtors al
+  títol de la pestanya quan s'està a `/create/` o
+  `/create/quiz-creator/` (`updateTitleUserId()` en
+  `create-auth.js`/`quizCreator.js`). Com que `env-badge.js` es carrega
+  a totes les pantalles i la sessió és la mateixa cookie en tot el
+  lloc, el nom apareix encara que la pàgina actual no siga `/create/`
+  (p. ex. a `/solo/` o `/host/`). Si no hi ha sessió, no es mostra eixa
+  segona línia (igual que en stage sense tag).
 - Vore `docs/STAGE-AUTOMATIC.md` per a com es configura `NODE_ENV` i
   `AUTO_SEED_STAGE` al VPS de stage.
 
