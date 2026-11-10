@@ -130,4 +130,9 @@ test('GET /api/admin/logs filtra por nivel, pin y texto libre', async () => {
   const byNameJson = await byName.json();
   assert.ok(byNameJson.data.some((row) => row.pin === 'CCCCCC'));
   assert.ok(byNameJson.data.every((row) => row.pin !== 'AAAAAA' && row.pin !== 'BBBBBB'));
+
+  const byTag = await request('/api/admin/logs?tag=player-rejoin-stale', { headers });
+  const byTagJson = await byTag.json();
+  assert.ok(byTagJson.data.length >= 1);
+  assert.ok(byTagJson.data.every((row) => row.tag === 'player-rejoin-stale'));
 });

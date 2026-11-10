@@ -53,6 +53,42 @@
             <option value="info">info</option>
             <option value="debug">debug</option>
           </select>
+          <select id="logs-filter-tag">
+            <option value="">Cualquier tag</option>
+            <optgroup label="Partida">
+              <option value="host-join">host-join</option>
+              <option value="host-join-game">host-join-game</option>
+              <option value="game-start">game-start</option>
+              <option value="game-end">game-end</option>
+              <option value="nextQuestion">nextQuestion</option>
+              <option value="skipQuestion">skipQuestion</option>
+              <option value="newQuiz">newQuiz</option>
+            </optgroup>
+            <optgroup label="Jugador">
+              <option value="player-join">player-join</option>
+              <option value="player-rejoin">player-rejoin</option>
+              <option value="player-rejoin-stale">player-rejoin-stale</option>
+              <option value="player-leave">player-leave</option>
+              <option value="playerAnswer">playerAnswer</option>
+            </optgroup>
+            <optgroup label="Importación CSV">
+              <option value="upload-csv:start">upload-csv:start</option>
+              <option value="upload-csv:empty">upload-csv:empty</option>
+              <option value="upload-csv:public-anon">upload-csv:public-anon</option>
+              <option value="upload-csv:local">upload-csv:local</option>
+              <option value="upload-csv:success">upload-csv:success</option>
+            </optgroup>
+            <optgroup label="Sistema">
+              <option value="admin-settings">admin-settings</option>
+              <option value="express-error">express-error</option>
+              <option value="uncaughtException">uncaughtException</option>
+              <option value="unhandledRejection">unhandledRejection</option>
+              <option value="socket-io-error">socket-io-error</option>
+              <option value="socket-connection-error">socket-connection-error</option>
+              <option value="timeUp">timeUp</option>
+              <option value="requestDbNames">requestDbNames</option>
+            </optgroup>
+          </select>
           <input type="text" id="logs-filter-q" placeholder="Buscar texto (incluye nombre de alumnado)...">
           <input type="text" id="logs-filter-pin" placeholder="PIN">
           <button type="button" id="logs-filter-apply">Filtrar</button>

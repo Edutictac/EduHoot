@@ -366,6 +366,9 @@ module.exports = function createAdminRouter({
     if (reqQuery.pin) {
       query.pin = String(reqQuery.pin);
     }
+    if (reqQuery.tag) {
+      query.tag = String(reqQuery.tag);
+    }
     if (reqQuery.hostId) {
       query.hostId = String(reqQuery.hostId);
     }

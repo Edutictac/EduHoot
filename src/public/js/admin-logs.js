@@ -10,6 +10,7 @@
   var settingsStatus = document.getElementById('logs-settings-status');
 
   var filterLevel = document.getElementById('logs-filter-level');
+  var filterTag = document.getElementById('logs-filter-tag');
   var filterQ = document.getElementById('logs-filter-q');
   var filterPin = document.getElementById('logs-filter-pin');
   var filterApplyBtn = document.getElementById('logs-filter-apply');
@@ -214,6 +215,7 @@
   function buildFilterParams(){
     var params = new URLSearchParams();
     if(filterLevel && filterLevel.value) params.set('level', filterLevel.value);
+    if(filterTag && filterTag.value) params.set('tag', filterTag.value);
     if(filterQ && filterQ.value) params.set('q', filterQ.value);
     if(filterPin && filterPin.value) params.set('pin', filterPin.value);
     return params;
