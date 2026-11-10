@@ -176,6 +176,9 @@ body{
   color: var(--text);
   padding: 6px 10px;
 }
+#logs-filter-q{
+  flex: 1 1 200px;
+}
 .logs-settings-row button, .logs-filters-row button{
   background: var(--accent-2);
   border: none;
