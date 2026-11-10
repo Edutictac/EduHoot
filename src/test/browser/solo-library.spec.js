@@ -39,8 +39,7 @@ async function mockBackend(page) {
 // directamente con ?id=): listado público, favorito persistente, valoración
 // con estrellas, selección de un quiz y una partida hasta el resultado.
 // Pensado como red de seguridad reutilizable mientras se reparte solo.js en
-// varios ficheros (ver .local/MIGRATION_PROGRESS.md), no como cobertura
-// exhaustiva del frontend.
+// varios ficheros, no como cobertura exhaustiva del frontend.
 test('listado, favorito, valoración, jugar y resultado', async ({ page }) => {
     await mockBackend(page);
     await page.goto('/solo/?lang=es');

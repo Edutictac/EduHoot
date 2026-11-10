@@ -138,10 +138,9 @@ test('respuesta múltiple: permite marcar varias opciones y enviarlas juntas', a
     }
 });
 
-// Bug anotado en eduhoot-local-context/.local/ISSUES.md: las claves
-// 'text_placeholder' y 'submit_free' no existen en i18n-player.js, así que
-// hoy se ven literales en vez de traducidas. El spec fija el comportamiento
-// real (con el bug), no el ideal.
+// Bug conocido: las claves 'text_placeholder' y 'submit_free' no existen en
+// i18n-player.js, así que hoy se ven literales en vez de traducidas. El spec
+// fija el comportamiento real (con el bug), no el ideal.
 test('respuesta libre de texto corto: muestra el campo y la envía como texto', async ({ page }) => {
     await openGame(page);
     await serverEmit(page, 'playerQuestion', { question: '¿Capital de Italia?', type: 'short-answer', time: 20 });

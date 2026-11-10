@@ -76,5 +76,4 @@ com a capa opcional per damunt d'este sistema (un *transport* més de
 Winston), no com a part del disseny inicial. Queden pendents, entre
 altres coses: confirmar si el SMTP que ja usa Authentik es pot
 reaprofitar, decidir llindar/*throttling* per no inundar el correu si
-l'error es repetix en bucle, i decidir destinataris. Anàlisi complet
-en `.local/LOGGING_HOWTO.md` (no versionat en este repo).
+l'error es repetix en bucle, i decidir destinataris.
