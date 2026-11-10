@@ -364,7 +364,11 @@ module.exports = function createAdminRouter({
       query.level = reqQuery.level;
     }
     if (reqQuery.pin) {
-      query.pin = String(reqQuery.pin);
+      // El PIN es guarda tal qual el genera el joc (número), no com a text;
+      // s'accepten ambdues formes perquè qui filtra no haja d'endevinar-ho.
+      const pinStr = String(reqQuery.pin);
+      const pinNum = Number(reqQuery.pin);
+      query.pin = Number.isFinite(pinNum) ? { $in: [pinStr, pinNum] } : pinStr;
     }
     if (reqQuery.tag) {
       query.tag = String(reqQuery.tag);

@@ -119,6 +119,15 @@ test('GET /api/admin/logs filtra por nivel, pin y texto libre', async () => {
   assert.ok(byPinJson.data.length >= 1);
   assert.ok(byPinJson.data.every((row) => row.pin === 'AAAAAA'));
 
+  // El PIN real del juego se guarda como número (Math.floor(...) en
+  // hostEvents.js), no como texto: el filtro debe encontrarlo igual aunque
+  // llegue como string desde la query string de la URL.
+  logger.info('Partida iniciada en pin numérico', { tag: 'game-start', pin: 424242, hostId: 'hostNum' });
+  await new Promise((resolve) => setTimeout(resolve, 150));
+  const byNumericPin = await request('/api/admin/logs?pin=424242', { headers });
+  const byNumericPinJson = await byNumericPin.json();
+  assert.ok(byNumericPinJson.data.some((row) => row.pin === 424242));
+
   const byText = await request('/api/admin/logs?q=cr%C3%ADtico', { headers });
   const byTextJson = await byText.json();
   assert.ok(byTextJson.data.some((row) => row.pin === 'BBBBBB'));
