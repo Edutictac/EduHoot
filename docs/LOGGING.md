@@ -35,7 +35,7 @@ stage (vore l'historial d'issues del projecte).
   (`GET`/`POST /api/admin/settings/logging`).
 - **Visor web**: `/admin/logs` (mateix patró vanilla JS que
   `/admin/stats`, protegit amb rol `admin`), amb filtres per nivell,
-  PIN, `hostId` i text lliure.
+  `tag` i text lliure (cerca a `message`, `tag` i `meta`).
 - **Descàrrega**: botons CSV i NDJSON al visor
   (`GET /api/admin/logs/export`), amb els mateixos filtres, per a
   analitzar els logs fora de l'aplicació.
@@ -59,7 +59,8 @@ dispersos pel logger nou, es registren explícitament:
   `uncaughtException`/`unhandledRejection`).
 
 Cada entrada guarda camps de correlació (`pin`, `hostId`, `playerId`,
-`tag`) perquè es puga filtrar per partida concreta al visor.
+`tag`) per a compatibilitat amb entrades anteriors; el visor busca a
+`message`, `tag` i `meta`.
 
 ## Configuració
 

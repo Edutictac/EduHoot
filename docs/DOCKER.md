@@ -4,7 +4,7 @@ La imatge d'EduHoot es distribueix com a paquet del repositori en GitHub
 Container Registry:
 
 ```bash
-docker pull ghcr.io/edutictac/eduhoot:1.0.5
+docker pull ghcr.io/edutictac/eduhoot:1.1.0
 ```
 
 És la mateixa imatge publicada en

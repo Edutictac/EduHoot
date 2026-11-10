@@ -38,8 +38,8 @@ funcionament del projecte.
 - **Express + Socket.IO en un sol procés Node**, organitzat en capes
   (`src/server/`): `data/` (accés a MongoDB), `services/` (lògica de
   negoci), `routes/` (rutes HTTP, una per recurs) i `sockets/`
-  (esdeveniments de Socket.IO). `server.js` (~355 línies) és només el
-  punt d'entrada: configura Express, instancia els serveis, munta els
+  (esdeveniments de Socket.IO). `server.js` és només el punt d'entrada:
+  configura Express, instancia els serveis, munta els
   routers i registra els handlers de Socket.IO. Els mòduls amb estat o
   que depenen d'altres instàncies s'exporten com a factories
   (`createXxx({ dependències })`); la resta són mòduls plans que es
@@ -48,12 +48,14 @@ funcionament del projecte.
 - **Sense build step**: el client és JS vanilla servit directament des de
   `src/public/`, sense bundler (webpack/vite). Cada pantalla (`create`,
   `host`, `player`, `solo`, `multiplayer`) carrega els seus propis
-  `<script>` solts. Única excepció de framework: el lobby de `/host/`, un
-  pilot amb Vue 3 també sense build step (vore "Lobby de l'amfitrió amb
-  Vue").
+  `<script>` solts. Excepcions de framework, totes amb Vue 3 i sense build
+  step: el lobby de `/host/` i les pantalles de joc `/player/game/` i
+  `/host/game/` (vore "Lobby de l'amfitrió amb Vue" i les seccions de
+  Subfase B).
 - **Dependències de producció mínimes** (`src/package.json`): `express`,
   `socket.io`, `mongodb` (driver natiu, sense ORM/Mongoose), `helmet`
-  (capçaleres de seguretat), `multer` (pujada d'imatges), `moment`.
+  (capçaleres de seguretat), `multer` (pujada d'imatges), `moment`,
+  `winston` i `winston-transport` (logging persistent).
 - **Persistència**: MongoDB és l'únic magatzem persistent. Les partides
   en curs i les sessions HTTP viuen en memòria del procés Node, no en
   Mongo (vore "Model de dades" i "Autenticació i sessions").
@@ -149,8 +151,8 @@ A banda, fitxers transversals que no pertanyen a una sola pantalla:
 
 ## Model de dades (MongoDB)
 
-Sis col·leccions, totes en la mateixa base de dades: `kahootDB` per
-defecte, configurable amb `MONGO_DB` (`src/server/data/db.js:6`). Els noms
+Huit col·leccions, totes en la mateixa base de dades: `kahootDB` per
+defecte, configurable amb `MONGO_DB` (`DB_NAME` en `data/db.js`). Els noms
 de col·lecció es definixen en `data/db.js` i s'hi accedix sempre a través
 de `data/repositories.js`:
 
@@ -162,6 +164,8 @@ de `data/repositories.js`:
 | `ephemeralQuizzes` | `EPHEMERAL_COLLECTION` | Qüestionaris del mode "Només jo" (efímers, amb caducitat). |
 | `quizRatings` | `RATINGS_COLLECTION` | Valoracions agregades de cada qüestionari. |
 | `quizRatingVotes` | `RATING_VOTES_COLLECTION` | Vot individual de valoració, per a evitar vots duplicats. |
+| `appLogs` | `LOGS_COLLECTION` | Logs del servidor, en una col·lecció capped (circular) redimensionable. |
+| `appSettings` | `SETTINGS_COLLECTION` | Configuració editable en calent, com el nivell i la mida del logging. |
 
 Les partides en curs ("live games") **no estan en Mongo**: viuen en un
 `Map` en memòria del procés Node mentre la partida està activa. Només al
@@ -182,7 +186,7 @@ en la claim configurada poden entrar. Vore
 
 - L'adreça de Commons es pot canviar amb `EDUTICTAC_COMMONS_URL` (per a un
   Commons local); el servidor la reescriu a les pàgines amb xip
-  (`CHIP_PAGES`, `src/server/server.js:147`).
+  (constant `CHIP_PAGES` en `server.js`).
 - El backend encara accepta **correu + contrasenya** (`POST /api/auth/login`)
   i **Google** mentre no s'active el mode només Authentik
   (`AUTHENTIK_ONLY`), però la interfície ja no té cap formulari per a fer-ho.
@@ -193,7 +197,7 @@ en la claim configurada poden entrar. Vore
   `docs/DEV_DOCKER_SETUP.md`.
 
 Les sessions HTTP **no es guarden en Mongo ni en un store extern**: és
-un `Map` en memòria (`sessions`, `src/server/services/sessions.js:3`) indexat per un
+un `Map` en memòria (`sessions` en `services/sessions.js`) indexat per un
 `sessionId` aleatori que s'envia com a cookie. Això significa que
 **reiniciar el servidor tanca la sessió de tothom** — no hi ha
 persistència de sessió entre reinicis del procés.
@@ -223,16 +227,15 @@ Esdeveniments principals que rep el servidor (registrats en
 
 ## Cicle de vida d'una partida: PIN, lobby i temps d'espera
 
-`host-join` (`src/server/sockets/hostEvents.js:36-125`) crea la partida en
+El handler `host-join` de `sockets/hostEvents.js` crea la partida en
 memòria amb un PIN nou i `gameLive: false` (sala d'espera). Eixe PIN ja és
 vàlid: l'alumnat pot entrar-hi (`/join.html?pin=...`) i quedar-se esperant
-abans que el professorat pulse "Començar". `startGame`
-(`hostEvents.js:334-400`) posa `gameLive: true` i arranca la primera
-pregunta.
+abans que el professorat pulse "Començar". El handler `startGame` posa
+`gameLive: true` i arranca la primera pregunta.
 
 No hi ha cap col·lecció de base de dades per a "partides" — tot açò viu
 només en l'array en memòria de `src/server/utils/liveGames.js`, i es
-borra sol segons uns temps fixats a `src/server/sockets/gameHelpers.js:9-12`:
+borra sol segons les constants de temps de `sockets/gameHelpers.js`:
 
 - **100 s** després d'acabar la partida (`GameOver`), abans d'esborrar-la.
 - **30 min** sense cap activitat.
@@ -381,8 +384,8 @@ Per a no confondre un entorn de desenvolupament o stage amb producció,
 `src/public/js/env-badge.js` es carrega en totes les pantalles públiques
 principals (`index`, `join`, `create`, `create/quiz-creator`, `host`,
 `host/game`, `player`, `player/game`, `solo`, `multiplayer`,
-`admin-stats`) i consulta l'endpoint `GET /api/env`
-(`src/server/server.js:179`, retorna `{ env: process.env.NODE_ENV || '' }`).
+`admin-stats`) i consulta l'endpoint `GET /api/env` de `server.js`
+(retorna `{ env: process.env.NODE_ENV || '' }`).
 
 - Si `NODE_ENV` és `development` o `staging`, afig un distintiu fix a
   dalt de la pàgina ("🛠️ Entorn: desenvolupament" / "🧪 Entorn: stage"),
@@ -420,8 +423,7 @@ principals (`index`, `join`, `create`, `create/quiz-creator`, `host`,
   `AUTO_SEED_STAGE` al VPS de stage.
 
 El peu comú de pàgina mostra la versió desplegada amb `app-version.js`, que
-consulta `GET /api/version` (`src/server/server.js:183`, versió de
-`package.json`).
+consulta `GET /api/version` de `server.js` (versió de `package.json`).
 
 ## Deute tècnic conegut
 
@@ -443,13 +445,12 @@ consulta `GET /api/version` (`src/server/server.js:183`, versió de
   afegint mecàniques de joc de dificultat alta; la part del backend ja
   està feta (vore punt anterior).
 - ~~Stage i producció comparteixen hui la mateixa base de dades.~~
-  **Corregit.** `DB_NAME` (`src/server/data/db.js:6`) ja és configurable
+  **Corregit.** `DB_NAME` en `data/db.js` ja és configurable
   (`process.env.MONGO_DB || 'kahootDB'`, mateix patró que ja usen
-  `src/scripts/normalize-tags.js` i `src/scripts/seed-dev-data.js`), i
-  `install-files/stage.env.example` ja definix
-  `MONGO_DB=eduhoot_stage`. Cal que `/etc/eduhoot/stage.env` en el VPS
-  incloga eixa variable (vore `docs/STAGE_SETUP.md`) perquè l'aïllament de
-  base de dades siga efectiu.
+  `src/scripts/normalize-tags.js` i `src/scripts/seed-dev-data.js`). Stage
+  definix `MONGO_DB=eduhoot_stage` en la seua configuració i desplega amb
+  Docker (vore `docs/STAGE-AUTOMATIC.md`), així que l'aïllament de base de
+  dades és efectiu.
 - ~~El panell `/admin/stats` no estava integrat amb el xip
   d'EduTicTac/Authentik com la resta de pàgines, i el seu formulari antic
   de correu+contrasenya/Google havia quedat trencat en producció amb
@@ -467,18 +468,16 @@ consulta `GET /api/version` (`src/server/server.js:183`, versió de
   `sessionStorage` pròpia (`eduh_auth_bridge_admin`) perquè no interferisca
   amb la de `/create/`.
 - La **CSP** (*Content Security Policy*) està desactivada
-  (`contentSecurityPolicy: false`, `src/server/server.js:178`); Helmet
-  només posa la resta de capçaleres. Activar-la afegiria una segona
-  barrera contra XSS: si algun `innerHTML` deixa passar text d'usuari
-  (noms de jugador, quizzes importats), el navegador no executaria el
-  codi injectat ni enviaria dades a dominis no permesos. Seguiment en
-  la [issue #20](https://github.com/Edutictac/EduHoot/issues/20).
-  - **Requisit**: passar a `addEventListener` els 16 atributs `on…=`
-    que queden (8 `onclick`, p. ex. `endGame()` en `host/index.html` i
-    `nextQuestion()`/`toggleRanking()`/`toggleHostFullscreen()` en
-    `host/game/index.html` — este últim encara estàtic, Subfase B —, i
-    8 `onerror` del widget de Commons; `player/game/index.html` ja no
-    en té cap). Sense açò caldria `'unsafe-inline'` en els scripts, que
+  (`contentSecurityPolicy: false` en la configuració de Helmet de
+  `server.js`); Helmet només posa la resta de capçaleres. Activar-la
+  afegiria una segona barrera contra XSS: si algun `innerHTML` deixa
+  passar text d'usuari (noms de jugador, quizzes importats), el navegador
+  no executaria el codi injectat ni enviaria dades a dominis no permesos.
+  Seguiment en la [issue #20](https://github.com/Edutictac/EduHoot/issues/20).
+  - **Requisit**: passar a `addEventListener` els atributs `on…=` que
+    queden (els `onclick` de `host/index.html`, `host/game/index.html` i
+    `create/quiz-creator/index.html`, i els `onerror` del widget de
+    Commons). Sense açò caldria `'unsafe-inline'` en els scripts, que
     anul·la quasi tota la protecció. En els estils, `'unsafe-inline'`
     sí és acceptable.
   - **Orígens a permetre hui**: `cdn.jsdelivr.net` (llibreries de
@@ -487,14 +486,14 @@ consulta `GET /api/version` (`src/server/server.js:183`, versió de
     miniatures, quizzes).
   - **Com**: primer amb `reportOnly: true` en dev i stage (només avisa
     en la consola, no bloqueja), després en mode real.
-  - **Vue**: el lobby de `/host/` i la pantalla de joc de `/player/game/`
-    ja l'usen, i el seu compilador de plantilles necessita també
-    `'unsafe-eval'`. Risc baix mentre les plantilles no continguen text
-    d'usuari.
+  - **Vue**: el lobby de `/host/` i les pantalles de joc de `/player/game/`
+    i `/host/game/` ja l'usen, i el seu compilador de plantilles necessita
+    també `'unsafe-eval'`. Risc baix mentre les plantilles no continguen
+    text d'usuari.
 - **Reconnexió trencada a `/player/game/` després de la primera**
   (trobat provant en real la Subfase B de `playerGame.js`, 2026-11-08;
   [issue #23](https://github.com/Edutictac/EduHoot/issues/23)):
-  `Players.tokens` (`src/server/utils/players.js:3,8-11,25-29`) guarda
+  `Players.tokens` (en `src/server/utils/players.js`) guarda
   `{hostId, playerId}` quan es crea el jugador i mai s'actualitza quan
   `playerId` canvia en una reconnexió posterior (`player.playerId =
   socket.id` a `sockets/playerEvents.js`, als tres llocs on es
@@ -508,8 +507,9 @@ consulta `GET /api/version` (`src/server/server.js:183`, versió de
 - **`short-answer`/`numeric` sempre filtrades de "Jugar a l'aula"**
   ([issue #24](https://github.com/Edutictac/EduHoot/issues/24)):
   `isMultiplayerFreeTypeQuestion` les lleva dos vegades (en crear la
-  partida, `hostEvents.js:80`, i en `buildQuestions`,
-  `gameHelpers.js:159`), encara que `playerGame.js`/`hostGame.js` tenen
+  partida, al handler `host-join` de `hostEvents.js`, i en
+  `buildQuestions()` de `gameHelpers.js`), encara que
+  `playerGame.js`/`hostGame.js` tenen
   codi per a pintar-les. Pot ser intencionat o un oblit; pendent de
   decidir.
 - ~~`#playersAnswered` (`/host/game/`) es quedava ocult per sempre
@@ -541,8 +541,8 @@ Quan un alumne s'uneix a una partida (pantalla de `join`, codi en
   en `POPULAR_FEATURES.md`, pendent d'implementar).
 - El nom es normalitza abans d'enviar-se: es retallen espais al
   principi/final, es col·lapsen espais múltiples, i es limita a un
-  màxim de caràcters (`normalizeGuestName` / `normalizeGuestNameLive`,
-  `join.js:122-131`). Segons el `README.md`, el límit en multijugador és
+  màxim de caràcters (funcions `normalizeGuestName` /
+  `normalizeGuestNameLive` en `join.js`). Segons el `README.md`, el límit en multijugador és
   de 40 caràcters.
 - A més del nom, l'alumne tria una **icona/emoji** d'un selector visual
   (`icon-picker`) que l'identifica en la partida.
@@ -562,13 +562,13 @@ partida concreta.
 En acabar una partida, el professorat/amfitrió pot descarregar un
 informe complet dels resultats:
 
-- **Botó**: "Descargar informe (CSV)" en la vista de l'amfitrió
-  (`src/public/js/hostGame.js`: el botó el crea
-  `ensureDownloadReportButton()` i la descàrrega la fa
-  `downloadSessionReportCsv()`). Al costat ix «Tornar», que porta a la
-  biblioteca (`ensureBackToLibraryLink()`).
+- **Botons**: "Descargar informe (CSV)" (`#downloadReportBtn`, mètode
+  `downloadReport` de l'app Vue, que crida
+  `downloadSessionReportCsv()` en `hostGame.js`) i «Tornar»
+  (`#backToLibraryBtn`, cap a `/create/`). Eixos botons només es mostren
+  en acabar la partida.
 - **Endpoint**: `GET /api/live-games/:pin/report.csv?hostId=...`
-  (`src/server/routes/games.js:17`). El servidor comprova que el `hostId`
+  (ruta de `routes/games.js`). El servidor comprova que el `hostId`
   que arriba en la petició coincidix amb l'amfitrió real d'esa partida;
   si no, respon `403 No autorizado para descargar este informe`. Això
   evita que qualsevol amb el PIN de la partida puga descarregar els
@@ -589,7 +589,7 @@ informe complet dels resultats:
 
 ### Columnes del CSV
 
-Capçalera definida en `src/server/services/sessionReport.js:174`:
+Capçalera definida per `liveSessionToCsv()` en `sessionReport.js`:
 
 ```
 pin;quizId;quizNombre;preguntasTotales;posicion;alumno;puntuacionFinal;
@@ -612,7 +612,7 @@ El CSV mescla dos nivells d'informació en el mateix fitxer:
   va ser correcte, i quant va tardar. `resultado` pot ser `correcta`,
   `incorrecta`, `parcial` (encert parcial en preguntes de resposta
   múltiple), `encuesta` (preguntes `poll`, sense valoració) o
-  `sin responder` (`src/server/services/sessionReport.js:203-209`).
+  `sin responder` (mapeig de `resultado` en `sessionReport.js`).
 
 **No hi ha una columna de "% d'encerts" ja calculada.** Per a obtindre'l
 cal calcular-lo a partir d'`aciertos` / `preguntasTotales` en un full de
@@ -623,14 +623,14 @@ fila d'alumne).
 
 Cada qüestionari de la biblioteca (`/create/`) té, junt al botó de
 descàrrega en CSV, un botó amb la icona de Moodle
-(`src/public/js/create-library.js:704`, funció `downloadMoodleXml()` en
-`create-export.js:362`) que descarrega eixe mateix qüestionari convertit al format
-Moodle XML, llest per a importar-lo al banc de preguntes de Moodle/AULES
-i muntar ahí un "Qüestionari" natiu.
+(funció `downloadMoodleXml()` en `create-export.js`, enllaçada des de
+`create-library.js`) que descarrega eixe mateix qüestionari convertit al
+format Moodle XML, llest per a importar-lo al banc de preguntes de
+Moodle/AULES i muntar ahí un "Qüestionari" natiu.
 
-- **Endpoint**: `GET /api/quizzes/:id/moodle-xml`
-  (`src/server/routes/quizzes.js:147`), que crida la funció
-  `quizToMoodleXml()` (`src/server/services/moodleExport.js:43`).
+- **Endpoint**: `GET /api/quizzes/:id/moodle-xml` (ruta de
+  `routes/quizzes.js`), que crida la funció `quizToMoodleXml()` de
+  `services/moodleExport.js`.
 - **Tipus de pregunta que convertix**: opció múltiple d'una o diverses
   respostes correctes (`multichoice`), verdader/fals (`truefalse`),
   resposta curta (`shortanswer`) i numèrica amb tolerància
@@ -651,20 +651,19 @@ poder importar un fitxer XML al banc de preguntes del seu propi curs.
   redirigixen ahí). Pàgina: `src/public/admin-stats.html` + lògica en
   `src/public/js/admin-stats.js`.
 - **Rol necessari**: `admin` (no `editor`). El propi HTML es servix a
-  qualsevol visitant (`router.get('/admin/stats', ...)` en
-  `src/server/routes/admin.js:349` no té `requireRole`); és la crida a
-  l'endpoint de dades la que exigix el rol. Segons `README.md:36/115`,
-  el primer usuari que entra amb Google es crea com `admin`; la resta
-  entra com `editor`.
-- **Endpoint de dades**: `GET /api/admin/stats`
-  (`src/server/routes/admin.js:299-347`, protegit amb
-  `requireRole('admin')`, vore `src/server/services/authMiddleware.js:45`).
-  Si no hi ha sessió respon `401`; si hi ha sessió però el rol és
-  insuficient, `403`.
+  qualsevol visitant (el handler `router.get('/admin/stats', ...)` de
+  `routes/admin.js` no té `requireRole`); és la crida a l'endpoint de
+  dades la que exigix el rol. Segons el `README.md`, el primer usuari que
+  entra per la via antigua de Google es crea com `admin`; la resta entra
+  com `editor`.
+- **Endpoint de dades**: `GET /api/admin/stats`, protegit amb
+  `requireRole('admin')` en `routes/admin.js` (vore també
+  `services/authMiddleware.js`). Si no hi ha sessió respon `401`; si hi
+  ha sessió però el rol és insuficient, `403`.
 - **Login des de la mateixa pàgina, pel xip EduTicTac/Authentik**: igual
   que `/create/`, la pàgina carrega `<edutictac-account>` +
   `/js/edutictac-chip.js` + `account-widget.js` i registra `/admin/stats`
-  en `CHIP_PAGES` (`src/server/server.js:161-174`) perquè la reescriptura
+  en `CHIP_PAGES` (`server.js`) perquè la reescriptura
   d'`EDUTICTAC_COMMONS_URL` també hi funcione. `admin-stats.js` porta una
   versió reduïda i pròpia (sense dependències de la UI de `/create/`) del
   pont de sessió de `src/public/js/create-auth.js`: si Commons té sessió
@@ -729,8 +728,8 @@ d'ells està pensat per a una classe amb un dispositiu per alumne:
 
 | Mode (botó) | Funció / destí | Per a què servix |
 |---|---|---|
-| **"Jugar a l'aula"** | `startGame(quiz.id)` → `/host/` (`create-quiz-actions.js:2-4`) | El mode clàssic tipus Kahoot: es genera un PIN/QR, cada alumne s'uneix des del seu propi mòbil/tablet via `/join`, i el professorat projecta les preguntes des de `/host/`. **És el mode a usar amb un grup d'alumnes, cada un amb el seu dispositiu.** És *host-paced*: el professorat controla el ritme (vore secció següent). |
-| **"Multijugador"** | `startMultiplayer(quiz.id)` → `/multiplayer/` | Pensat per a 2-4 jugadors compartint **una sola pantalla/dispositiu** ("Juega en la misma pantalla", `src/public/multiplayer/index.html:18-19`). No servix per a una classe amb un dispositiu per alumne. |
+| **"Jugar a l'aula"** | `startGame(quiz.id)` → `/host/` (`create-quiz-actions.js`) | El mode clàssic tipus Kahoot: es genera un PIN/QR, cada alumne s'uneix des del seu propi mòbil/tablet via `/join`, i el professorat projecta les preguntes des de `/host/`. **És el mode a usar amb un grup d'alumnes, cada un amb el seu dispositiu.** És *host-paced*: el professorat controla el ritme (vore secció següent). |
+| **"Multijugador"** | `startMultiplayer(quiz.id)` → `/multiplayer/` | Pensat per a 2-4 jugadors compartint **una sola pantalla/dispositiu** (text "Juega en la misma pantalla" en `src/public/multiplayer/index.html`). No servix per a una classe amb un dispositiu per alumne. |
 | **"Solo"** | `startSolo(quiz.id)` → `/solo/` | Mode individual, per a practicar fora de classe (vore també els [enllaços directes al mode Solo](README.md) del README). No és un mode de grup. |
 
 Per a una classe amb molts alumnes, cada un amb el seu propi dispositiu,
@@ -746,18 +745,17 @@ no és exclusiu de mòbils) rep el **text** de la pregunta i de les
 respostes, a banda de la pantalla compartida del professorat:
 
 - **Marcada**: el servidor emet `playerQuestion` amb la pregunta
-  completa (`src/server/sockets/gameHelpers.js:281-295`,
-  `buildStudentPlayerPayload()`); el dispositiu pinta el text i els
-  botons de resposta amb el seu contingut
-  (`src/public/js/playerGame.js:768-800`).
+  completa (`buildStudentPlayerPayload()` en `gameHelpers.js`); el
+  dispositiu pinta el text i els botons de resposta amb el seu contingut
+  (listener `playerQuestion` en `playerGame.js`).
 - **Desmarcada**: el mateix event `playerQuestion` es segueix enviant,
   però amb un payload "a cegues" — `{ blind: true, answerCount, type,
   pointsMultiplier, time }`, sense text de la pregunta ni de les
   respostes. El dispositiu mostra un avís ("Mira la pantalla per a
   veure la pregunta", clau `blind_hint`) i pinta només els `answerCount`
   botons actius amb la seua forma/color fixos per CSS (triangle verd,
-  romb taronja, cercle blau, quadrat roig —
-  `src/public/css/playerGameView.css:321-348`), sense text visible.
+  romb taronja, cercle blau, quadrat roig — regles de forma/color de
+  `src/public/css/playerGameView.css`), sense text visible.
   Cada botó porta un `aria-label` amb el nom de la forma (p. ex.
   "Opció A: triangle") perquè seguisca sent accessible sense text
   (vore `docs/ACCESSIBILITY.md`).
@@ -782,10 +780,10 @@ la pantalla d'amfitrió (`src/public/host/index.html`,
 
 El que sí és automàtic és el **tancament d'una pregunta**:
 - Si tots els jugadors responen abans de temps, el servidor ho detecta
-  (`playersAnswered === playerNum.length`, `src/server/sockets/playerEvents.js:247`)
-  i mostra resultats.
+  (quan `playersAnswered === playerNum.length`, al handler de resposta de
+  `playerEvents.js`) i mostra resultats.
 - Si s'acaba el temps, l'amfitrió emet `timeUp` i el servidor fa el
-  mateix (`src/server/sockets/common.js:71-93`).
+  mateix (handler `timeUp` de `common.js`).
 
 Però això només obri la pantalla de resultats/rànquing. **Passar a la
 pregunta següent requerix sempre una acció explícita del professorat**:

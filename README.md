@@ -9,7 +9,7 @@ Imatge Docker i publicació en GitHub: [documentació](docs/DOCKER.md).
 
 **EduHoot** és una aplicació tipus Kahoot per a l’aula: pots crear, importar i llançar qüestionaris amb imatges, vídeos i temps configurables. Admet CSV (inclosos els generats per IA) i importació de Kahoot públic. Està inspirada i reutilitza idees de [llixhoot](https://github.com/llixhoot/llixhoot), [llixhoot en lliurex](https://github.com/lliurex/llixhoot) i [qplay](https://github.com/jjdeharo/qplay).
 
-- Modes: **Només jo** (efímer sense login), **Per enllaç/Públic** (persistents encara que no hi haja sessió) i control de permisos per a clonar.
+- Visibilitat: **privat**, **per enllaç** o **públic**, amb control de permisos per a clonar.
 - Idiomes: valencià, castellà i anglès (autodetecta el navegador i es pot canviar).
 - Host: botó de “Saltar pregunta”, indicador de progrés i reentrada ràpida quan algun jugador perd la connexió.
 - Importació Kahoot: enganxa la URL pública i juga des d’EduHoot.
@@ -24,7 +24,7 @@ Imatge Docker i publicació en GitHub: [documentació](docs/DOCKER.md).
 4. Obri `http://localhost:3000/create/`.
 5. Alternativa amb Docker: consulta [docs/DEV_DOCKER_SETUP.md](docs/DEV_DOCKER_SETUP.md) per a desenvolupar sense instal·lar Node ni MongoDB en local.
 
-### Accés amb Google
+### Accés amb Google (llegat)
 
 Configura un client OAuth 2.0 de Google amb la URL de retorn `https://tu-dominio/api/auth/google/callback` (o `http://localhost:3000/api/auth/google/callback` en local) i arranca el servidor amb:
 
@@ -33,17 +33,13 @@ Configura un client OAuth 2.0 de Google amb la URL de retorn `https://tu-dominio
 - `PUBLIC_BASE_URL` (recomanat en producció, per exemple `https://tu-dominio`)
 - `EDUTICTAC_COMMONS_URL` (opcional): Commons al qual apunta el xip de compte. Per defecte `https://commons.edutictac.es`; en un Commons local, l'adreça pública del portal, per exemple `http://edutictac.local:8082`.
 
-El primer usuari que entra amb Google es crea com `admin`; els següents entren com `editor`. Si ja existeix un usuari amb el mateix email, se li enllaça Google i conserva el rol.
+El primer usuari que entra per esta via antiga es crea com `admin`; els següents entren com `editor`. Si ja existeix un usuari amb el mateix email, se li enllaça Google i conserva el rol.
 
-En la pantalla de create, el bloc d'alta ràpida mostra només el botó de Google. El botó `Entrar/Compte` continua obrint el modal d'accés amb email per a usuaris antics.
+La interfície de `/create/` ja no mostra Google ni el formulari de correu+contrasenya: l'accés docent és el xip d'EduTicTac amb Authentik. Google es manté al backend i dins del propi Authentik.
 
-### Deploy simple al VPS
+### Accés docent amb Authentik
 
-- Plantilla segura versionable: `scripts/deploy.example.sh`
-- Recomanat: copia-la a `scripts/deploy.sh`, ompli les teues dades i no la puges al repo.
-- Exemple: `DEPLOY_TARGET=usuari@vps:/var/www/eduhoot bash scripts/deploy.example.sh`
-- Amb reinici remot opcional: `DEPLOY_TARGET=usuari@vps:/var/www/eduhoot DEPLOY_REMOTE_CMD='cd /var/www/eduhoot/src && npm ci --omit=dev && pm2 restart eduhoot' bash scripts/deploy.example.sh`
-- Per previsualitzar canvis sense copiar: `DRY_RUN=1 bash scripts/deploy.example.sh`
+El xip d'EduTicTac obri la sessió Authentik d'EduHoot. Configura `AUTHENTIK_ISSUER`, `AUTHENTIK_CLIENT_ID`, `AUTHENTIK_CLIENT_SECRET` i `AUTHENTIK_REDIRECT_URI` (per defecte `/api/auth/authentik/callback`), i registra eixa URL en Authentik. Només les identitats amb un rol docent en la claim configurada poden crear o gestionar qüestionaris; l'alumnat no pot entrar per esta via. La claim de grups és `groups` per defecte (`AUTHENTIK_ROLE_CLAIM`) i els rols acceptats es configuren amb `AUTHENTIK_TEACHER_ROLES`.
 
 ### Funcions clau
 
@@ -62,20 +58,7 @@ En la pantalla de create, el bloc d'alta ràpida mostra només el botó de Googl
 Vols saber amb detall com funciona cada funcionalitat (modes de joc, avanç
 de preguntes, informe CSV...)? Consulta [ARCHITECTURE.md](ARCHITECTURE.md).
 
-### Actualitzacions recents
-
-- Pantalla neta a l’instant entre preguntes, sense restes de la pregunta anterior.
-- Noms de jugador de fins a 40 caràcters en multijugador.
-- Icones de forma (triangle, rombe, cercle, quadrat) a cada resposta, dibuixades amb CSS pur, a més del color, per a distingir-les millor i per accessibilitat davant el daltonisme.
-- Botó de pantalla completa a la vista del professor.
-- Celebració quan tota la classe encerta una pregunta, i avís quan la falla tota.
-- Animació a la insígnia de punts dobles i animació de moviments al rànquing entre preguntes.
-- Informe de partida (`report.csv`) més segur: només el host real el pot descarregar, amb neteja automàtica dels fitxers en disc encara que el servidor es reinicie.
-- Landing principal redissenyada amb accessos separats, selector d’idioma i footer comú amb el logo d’EduTicTac.
-- Biblioteca amb ordenació per data i alfabètica, tags rellevants i estadístiques de partides.
-- El mode Solo ara registra partides i mostra estadístiques visibles al ranking i un feedback més clar.
-- Mode "a cegues": l'amfitrió pot ocultar l'enunciat i mostrar només botons amb forma/color a l'alumnat, en qualsevol dispositiu.
-- Camps `idioma`, `llicència` i `descripció` en crear o editar un qüestionari.
+Per als canvis recents, consulta el [CHANGELOG](CHANGELOG.md).
 
 ### Enllaços directes al mode Solo
 
@@ -88,7 +71,7 @@ de preguntes, informe CSV...)? Consulta [ARCHITECTURE.md](ARCHITECTURE.md).
 
 **EduHoot** es una aplicación tipo Kahoot para el aula: crea, importa y lanza quizzes con imágenes, vídeos y tiempos configurables. Admite CSV (también generados por IA) e importación de Kahoot público. Se inspira y reutiliza ideas de [llixhoot](https://github.com/llixhoot/llixhoot), [llixhoot en lliurex](https://github.com/lliurex/llixhoot) y [qplay](https://github.com/jjdeharo/qplay).
 
-- Modos: **Solo yo** (efímero sin login), **Por enlace/Público** (persisten aunque no haya sesión) y control de permisos para clonar.
+- Visibilidad: **privado**, **por enlace** o **público**, con control de permisos para clonar.
 - Idiomas: valenciano, castellano e inglés (autodetecta el navegador y se puede cambiar).
 - Host: botón de “Saltar pregunta”, indicador de progreso y reincorporación rápida cuando los jugadores pierden la conexión.
 - Importación Kahoot: pega la URL pública y juega desde EduHoot.
@@ -103,7 +86,7 @@ de preguntes, informe CSV...)? Consulta [ARCHITECTURE.md](ARCHITECTURE.md).
 4. Abre `http://localhost:3000/create/`.
 5. Alternativa con Docker: consulta [docs/DEV_DOCKER_SETUP.md](docs/DEV_DOCKER_SETUP.md) para desarrollar sin instalar Node ni MongoDB localmente.
 
-### Acceso con Google
+### Acceso con Google (legado)
 
 Configura un cliente OAuth 2.0 de Google con la URL de retorno `https://tu-dominio/api/auth/google/callback` (o `http://localhost:3000/api/auth/google/callback` en local) y arranca el servidor con:
 
@@ -112,33 +95,19 @@ Configura un cliente OAuth 2.0 de Google con la URL de retorno `https://tu-domin
 - `PUBLIC_BASE_URL` (recomendado en producción, por ejemplo `https://tu-dominio`)
 - `EDUTICTAC_COMMONS_URL` (opcional): Commons al que apunta el chip de cuenta. Por defecto `https://commons.edutictac.es`; en un Commons local, la dirección pública del portal, por ejemplo `http://edutictac.local:8082`.
 
-El primer usuario que entra con Google se crea como `admin`; los siguientes entran como `editor`. Si ya existe un usuario con el mismo email, se le enlaza Google y conserva su rol.
+El primer usuario que entra por esta vía antigua se crea como `admin`; los siguientes entran como `editor`. Si ya existe un usuario con el mismo email, se le enlaza Google y conserva su rol.
 
-En la pantalla de create, el bloque de alta rápida muestra solo el botón de Google. El botón `Entrar/Cuenta` sigue abriendo el modal de acceso con email para usuarios antiguos.
+La interfaz de `/create/` ya no muestra Google ni el formulario de correo+contraseña: el acceso docente es el chip de EduTicTac con Authentik. Google se mantiene en el backend y dentro del propio Authentik.
 
 ### Acceso docente con Authentik
 
-En producción hay una transición de 14 días desde el 12 de octubre de 2026.
-La fecha anunciada para dejar solo «Entrar con EduTicTac» era el 26 de octubre
-a las 19:00 (Europe/Madrid). La retirada automática y el recordatorio están
-desactivados mientras se valida la corrección del acceso real. Google seguirá
-disponible dentro de Authentik. Véase el
-[plan de migración](docs/PLA-MIGRACIO-AUTHENTIK-2026-10.md).
-
-`AUTHENTIK_MIGRATION_END` permite fijar el fin de la transición en ISO UTC.
-Al llegar al plazo se desactivan Google directo y las vías docentes locales,
-y las sesiones HTTP antiguas requieren volver a entrar por Authentik.
-La vinculación inicial requiere correo verificado; los accesos posteriores
-usan issuer/sub y conservan la propiedad de los cuestionarios y el rol.
-El grupo `professorat` se admite entre los grupos docentes.
-
-EduHoot admite login OIDC con Authentik. Solo las identidades que incluyen un
-rol docente en la claim configurada pueden iniciar sesión; el alumnado no puede
-usar este login para crear o gestionar cuestionarios. Configura
+El chip de EduTicTac abre la sesión Authentik de EduHoot. Configura
 `AUTHENTIK_ISSUER`, `AUTHENTIK_CLIENT_ID`, `AUTHENTIK_CLIENT_SECRET` y
 `AUTHENTIK_REDIRECT_URI` (por defecto `/api/auth/authentik/callback`), y registra
-esa URL en Authentik. La claim de roles/grupos es `groups` por defecto y se
-puede cambiar con `AUTHENTIK_ROLE_CLAIM`; los roles aceptados se configuran con
+esa URL en Authentik. Solo las identidades con un rol docente en la claim
+configurada pueden crear o gestionar cuestionarios; el alumnado no puede usar
+este acceso. La claim de grupos es `groups` por defecto
+(`AUTHENTIK_ROLE_CLAIM`) y los roles aceptados se configuran con
 `AUTHENTIK_TEACHER_ROLES`.
 
 ### Integración con EduTicTac Commons
@@ -155,28 +124,11 @@ En modo mixto (`EDUTICTAC_ID_AUTH_REQUIRED=0`), si el alumno rellena código + P
 
 Al terminar una partida, EduHoot envía resumen de puntuación a `/api/apps/eduhoot/scores` cuando `EDUTICTAC_ID_API_URL` y `EDUTICTAC_ID_APP_TOKEN` están configurados.
 
-### Deploy simple al VPS
-
-- Plantilla segura versionable: `scripts/deploy.example.sh`
-- Recomendado: cópiala a `scripts/deploy.sh`, rellena tus datos y no la subas al repo.
-- Ejemplo: `DEPLOY_TARGET=usuario@vps:/var/www/eduhoot bash scripts/deploy.example.sh`
-- Con reinicio remoto opcional: `DEPLOY_TARGET=usuario@vps:/var/www/eduhoot DEPLOY_REMOTE_CMD='cd /var/www/eduhoot/src && npm ci --omit=dev && pm2 restart eduhoot' bash scripts/deploy.example.sh`
-- Para previsualizar cambios sin copiar: `DRY_RUN=1 bash scripts/deploy.example.sh`
-
 ### Entorno stage (preproducción)
 
-- Guía completa: `docs/STAGE_SETUP.md`
-- Plantilla de deploy stage: `scripts/deploy-stage.example.sh`
-- Servicio systemd stage: `install-files/service/eduhoot-stage-server.service`
-- Config Nginx stage: `install-files/nginx/eduhoot-stage.conf`
-- Variables de entorno stage: `install-files/stage.env.example`
-
-Flujo recomendado:
-
-1. Monta stage una vez siguiendo `docs/STAGE_SETUP.md`.
-2. Despliega cambios a `/opt/eduhoot-stage/src` con `scripts/deploy-stage.sh`.
-3. Valida en `stage.tu-dominio` (flujos host/player, login y CSV).
-4. Solo después promueve a producción.
+Stage se publica con una etiqueta `stage-*` en GitHub y se despliega
+automáticamente desde la imagen publicada. La guía vigente es
+[`docs/STAGE-AUTOMATIC.md`](docs/STAGE-AUTOMATIC.md).
 
 ### Funciones clave
 
@@ -195,20 +147,7 @@ Flujo recomendado:
 ¿Quieres saber en detalle cómo funciona cada funcionalidad (modos de
 juego, avance de preguntas, informe CSV...)? Consulta [ARCHITECTURE.md](ARCHITECTURE.md).
 
-### Actualizaciones recientes
-
-- Pantalla limpia al instante entre preguntas, sin restos de la pregunta anterior.
-- Nombres de jugador de hasta 40 caracteres en multijugador.
-- Iconos de forma (triángulo, rombo, círculo, cuadrado) en cada respuesta, dibujados con CSS puro, además del color, para distinguirlas mejor y por accesibilidad ante el daltonismo.
-- Botón de pantalla completa en la vista del profesorado.
-- Celebración cuando toda la clase acierta una pregunta, y aviso cuando la falla toda.
-- Animación en la insignia de puntos dobles y animación de movimientos en el ranking entre preguntas.
-- Informe de partida (`report.csv`) más seguro: solo el host real puede descargarlo, con limpieza automática de los ficheros en disco aunque el servidor se reinicie.
-- Landing principal renovada con accesos diferenciados, selector de idioma y footer compartido con el logo de EduTicTac.
-- Biblioteca con orden por fecha y alfabético, etiquetas relevantes y estadísticas visibles en cada ficha.
-- Modo Solo registra partidas y mejora el ranking/feedback, además de mostrar estadísticas de partidas jugadas.
-- Modo "a ciegas": el profesorado puede ocultar el enunciado y mostrar solo botones con forma/color al alumnado, en cualquier dispositivo.
-- Campos de `idioma`, `licencia` y `descripción` al crear o editar un cuestionario.
+Para los cambios recientes, consulta el [CHANGELOG](CHANGELOG.md).
 
 ### Enlaces directos al modo Solo
 
@@ -221,7 +160,7 @@ juego, avance de preguntas, informe CSV...)? Consulta [ARCHITECTURE.md](ARCHITEC
 
 **EduHoot** is a Kahoot-like app for classrooms: create, import, and launch quizzes with images, videos, and configurable timers. Supports CSV (including AI-generated) and public Kahoot import. It’s inspired by and reuses ideas from [llixhoot](https://github.com/llixhoot/llixhoot), [llixhoot on lliurex](https://github.com/lliurex/llixhoot), and [qplay](https://github.com/jjdeharo/qplay).
 
-- Modes: **Only me** (ephemeral without login), **By link/Public** (persist even without login), with clone-permission control.
+- Visibility: **private**, **by link**, or **public**, with clone-permission control.
 - Languages: Valencian, Spanish, English (auto-detects browser and is switchable).
 - Host: “Skip question” button, progress counter, and quick player rejoin when connections drop.
 - Kahoot import: paste a public URL and play it from EduHoot.
@@ -236,7 +175,7 @@ juego, avance de preguntas, informe CSV...)? Consulta [ARCHITECTURE.md](ARCHITEC
 4. Open `http://localhost:3000/create/`.
 5. Docker alternative: see [docs/DEV_DOCKER_SETUP.md](docs/DEV_DOCKER_SETUP.md) to develop without installing Node or MongoDB locally.
 
-### Google Sign-In
+### Google Sign-In (legacy)
 
 Create a Google OAuth 2.0 client with the redirect URL `https://your-domain/api/auth/google/callback` (or `http://localhost:3000/api/auth/google/callback` locally) and start the server with:
 
@@ -245,30 +184,25 @@ Create a Google OAuth 2.0 client with the redirect URL `https://your-domain/api/
 - `PUBLIC_BASE_URL` (recommended in production, for example `https://your-domain`)
 - `EDUTICTAC_COMMONS_URL` (optional): Commons the account chip points to. Defaults to `https://commons.edutictac.es`; in a local Commons, the portal's public address, for example `http://edutictac.local:8082`.
 
-The first Google user becomes `admin`; later users become `editor`. If a user with the same email already exists, Google is linked to that account and the current role is preserved.
+The first user through this legacy route becomes `admin`; later users become `editor`. If a user with the same email already exists, Google is linked to that account and the current role is preserved.
 
-### Simple VPS Deploy
+The `/create/` interface no longer shows Google or the email+password form: teacher access is the EduTicTac chip with Authentik. Google remains in the backend and inside Authentik itself.
 
-- Safe versioned template: `scripts/deploy.example.sh`
-- Recommended: copy it to `scripts/deploy.sh`, fill your real values, and keep it out of the repo.
-- Example: `DEPLOY_TARGET=user@vps:/var/www/eduhoot bash scripts/deploy.example.sh`
-- With optional remote restart: `DEPLOY_TARGET=user@vps:/var/www/eduhoot DEPLOY_REMOTE_CMD='cd /var/www/eduhoot/src && npm ci --omit=dev && pm2 restart eduhoot' bash scripts/deploy.example.sh`
-- Preview without copying: `DRY_RUN=1 bash scripts/deploy.example.sh`
+### Teacher sign-in with Authentik
+
+The EduTicTac chip opens EduHoot's Authentik session. Configure
+`AUTHENTIK_ISSUER`, `AUTHENTIK_CLIENT_ID`, `AUTHENTIK_CLIENT_SECRET`, and
+`AUTHENTIK_REDIRECT_URI` (defaults to `/api/auth/authentik/callback`), and
+register that URL in Authentik. Only identities with a teacher role in the
+configured claim can create or manage quizzes; students cannot use this login.
+The groups claim is `groups` by default (`AUTHENTIK_ROLE_CLAIM`) and accepted
+roles are configured with `AUTHENTIK_TEACHER_ROLES`.
 
 ### Stage Environment (pre-production)
 
-- Full guide: `docs/STAGE_SETUP.md`
-- Stage deploy template: `scripts/deploy-stage.example.sh`
-- Stage systemd service: `install-files/service/eduhoot-stage-server.service`
-- Stage Nginx config: `install-files/nginx/eduhoot-stage.conf`
-- Stage environment variables: `install-files/stage.env.example`
-
-Recommended flow:
-
-1. Set up stage once using `docs/STAGE_SETUP.md`.
-2. Deploy changes to `/opt/eduhoot-stage/src` via `scripts/deploy-stage.sh`.
-3. Validate on `stage.your-domain` (host/player flows, login, CSV import).
-4. Promote to production only after stage is green.
+Stage is published with a `stage-*` tag on GitHub and deployed automatically
+from the published image. See
+[`docs/STAGE-AUTOMATIC.md`](docs/STAGE-AUTOMATIC.md).
 
 ### Key features
 
@@ -287,20 +221,7 @@ Recommended flow:
 Want the full details on how each feature works (game modes, question
 advancing, CSV report...)? See [ARCHITECTURE.md](ARCHITECTURE.md).
 
-### Recent updates
-
-- Instant clean screen between questions, with no leftovers from the previous one.
-- Player names up to 40 characters in multiplayer.
-- Shape icons (triangle, diamond, circle, square) on each answer, drawn with pure CSS, on top of the color, for clearer matching and color-blindness accessibility.
-- Fullscreen toggle button on the teacher's view.
-- Celebration when the whole class gets a question right, and a warning when everyone misses it.
-- Small animation on the double-points badge and a ranking movement animation between questions.
-- More secure game report (`report.csv`): only the real host can download it, with automatic cleanup of the files on disk even if the server restarts.
-- Redesigned landing with separate entry points, language selector, and shared footer pointing to EduTicTac.
-- Library now supports ordering by date/alpha, shows only related tags, and surfaces quiz stats.
-- Solo mode logs plays so the ranking/counts include solo sessions, plus brighter feedback and stats.
-- "Blind" mode: the host can hide the question text and show students only shape/color buttons, on any device.
-- `Language`, `license`, and `description` fields when creating or editing a quiz.
+For recent changes, see the [CHANGELOG](CHANGELOG.md).
 
 ### Solo Deep Links
 

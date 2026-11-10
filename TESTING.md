@@ -36,15 +36,16 @@ més carrega 5 qüestionaris de mostra.
 ## Tests automàtics
 
 > **Què és Playwright?** És una ferramenta de Microsoft per a provar
-> aplicacions web automatitzant un navegador real (en este projecte,
-> Chrome) sense que ningú haja de fer clic a mà: obri la pàgina, navega,
-> emplena camps, prem botons i comprova que allò que apareix en pantalla
-> és l'esperat. A diferència de `npm test` (que prova funcions i l'API
-> del servidor directament), Playwright prova l'aplicació "des de fora",
-> igual que la veuria una persona real usant el navegador. En EduHoot
-> s'usa només per a `npm run test:i18n` (canvi d'idioma i estat de
-> sessió), executant cada test dos vegades: una emulant escriptori i
-> l'altra emulant un mòbil (`src/playwright.config.js`).
+> aplicacions web automatitzant un navegador real (en aquest projecte,
+> Chrome) sense que ningú haja de fer clic a mà. En EduHoot s'utilitza
+> principalment per a tests de navegador (`npm run test:i18n`), però el seu
+> ús es pot estendre a qualsevol recorregut d'interfície.
+
+> A diferència de `npm test` (que prova funcions i l'API del servidor
+> directament), Playwright provar l'aplicació "des de fora", igual que la
+> veuria una persona real usant el navegador. Actualment cobrim tests de:
+> canvis d'idioma, estat de sessió, pantalla d'inici, modes de joc,
+> autenticació i components del lobby.
 
 | Orde | Què executa | Necessita Mongo real | Necessita alguna cosa més |
 |---|---|---|---|
@@ -84,14 +85,17 @@ problemes d'estil, variables sense usar, etc.
   simulat de dev: rol del seed, rebuig sense rol docent i PKCE), i
   `adminLogs.test.js` (visor de logs i configuració de nivell/mida de la
   col·lecció capped, totes dos protegides per rol admin).
-- **`test/browser/`** — tests de navegador amb Playwright: `language.spec.js`
-  (canvi d'idioma), `auth-state.spec.js` (estat de sessió i pont amb el xip),
-  `solo-poll.spec.js` (les preguntes d'enquesta en mode Solo no compten com a
-  error ni puntuen), `chip-footer.spec.js` (xip de compte i peu comú),
-  `solo-library.spec.js` (llistat, favorit, valoració i partida en `/solo/`),
+- **`test/browser/`** — tests de navegador amb Playwright:
+  `language.spec.js` (canvi d'idioma), `auth-state.spec.js` (estat de sessió
+  i pont amb el xip), `player-game.spec.js` (joc de l'alumnat des del PIN a
+  /player/game/ amb Socket.IO fals), `solo-poll.spec.js` (les preguntes
+  d'enquesta en mode Solo no compten com a error ni puntuen),
+  `chip-footer.spec.js` (xip de compte i peu comú), `solo-library.spec.js`
+  (llistat, favorit, valoració i partida en `/solo/`),
   `create-library.spec.js` (llistat, cerca, etiqueta, CSV i esborrat en
-  `/create/`) i `host-lobby.spec.js` (lobby de `/host/`: PIN, QR, jugadors,
+  `/create/`), `host-lobby.spec.js` (lobby de `/host/`: PIN, QR, jugadors,
   opcions en iniciar, iframe de la partida i idioma, amb un Socket.IO fals),
+  `host-game.spec.js` (partida de l'amfitrió amb Socket.IO fals),
   `host-game-timer.spec.js` (el temporitzador de l'amfitrió mostra el temps
   de cada pregunta des del primer moment) i `host-game-end.spec.js`
   (enllaç «Tornar» a la biblioteca en acabar, també dins de l'iframe del

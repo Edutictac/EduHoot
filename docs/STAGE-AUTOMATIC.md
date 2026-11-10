@@ -105,7 +105,9 @@ idempotent per `devSeedKey` i es nega a executar-se si `NODE_ENV` no és
 
 ### Instal·lació real al VPS
 
-El stage de producció **no** utilitza el disseny systemd de `STAGE_SETUP.md`
+El stage de producció es desplega automàticament des de GitHub (compose,
+`eduhoot-stage.env`, actualitza cada 2 minuts). El disseny systemd de
+`STAGE_SETUP.md` ja no s'utiliza.
 (pensat per a una instal·lació manual i ja obsolet). Corre amb Docker a
 `/opt/eduhoot-stage/`:
 

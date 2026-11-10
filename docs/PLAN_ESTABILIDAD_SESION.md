@@ -3,6 +3,8 @@
 **Objetivo:** Reducir al mínimo las caídas de alumnos durante una partida en modo aula.  
 **Estimación total:** ~3-4 horas de desarrollo.
 
+**Estat (10-11-2026): implementat.** Els sis canvis estan al codi; aquest document es conserva com a referència històrica.
+
 ---
 
 ## Diagnóstico
@@ -157,8 +159,8 @@ Día 1 (1-2 h) — Cambios de bajo riesgo, alto impacto
   [x] #4 Listener visibilitychange
 
 Día 2 (1-2 h) — Mejora de UX
-  [ ] #5 Cuenta atrás de gracia en el cliente
-  [ ] #6 Wake Lock durante preguntas
+  [x] #5 Cuenta atrás de gracia en el cliente
+  [x] #6 Wake Lock durante preguntas
 ```
 
 ---

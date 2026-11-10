@@ -206,9 +206,9 @@ el context, que ja estan en la taula).
    conflicte a l'aula; la resta de power-ups continua avant.
 
 5. 🟩 **Ambdues** — Avatars de personatge personalitzables — 🟡 Mitjana
-   Ja existix un selector de 29 icones/emojis fixos (`join.html:44-73`,
-   `join.js:2,33-52,191-193`, persistit com `avatar_icon` en
-   `sockets/playerEvents.js:83` i `services/commons.js:165`); la proposta seria ampliar-lo (color,
+   Ja existix un selector de 29 icones/emojis fixos (`join.html`,
+   `join.js`, persistit com `avatar_icon` en
+   `playerEvents.js` i `services/commons.js`); la proposta seria ampliar-lo (color,
    accessoris, galeria més àmplia), no crear-lo des de zero.
    → **Criteri pedagògic:** ✖️ Aprenentatge: Cap · 🙂 Clima: Segur ·
    ➖ Inclusió: Neutra → **Aparcada** (no es descarta el que ja existix,
@@ -345,7 +345,7 @@ el context, que ja estan en la taula).
 
 23. 🟨 **Kahoot** — Pantalla "¡Prepara't!" amb compte arrere 3-2-1 — 🟢 Baixa
     Ja implementada en el mode "Jugar a l'aula" des del commit `9b8c345`
-    (`sockets/gameHelpers.js:295`, esdeveniment `questionCountdown`). No
+    (`sockets/gameHelpers.js`, esdeveniment `questionCountdown`). No
     existix en Solo; l'únic pendent és portar `showQuestionCountdown`.
     → **Criteri pedagògic:** ✖️ Aprenentatge: Cap · 🙂 Clima: Segur ·
     ➖ Inclusió: Neutra → sense valor pedagògic directe, però s'implementa
@@ -510,21 +510,21 @@ realista, no només una llista d'idees.
 - **Diverses propostes ja estan parcial o totalment implementades.**
   Comprovat contra el codi actual:
   - **5 (avatars)** — ja existix un selector de 29 icones/emojis fixos
-    (`src/public/join.html:44-73`, `join.js:2,33-52,191-193`, persistit
-    com `avatar_icon` en `sockets/playerEvents.js:83` i
-    `services/commons.js:165`).
+    (`src/public/join.html`, `join.js`, persistit
+    com `avatar_icon` en `playerEvents.js` i
+    `services/commons.js`).
   - **9 (música per fases)** — `music-player.js` (377 línies) ja és un
     reproductor de pista de fons amb selector/volum/rotació, més un
     efecte de gong al tancar cada pregunta (`effects/gong.mp3`,
     `initGong()`/`playGong()` en `hostGame.js`). Encara no distingix música per fases.
   - **23 (compte arrere 3-2-1)** — ja implementada abans de cada
     pregunta en el mode "Jugar a l'aula" (commit `9b8c345`,
-    `sockets/gameHelpers.js:295`, `scheduleQuestionCountdown()`,
+    `sockets/gameHelpers.js`, `scheduleQuestionCountdown()`,
     esdeveniment `questionCountdown`). **No
     existix en Solo**: ahí només faltaria portar `showQuestionCountdown`.
   - **4 (power-ups)** — el submecanisme de "doble puntuació" ja existix
-    (commit `ef9cb40`, `services/scoring.js:16` i
-    `services/kahootImport.js:83-86`), però només
+    (commit `ef9cb40`, `services/scoring.js` i
+    `services/kahootImport.js`), però només
     s'activa automàticament en importar un qüestionari de Kahoot que ja
     ho portava marcat; no hi ha control manual en el creador propi.
   - **15 (importació ampliada)** — `create-ia.js` ja té
