@@ -44,20 +44,38 @@ module.exports = function createPlayerEvents({
       console.log('Player connected to game pin', pinParam);
       const hostId = game.hostId;
 
+      const emitJoinUpdate = (ackExtra) => {
+        socket.join(game.pin);
+        const playersInGame = players.getPlayers(hostId);
+        io.to(game.pin).emit('updatePlayerLobby', playersInGame);
+        io.to(hostId).emit('updatePlayerLobby', playersInGame);
+        socket.emit('playerJoinAck', { ok: true, pin: game.pin, hostId });
+        if (ackExtra) socket.emit(ackExtra.event, ackExtra.payload);
+        if (game.gameLive) {
+          socket.emit('gameStartedPlayer');
+        }
+      };
+
+      // Reenvío del mismo 'player-join' en la misma conexión (p. ej. el
+      // reintento a los 1200ms de lobby.js si el ack tarda): ya está unido
+      // con este socket, no crear una segunda fila.
+      const already = players.getPlayer(socket.id);
+      if (already && already.hostId === hostId) {
+        if (token && already.token !== token) {
+          if (already.token) players.tokens.delete(already.token);
+          already.token = token;
+          players.tokens.set(token, { hostId, playerId: socket.id });
+        }
+        emitJoinUpdate();
+        return;
+      }
+
       let existing = null;
       if (token) {
         existing = players.getByToken(token);
         if (existing && existing.hostId === hostId) {
           existing.playerId = socket.id;
-          socket.join(game.pin);
-          const playersInGame = players.getPlayers(hostId);
-          io.to(game.pin).emit('updatePlayerLobby', playersInGame);
-          io.to(hostId).emit('updatePlayerLobby', playersInGame);
-          socket.emit('playerJoinAck', { ok: true, pin: game.pin, hostId });
-          socket.emit('playerRejoin', { ok: true });
-          if (game.gameLive) {
-            socket.emit('gameStartedPlayer');
-          }
+          emitJoinUpdate({ event: 'playerRejoin', payload: { ok: true } });
           console.log('[player-join] rejoined pin:', game.pin, 'playerId:', socket.id);
           return;
         }
@@ -73,6 +91,34 @@ module.exports = function createPlayerEvents({
       }
 
       const safeName = studentIdentity ? normalizePlayerName(studentIdentity.public_code) : normalizeSoloName(params.name);
+
+      // El token no llegó o no resolvió (p. ej. tras un corte de wifi que
+      // provocó una reconexión sin el token persistido). Si ya había una fila
+      // con el mismo nombre pero su conexión anterior ya no está viva, es la
+      // misma persona reconectando, no un alumnado distinto con el mismo
+      // nombre: reutilizamos la fila en vez de duplicarla y dejar un
+      // "fantasma" visible hasta los 40s de margen de reconexión.
+      const stale = players.getPlayers(hostId).find((p) => p.name === safeName && !io.sockets.sockets.has(p.playerId));
+      if (stale) {
+        if (stale.token) {
+          players.tokens.delete(stale.token);
+        }
+        stale.playerId = socket.id;
+        stale.token = token || '';
+        if (studentIdentity && studentIdentity.avatar_icon) {
+          stale.icon = studentIdentity.avatar_icon;
+        } else if (params.icon) {
+          stale.icon = params.icon;
+        }
+        stale.gameData.identity = studentIdentity || stale.gameData.identity;
+        if (token) {
+          players.tokens.set(token, { hostId, playerId: socket.id });
+        }
+        emitJoinUpdate({ event: 'playerRejoin', payload: { ok: true } });
+        console.log('[player-join] reused stale entry by name, pin:', game.pin, 'playerId:', socket.id);
+        return;
+      }
+
       players.addPlayer(hostId, socket.id, safeName, {
         score: 0,
         answer: 0,
@@ -81,15 +127,7 @@ module.exports = function createPlayerEvents({
         answerHistory: [],
         identity: studentIdentity || null
       }, studentIdentity && studentIdentity.avatar_icon ? studentIdentity.avatar_icon : (params.icon || ''), token);
-      socket.join(game.pin);
-
-      const playersInGame = players.getPlayers(hostId);
-      io.to(game.pin).emit('updatePlayerLobby', playersInGame);
-      io.to(hostId).emit('updatePlayerLobby', playersInGame);
-      socket.emit('playerJoinAck', { ok: true, pin: game.pin, hostId });
-      if (game.gameLive) {
-        socket.emit('gameStartedPlayer');
-      }
+      emitJoinUpdate();
       console.log('[player-join] joined pin:', game.pin, 'playerId:', socket.id);
     });
 

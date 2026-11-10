@@ -45,7 +45,8 @@ function setLobbyStatus(waiting, detail){
 
 //When player connects to server
 socket.on('connect', function() {
-    
+    joinAck = false;
+
     var params = jQuery.deparam(window.location.search); //Gets data from url
     var resolvedToken = resolveLobbyToken(params);
     if(resolvedToken){
