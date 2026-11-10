@@ -23,6 +23,7 @@ const mongoClient = new MongoClient(mongoUrl, {
 let db;
 let mongoReadyPromise = null;
 let indexesReadyPromise = null;
+let logsCollectionReady = false;
 
 function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -51,7 +52,14 @@ async function connectMongoWithRetry(attempt = 1) {
 }
 
 async function getDb() {
-  if (db) return db;
+  if (db) {
+    // Idempotent i amb el seu propi flag d'èxit: si el primer intent (a
+    // connectMongoWithRetry o ací mateix) va fallar per un tall transitori
+    // de connexió, es reintenta en la pròxima crida en lloc de deixar
+    // l'app sense la col·lecció capped per sempre.
+    await ensureLogsCollection(db);
+    return db;
+  }
   if (mongoReadyPromise) return mongoReadyPromise;
   mongoReadyPromise = connectMongoWithRetry();
   return mongoReadyPromise;
@@ -89,22 +97,33 @@ async function ensureIndexes(dbInstance) {
 // des de /admin/logs (collMod amb cappedSize), este arrencada només la
 // crea si encara no existix.
 async function ensureLogsCollection(dbInstance) {
-  const existing = await dbInstance.listCollections({ name: LOGS_COLLECTION }).toArray();
-  if (existing.length) return;
-  let sizeBytes = DEFAULT_LOGS_CAPPED_SIZE_BYTES;
+  if (logsCollectionReady) return;
   try {
-    const settingsDoc = await dbInstance.collection(SETTINGS_COLLECTION).findOne({ _id: 'logging' });
-    if (settingsDoc && Number(settingsDoc.cappedSizeBytes) > 0) {
-      sizeBytes = Number(settingsDoc.cappedSizeBytes);
+    const existing = await dbInstance.listCollections({ name: LOGS_COLLECTION }).toArray();
+    if (existing.length) {
+      logsCollectionReady = true;
+      return;
     }
-  } catch (err) {
-    console.error('ensureLogsCollection: no s\'ha pogut llegir appSettings, s\'usa la mida per defecte', err);
-  }
-  try {
+    let sizeBytes = DEFAULT_LOGS_CAPPED_SIZE_BYTES;
+    try {
+      const settingsDoc = await dbInstance.collection(SETTINGS_COLLECTION).findOne({ _id: 'logging' });
+      if (settingsDoc && Number(settingsDoc.cappedSizeBytes) > 0) {
+        sizeBytes = Number(settingsDoc.cappedSizeBytes);
+      }
+    } catch (err) {
+      console.error('ensureLogsCollection: no s\'ha pogut llegir appSettings, s\'usa la mida per defecte', err);
+    }
     await dbInstance.createCollection(LOGS_COLLECTION, { capped: true, size: sizeBytes });
+    logsCollectionReady = true;
   } catch (err) {
-    // NamespaceExists (race entre processos) no és un error real.
-    if (!err || err.codeName !== 'NamespaceExists') {
+    // NamespaceExists (race entre processos) no és un error real; en
+    // qualsevol altre cas (p. ex. un tall de connexió transitori) es deixa
+    // `logsCollectionReady` a false perquè la pròxima crida a getDb() ho
+    // reintente, en lloc de deixar la col·lecció capped sense crear per
+    // sempre.
+    if (err && err.codeName === 'NamespaceExists') {
+      logsCollectionReady = true;
+    } else {
       console.error('ensureLogsCollection error', err);
     }
   }
