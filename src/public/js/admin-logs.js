@@ -12,7 +12,6 @@
   var filterLevel = document.getElementById('logs-filter-level');
   var filterQ = document.getElementById('logs-filter-q');
   var filterPin = document.getElementById('logs-filter-pin');
-  var filterHostId = document.getElementById('logs-filter-hostid');
   var filterApplyBtn = document.getElementById('logs-filter-apply');
   var filterRefreshBtn = document.getElementById('logs-filter-refresh');
   var exportCsvBtn = document.getElementById('logs-export-csv');
@@ -217,7 +216,6 @@
     if(filterLevel && filterLevel.value) params.set('level', filterLevel.value);
     if(filterQ && filterQ.value) params.set('q', filterQ.value);
     if(filterPin && filterPin.value) params.set('pin', filterPin.value);
-    if(filterHostId && filterHostId.value) params.set('hostId', filterHostId.value);
     return params;
   }
 

@@ -106,6 +106,7 @@ test('GET /api/admin/logs filtra por nivel, pin y texto libre', async () => {
 
   logger.info('Partida iniciada en pin A', { tag: 'game-start', pin: 'AAAAAA', hostId: 'hostA' });
   logger.error('Fallo crítico en pin B', { tag: 'playerAnswer', pin: 'BBBBBB', hostId: 'hostB' });
+  logger.warn('Jugador reconectado sin token resolt, fila reutilitzada pel nom', { tag: 'player-rejoin-stale', pin: 'CCCCCC', hostId: 'hostC', name: 'Oscar' });
   await new Promise((resolve) => setTimeout(resolve, 200)); // el transport escribe de forma asíncrona
 
   const byLevel = await request('/api/admin/logs?level=error', { headers });
@@ -122,4 +123,11 @@ test('GET /api/admin/logs filtra por nivel, pin y texto libre', async () => {
   const byTextJson = await byText.json();
   assert.ok(byTextJson.data.some((row) => row.pin === 'BBBBBB'));
   assert.ok(byTextJson.data.every((row) => row.pin !== 'AAAAAA'));
+
+  // El texto libre también debe encontrar datos guardados solo en `meta`
+  // (p. ej. el nombre del alumnado), no solo en message/tag.
+  const byName = await request('/api/admin/logs?q=Oscar', { headers });
+  const byNameJson = await byName.json();
+  assert.ok(byNameJson.data.some((row) => row.pin === 'CCCCCC'));
+  assert.ok(byNameJson.data.every((row) => row.pin !== 'AAAAAA' && row.pin !== 'BBBBBB'));
 });

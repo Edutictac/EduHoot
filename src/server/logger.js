@@ -30,6 +30,11 @@ class MongoCappedTransport extends Transport {
   log(info, callback) {
     setImmediate(() => this.emit('logged', info));
     const { level, message, timestamp, tag, pin, hostId, playerId, ...meta } = info;
+    const hasMeta = Object.keys(meta).length > 0;
+    // Camp pla per a la busca de text lliure del visor (incloent-hi el
+    // contingut de `meta`, p. ex. el nom de l'alumnat): un regex sobre un
+    // objecte Mongo no funciona, així que es guarda ja concatenat.
+    const searchText = [message, tag, hasMeta ? JSON.stringify(meta) : ''].filter(Boolean).join(' ');
     getLogsCollection()
       .then((collection) => collection.insertOne({
         level,
@@ -38,7 +43,8 @@ class MongoCappedTransport extends Transport {
         pin: pin || null,
         hostId: hostId || null,
         playerId: playerId || null,
-        meta: Object.keys(meta).length ? meta : null,
+        meta: hasMeta ? meta : null,
+        searchText,
         createdAt: timestamp ? new Date(timestamp) : new Date()
       }))
       .catch((err) => {

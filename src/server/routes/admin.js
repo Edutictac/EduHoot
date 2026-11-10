@@ -380,7 +380,10 @@ module.exports = function createAdminRouter({
     if (reqQuery.q) {
       const safeText = String(reqQuery.q).slice(0, 200).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const re = new RegExp(safeText, 'i');
-      query.$or = [{ message: re }, { tag: re }];
+      // searchText ja inclou message+tag+meta (p. ex. el nom de l'alumnat);
+      // es manté message/tag com a alternativa per a entrades anteriors a
+      // l'existència d'eixe camp.
+      query.$or = [{ searchText: re }, { message: re }, { tag: re }];
     }
     return query;
   }
