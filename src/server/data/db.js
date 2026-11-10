@@ -10,6 +10,9 @@ const SOLO_SCORES_COLLECTION = 'soloScores';
 const EPHEMERAL_COLLECTION = 'ephemeralQuizzes';
 const RATINGS_COLLECTION = 'quizRatings';
 const RATING_VOTES_COLLECTION = 'quizRatingVotes';
+const LOGS_COLLECTION = 'appLogs';
+const SETTINGS_COLLECTION = 'appSettings';
+const DEFAULT_LOGS_CAPPED_SIZE_BYTES = 10 * 1024 * 1024; // 10MB, ajustable des de /admin/logs
 const MONGO_MAX_RETRIES = 5;
 const MONGO_RETRY_DELAY_MS = 3000;
 const MONGO_MAX_POOL_SIZE = parseInt(process.env.MONGO_MAX_POOL_SIZE, 10) || 50;
@@ -31,6 +34,7 @@ async function connectMongoWithRetry(attempt = 1) {
     await mongoClient.connect();
     db = mongoClient.db(DB_NAME);
     await ensureIndexes(db);
+    await ensureLogsCollection(db);
     console.log(`Connected to MongoDB at ${mongoUrl}`);
     mongoReadyPromise = null;
     return db;
@@ -80,6 +84,32 @@ async function ensureIndexes(dbInstance) {
   return indexesReadyPromise;
 }
 
+// appLogs es capped: cal crear-la explícitament amb 'capped: true',
+// `collection(name)` no ho fa sol. La mida es pot reconfigurar en calent
+// des de /admin/logs (collMod amb cappedSize), este arrencada només la
+// crea si encara no existix.
+async function ensureLogsCollection(dbInstance) {
+  const existing = await dbInstance.listCollections({ name: LOGS_COLLECTION }).toArray();
+  if (existing.length) return;
+  let sizeBytes = DEFAULT_LOGS_CAPPED_SIZE_BYTES;
+  try {
+    const settingsDoc = await dbInstance.collection(SETTINGS_COLLECTION).findOne({ _id: 'logging' });
+    if (settingsDoc && Number(settingsDoc.cappedSizeBytes) > 0) {
+      sizeBytes = Number(settingsDoc.cappedSizeBytes);
+    }
+  } catch (err) {
+    console.error('ensureLogsCollection: no s\'ha pogut llegir appSettings, s\'usa la mida per defecte', err);
+  }
+  try {
+    await dbInstance.createCollection(LOGS_COLLECTION, { capped: true, size: sizeBytes });
+  } catch (err) {
+    // NamespaceExists (race entre processos) no és un error real.
+    if (!err || err.codeName !== 'NamespaceExists') {
+      console.error('ensureLogsCollection error', err);
+    }
+  }
+}
+
 module.exports = {
   mongoClient,
   getDb,
@@ -88,5 +118,8 @@ module.exports = {
   SOLO_SCORES_COLLECTION,
   EPHEMERAL_COLLECTION,
   RATINGS_COLLECTION,
-  RATING_VOTES_COLLECTION
+  RATING_VOTES_COLLECTION,
+  LOGS_COLLECTION,
+  SETTINGS_COLLECTION,
+  DEFAULT_LOGS_CAPPED_SIZE_BYTES
 };

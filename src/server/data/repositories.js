@@ -5,7 +5,9 @@ const {
   SOLO_SCORES_COLLECTION,
   EPHEMERAL_COLLECTION,
   RATINGS_COLLECTION,
-  RATING_VOTES_COLLECTION
+  RATING_VOTES_COLLECTION,
+  LOGS_COLLECTION,
+  SETTINGS_COLLECTION
 } = require('./db');
 
 async function getGamesCollection() {
@@ -38,11 +40,23 @@ async function getRatingVotesCollection() {
   return database.collection(RATING_VOTES_COLLECTION);
 }
 
+async function getLogsCollection() {
+  const database = await getDb();
+  return database.collection(LOGS_COLLECTION);
+}
+
+async function getSettingsCollection() {
+  const database = await getDb();
+  return database.collection(SETTINGS_COLLECTION);
+}
+
 module.exports = {
   getGamesCollection,
   getUsersCollection,
   getSoloScoresCollection,
   getEphemeralCollection,
   getRatingsCollection,
-  getRatingVotesCollection
+  getRatingVotesCollection,
+  getLogsCollection,
+  getSettingsCollection
 };

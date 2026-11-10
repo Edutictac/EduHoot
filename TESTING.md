@@ -81,7 +81,9 @@ problemes d'estil, variables sense usar, etc.
   Commons de `EDUTICTAC_COMMONS_URL`), i `devLogin.test.js` /
   `devLoginOff.test.js` (`/dev/login` funciona en desenvolupament i dona 404
   fora d'ell), i `devOidc.test.js` (flux d'Authentik complet contra l'OIDC
-  simulat de dev: rol del seed, rebuig sense rol docent i PKCE).
+  simulat de dev: rol del seed, rebuig sense rol docent i PKCE), i
+  `adminLogs.test.js` (visor de logs i configuració de nivell/mida de la
+  col·lecció capped, totes dos protegides per rol admin).
 - **`test/browser/`** — tests de navegador amb Playwright: `language.spec.js`
   (canvi d'idioma), `auth-state.spec.js` (estat de sessió i pont amb el xip),
   `solo-poll.spec.js` (les preguntes d'enquesta en mode Solo no compten com a

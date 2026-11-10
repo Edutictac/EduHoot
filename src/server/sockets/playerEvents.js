@@ -1,4 +1,5 @@
 const { getQuestionMeta, normalizeCorrectAnswers } = require('../questionUtils');
+const { logger } = require('../logger');
 
 // player-join, player-join-game, playerAnswer.
 module.exports = function createPlayerEvents({
@@ -24,24 +25,25 @@ module.exports = function createPlayerEvents({
 
   return function registerPlayerEvents(socket) {
     socket.on('player-join', (params) => {
-      console.log('[player-join] params:', {
-        pin: params && params.pin ? String(params.pin) : '',
-        name: params && params.name ? normalizeSoloName(params.name) : '',
+      const pinParam = params.pin ? params.pin.toString() : '';
+      const safeLogName = params && params.name ? normalizeSoloName(params.name) : '';
+      logger.debug('player-join recibido', {
+        tag: 'player-join',
+        pin: pinParam,
+        name: safeLogName,
         hasToken: !!(params && params.token),
         hasStudentJoinToken: !!(params && params.studentJoinToken)
       });
       logGames('player-join');
-      const pinParam = params.pin ? params.pin.toString() : '';
       const token = params.token;
 
       const game = pinParam ? games.getGameByPin(pinParam) : null;
       if (!game) {
-        console.log('[player-join] noGameFound for pin:', params.pin);
+        logger.warn('player-join sin partida para ese PIN', { tag: 'player-join', pin: pinParam });
         socket.emit('noGameFound');
         return;
       }
 
-      console.log('Player connected to game pin', pinParam);
       const hostId = game.hostId;
 
       const emitJoinUpdate = (ackExtra) => {
@@ -76,7 +78,7 @@ module.exports = function createPlayerEvents({
         if (existing && existing.hostId === hostId) {
           existing.playerId = socket.id;
           emitJoinUpdate({ event: 'playerRejoin', payload: { ok: true } });
-          console.log('[player-join] rejoined pin:', game.pin, 'playerId:', socket.id);
+          logger.info('Jugador reconectado (token)', { tag: 'player-rejoin', pin: game.pin, hostId, playerId: socket.id });
           return;
         }
       }
@@ -115,7 +117,7 @@ module.exports = function createPlayerEvents({
           players.tokens.set(token, { hostId, playerId: socket.id });
         }
         emitJoinUpdate({ event: 'playerRejoin', payload: { ok: true } });
-        console.log('[player-join] reused stale entry by name, pin:', game.pin, 'playerId:', socket.id);
+        logger.warn('Jugador reconectado sin token resolt, fila reutilitzada pel nom', { tag: 'player-rejoin-stale', pin: game.pin, hostId, playerId: socket.id, name: safeName });
         return;
       }
 
@@ -128,7 +130,7 @@ module.exports = function createPlayerEvents({
         identity: studentIdentity || null
       }, studentIdentity && studentIdentity.avatar_icon ? studentIdentity.avatar_icon : (params.icon || ''), token);
       emitJoinUpdate();
-      console.log('[player-join] joined pin:', game.pin, 'playerId:', socket.id);
+      logger.info('Jugador unit a la partida', { tag: 'player-join', pin: game.pin, hostId, playerId: socket.id, name: safeName });
     });
 
     socket.on('player-join-game', (data) => {
@@ -296,7 +298,7 @@ module.exports = function createPlayerEvents({
           }
           scheduleGameCleanup(hostId, GAME_INACTIVITY_TIMEOUT);
         } catch (err) {
-          console.error('playerAnswer error', err);
+          logger.error('playerAnswer error', { tag: 'playerAnswer', error: err && err.message ? err.message : String(err) });
           socket.emit('noGameFound');
         }
       }

@@ -8,6 +8,7 @@ const {
   getRatingsCollection,
   getRatingVotesCollection
 } = require('../data/repositories');
+const { logger } = require('../logger');
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 2 * 1024 * 1024 } });
 const uploadRate = new Map(); // clave: ip -> { count, windowStart }
@@ -40,7 +41,7 @@ function uploadRateLimiter(req, res, next) {
 }
 
 function logEvent(tag, payload) {
-  console.log(`[${tag}]`, payload);
+  logger.info(tag, Object.assign({ tag }, payload));
 }
 
 module.exports = function createQuizzesRouter({

@@ -127,20 +127,41 @@ const {
   findOrCreateGoogleUser
 } = require('./services/oauth')({ PORT });
 const { authRateLimiter, sessionMiddleware, requireRole } = require('./services/authMiddleware')({ authentikOnly });
+const { logger } = require('./logger');
+const { getLogsCollection } = require('./data/repositories');
 
 // Log y absorbe errores no controlados para evitar que el proceso caiga
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('[unhandledRejection]', reason);
+  logger.error('unhandledRejection', { tag: 'unhandledRejection', error: reason && reason.message ? reason.message : String(reason) });
 });
 process.on('uncaughtException', (err) => {
+  // El transport de Mongo del logger és "fire and forget" (no bloqueja el
+  // bucle d'events en l'ús normal), però ací el procés mor just després:
+  // sense esperar explícitament, este és justament el log més probable de
+  // perdre's. S'intenta persistir amb un marge curt abans de eixir.
+  const message = err && err.message ? err.message : String(err);
   console.error('[uncaughtException]', err);
-  process.exit(1);
+  const persist = getLogsCollection()
+    .then((collection) => collection.insertOne({
+      level: 'error',
+      message: 'uncaughtException',
+      tag: 'uncaughtException',
+      pin: null,
+      hostId: null,
+      playerId: null,
+      meta: { error: message, stack: err && err.stack },
+      createdAt: new Date()
+    }))
+    .catch(() => {});
+  Promise.race([persist, new Promise((resolve) => setTimeout(resolve, 1500))]).finally(() => {
+    process.exit(1);
+  });
 });
 io.on('error', (err) => {
-  console.error('[socket-io-error]', err);
+  logger.error('socket-io-error', { tag: 'socket-io-error', error: err && err.message ? err.message : String(err) });
 });
 io.engine.on('connection_error', (err) => {
-  console.error('[socket-connection-error]', err);
+  logger.error('socket-connection-error', { tag: 'socket-connection-error', error: err && err.message ? err.message : String(err) });
 });
 const PUBLIC_IMPORT_SOURCE_URL = (process.env.PUBLIC_IMPORT_SOURCE_URL || '').trim().replace(/\/+$/, '');
 const APP_VERSION = require('../package.json').version;
@@ -170,7 +191,8 @@ const CHIP_PAGES = {
   '/host/index.html': 'host/index.html',
   '/player/': 'player/index.html',
   '/player/index.html': 'player/index.html',
-  '/admin/stats': 'admin-stats.html'
+  '/admin/stats': 'admin-stats.html',
+  '/admin/logs': 'admin-logs.html'
 };
 
 // Body parsers (bump limit to allow quizzes con recursos más pesados)
@@ -378,7 +400,7 @@ if (process.env.NODE_ENV === 'development') {
 
 // Fallback para errores de rutas no capturados
 app.use((err, req, res, next) => {
-  console.error('[express-error]', err);
+  logger.error('express-error', { tag: 'express-error', error: err && err.message ? err.message : String(err), path: req && req.path });
   if (res.headersSent) return next(err);
   return res.status(500).json({ error: 'Error interno. Inténtalo de nuevo.' });
 });

@@ -28,6 +28,7 @@ funcionament del projecte.
 - [Informe de partida (descàrrega en CSV)](#informe-de-partida-descàrrega-en-csv)
 - [Exportació a Moodle XML](#exportació-a-moodle-xml)
 - [Panell d'administració (estadístiques)](#panell-dadministració-estadístiques)
+- [Logs del servidor (/admin/logs)](#logs-del-servidor-adminlogs)
 - [Modes de joc](#modes-de-joc)
 - [Avanç de pregunta: automàtic o manual?](#avanç-de-pregunta-automàtic-o-manual)
 - [Càlcul de la puntuació](#càlcul-de-la-puntuació)
@@ -686,6 +687,39 @@ poder importar un fitxer XML al banc de preguntes del seu propi curs.
 - **El mateix router (`admin.js`) també allotja** ferramentes afins
   sense interfície pròpia (només API): exportar/importar quizzes en
   bloc, i rèplica ("mirror") d'imàtgens de Kahoot o externes.
+
+## Logs del servidor (`/admin/logs`)
+
+- **Llibreria**: Winston (`src/server/logger.js`), amb eixida a consola
+  i un *transport* propi que persistix cada entrada com a document a la
+  col·lecció `appLogs` (`src/server/data/db.js`), creada explícitament
+  com a **capped** (circular, mida fixa en bytes) perquè `collection()`
+  no ho fa sol. Camps de correlació a cada document: `level`, `message`,
+  `tag`, `pin`, `hostId`, `playerId`, `meta` (la resta de dades), i
+  `createdAt`.
+- **Nivell i mida configurables** sense redesplegar: col·lecció
+  `appSettings` (document `_id: 'logging'`), editable des del propi
+  visor o per `GET`/`POST /api/admin/settings/logging`
+  (`src/server/routes/admin.js`, `requireRole('admin')`). Canviar la
+  mida redimensiona la col·lecció en calent (`collMod` amb
+  `cappedSize`); per defecte, nivell `info` i 10MB.
+- **Visor**: `/admin/logs` (`src/public/admin-logs.html` +
+  `src/public/js/admin-logs.js`, mateix patró vanilla JS que
+  `/admin/stats`, sense Vue), amb filtres per nivell, PIN, `hostId` i
+  text lliure (`GET /api/admin/logs`, mateixa protecció de rol).
+- **`uncaughtException` és un cas especial**: el *transport* normal no
+  bloqueja el bucle d'esdeveniments (escriu en segon pla), però ahí el
+  procés es tanca (`process.exit(1)`) just després de l'error. Per no
+  perdre eixe log concret, `server.js` intenta persistir-lo directament
+  amb un marge curt (1,5s) abans d'eixir, a banda del `logger.error`
+  normal.
+- **Esdeveniments de partida registrats**: creació/inici/fi de partida
+  (`game-start`/`game-end`/`host-join` en `hostEvents.js`), unió/
+  reconnexió/eixida de jugador (`player-join`/`player-rejoin`/
+  `player-leave` en `playerEvents.js`/`common.js`, incloent-hi el cas
+  de reutilitzar una fila amb el mateix nom quan el token no resol —
+  vore la issue de jugadors duplicats), i els errors no controlats de
+  cada mòdul de sockets/rutes.
 
 ## Modes de joc
 

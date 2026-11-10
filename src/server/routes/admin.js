@@ -1,7 +1,9 @@
 const express = require('express');
 const path = require('path');
 const multer = require('multer');
-const { getGamesCollection, getEphemeralCollection } = require('../data/repositories');
+const { getGamesCollection, getEphemeralCollection, getLogsCollection, getSettingsCollection } = require('../data/repositories');
+const { getDb, LOGS_COLLECTION, DEFAULT_LOGS_CAPPED_SIZE_BYTES } = require('../data/db');
+const { logger, setLevel, LOG_LEVELS, DEFAULT_LEVEL } = require('../logger');
 
 const bulkUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
 
@@ -352,6 +354,158 @@ module.exports = function createAdminRouter({
 
   router.get(['/admin', '/admin/', '/admin-stats.html'], (req, res) => {
     res.redirect('/admin/stats');
+  });
+
+  // Construeix el filtre Mongo a partir dels paràmetres de consulta,
+  // compartit pel visor (paginat) i per la descàrrega (sense tope).
+  function buildLogsQuery(reqQuery) {
+    const query = {};
+    if (reqQuery.level && LOG_LEVELS.includes(reqQuery.level)) {
+      query.level = reqQuery.level;
+    }
+    if (reqQuery.pin) {
+      query.pin = String(reqQuery.pin);
+    }
+    if (reqQuery.hostId) {
+      query.hostId = String(reqQuery.hostId);
+    }
+    if (reqQuery.playerId) {
+      query.playerId = String(reqQuery.playerId);
+    }
+    if (reqQuery.from || reqQuery.to) {
+      query.createdAt = {};
+      if (reqQuery.from) query.createdAt.$gte = new Date(reqQuery.from);
+      if (reqQuery.to) query.createdAt.$lte = new Date(reqQuery.to);
+    }
+    if (reqQuery.q) {
+      const safeText = String(reqQuery.q).slice(0, 200).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const re = new RegExp(safeText, 'i');
+      query.$or = [{ message: re }, { tag: re }];
+    }
+    return query;
+  }
+
+  function csvField(value) {
+    const str = value === null || value === undefined ? '' : String(value);
+    if (/[",\n;]/.test(str)) {
+      return '"' + str.replace(/"/g, '""') + '"';
+    }
+    return str;
+  }
+
+  // Admin: visor de logs (col·lecció capped `appLogs`)
+  router.get('/api/admin/logs', requireRole('admin'), async (req, res) => {
+    try {
+      const collection = await getLogsCollection();
+      const query = buildLogsQuery(req.query);
+      const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 100, 1), 500);
+      const docs = await collection.find(query).sort({ createdAt: -1 }).limit(limit).toArray();
+      return res.json({ ok: true, data: docs });
+    } catch (err) {
+      console.error('admin-logs error', err);
+      return res.status(500).json({ error: 'No s\'han pogut obtindre els logs.' });
+    }
+  });
+
+  // Admin: descàrrega dels logs (mateixos filtres que el visor, sense el
+  // tope de 500 files; la col·lecció és capped, així que el volum ja està
+  // acotat per la mida configurada).
+  router.get('/api/admin/logs/export', requireRole('admin'), async (req, res) => {
+    const format = req.query.format === 'ndjson' ? 'ndjson' : 'csv';
+    try {
+      const collection = await getLogsCollection();
+      const query = buildLogsQuery(req.query);
+      const cursor = collection.find(query).sort({ createdAt: -1 });
+      const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+      if (format === 'ndjson') {
+        res.setHeader('Content-Type', 'application/x-ndjson; charset=utf-8');
+        res.setHeader('Content-Disposition', `attachment; filename="eduhoot-logs-${stamp}.ndjson"`);
+        for await (const doc of cursor) {
+          res.write(JSON.stringify(doc) + '\n');
+        }
+        return res.end();
+      }
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="eduhoot-logs-${stamp}.csv"`);
+      res.write('createdAt,level,tag,pin,hostId,playerId,message,meta\n');
+      for await (const doc of cursor) {
+        const row = [
+          doc.createdAt instanceof Date ? doc.createdAt.toISOString() : doc.createdAt,
+          doc.level,
+          doc.tag,
+          doc.pin,
+          doc.hostId,
+          doc.playerId,
+          doc.message,
+          doc.meta ? JSON.stringify(doc.meta) : ''
+        ].map(csvField).join(',');
+        res.write(row + '\n');
+      }
+      return res.end();
+    } catch (err) {
+      console.error('admin-logs-export error', err);
+      if (res.headersSent) return res.end();
+      return res.status(500).json({ error: 'No s\'han pogut exportar els logs.' });
+    }
+  });
+
+  router.get('/api/admin/settings/logging', requireRole('admin'), async (req, res) => {
+    try {
+      const settings = await getSettingsCollection();
+      const doc = await settings.findOne({ _id: 'logging' });
+      return res.json({
+        ok: true,
+        data: {
+          level: (doc && doc.level) || DEFAULT_LEVEL,
+          cappedSizeBytes: (doc && doc.cappedSizeBytes) || DEFAULT_LOGS_CAPPED_SIZE_BYTES
+        }
+      });
+    } catch (err) {
+      console.error('admin-settings-logging GET error', err);
+      return res.status(500).json({ error: 'No s\'ha pogut obtindre la configuració.' });
+    }
+  });
+
+  router.post('/api/admin/settings/logging', requireRole('admin'), async (req, res) => {
+    try {
+      const { level, cappedSizeBytes } = req.body || {};
+      const update = {};
+      if (level !== undefined) {
+        if (!LOG_LEVELS.includes(level)) {
+          return res.status(400).json({ error: `Nivell invàlid. Valors permesos: ${LOG_LEVELS.join(', ')}` });
+        }
+        update.level = level;
+      }
+      let newSizeBytes = null;
+      if (cappedSizeBytes !== undefined) {
+        newSizeBytes = parseInt(cappedSizeBytes, 10);
+        if (!Number.isFinite(newSizeBytes) || newSizeBytes < 1024 * 1024) {
+          return res.status(400).json({ error: 'La mida mínima de la col·lecció de logs és 1MB.' });
+        }
+        update.cappedSizeBytes = newSizeBytes;
+      }
+      if (!Object.keys(update).length) {
+        return res.status(400).json({ error: 'Cal indicar level i/o cappedSizeBytes.' });
+      }
+      const settings = await getSettingsCollection();
+      await settings.updateOne({ _id: 'logging' }, { $set: update }, { upsert: true });
+      if (update.level) {
+        setLevel(update.level);
+      }
+      if (newSizeBytes) {
+        const database = await getDb();
+        await database.command({ collMod: LOGS_COLLECTION, cappedSize: newSizeBytes });
+      }
+      logger.info('Configuració de logging actualitzada', { tag: 'admin-settings', ...update });
+      return res.json({ ok: true });
+    } catch (err) {
+      console.error('admin-settings-logging POST error', err);
+      return res.status(500).json({ error: 'No s\'ha pogut actualitzar la configuració.' });
+    }
+  });
+
+  router.get('/admin/logs', (req, res) => {
+    res.sendFile(path.join(publicPath, 'admin-logs.html'));
   });
 
   return router;

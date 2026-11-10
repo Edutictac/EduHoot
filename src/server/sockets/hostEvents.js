@@ -1,4 +1,5 @@
 const { getGamesCollection } = require('../data/repositories');
+const { logger } = require('../logger');
 
 // host-join, host-join-game, startGame, nextQuestion, skipQuestion, newQuiz.
 module.exports = function createHostEvents({
@@ -109,7 +110,7 @@ module.exports = function createHostEvents({
 
           socket.join(game.pin);
 
-          console.log('Game Created with pin:', game.pin);
+          logger.info('Partida creada', { tag: 'host-join', pin: game.pin, hostId: game.hostId });
           logGames('host-join');
 
           socket.emit('showGamePin', {
@@ -119,7 +120,7 @@ module.exports = function createHostEvents({
           socket.emit('noGameFound');
         }
       } catch (err) {
-        console.error('host-join error', err);
+        logger.error('host-join error', { tag: 'host-join', error: err && err.message ? err.message : String(err) });
         socket.emit('noGameFound');
       }
     });
@@ -186,7 +187,7 @@ module.exports = function createHostEvents({
             io.to(game.pin).emit('playerQuestion', buildStudentPlayerPayload(fullPlayerPayload, game.gameData.options));
           }
         } catch (err) {
-          console.error('host-join-game error', err);
+          logger.error('host-join-game error', { tag: 'host-join-game', error: err && err.message ? err.message : String(err) });
           socket.emit('noGameFound');
         }
 
@@ -291,6 +292,7 @@ module.exports = function createHostEvents({
           });
           game.gameLive = false;
           game.gameOver = true;
+          logger.info('Partida finalitzada', { tag: 'game-end', pin: game.pin, hostId: game.hostId, playersCount: Array.isArray(playersInGame) ? playersInGame.length : 0 });
           // Congelamos el informe con la foto de jugadores de este instante: si esperamos a los
           // await de abajo, los alumnos ya han recibido "GameOver" y sus dispositivos pueden
           // desconectarse (bloqueo de pantalla, cierre de pestaña...), vaciando players.getPlayers()
@@ -302,7 +304,7 @@ module.exports = function createHostEvents({
           scheduleGameCleanup(socket.id);
         }
       } catch (err) {
-        console.error('nextQuestion error', err);
+        logger.error('nextQuestion error', { tag: 'nextQuestion', error: err && err.message ? err.message : String(err) });
         socket.emit('noGameFound');
       }
     });
@@ -326,7 +328,7 @@ module.exports = function createHostEvents({
         helpers.emitQuestionOverPayloadDeferred(game);
         scheduleGameCleanup(socket.id, GAME_INACTIVITY_TIMEOUT);
       } catch (err) {
-        console.error('skipQuestion error', err);
+        logger.error('skipQuestion error', { tag: 'skipQuestion', error: err && err.message ? err.message : String(err) });
         socket.emit('noGameFound');
       }
     });
@@ -394,6 +396,7 @@ module.exports = function createHostEvents({
       }
       game.gameLive = true;
       game.gameOver = false;
+      logger.info('Partida iniciada', { tag: 'game-start', pin: game.pin, hostId: game.hostId, playersCount: gamePlayers.length, questionsCount: game.gameData.questions.length });
       scheduleGameCleanup(socket.id, GAME_INACTIVITY_TIMEOUT);
       io.to(game.pin).emit('gameStartedPlayer');
       socket.emit('gameStarted', game.hostId);
@@ -431,7 +434,7 @@ module.exports = function createHostEvents({
         await collection.insertOne(quiz);
         socket.emit('startGameFromCreator', newId);
       } catch (err) {
-        console.error('newQuiz error', err);
+        logger.error('newQuiz error', { tag: 'newQuiz', error: err && err.message ? err.message : String(err) });
         socket.emit('noGameFound');
       }
     });

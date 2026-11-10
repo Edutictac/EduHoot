@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Admin Logs | EduHoot</title>
+    <link rel="stylesheet" href="/css/admin.css">
+    <link rel="icon" href="/icons/logo.svg" type="image/svg+xml">
+    <link href="/css/fonts.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/edutictac-footer.css">
+    <link rel="stylesheet" href="/css/edutictac-shared.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="/js/edutictac-chip.js"></script>
+    <script src="https://commons.edutictac.es/assets/account-widget.js" defer onerror="document.documentElement.classList.add('account-fallback')"></script>
+  </head>
+  <body>
+    <edutictac-account class="site-account site-account--top" data-base="https://commons.edutictac.es"></edutictac-account>
+    <header class="admin-header">
+      <div>
+        <h1>Logs del servidor</h1>
+        <p><a href="/admin/stats">&larr; Panel de estadísticas</a></p>
+      </div>
+      <div class="login-inline" id="auth-area">
+        <button type="button" id="login-fallback">Entrar con EduTicTac</button>
+        <span id="login-status"></span>
+      </div>
+    </header>
+    <main class="admin-content">
+      <section class="panel" id="logs-settings">
+        <h4>Configuración</h4>
+        <div class="logs-settings-row">
+          <label>Nivel mínimo
+            <select id="logs-level-select">
+              <option value="error">error</option>
+              <option value="warn">warn</option>
+              <option value="info">info</option>
+              <option value="debug">debug</option>
+            </select>
+          </label>
+          <label>Tamaño máximo (MB)
+            <input type="number" id="logs-capped-mb" min="1" step="1">
+          </label>
+          <button type="button" id="logs-settings-save">Guardar</button>
+          <span id="logs-settings-status"></span>
+        </div>
+      </section>
+      <section class="panel" id="logs-filters">
+        <h4>Filtros</h4>
+        <div class="logs-filters-row">
+          <select id="logs-filter-level">
+            <option value="">Cualquier nivel</option>
+            <option value="error">error</option>
+            <option value="warn">warn</option>
+            <option value="info">info</option>
+            <option value="debug">debug</option>
+          </select>
+          <input type="text" id="logs-filter-q" placeholder="Buscar texto...">
+          <input type="text" id="logs-filter-pin" placeholder="PIN">
+          <input type="text" id="logs-filter-hostid" placeholder="hostId">
+          <button type="button" id="logs-filter-apply">Filtrar</button>
+          <button type="button" id="logs-filter-refresh">Refrescar</button>
+          <button type="button" id="logs-export-csv">Descargar CSV</button>
+          <button type="button" id="logs-export-ndjson">Descargar NDJSON</button>
+        </div>
+      </section>
+      <section class="panel" id="logs-table-wrap">
+        <table id="logs-table">
+          <thead>
+            <tr><th>Fecha</th><th>Nivel</th><th>Tag</th><th>Mensaje</th><th>PIN</th><th>hostId</th><th>playerId</th></tr>
+          </thead>
+          <tbody id="logs-tbody"></tbody>
+        </table>
+      </section>
+    </main>
+    <div id="logs-error" class="error"></div>
+    <script src="/js/admin-logs.js"></script>
+    <script src="/js/env-badge.js"></script>
+  </body>
+</html>

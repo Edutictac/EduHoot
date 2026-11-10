@@ -154,10 +154,57 @@ body{
   font-weight: 700;
 }
 
+.admin-content > .panel{ margin-bottom: 16px; }
+.logs-settings-row, .logs-filters-row{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+.logs-settings-row label{
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.logs-settings-row select, .logs-settings-row input,
+.logs-filters-row select, .logs-filters-row input{
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--card-stroke);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 6px 10px;
+}
+.logs-settings-row button, .logs-filters-row button{
+  background: var(--accent-2);
+  border: none;
+  border-radius: 8px;
+  color: #0b1220;
+  font-weight: 700;
+  padding: 7px 14px;
+  cursor: pointer;
+}
+#logs-table{
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+#logs-table th, #logs-table td{
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--card-stroke);
+  vertical-align: top;
+}
+#logs-table td.level-error{ color: #fecdd3; }
+#logs-table td.level-warn{ color: #fed7aa; }
+#logs-table td.level-debug{ color: var(--muted); }
+
 @media (max-width: 600px){
   body{ padding: 14px; }
   .login-inline{ flex-wrap: wrap; width: 100%; }
   .login-inline input{ width: 100%; }
   .login-inline span{ min-width: 0; width: 100%; }
   .card .value{ font-size: 26px; }
+  #logs-table-wrap{ overflow-x: auto; }
 }

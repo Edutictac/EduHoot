@@ -1,4 +1,5 @@
 const { getGamesCollection } = require('../data/repositories');
+const { logger } = require('../logger');
 
 // disconnect, getScore, time, timeUp, requestDbNames — esdeveniments de
 // socket que no són específics ni d'amfitrió ni d'alumnat.
@@ -33,6 +34,7 @@ module.exports = function createCommonEvents({ io, games, players, helpers, sele
               const stillMissing = players.getPlayer(socket.id);
               if (stillMissing) {
                 players.removePlayer(socket.id);
+                logger.info('Jugador eliminat tras el marge de reconnexió', { tag: 'player-leave', pin, hostId, playerId: socket.id });
                 const playersInGame = players.getPlayers(hostId);
                 io.to(pin).emit('updatePlayerLobby', playersInGame);
                 io.to(hostId).emit('updatePlayerLobby', playersInGame);
@@ -87,7 +89,7 @@ module.exports = function createCommonEvents({ io, games, players, helpers, sele
         emitQuestionOverPayloadDeferred(game);
         scheduleGameCleanup(socket.id, GAME_INACTIVITY_TIMEOUT);
       } catch (err) {
-        console.error('timeUp error', err);
+        logger.error('timeUp error', { tag: 'timeUp', error: err && err.message ? err.message : String(err) });
         socket.emit('noGameFound');
       }
     });
@@ -99,7 +101,7 @@ module.exports = function createCommonEvents({ io, games, players, helpers, sele
         const filtered = selectQuizzesForUser(res, socket.user);
         socket.emit('gameNamesData', filtered);
       } catch (err) {
-        console.error('requestDbNames error', err);
+        logger.error('requestDbNames error', { tag: 'requestDbNames', error: err && err.message ? err.message : String(err) });
         socket.emit('gameNamesData', []);
       }
     });

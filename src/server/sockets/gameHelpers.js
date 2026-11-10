@@ -5,6 +5,7 @@ const {
   getQuestionMeta,
   isSubmissionCorrect
 } = require('../questionUtils');
+const { logger } = require('../logger');
 
 const GAME_CLEANUP_DELAY = 100 * 1000; // 90 segundos tras GameOver
 const GAME_INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutos de inactividad
@@ -92,7 +93,7 @@ function recordPlayerAnswerHistory(player, game, questionNumber, submission, isC
 
 function logGames(games, tag) {
   const pins = games.games.map((g) => `${g.pin}(host:${g.hostId})`);
-  console.log(`[${tag}] Active games:`, pins.length ? pins.join(', ') : 'none');
+  logger.debug(`Active games: ${pins.length ? pins.join(', ') : 'none'}`, { tag });
 }
 
 // Factoria: la majoria d'estos helpers necessiten io/games/players, compartits
