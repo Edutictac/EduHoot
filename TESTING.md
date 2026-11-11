@@ -97,9 +97,10 @@ problemes d'estil, variables sense usar, etc.
   opcions en iniciar, iframe de la partida i idioma, amb un Socket.IO fals),
   `host-game.spec.js` (partida de l'amfitrió amb Socket.IO fals),
   `host-game-timer.spec.js` (el temporitzador de l'amfitrió mostra el temps
-  de cada pregunta des del primer moment) i `host-game-end.spec.js`
+  de cada pregunta des del primer moment), `host-game-end.spec.js`
   (enllaç «Tornar» a la biblioteca en acabar, també dins de l'iframe del
-  lobby).
+  lobby) i `multiplayer.spec.js` (catàleg, configuració, partida i
+  resultats de `/multiplayer/`, amb la REST simulada).
 
 ### Scripts puntuals que NO són part del flux de test estàndard
 

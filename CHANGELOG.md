@@ -1,5 +1,7 @@
 # Changelog
 
+<!-- markdownlint-configure-file { "MD024": { "siblings_only": true } } -->
+
 Tots els canvis notables d'EduHoot es documenten en este fitxer.
 
 El format es basa en [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
@@ -17,6 +19,7 @@ fitxers corresponents, i els originals es van eliminar.
 ## [Sense publicar]
 
 ### Afegit
+
 - En acabar la partida, la pantalla de l'amfitrió mostra «Tornar» al
   costat de «Descarregar informe», per a tornar a la biblioteca
   (`/create/`) sense haver d'usar el botó d'arrere del navegador
@@ -32,6 +35,7 @@ fitxers corresponents, i els originals es van eliminar.
   PIN té un botó «Cancel·la» que hi torna (el modal tapava l'enllaç).
 
 ### Canviat
+
 - El lobby de l'amfitrió (`/host/`) és ara una app de Vue 3, sense build
   step: és la prova pilot de la Subfase B de
   [`docs/MIGRATING.md`](docs/MIGRATING.md). Funciona igual que abans; Vue
@@ -50,6 +54,7 @@ fitxers corresponents, i els originals es van eliminar.
   catàleg, configuració, partida i resultats. Funciona igual que abans.
 
 ### Corregit
+
 - En canviar d'idioma en el lobby de `/host/`, l'error visible (p. ex.
   «Falta el quiz…») es convertia en el missatge genèric; ara es traduïx.
 - El temporitzador de l'amfitrió en la partida no es repintava fins al
@@ -74,6 +79,7 @@ fitxers corresponents, i els originals es van eliminar.
 ## [1.1.0] - 2026-11-07
 
 ### Afegit
+
 - Entorn de desenvolupament amb Docker (`docker compose up`): alça EduHoot
   amb recàrrega automàtica, sense instal·lar Node ni MongoDB en local.
   Documentat en [`docs/DEV_DOCKER_SETUP.md`](docs/DEV_DOCKER_SETUP.md).
@@ -96,6 +102,7 @@ fitxers corresponents, i els originals es van eliminar.
   desplegament quan l'app s'executa en stage.
 
 ### Canviat
+
 - El distintiu verd de stage ara és clicable: porta a la portada del
   mateix origen, igual que el de desenvolupament porta a `/dev/login`.
 - En stage i desenvolupament s'amaga l'enllaç "Inici" del xip de compte
@@ -110,6 +117,7 @@ fitxers corresponents, i els originals es van eliminar.
   dispositiu, no només mòbils (la casella es deia abans "Enviar als mòbils").
 
 ### Corregit
+
 - Les preguntes d'enquesta («opinió») en el mode Solo ja no es compten com a
   errors: ja no obrin el diàleg d'error, queden excloses del total puntuat
   del rànquing, i una partida només d'enquestes no demana entrada al
@@ -135,11 +143,13 @@ fitxers corresponents, i els originals es van eliminar.
 ## [1.0.13] - 2026-10-25
 
 ### Afegit
+
 - `EDUTICTAC_COMMONS_URL`: el xip de compte pot apuntar a un Commons local
   (p. ex. `http://edutictac.local:8082`) en lloc de `commons.edutictac.es`. El
   servidor reescriu l'adreça del xip a les pàgines que el porten.
 
 ### Canviat
+
 - Si Commons no respon i el xip no es pinta, «Entrar» de `/create/` porta
   directament a l'accés Authentik d'EduHoot, perquè el professorat mai es
   quede sense entrar.
@@ -149,6 +159,7 @@ fitxers corresponents, i els originals es van eliminar.
 ## [1.0.12] - 2026-10-25
 
 ### Canviat
+
 - El peu mostra la versió d'EduHoot desplegada (p. ex. «v1.0.12»), servida per
   `GET /api/version` a partir de `package.json`, en lloc de la versió de la
   memòria cau del service worker. Ara també apareix a host, lobby i
@@ -157,12 +168,14 @@ fitxers corresponents, i els originals es van eliminar.
 ## [1.0.11] - 2026-10-25
 
 ### Corregit
+
 - El botó «Entrar» de `/create/` obri el menú del xip i el deixa obert; abans
   el mateix clic el tancava perquè el xip el prenia com un clic de fora.
 
 ## [1.0.10] - 2026-10-25
 
 ### Canviat
+
 - El xip de compte d'EduTicTac és l'únic accés del professorat. Quan el xip
   té sessió de professorat, EduHoot hi entra sense demanar res més (SSO amb
   Authentik), i quan el xip la tanca, EduHoot també. Només actua quan EduHoot
@@ -173,11 +186,13 @@ fitxers corresponents, i els originals es van eliminar.
   mostren només l'enllaç «Inici» del xip i conserven el selector d'idioma propi.
 
 ### Llevat
+
 - Formulari antic d'accés de `/create/`: correu i contrasenya, recuperació de
   contrasenya, alta i restabliment d'usuaris, Google, avís de migració i botons
   «Entrar»/«Eixir» de la capçalera, amb els seus textos.
 
 ### Corregit
+
 - Integració del xip i del peu: el xip ja no es mescla amb el títol de
   `/create/` ni aixafa la capçalera de multijugador en mòbil; «Cancel·la la
   partida» ja no es parteix en tres línies; el títol del lobby no queda davall
@@ -186,12 +201,14 @@ fitxers corresponents, i els originals es van eliminar.
 ## [1.0.9] - 2026-10-25
 
 ### Corregit
+
 - El xip de compte ara pren l'idioma detectat per cada pàgina; abans podia
   mostrar els textos en català amb la pàgina en castellà o anglés.
 
 ## [1.0.8] - 2026-10-25
 
 ### Afegit
+
 - Xip de compte central d'EduTicTac i peu comú a la portada, l'entrada, el joc
   individual, la creació, el multijugador local i els lobbys d'amfitrió i
   d'alumnat. El selector d'idioma propi queda com a resposta si Commons no
@@ -199,6 +216,7 @@ fitxers corresponents, i els originals es van eliminar.
 - Declaració explícita d'UTF-8 a les pàgines que no la tenien.
 
 ### Canviat
+
 - Traduccions que faltaven al peu de pàgina; el llistat públic d'activitats
   ara s'ordena per valoració.
 - La música de la partida ara s'inicia automàticament, sense esperar que
@@ -207,10 +225,12 @@ fitxers corresponents, i els originals es van eliminar.
 ## [1.0.7] - 2026-10-09
 
 ### Afegit
+
 - Tipus de pregunta d'enquesta («opinió»), amb suport de puntuació parcial en
   preguntes de resposta múltiple.
 
 ### Canviat
+
 - Les preguntes de resposta múltiple ara penalitzen les seleccions errònies,
   en lloc de només premiar les correctes.
 - L'ordre aleatori de preguntes en el mode amfitrió ara ve desmarcat
@@ -227,6 +247,7 @@ Lot de millores basat en feedback real d'ús a l'aula (Daniel Sàez Buedo
 i el seu alumnat).
 
 ### Afegit
+
 - Icones de forma (triangle, rombe, cercle, quadrat) en cada opció de
   resposta, dibuixades amb CSS pur (`clip-path`), per a distingir-les millor
   i per accessibilitat (daltonisme).
@@ -238,6 +259,7 @@ i el seu alumnat).
 - Correu de contacte afegit al peu de pàgina per a notificar problemes.
 
 ### Canviat
+
 - La pantalla de pregunta ara es neteja a l'instant entre preguntes, sense
   restes de l'anterior.
 - Els noms de jugador en multijugador ja poden tindre fins a 40 caràcters.
@@ -248,10 +270,12 @@ i el seu alumnat).
 - Els camps de vídeo importats ara es validen abans d'utilitzar-se.
 
 ### Corregit
+
 - L'informe de partida (Top 5 / `report.csv`) ja no perd jugadors després
   que acabe la partida.
 
 ### Seguretat
+
 - Els informes de partida (`report.csv`) només els pot descarregar ara
   l'amfitrió real d'esa partida (abans s'acceptava qualsevol valor de
   `hostId` no buit).
@@ -262,6 +286,7 @@ i el seu alumnat).
 ## [1.0.4] - 2026-09-19
 
 ### Seguretat
+
 - Inici de sessió SSO real amb Authentik: s'ha llevat el paràmetre forçat
   `prompt=login`, de manera que els usuaris que ja havien iniciat sessió ja
   no es veuen obligats a tornar a introduir les credencials cada vegada.
@@ -269,9 +294,11 @@ i el seu alumnat).
 ## [1.0.3] - 2026-09-18
 
 ### Afegit
+
 - Importació del catàleg de qüestionaris compartit des d'EduTicTac Commons.
 
 ### Corregit
+
 - El botó d'inici de sessió amb Google ara s'amaga quan l'OAuth de Google no
   està configurat en la instància.
 
@@ -282,6 +309,7 @@ passa del prototip `0.1.0` a seguir la versió del paquet Node; no calia
 migrar la base `kahootDB`.
 
 ### Afegit
+
 - Integració amb EduTicTac Commons 0.1.1-alpha.
 - Selectors d'idioma separats per a català/valencià/castellà/anglès
   (CA/VA/ES/EN), amb la preferència persistent entre sessions.
@@ -292,18 +320,21 @@ migrar la base `kahootDB`.
   request via GitHub Actions.
 
 ### Canviat
+
 - Els enllaços amb `?lang=` ara respecten un canvi d'idioma manual posterior
   de l'usuari, també després de recarregar o en passar a l'editor.
 - Dependències actualitzades; retirada la llibreria `expect`, substituïda
   per proves basades en `node:assert`.
 
 ### Corregit
+
 - Diverses correccions de valencià en el creador de qüestionaris i en els
   textos del joc.
 
 ## [1.0.1] - 2026-03-26
 
 ### Afegit
+
 - Suport per a Docker, més una plantilla/script de desplegament segur per a
   producció.
 - Servei de producció propi d'EduHoot (unitat systemd), vinculat a loopback
@@ -335,6 +366,7 @@ migrar la base `kahootDB`.
   llicència AGPL-3.0 afegits al peu de pàgina.
 
 ### Canviat
+
 - Llicència del projecte canviada de CC BY-SA 4.0 a AGPL-3.0.
 - Metadades del qüestionari ampliades amb idioma, llicència i descripció,
   més una imatge de portada determinista.
@@ -349,6 +381,7 @@ migrar la base `kahootDB`.
 - `node_modules` ja no es rastreja en git.
 
 ### Corregit
+
 - Estabilitat de reconnexió WebSocket en el mode aula.
 - Jugadors duplicats després d'una recàrrega de la sala provocada per un
   canvi d'idioma.
@@ -359,6 +392,7 @@ migrar la base `kahootDB`.
   servidor.
 
 ### Seguretat
+
 - Reforç general de l'autenticació i la gestió de sessions, i de l'entorn de
   stage.
 - Capçalera `Cross-Origin-Resource-Policy` afegida als recursos estàtics.
@@ -372,6 +406,7 @@ migrar la base `kahootDB`.
 > no és un registre línia a línia.
 
 ### Afegit
+
 - Prototip inicial d'EduHoot: interfície de creació de qüestionaris,
   partides multijugador a l'estil Kahoot amb unió per PIN/QR, i mode Solo
   (un sol jugador).

@@ -503,7 +503,7 @@ consulta `GET /api/version` de `server.js` (versió de `package.json`).
   no executaria el codi injectat ni enviaria dades a dominis no permesos.
   Seguiment en la [issue #20](https://github.com/Edutictac/EduHoot/issues/20).
   - **Requisit**: passar a `addEventListener` els atributs `on…=` que
-    queden (els `onclick` de `host/index.html`, `host/game/index.html` i
+    queden (els `onclick` de `host/game/index.html` i
     `create/quiz-creator/index.html`, i els `onerror` del widget de
     Commons). Sense açò caldria `'unsafe-inline'` en els scripts, que
     anul·la quasi tota la protecció. En els estils, `'unsafe-inline'`
