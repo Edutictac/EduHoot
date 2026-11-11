@@ -141,7 +141,7 @@ JS d'orquestració amb `<script>` clàssics (sense build step):
 | `/create/` | `create.js` + mòduls `create-*.js` + `i18n-create.js` (ja repartits, Subfase A) | Professorat: biblioteca de qüestionaris — llistat, filtres, exportació, importació, panell d'admin |
 | `/create/quiz-creator/` | `quizCreator.js` | Professorat: editor d'un qüestionari (preguntes, respostes, tipus) |
 | `/solo/` | `solo.js` + mòduls `solo-*.js` + `i18n-solo.js` (ja repartits, Subfase A) | Mode individual, a ritme propi, fora de classe |
-| `/multiplayer/` | `multiplayer.js` | Mode 2-4 jugadors compartint una sola pantalla |
+| `/multiplayer/` | `multiplayer.js` (ja amb Vue) | Mode 2-4 jugadors compartint una sola pantalla |
 | `/admin-stats.html` | `admin-stats.js` | Estadístiques del panell d'administració |
 
 A banda, fitxers transversals que no pertanyen a una sola pantalla:
@@ -374,6 +374,37 @@ la pàgina és l'arrel de Vue, dos blocs, un commit cada un).
   Socket.IO fals (diversos arguments per esdeveniment) que
   `player-game.spec.js`. Complementa `host-game-timer.spec.js`
   (issue #21) i `host-game-end.spec.js` (issue #17), ja existents.
+
+### Pantalla multijugador amb Vue
+
+Quarta pantalla de la Subfase B: `/multiplayer/`
+(`src/public/js/multiplayer.js`). A diferència de les anteriors, no
+usa Socket.IO: tot passa en el navegador (2-4 jugadors a la mateixa
+pantalla) i només parla amb el servidor per REST (catàleg, preferits,
+valoracions). L'arrel de Vue és `#multiplayer-app`, amb
+`display: contents` perquè no altere el maquetat. Dos blocs, un commit
+cada un.
+
+- **Bloc 1**: el catàleg (cerca, filtres, etiquetes, ordre, paginació,
+  preferits i valoracions). Marcar un preferit o valorar no reordena
+  la llista a l'instant (l'ordre es calcula sobre les dades sense
+  reactivitat, `Vue.toRaw`), igual que abans.
+- **Bloc 2**: configuració (jugadors, noms, icones, nombre de preguntes
+  i temps), partida (un panell per jugador, resposta única i múltiple,
+  temporitzador, rànquing de ronda en modal) i resultats. L'estat de la
+  partida és un objecte reactiu (`state`) amb un camp `view` que diu
+  quina part es mostra. Les funcions de lògica (puntuació, rondes,
+  temps esgotat) quasi no canvien; s'han eliminat les que construïen
+  l'HTML a mà.
+- **Puntuació visible**: cada jugador té `shownScore` a banda de
+  `score`, i només s'actualitza en començar la pregunta i en revelar la
+  ronda. Així ningú veu qui ha encertat abans que responguen tots.
+- **Diferència mínima**: si s'acaba el temps en una pregunta de resposta
+  múltiple, el botó «Enviar respostes» queda desactivat (abans quedava
+  actiu, però no feia res).
+- **Proves**: `src/test/browser/multiplayer.spec.js`, amb la REST
+  simulada i `Math.random` fixat perquè l'ordre de preguntes i
+  respostes siga previsible.
 
 ## Distintiu visual d'entorn (dev/stage)
 

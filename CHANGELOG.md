@@ -43,6 +43,8 @@ fitxers corresponents, i els originals es van eliminar.
   insígnia de punts dobles, compte arrere, modal de resultats i
   rànquing, celebració de grup i fi de partida. Funciona igual que
   abans.
+- El mode Multijugador (`/multiplayer/`) també és ara una app de Vue 3:
+  catàleg, configuració, partida i resultats. Funciona igual que abans.
 
 ### Corregit
 - En canviar d'idioma en el lobby de `/host/`, l'error visible (p. ex.
@@ -60,6 +62,11 @@ fitxers corresponents, i els originals es van eliminar.
   només per al mode Multijugador), i si un qüestionari no en tenia cap
   altra, ni es podia llançar la partida
   ([#24](https://github.com/Edutictac/EduHoot/issues/24)).
+- En el mode Multijugador, l'ordre «Millor valorats» mostrava el text
+  intern `sortRating` i ordenava per partides jugades; ara ordena per
+  valoració.
+- En el mode Multijugador, un encert parcial en resposta múltiple sumava
+  punts però el panell no deia res; ara mostra «Parcialment correcte».
 
 ## [1.1.0] - 2026-11-07
 
