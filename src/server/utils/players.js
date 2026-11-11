@@ -28,6 +28,17 @@ class Players {
         if(!link) return null;
         return this.getPlayer(link.playerId);
     }
+    // Reassigna el playerId (socket.id) d'un jugador ja existent, p. ex.
+    // en reconnectar. Cal actualitzar també `tokens`, que guarda el seu
+    // propi playerId a banda: si no, una segona reconnexió via token ja
+    // no trobaria la fila (issue #23).
+    updatePlayerId(player, newPlayerId){
+        if(!player) return;
+        player.playerId = newPlayerId;
+        if(player.token){
+            this.tokens.set(player.token, { hostId: player.hostId, playerId: newPlayerId });
+        }
+    }
     getPlayer(playerId){
         return this.players.filter((player) => player.playerId === playerId)[0]
     }

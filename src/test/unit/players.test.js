@@ -30,3 +30,20 @@ test('Players getPlayer devuelve undefined si no existe', () => {
   const players = new Players();
   assert.equal(players.getPlayer('nadie'), undefined);
 });
+
+test('updatePlayerId mantiene resoluble el token tras varias reconexiones (issue #23)', () => {
+  const players = new Players();
+  const player = players.addPlayer('host-1', 'socket-a', 'Ana', {}, '', 'tok-1');
+
+  // Primera reconexión: socket-a -> socket-b.
+  players.updatePlayerId(player, 'socket-b');
+  assert.equal(players.getByToken('tok-1').playerId, 'socket-b');
+  assert.equal(players.getPlayer('socket-a'), undefined);
+
+  // Segunda reconexión: socket-b -> socket-c. Sin el fix, getByToken()
+  // seguía devolviendo el playerId antiguo ('socket-a') y getPlayer()
+  // ya no lo encontraba, dejando la reconexión en noGameFound.
+  players.updatePlayerId(player, 'socket-c');
+  assert.equal(players.getByToken('tok-1').playerId, 'socket-c');
+  assert.equal(players.getPlayer('socket-c'), player);
+});

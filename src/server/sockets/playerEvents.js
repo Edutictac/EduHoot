@@ -76,7 +76,7 @@ module.exports = function createPlayerEvents({
       if (token) {
         existing = players.getByToken(token);
         if (existing && existing.hostId === hostId) {
-          existing.playerId = socket.id;
+          players.updatePlayerId(existing, socket.id);
           emitJoinUpdate({ event: 'playerRejoin', payload: { ok: true } });
           logger.info('Jugador reconectado (token)', { tag: 'player-rejoin', pin: game.pin, hostId, playerId: socket.id });
           return;
@@ -137,9 +137,6 @@ module.exports = function createPlayerEvents({
       let player = players.getPlayer(data.id);
       if (!player && data.token) {
         player = players.getByToken(data.token);
-        if (player) {
-          player.playerId = socket.id;
-        }
       }
       if (player) {
         const game = games.getGame(player.hostId);
@@ -148,7 +145,7 @@ module.exports = function createPlayerEvents({
           return;
         }
         socket.join(game.pin);
-        player.playerId = socket.id;
+        players.updatePlayerId(player, socket.id);
         socket.emit('playerGracePeriod', { ms: PLAYER_RECONNECT_GRACE_MS });
 
         const playerData = players.getPlayers(game.hostId);
