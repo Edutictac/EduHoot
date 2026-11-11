@@ -27,6 +27,9 @@ fitxers corresponents, i els originals es van eliminar.
 - El visor `/admin/logs` té un botó «Ver» a les entrades amb detall
   addicional (p. ex. `uncaughtException`), que obri un modal amb la
   resta de camps i el stack trace complet.
+- La pantalla d'entrada de l'alumnat (`/join.html`) té un enllaç
+  «Tornar» a la portada, com `/solo/` i `/multiplayer/`, i el modal del
+  PIN té un botó «Cancel·la» que hi torna (el modal tapava l'enllaç).
 
 ### Canviat
 - El lobby de l'amfitrió (`/host/`) és ara una app de Vue 3, sense build
