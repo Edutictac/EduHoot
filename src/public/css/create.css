@@ -1098,3 +1098,35 @@ body.modal-open{
         margin: 6px 0;
     }
 }
+
+.stage-notice{
+    margin: 24px 0;
+    padding: 20px;
+    border: 2px solid #fbbf24;
+    border-radius: 16px;
+    background: #49330d;
+}
+.stage-notice h2{
+    margin: 0 0 10px;
+    font-size: 1.2rem;
+}
+.stage-notice p{
+    margin: 0 0 16px;
+    line-height: 1.6;
+    color: #e2e8f0;
+}
+
+.stage-notice h2{
+    color: #fde68a;
+}
+.stage-notice .btn{
+    color: #1c1917;
+    background: #fbbf24;
+    border-color: #fbbf24;
+}
+.stage-notice .btn:hover,
+.stage-notice .btn:focus-visible{
+    color: #1c1917;
+    background: #fde68a;
+    border-color: #fde68a;
+}
