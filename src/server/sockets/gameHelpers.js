@@ -99,7 +99,7 @@ function logGames(games, tag) {
 // Factoria: la majoria d'estos helpers necessiten io/games/players, compartits
 // amb la resta de server.js i amb les rutes ja mogudes en el Pas 4 — s'injecten
 // en compte de moure's, igual que 'players' en services/sessionReport.js.
-module.exports = function createGameHelpers({ io, games, players, cleanImportedText, isMultiplayerFreeTypeQuestion }) {
+module.exports = function createGameHelpers({ io, games, players, cleanImportedText }) {
   function scheduleGameCleanup(hostId, delayMs = GAME_CLEANUP_DELAY) {
     const game = games.getGame(hostId);
     if (!game) return;
@@ -157,9 +157,8 @@ module.exports = function createGameHelpers({ io, games, players, cleanImportedT
     const overrideTime = parseInt(opts.timePerQuestion, 10);
     const useOverrideTime = !Number.isNaN(overrideTime) && overrideTime > 0;
 
-    const filtered = Array.isArray(questions) ? questions.filter((q) => !isMultiplayerFreeTypeQuestion(q)) : [];
-
-    const base = randomQ ? shuffleQuestions(filtered) : [...filtered];
+    const safeQuestions = Array.isArray(questions) ? questions : [];
+    const base = randomQ ? shuffleQuestions(safeQuestions) : [...safeQuestions];
 
     return base.map((q) => {
       const meta = normalizeQuestionMeta(q);

@@ -15,7 +15,6 @@ module.exports = function registerSocketHandlers(io, deps) {
     parseCookies,
     authentikOnly,
     cleanImportedText,
-    isMultiplayerFreeTypeQuestion,
     findGameById,
     canUseQuiz,
     cacheFinishedSessionReport,
@@ -35,7 +34,7 @@ module.exports = function registerSocketHandlers(io, deps) {
     selectQuizzesForUser
   } = deps;
 
-  const helpers = createGameHelpers({ io, games, players, cleanImportedText, isMultiplayerFreeTypeQuestion });
+  const helpers = createGameHelpers({ io, games, players, cleanImportedText });
 
   const registerCommonEvents = createCommonEvents({ io, games, players, helpers, selectQuizzesForUser });
   const registerHostEvents = createHostEvents({
@@ -46,7 +45,6 @@ module.exports = function registerSocketHandlers(io, deps) {
     findGameById,
     canUseQuiz,
     cleanImportedText,
-    isMultiplayerFreeTypeQuestion,
     cacheFinishedSessionReport,
     incrementQuizStats,
     commons,

@@ -31,6 +31,7 @@ funcionament del projecte.
 - [Logs del servidor (/admin/logs)](#logs-del-servidor-adminlogs)
 - [Modes de joc](#modes-de-joc)
 - [Avanç de pregunta: automàtic o manual?](#avanç-de-pregunta-automàtic-o-manual)
+- [Comparativa de tipus amb Kahoot, Wayground i AULES](#comparativa-de-tipus-amb-kahoot-wayground-i-aules)
 - [Càlcul de la puntuació](#càlcul-de-la-puntuació)
 
 ## Arquitectura tècnica (resum)
@@ -317,14 +318,10 @@ fora (es oculta just en connectar).
   interna que fa l'efecte de "tic" (el rellotge) es recrea; el
   contenidor exterior (la lluentor contínua de fons) no, perquè no es
   talle.
-- **Tipus de pregunta provats en una partida real**: `quiz` i
-  `multiple`, en mode normal i a cegues. `short-answer`/`numeric` no
-  s'han pogut provar amb una partida real de "Jugar a l'aula": el
-  servidor les filtra sempre (vore "Deute tècnic conegut" →
-  [issue #24](https://github.com/Edutictac/EduHoot/issues/24)), així
-  que avui només hi arriben en mode Solo. El seu codi a
-  `playerGame.js` queda verificat pel Socket.IO fals de l'spec, no per
-  una partida real.
+- **Tipus de pregunta provats en una partida real**: `quiz`, `multiple`,
+  `short-answer` i `numeric`, en mode normal i a cegues ([issue #24](https://github.com/Edutictac/EduHoot/issues/24),
+  resolta: el filtre que les excloïa de "Jugar a l'aula" era el del
+  mode Multijugador, aplicat per error també ací).
 - **Proves**: `src/test/browser/player-game.spec.js`, amb un Socket.IO
   fals que admet diversos arguments per esdeveniment (p. ex.
   `questionOver(playerData, payload)`).
@@ -504,14 +501,16 @@ consulta `GET /api/version` de `server.js` (versió de `package.json`).
   `/player/game/`) funciona per casualitat: encara no s'havia reassignat
   `playerId` quan es consulta. No és cosa de la Subfase B (Vue): el
   mateix passaria amb el codi anterior.
-- **`short-answer`/`numeric` sempre filtrades de "Jugar a l'aula"**
-  ([issue #24](https://github.com/Edutictac/EduHoot/issues/24)):
-  `isMultiplayerFreeTypeQuestion` les lleva dos vegades (en crear la
+- ~~`short-answer`/`numeric` sempre filtrades de "Jugar a l'aula"~~
+  **Corregit** ([issue #24](https://github.com/Edutictac/EduHoot/issues/24)):
+  `isMultiplayerFreeTypeQuestion` les llevava dos vegades (en crear la
   partida, al handler `host-join` de `hostEvents.js`, i en
-  `buildQuestions()` de `gameHelpers.js`), encara que
-  `playerGame.js`/`hostGame.js` tenen
-  codi per a pintar-les. Pot ser intencionat o un oblit; pendent de
-  decidir.
+  `buildQuestions()` de `gameHelpers.js`) — eixe filtre és el del mode
+  Multijugador (pantalla compartida, sense teclat), reutilitzat per
+  error també en "Jugar a l'aula". Es va llevar d'eixos dos llocs
+  (`playerGame.js`/`hostGame.js` ja tenien el codi llest per a
+  pintar-les); el filtre seguix aplicant-se, com toca, només en
+  `?mode=multiplayer` (`routes/quizzes.js`).
 - ~~`#playersAnswered` (`/host/game/`) es quedava ocult per sempre
   després de la primera pregunta.~~ **Corregit** (trobat auditant
   `hostGame.js` en preparar la Subfase B, 2026-11-09): `questionOver`
@@ -801,6 +800,118 @@ pendent de prémer "Siguiente pregunta" després de cada pregunta. Un mode
 sense intervenció del professorat són millores pendents, encara no
 implementades — estan recollides en `POPULAR_FEATURES.md` ("Mode
 autoritme (self-paced)" i "Mode 'presentació' híbrid").
+
+## Tipus de pregunta suportats
+
+El tipus es normalitza i es valida en `normalizeQuestionType()` /
+`VALID_TYPES` (`src/server/questionUtils.js`), que és també on cal
+mirar per a conéixer l'únic llistat autoritatiu (useat tant en l'editor
+de `/create/` com en la importació de CSV):
+
+- **`quiz`**: opció múltiple clàssica, una única resposta correcta
+  (fins a 4 opcions, `toValidAnswerIndex()` les limita a l'1-4).
+- **`multiple`**: opció múltiple amb diverses respostes correctes alhora;
+  cal marcar-les totes i només elles (`isSubmissionCorrect()`) per a
+  l'encert complet, amb crèdit parcial si no s'encerta del tot (vore
+  "Càlcul de la puntuació" més avall).
+- **`true-false`**: com `quiz` però amb només 2 opcions (reserva els
+  índexs a l'1-2).
+- **`short-answer`**: resposta lliure de text. S'accepten diverses
+  respostes vàlides (`acceptedAnswers`, separades per `|`, `,` o salt de
+  línia en el CSV, `splitAcceptedAnswers()`) i la comparació ignora
+  accents, majúscules i puntuació (`normalizeFreeText()`).
+- **`numeric`**: resposta lliure numèrica amb tolerància
+  (`numericAnswer` ± `tolerance`, admet coma decimal,
+  `parseLenientNumber()`).
+- **`poll`** (encuesta/enquesta): sense resposta correcta, mai compta en
+  la puntuació (vore "Preguntes d'enquesta" més avall).
+
+**Tipus provats en partida real de "Jugar a l'aula"**: `quiz`,
+`multiple`, `short-answer` i `numeric` ([issue #24](https://github.com/Edutictac/EduHoot/issues/24),
+resolta). El mode Multijugador (pantalla compartida) seguix excloent
+`short-answer`/`numeric` perquè el mòbil hi funciona com a mando sense
+teclat.
+
+**Noms alternatius acceptats en la importació de CSV**: la funció de
+normalització és tolerant amb sinònims i variants en català/castellà
+(p. ex. `encuesta`/`enquesta` → `poll`, `respuesta corta`/`resposta
+curta` → `short-answer`, `verdadero/falso`/`vertader/fals` →
+`true-false`). Qualsevol valor no reconegut cau per defecte a `quiz`.
+
+**Noms diferents en l'exportació a Moodle XML**: Moodle fa servir una
+altra nomenclatura pels mateixos conceptes (`multichoice`, `truefalse`,
+`shortanswer`, `numerical`, vore "Exportació a Moodle XML" més avall);
+no hi ha equivalent per a `poll`, que no s'exporta.
+
+## Comparativa de tipus amb Kahoot, Wayground i AULES
+
+Comparativa de tipus de pregunta entre EduHoot i les plataformes on el
+professorat sol reutilitzar el mateix qüestionari: Kahoot, Wayground
+(antes Quizizz) i AULES (Moodle). Serveix per a decidir quins tipus es
+poden crear una vegada i usar en cada entorn.
+
+> **Estat de la informació:** les dades de Kahoot i Wayground provenen de
+> cerca web i de la documentació d'ajuda pública, no d'un compte real.
+> Poden variar segons el pla de subscripció. Abans de tractar-les com a
+> definitives, cal verificar-les en un compte de cada plataforma. Les
+> dades d'AULES (Moodle) i d'EduHoot sí estan contrastades amb el codi i
+> amb els bancos de preguntes del repositori.
+
+### Tipus disponibles per plataforma
+
+- **Kahoot.** *Test de coneixements:* opció múltiple (quiz), vertader/fals,
+  resposta escrita (*type answer*, fins a 20 caràcters), control lliscant
+  (*slider*), *pin answer* (marcar un punt en una imatge) i *puzzle*
+  (ordenar alternatives). *Opinió:* enquesta (*poll*), escala, NPS,
+  *drop pin* i núvol de paraules. No hi ha cap tipus de resposta llarga.
+- **Wayground (antes Quizizz).** Opció múltiple (en tots els plans),
+  amb varies correctes (*multi-select*, de pagament), resposta curta o
+  oberta, emplenar buits, enquesta, núvol de paraules, dibuix i
+  diapositives. *Interactius:* emparellament (*Match*), desplegable,
+  arrossegar i deixar anar, i etiquetat sobre imatge (arrossegar text a
+  zones d'una imatge). No s'ha trobat un tipus d'ordenar ni de *hotspot*
+  (fer clic en una zona de la imatge).
+- **AULES (Moodle).** Els tipus del nucli de Moodle: opció múltiple (una o
+  varies correctes), vertader/fals, resposta curta, emparellament,
+  numèrica, assaig, incrustades (*Cloze*), emplenar buits amb desplegable,
+  arrossegar i deixar anar en text o sobre imatge, calculada i descripció
+  (no puntua). Un XML de Moodle pot incloure emparellaments encara que
+  EduHoot no els exporte.
+
+### Comparativa
+
+| Tipus | EduHoot (aula) | Kahoot | Wayground | AULES (Moodle) |
+|---|---|---|---|---|
+| Opció múltiple (una correcta) | Sí (`quiz`) | Sí | Sí | Sí |
+| Opció múltiple (varies correctes) | Sí (`multiple`) | No confirmat | Sí (de pagament) | Sí |
+| Vertader/fals | Sí (`true-false`), sense prova en aula | Sí | No confirmat | Sí |
+| Resposta curta | Sí (`short-answer`), no en Multijugador | Sí (*type answer*, 20 car.) | Sí (oberta, buits) | Sí |
+| Numèrica | Sí (`numeric`), no en Multijugador | No confirmat | No confirmat | Sí |
+| Emparellament | No | No | Sí (*Match*) | Sí |
+| Ordenar | No | Sí (*puzzle*) | Aproximat (desplegable, arrossegar) | Sí (arrossegar) |
+| Imatge amb marcador | No | Sí (*pin answer*) | Etiquetat (arrossegar text) | Sí (arrossegar sobre imatge) |
+| Enquesta (no puntua) | Sí (`poll`) | Sí | Sí | No (no és tipus del banc) |
+| Assaig / text llarg | No | No | Sí (oberta) | Sí |
+
+### Implicacions per a EduHoot
+
+- **Exportació a Moodle XML:** `services/moodleExport.js` només converteix
+  `multichoice`, `truefalse`, `shortanswer` i `numerical`. Els
+  emparellaments, els assajos i les incrustades no es poden exportar
+  des d'EduHoot, tot i que el format Moodle sí els admet.
+- **Partida a l'aula:** en els tipus que EduHoot pot fer a l'aula, només
+  `quiz` i `multiple` estan provats en partida real; `true-false` té el
+  codi però no consta com a provat.
+- **Interoperabilitat:** les opcions comunes a les quatre plataformes són
+  l'opció múltiple d'una correcta i, en la majoria de casos, el
+  vertader/fals. Qualsevol altre tipus limita el qüestionari a una
+  plataforma concreta.
+
+Fonts (cerca web, a verificar):
+- [Kahoot, tipus de pregunta (suport oficial)](https://support.kahoot.com/hc/articles/115002308428)
+- [Kahoot, nous tipus de pregunta i opcions de joc (2019)](https://kahoot.com/blog/2019/10/08/new-question-types-and-game-options/)
+- [Wayground, tipus de pregunta explicats](https://help.wayground.com/support/solutions/articles/158000411419-question-types-explained)
+- [Wayground per a empreses, tots els tipus de pregunta](https://forbusiness-help.wayground.com/support/solutions/articles/158000411109-all-questions-types-on-quizizz-for-work)
 
 ## Càlcul de la puntuació
 

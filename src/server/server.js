@@ -341,7 +341,6 @@ registerSocketHandlers(io, {
   parseCookies,
   authentikOnly,
   cleanImportedText,
-  isMultiplayerFreeTypeQuestion,
   findGameById,
   canUseQuiz,
   cacheFinishedSessionReport,

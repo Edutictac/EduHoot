@@ -52,6 +52,11 @@ fitxers corresponents, i els originals es van eliminar.
 - A la pantalla de l'amfitrió (`/host/game/`), el comptador «Han
   respost X / Y» es quedava ocult per sempre a partir de la segona
   pregunta, i no es podia saltar la primera pregunta de cada partida.
+- Les preguntes de resposta curta i numèrica ja arriben a «Jugar a
+  l'aula»: el servidor les filtrava sempre per error (un filtre pensat
+  només per al mode Multijugador), i si un qüestionari no en tenia cap
+  altra, ni es podia llançar la partida
+  ([#24](https://github.com/Edutictac/EduHoot/issues/24)).
 
 ## [1.1.0] - 2026-11-07
 

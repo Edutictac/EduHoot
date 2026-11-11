@@ -10,7 +10,6 @@ module.exports = function createHostEvents({
   findGameById,
   canUseQuiz,
   cleanImportedText,
-  isMultiplayerFreeTypeQuestion,
   cacheFinishedSessionReport,
   incrementQuizStats,
   commons,
@@ -78,14 +77,6 @@ module.exports = function createHostEvents({
           }
 
           const originalQuestions = Array.isArray(kahoot.questions) ? kahoot.questions : [];
-          const multiplayerQuestions = originalQuestions.filter((q) => !isMultiplayerFreeTypeQuestion(q));
-          if (multiplayerQuestions.length === 0) {
-            socket.emit('hostError', {
-              error: 'Este quiz no tiene preguntas compatibles con multijugador (se omiten las de escribir: respuesta corta/numérica).'
-            });
-            socket.emit('noGameFound');
-            return;
-          }
 
           games.addGame(gamePin, socket.id, false, {
             playersAnswered: 0,
@@ -94,8 +85,8 @@ module.exports = function createHostEvents({
             quizName: cleanImportedText(kahoot.name || ''),
             question: 1,
             questions: [],
-            originalQuestions: multiplayerQuestions,
-            totalQuestions: multiplayerQuestions.length,
+            originalQuestions: originalQuestions,
+            totalQuestions: originalQuestions.length,
             options: {
               randomQuestions: false,
               randomAnswers: true,
