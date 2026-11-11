@@ -906,6 +906,7 @@ body.mode-per-player .question-card{
 
 .player-feedback.ok{ color: #bbf7d0; }
 .player-feedback.bad{ color: #fecaca; }
+.player-feedback.partial{ color: #fde68a; }
 .player-feedback.muted{ color: rgba(255,255,255,0.7); }
 
 .answers{

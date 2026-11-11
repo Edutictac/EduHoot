@@ -250,6 +250,7 @@
       score: 'Puntos',
       correctText: '¡Correcto!',
       wrongText: 'Incorrecto',
+      partialText: 'Parcialmente correcto',
       timeup: 'Tiempo',
       finishTitle: 'Partida terminada',
       playAgain: 'Repetir',
@@ -322,6 +323,7 @@
       score: 'Score',
       correctText: 'Correct!',
       wrongText: 'Wrong',
+      partialText: 'Partially correct',
       timeup: 'Time',
       finishTitle: 'Match finished',
       playAgain: 'Play again',
@@ -394,6 +396,7 @@
       score: 'Punts',
       correctText: 'Correcte!',
       wrongText: 'Incorrecte',
+      partialText: 'Parcialment correcte',
       timeup: 'Temps',
       finishTitle: 'Partida acabada',
       playAgain: 'Tornar a jugar',
@@ -1808,7 +1811,7 @@
       var feedbackEl = panel.querySelector('[data-feedback]');
       if(feedbackEl){
         feedbackEl.textContent = '';
-        feedbackEl.classList.remove('ok', 'bad', 'muted');
+        feedbackEl.classList.remove('ok', 'bad', 'muted', 'partial');
       }
 
       var pq = getQuestionForPlayer(p.id);
@@ -1930,10 +1933,13 @@
 
       var feedbackEl = panel.querySelector('[data-feedback]');
       if(feedbackEl){
-        feedbackEl.classList.remove('ok', 'bad', 'muted');
+        feedbackEl.classList.remove('ok', 'bad', 'muted', 'partial');
         if(p.outcome === 'ok'){
           feedbackEl.textContent = t('correctText');
           feedbackEl.classList.add('ok');
+        }else if(p.outcome === 'partial'){
+          feedbackEl.textContent = t('partialText');
+          feedbackEl.classList.add('partial');
         }else if(p.outcome === 'bad'){
           feedbackEl.textContent = t('wrongText');
           feedbackEl.classList.add('bad');
