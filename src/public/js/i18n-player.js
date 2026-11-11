@@ -2,6 +2,7 @@
 (function () {
   const translations = {
     es: {
+      back: 'Volver',
       join_title: 'Únete a una partida',
       join_name: 'Nombre a mostrar',
       join_pin: 'PIN de la partida',
@@ -70,6 +71,7 @@
       footerContactLabel: 'Incidencias'
     },
     ca: {
+      back: 'Tornar',
       join_title: 'Uneix-te a una partida',
       join_name: 'Nom a mostrar',
       join_pin: 'PIN de la partida',
@@ -144,6 +146,7 @@
       reconnecting_kicked: 'Has eixit de la partida'
     },
     en: {
+      back: 'Back',
       join_title: 'Join a Game',
       join_name: 'Display Name',
       join_pin: 'Game Pin',
