@@ -18,6 +18,11 @@
   var exportCsvBtn = document.getElementById('logs-export-csv');
   var exportNdjsonBtn = document.getElementById('logs-export-ndjson');
   var tbody = document.getElementById('logs-tbody');
+  var detailModal = document.getElementById('logs-detail-modal');
+  var detailModalTitle = document.getElementById('logs-detail-modal-title');
+  var detailModalMeta = document.getElementById('logs-detail-modal-meta');
+  var detailModalStack = document.getElementById('logs-detail-modal-stack');
+  var currentRows = [];
 
   var authState = { user: null, checked: false };
   var authentikAuthEnabled = false;
@@ -194,10 +199,44 @@
     });
   }
 
+  function openLogDetail(row){
+    if(!detailModal) return;
+    if(detailModalTitle) detailModalTitle.textContent = row.tag ? ('Detalle: ' + row.tag) : 'Detalle del log';
+    if(detailModalMeta){
+      var date = row.createdAt ? new Date(row.createdAt).toLocaleString() : '';
+      var fields = [
+        ['Fecha', date],
+        ['Nivel', row.level],
+        ['Tag', row.tag],
+        ['Mensaje', row.message],
+        ['PIN', row.pin],
+        ['hostId', row.hostId],
+        ['playerId', row.playerId]
+      ];
+      detailModalMeta.innerHTML = fields
+        .filter(function(f){ return f[1] !== null && f[1] !== undefined && f[1] !== ''; })
+        .map(function(f){ return '<dt>' + escapeHtml(f[0]) + '</dt><dd>' + escapeHtml(f[1]) + '</dd>'; })
+        .join('');
+    }
+    if(detailModalStack){
+      var meta = row.meta || {};
+      var text = meta.stack || meta.error || (Object.keys(meta).length ? JSON.stringify(meta, null, 2) : 'Sin detalle adicional.');
+      detailModalStack.textContent = text;
+    }
+    if(typeof detailModal.showModal === 'function'){
+      detailModal.showModal();
+    }
+  }
+
+  function hasDetail(row){
+    return !!(row.meta && (row.meta.stack || row.meta.error || Object.keys(row.meta).length));
+  }
+
   function renderLogs(rows){
     if(!tbody) return;
+    currentRows = rows;
     tbody.innerHTML = '';
-    rows.forEach(function(row){
+    rows.forEach(function(row, index){
       var tr = document.createElement('tr');
       var date = row.createdAt ? new Date(row.createdAt).toLocaleString() : '';
       tr.innerHTML =
@@ -207,7 +246,16 @@
         '<td>' + escapeHtml(row.message) + '</td>' +
         '<td>' + escapeHtml(row.pin) + '</td>' +
         '<td>' + escapeHtml(row.hostId) + '</td>' +
-        '<td>' + escapeHtml(row.playerId) + '</td>';
+        '<td>' + escapeHtml(row.playerId) + '</td>' +
+        '<td class="logs-detail-btn-cell"></td>';
+      if(hasDetail(row)){
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'logs-detail-btn';
+        btn.textContent = 'Ver';
+        btn.addEventListener('click', function(){ openLogDetail(currentRows[index]); });
+        tr.lastElementChild.appendChild(btn);
+      }
       tbody.appendChild(tr);
     });
   }

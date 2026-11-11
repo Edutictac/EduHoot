@@ -24,6 +24,9 @@ fitxers corresponents, i els originals es van eliminar.
 - En desenvolupament, el distintiu «Entorn: desenvolupament» mostra
   davall el nom del professorat loguejat, si en té, en totes les
   pantalles.
+- El visor `/admin/logs` té un botó «Ver» a les entrades amb detall
+  addicional (p. ex. `uncaughtException`), que obri un modal amb la
+  resta de camps i el stack trace complet.
 
 ### Canviat
 - El lobby de l'amfitrió (`/host/`) és ara una app de Vue 3, sense build

@@ -704,7 +704,10 @@ poder importar un fitxer XML al banc de preguntes del seu propi curs.
 - **Visor**: `/admin/logs` (`src/public/admin-logs.html` +
   `src/public/js/admin-logs.js`, mateix patró vanilla JS que
   `/admin/stats`, sense Vue), amb filtres per nivell, PIN, `hostId` i
-  text lliure (`GET /api/admin/logs`, mateixa protecció de rol).
+  text lliure (`GET /api/admin/logs`, mateixa protecció de rol). Les
+  files amb `meta` no buit (p. ex. `uncaughtException`) tenen un botó
+  "Ver" que obri un `<dialog>` amb la resta de camps i el stack trace
+  complet — l'API ja tornava `meta` sencer, només faltava pintar-lo.
 - **`uncaughtException` és un cas especial**: el *transport* normal no
   bloqueja el bucle d'esdeveniments (escriu en segon pla), però ahí el
   procés es tanca (`process.exit(1)`) just després de l'error. Per no

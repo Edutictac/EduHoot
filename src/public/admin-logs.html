@@ -100,13 +100,23 @@
       <section class="panel" id="logs-table-wrap">
         <table id="logs-table">
           <thead>
-            <tr><th>Fecha</th><th>Nivel</th><th>Tag</th><th>Mensaje</th><th>PIN</th><th>hostId</th><th>playerId</th></tr>
+            <tr><th>Fecha</th><th>Nivel</th><th>Tag</th><th>Mensaje</th><th>PIN</th><th>hostId</th><th>playerId</th><th>Detalle</th></tr>
           </thead>
           <tbody id="logs-tbody"></tbody>
         </table>
       </section>
     </main>
     <div id="logs-error" class="error"></div>
+    <dialog id="logs-detail-modal" class="logs-detail-modal">
+      <form method="dialog" class="logs-detail-modal__form">
+        <header class="logs-detail-modal__header">
+          <h3 id="logs-detail-modal-title">Detalle del log</h3>
+          <button type="submit" class="logs-detail-modal__close" aria-label="Cerrar">&times;</button>
+        </header>
+        <dl id="logs-detail-modal-meta" class="logs-detail-modal__meta"></dl>
+        <pre id="logs-detail-modal-stack" class="logs-detail-modal__stack"></pre>
+      </form>
+    </dialog>
     <script src="/js/admin-logs.js"></script>
     <script src="/js/env-badge.js"></script>
   </body>
