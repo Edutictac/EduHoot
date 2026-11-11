@@ -329,6 +329,7 @@ test('partida compartida: responder, revelar, ranking por ronda y resultados', a
     await expect(answerButtons(page, 0).first()).toBeDisabled();
     await expect(answerButtons(page, 0).filter({ hasText: 'París' })).toHaveClass(/\bselected\b/);
     await expect(panel(page, 0).locator('[data-feedback]')).toHaveText('');
+    await expect(panel(page, 0).locator('[data-score]')).toHaveText('Puntos: 0');
     await expect(answerButtons(page, 1).first()).toBeEnabled();
 
     await answerButtons(page, 1).filter({ hasText: 'Berlín' }).click();
