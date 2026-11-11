@@ -78,6 +78,19 @@
         fetch('/api/env').then(function(res){
             return res.ok ? res.json() : null;
         }).then(function(data){
+            // Avís per a convidar a provar Stage i vore les novetats: es
+            // mostra a qualsevol entorn, només a les pàgines que en tinguen
+            // l'element (opt-in per pàgina). En el propi Stage s'amaga només
+            // el botó "Provar Stage" (no té sentit convidar a Stage estant-hi
+            // ja), però el de "novetats" seguix visible.
+            var stageNotice = document.getElementById('stage-notice');
+            if(stageNotice && data){
+                stageNotice.classList.remove('hidden');
+                var tryStageBtn = document.getElementById('stage-notice-try-stage');
+                if(tryStageBtn && data.env === 'staging'){
+                    tryStageBtn.classList.add('hidden');
+                }
+            }
             var cfg = data && ENVS[data.env];
             if(!cfg) return;
             document.documentElement.classList.add('env-' + data.env);
