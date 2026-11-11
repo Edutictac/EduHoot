@@ -55,7 +55,7 @@
 ### Noves maneres de jugar
 
 - **Ratxa d'encerts**: un contador que premia encertar preguntes seguides:
-  quan més llarga la ratxa, més ganes de no trencar-la.
+  com més llarga la ratxa, més ganes de no trencar-la.
 - **Vídeos «aprén i després respon»**: preguntes precedides d'un vídeo
   explicatiu, per a introduir contingut nou dins de la mateixa partida.
 - **Pràctica adaptativa**: el mode individual podrà repetir automàticament
