@@ -1,16 +1,6 @@
 // Multiplayer local (2-4 jugadores en la misma pantalla)
 (function(){
   var state = {
-    quizzes: [],
-    page: 0,
-    pageSize: 12,
-    sortOrder: 'plays',
-    filters: {
-      tags: [],
-      minQuestions: '',
-      maxQuestions: '',
-      onlyImage: false
-    },
     currentQuizId: null,
     quizData: null,
     desiredQuestionCount: null,
@@ -26,8 +16,7 @@
     players: [],
     playerNames: [],
     playerIcons: [],
-    phaseLocked: false,
-    favoriteIds: new Set()
+    phaseLocked: false
   };
 
   var NAMES_KEY = 'multiplayerPlayerNames';
@@ -35,8 +24,8 @@
   var FAVORITES_STORAGE_KEY = 'eduhoot-favorite-quizzes';
   var USER_RATING_STORAGE_KEY = 'eduhoot-user-ratings';
   var DEVICE_ID_STORAGE_KEY = 'eduhoot-device-id';
-  var userRatings = {};
   var deviceId = '';
+  var PAGE_SIZE = 12;
 
   function loadFavorites(){
     try{
@@ -50,35 +39,10 @@
     }
   }
 
-  function saveFavorites(){
+  function saveFavorites(ids){
     try{
-      localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(Array.from(state.favoriteIds)));
+      localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(Array.from(ids)));
     }catch(e){}
-  }
-
-  function isFavorite(id){
-    return state.favoriteIds && state.favoriteIds.has(String(id));
-  }
-
-  function toggleFavorite(id){
-    var key = String(id);
-    if(isFavorite(key)){
-      state.favoriteIds.delete(key);
-    }else{
-      state.favoriteIds.add(key);
-    }
-    saveFavorites();
-  }
-
-  function updateFavoriteButton(btn, id){
-    if(!btn) return;
-    var active = isFavorite(id);
-    btn.classList.toggle('is-active', active);
-    btn.setAttribute('aria-pressed', active ? 'true' : 'false');
-    var label = active ? t('favoriteRemove') : t('favoriteAdd');
-    btn.setAttribute('aria-label', label);
-    btn.title = label;
-    btn.textContent = active ? '❤' : '♡';
   }
 
   function getDeviceId(){
@@ -112,19 +76,10 @@
     }
   }
 
-  function saveUserRatings(){
+  function saveUserRatings(ratings){
     try{
-      localStorage.setItem(USER_RATING_STORAGE_KEY, JSON.stringify(userRatings));
+      localStorage.setItem(USER_RATING_STORAGE_KEY, JSON.stringify(ratings));
     }catch(e){}
-  }
-
-  function getUserRating(id){
-    return userRatings && userRatings[String(id)];
-  }
-
-  function setUserRating(id, rating){
-    userRatings[String(id)] = rating;
-    saveUserRatings();
   }
 
   function formatRatingSummary(avg, count){
@@ -132,41 +87,6 @@
       return t('ratingEmpty');
     }
     return format(t('ratingSummary'), { avg: avg.toFixed(1), count: count });
-  }
-
-  function updateRatingStars(starsWrap, displayRating){
-    if(!starsWrap) return;
-    var buttons = starsWrap.querySelectorAll('button[data-value]');
-    Array.prototype.forEach.call(buttons, function(btn){
-      var value = parseInt(btn.getAttribute('data-value'), 10);
-      btn.classList.toggle('is-filled', value <= displayRating);
-    });
-  }
-
-  function submitRating(quizId, rating, summaryEl, starsWrap, quizRef){
-    if(!deviceId) deviceId = getDeviceId();
-    fetch('/api/quizzes/' + encodeURIComponent(quizId) + '/rating', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ rating: rating, deviceId: deviceId })
-    })
-      .then(function(res){ return res.json().then(function(body){ return { ok: res.ok, body: body }; }); })
-      .then(function(payload){
-        if(!payload.ok) return;
-        var avg = Number(payload.body && payload.body.avg);
-        if(!Number.isFinite(avg)) avg = 0;
-        var count = Number(payload.body && payload.body.count);
-        if(!Number.isFinite(count)) count = 0;
-        count = Math.max(0, Math.round(count));
-        if(quizRef){
-          quizRef.ratingAvg = avg;
-          quizRef.ratingCount = count;
-        }
-        setUserRating(quizId, rating);
-        if(summaryEl) summaryEl.textContent = formatRatingSummary(avg, count);
-        updateRatingStars(starsWrap, rating);
-      })
-      .catch(function(){});
   }
 
   // Reutilizamos el set de iconos del selector de /join.
@@ -415,8 +335,6 @@
     }
   };
 
-  state.favoriteIds = loadFavorites();
-  userRatings = loadUserRatings();
   deviceId = getDeviceId();
 
   function t(key){
@@ -750,102 +668,6 @@
     if(langSelect) langSelect.value = lang;
   }
 
-  function getAllTagsFromQuizzes(){
-    var map = {};
-    state.quizzes.forEach(function(q){
-      var list = Array.isArray(q.tags) ? q.tags : [];
-      list.forEach(function(tag){
-        var clean = (tag || '').toString().trim();
-        if(!clean) return;
-        var key = clean.toLowerCase();
-        if(!map[key]) map[key] = { tag: clean, count: 0 };
-        map[key].count++;
-      });
-    });
-    var items = Object.keys(map).map(function(k){ return map[k]; });
-    items.sort(function(a, b){
-      if(b.count !== a.count) return b.count - a.count;
-      return a.tag.localeCompare(b.tag);
-    });
-    return items;
-  }
-
-  var tagFilterExpanded = false;
-
-  function ensureTagToggleButton(total){
-    var clearBtn = document.getElementById('tags-clear');
-    if(!clearBtn || !clearBtn.parentElement) return;
-    var actions = clearBtn.parentElement;
-    var btn = document.getElementById('tags-toggle');
-    if(!btn){
-      btn = document.createElement('button');
-      btn.id = 'tags-toggle';
-      btn.type = 'button';
-      btn.className = 'tag-filter__btn is-icon';
-      btn.setAttribute('aria-label', t('filterTagShowMore'));
-      btn.innerHTML = '<span class="tag-filter__icon" aria-hidden="true">▾</span><span class="sr-only"></span>';
-      btn.addEventListener('click', function(){
-        tagFilterExpanded = !tagFilterExpanded;
-        updateTagFilterOptions();
-      });
-      actions.insertBefore(btn, clearBtn);
-    }
-    var label = tagFilterExpanded ? t('filterTagShowLess') : t('filterTagShowMore');
-    var icon = tagFilterExpanded ? '▴' : '▾';
-    btn.setAttribute('aria-label', label);
-    var iconEl = btn.querySelector('.tag-filter__icon');
-    if(iconEl) iconEl.textContent = icon;
-    var sr = btn.querySelector('.sr-only');
-    if(sr) sr.textContent = label;
-    btn.style.display = total > 0 ? '' : 'none';
-  }
-
-  function getVisibleTagItems(allItems){
-    return tagFilterExpanded ? allItems : [];
-  }
-
-  function updateTagFilterOptions(){
-    var wrap = document.getElementById('tag-filter');
-    if(!wrap) return;
-    var allItems = getAllTagsFromQuizzes();
-    var allKeys = {};
-    allItems.forEach(function(it){ allKeys[it.tag.toLowerCase()] = true; });
-    wrap.innerHTML = '';
-    state.filters.tags = state.filters.tags.filter(function(tag){
-      var key = (tag || '').toString().trim().toLowerCase();
-      return !!allKeys[key];
-    });
-
-    ensureTagToggleButton(allItems.length);
-    if(!tagFilterExpanded) return;
-    var items = getVisibleTagItems(allItems);
-
-    items.forEach(function(item){
-      var tag = item.tag;
-      var label = document.createElement('label');
-      label.className = 'tag-filter__item';
-      var input = document.createElement('input');
-      input.type = 'checkbox';
-      input.value = tag;
-      input.checked = state.filters.tags.indexOf(tag) !== -1;
-      input.addEventListener('change', function(){
-        var selected = [];
-        var inputs = wrap.querySelectorAll('input[type="checkbox"]');
-        Array.prototype.forEach.call(inputs, function(el){
-          if(el.checked) selected.push(el.value);
-        });
-        state.filters.tags = selected;
-        state.page = 0;
-        renderList();
-      });
-      var span = document.createElement('span');
-      span.textContent = tag;
-      label.appendChild(input);
-      label.appendChild(span);
-      wrap.appendChild(label);
-    });
-  }
-
   function renderRoundRanking(){
     var list = document.getElementById('round-ranking-list');
     if(!list) return;
@@ -886,9 +708,8 @@
   function setLang(newLang){
     lang = newLang;
     EduhootLang.persist(lang);
+    app.lang = newLang;
     applyStaticText();
-    updateTagFilterOptions();
-    renderList();
     renderSelected();
     renderPlayerNameInputs();
     renderPlayers();
@@ -1231,43 +1052,40 @@
   }
 
   function fetchPublicQuizzes(){
-    var empty = document.getElementById('public-empty');
-    if(empty) empty.textContent = '…';
+    app.loading = true;
     fetch('/api/public-quizzes?mode=multiplayer')
       .then(function(res){ return res.json(); })
       .then(function(data){
-        state.quizzes = shuffleArray(Array.isArray(data) ? data : []);
-        state.page = 0;
-        updateTagFilterOptions();
-        renderList();
+        app.quizzes = shuffleArray(Array.isArray(data) ? data : []);
+        app.page = 0;
+        app.pruneTags();
+        app.loading = false;
       })
       .catch(function(){
-        var list = document.getElementById('public-list');
-        if(list) list.innerHTML = '';
-        if(empty) empty.textContent = '';
+        app.quizzes = [];
+        app.loading = false;
       });
   }
 
-  function sortPublicQuizzes(list){
-    if(!Array.isArray(list)) return list;
+  function sortPublicQuizzes(list, sortOrder){
     return list.slice().sort(function(a, b){
-      if(state.sortOrder === 'recent'){
+      if(sortOrder === 'recent'){
         var ta = Date.parse(a && (a.createdAt || a.updatedAt)) || 0;
         var tb = Date.parse(b && (b.createdAt || b.updatedAt)) || 0;
         if(ta === tb) return Math.random() - 0.5;
         return tb - ta;
       }
-      if(state.sortOrder === 'alpha'){
+      if(sortOrder === 'alpha'){
         var na = (a && a.name ? a.name : '').toLowerCase();
         var nb = (b && b.name ? b.name : '').toLowerCase();
         return na.localeCompare(nb);
       }
-      if(state.sortOrder === 'alpha-desc'){
+      if(sortOrder === 'alpha-desc'){
         var nda = (a && a.name ? a.name : '').toLowerCase();
         var ndb = (b && b.name ? b.name : '').toLowerCase();
         return ndb.localeCompare(nda);
       }
-      if(state.sortOrder === 'rating'){
+      if(sortOrder === 'rating'){
         var ra = Number(a && a.ratingAvg) || 0;
         var rb = Number(b && b.ratingAvg) || 0;
         if(ra !== rb) return rb - ra;
@@ -1277,229 +1095,13 @@
       }
       var pa = a && typeof a.playsCount === 'number' ? a.playsCount : 0;
       var pb = b && typeof b.playsCount === 'number' ? b.playsCount : 0;
-      if(state.sortOrder === 'least'){
+      if(sortOrder === 'least'){
         if(pa === pb) return Math.random() - 0.5;
         return pa - pb;
       }
       if(pa === pb) return Math.random() - 0.5;
       return pb - pa;
     });
-  }
-
-  function renderPagination(totalFiltered){
-    var controls = document.getElementById('public-pagination');
-    if(!controls) return;
-    controls.innerHTML = '';
-    var totalPages = Math.max(1, Math.ceil(totalFiltered / state.pageSize));
-    if(totalPages <= 1){
-      controls.classList.add('hidden');
-      return;
-    }
-    controls.classList.remove('hidden');
-
-    var prev = document.createElement('button');
-    prev.textContent = '<';
-    prev.disabled = state.page === 0;
-    prev.onclick = function(){
-      if(state.page > 0){
-        state.page -= 1;
-        renderList();
-      }
-    };
-
-    var info = document.createElement('span');
-    info.textContent = (state.page + 1) + ' / ' + totalPages;
-
-    var next = document.createElement('button');
-    next.textContent = '>';
-    next.disabled = state.page >= totalPages - 1;
-    next.onclick = function(){
-      if(state.page < totalPages - 1){
-        state.page += 1;
-        renderList();
-      }
-    };
-
-    controls.appendChild(prev);
-    controls.appendChild(info);
-    controls.appendChild(next);
-  }
-
-  function renderList(){
-    var list = document.getElementById('public-list');
-    var empty = document.getElementById('public-empty');
-    if(!list) return;
-
-    list.innerHTML = '';
-    var searchVal = ((document.getElementById('search') && document.getElementById('search').value) || '').toLowerCase();
-    var minQ = parseInt(state.filters.minQuestions, 10);
-    var maxQ = parseInt(state.filters.maxQuestions, 10);
-    if(Number.isNaN(minQ)) minQ = null;
-    if(Number.isNaN(maxQ)) maxQ = null;
-    var filtered = state.quizzes.filter(function(q){
-      if(!searchVal) return true;
-      var haystack = (q.name || '') + ' ' + (Array.isArray(q.tags) ? q.tags.join(' ') : '');
-      return haystack.toLowerCase().includes(searchVal);
-    });
-    if(state.filters.tags.length){
-      filtered = filtered.filter(function(q){
-        var tags = Array.isArray(q.tags) ? q.tags : [];
-        return state.filters.tags.some(function(tag){ return tags.indexOf(tag) !== -1; });
-      });
-    }
-    if(minQ !== null){
-      filtered = filtered.filter(function(q){
-        var count = typeof q.questionsCount === 'number' ? q.questionsCount : 0;
-        return count >= minQ;
-      });
-    }
-    if(maxQ !== null){
-      filtered = filtered.filter(function(q){
-        var count = typeof q.questionsCount === 'number' ? q.questionsCount : 0;
-        return count <= maxQ;
-      });
-    }
-    if(state.filters.onlyImage){
-      filtered = filtered.filter(function(q){
-        return !!(q.coverImage);
-      });
-    }
-
-    if(filtered.length === 0){
-      if(empty) empty.textContent = '';
-      renderPagination(0);
-      return;
-    }
-    if(empty) empty.textContent = '';
-
-    var favorites = [];
-    var nonFavorites = [];
-    filtered.forEach(function(q){
-      if(isFavorite(q.id)){
-        favorites.push(q);
-      }else{
-        nonFavorites.push(q);
-      }
-    });
-    favorites = sortPublicQuizzes(favorites);
-    nonFavorites = sortPublicQuizzes(nonFavorites);
-    filtered = favorites.concat(nonFavorites);
-    var totalPages = Math.max(1, Math.ceil(filtered.length / state.pageSize));
-    if(state.page >= totalPages) state.page = totalPages - 1;
-    var start = state.page * state.pageSize;
-    var pageItems = filtered.slice(start, start + state.pageSize);
-
-    pageItems.forEach(function(q){
-      var card = document.createElement('div');
-      card.className = 'card';
-
-      var header = document.createElement('div');
-      header.className = 'card-header';
-      var title = document.createElement('h3');
-      title.textContent = q.name || 'Quiz';
-      var favBtn = document.createElement('button');
-      favBtn.type = 'button';
-      favBtn.className = 'favorite-btn';
-      favBtn.addEventListener('click', function(ev){
-        ev.stopPropagation();
-        toggleFavorite(q.id);
-        updateFavoriteButton(favBtn, q.id);
-      });
-      updateFavoriteButton(favBtn, q.id);
-      header.appendChild(title);
-      header.appendChild(favBtn);
-
-      var meta = document.createElement('p');
-      meta.className = 'muted';
-      meta.textContent = format(t('questionsLabel'), { count: q.questionsCount || 0 });
-
-      var tagsWrap = document.createElement('div');
-      if(Array.isArray(q.tags)){
-        q.tags.forEach(function(tag){
-          var clean = (tag || '').toString().trim();
-          if(!clean) return;
-          var el = document.createElement('span');
-          el.className = 'tag';
-          el.textContent = clean;
-          tagsWrap.appendChild(el);
-        });
-      }
-
-      var ratingWrap = document.createElement('div');
-      ratingWrap.className = 'card-rating';
-      var ratingStars = document.createElement('div');
-      ratingStars.className = 'rating-stars';
-      for(var i = 1; i <= 5; i++){
-        (function(stars){
-          var starBtn = document.createElement('button');
-          starBtn.type = 'button';
-          starBtn.className = 'rating-star';
-          starBtn.setAttribute('data-value', String(stars));
-          starBtn.textContent = '★';
-          var label = format(t('ratingStarLabel'), { stars: stars });
-          starBtn.setAttribute('aria-label', label);
-          starBtn.title = label;
-          starBtn.addEventListener('click', function(ev){
-            ev.stopPropagation();
-            updateRatingStars(ratingStars, stars);
-            setUserRating(q.id, stars);
-            submitRating(q.id, stars, ratingSummary, ratingStars, q);
-          });
-          ratingStars.appendChild(starBtn);
-        })(i);
-      }
-      var ratingSummary = document.createElement('span');
-      ratingSummary.className = 'rating-summary muted';
-      var avg = Number(q && q.ratingAvg);
-      if(!Number.isFinite(avg)) avg = 0;
-      var count = Number(q && q.ratingCount);
-      if(!Number.isFinite(count)) count = 0;
-      count = Math.max(0, Math.round(count));
-      ratingSummary.textContent = formatRatingSummary(avg, count);
-      var userRating = getUserRating(q.id);
-      var displayRating = userRating ? userRating : Math.round(avg || 0);
-      updateRatingStars(ratingStars, displayRating);
-      ratingWrap.appendChild(ratingStars);
-      ratingWrap.appendChild(ratingSummary);
-
-      var stats = document.createElement('p');
-      stats.className = 'muted';
-      var plays = q.playsCount || 0;
-      var players = q.playersCount || 0;
-      stats.textContent = plays + ' ' + t('playsShort') + ' · ' + players + ' ' + t('playersShort');
-
-      var thumb = document.createElement('div');
-      thumb.className = 'card-thumb placeholder';
-      var img = document.createElement('img');
-      img.alt = '';
-      var thumbUrl = mediaThumb(q.coverImage || q.coverVideo);
-      if(thumbUrl){
-        img.onload = function(){ thumb.classList.add('has-media'); thumb.classList.remove('placeholder'); };
-        img.onerror = function(){ img.removeAttribute('src'); };
-        img.src = thumbUrl;
-      } else {
-        img.onload = function(){ thumb.classList.add('has-media'); thumb.classList.remove('placeholder'); };
-        img.src = '/icons/logo.svg';
-      }
-      thumb.appendChild(img);
-
-      var btn = document.createElement('button');
-      btn.className = 'btn btn-primary';
-      btn.type = 'button';
-      btn.textContent = t('selectQuiz');
-      btn.onclick = function(){ selectQuiz(q.id); };
-
-      card.appendChild(thumb);
-      card.appendChild(header);
-      card.appendChild(meta);
-      card.appendChild(tagsWrap);
-      card.appendChild(ratingWrap);
-      card.appendChild(stats);
-      card.appendChild(btn);
-      list.appendChild(card);
-    });
-
-    renderPagination(filtered.length);
   }
 
   function renderSelected(){
@@ -2255,68 +1857,6 @@
       langSelect.addEventListener('change', function(){ setLang(langSelect.value); });
     }
 
-    var search = document.getElementById('search');
-    if(search){
-      search.addEventListener('input', function(){ state.page = 0; renderList(); });
-    }
-    var sortSelect = document.getElementById('sort');
-    if(sortSelect){
-      sortSelect.value = state.sortOrder;
-      sortSelect.addEventListener('change', function(){
-        state.sortOrder = sortSelect.value;
-        state.page = 0;
-        renderList();
-      });
-    }
-    var tagsSelectAll = document.getElementById('tags-select-all');
-    if(tagsSelectAll){
-      tagsSelectAll.addEventListener('click', function(){
-        // Selecciona todas las etiquetas (y las muestra)
-        var all = getAllTagsFromQuizzes().map(function(it){ return it.tag; });
-        state.filters.tags = all;
-        tagFilterExpanded = true;
-        updateTagFilterOptions();
-        state.page = 0;
-        renderList();
-      });
-    }
-    var tagsClear = document.getElementById('tags-clear');
-    if(tagsClear){
-      tagsClear.addEventListener('click', function(){
-        state.filters.tags = [];
-        updateTagFilterOptions();
-        state.page = 0;
-        renderList();
-      });
-    }
-    var minQuestions = document.getElementById('min-questions');
-    if(minQuestions){
-      minQuestions.value = state.filters.minQuestions;
-      minQuestions.addEventListener('input', function(){
-        state.filters.minQuestions = minQuestions.value;
-        state.page = 0;
-        renderList();
-      });
-    }
-    var maxQuestions = document.getElementById('max-questions');
-    if(maxQuestions){
-      maxQuestions.value = state.filters.maxQuestions;
-      maxQuestions.addEventListener('input', function(){
-        state.filters.maxQuestions = maxQuestions.value;
-        state.page = 0;
-        renderList();
-      });
-    }
-    var onlyImage = document.getElementById('only-image');
-    if(onlyImage){
-      onlyImage.checked = !!state.filters.onlyImage;
-      onlyImage.addEventListener('change', function(){
-        state.filters.onlyImage = !!onlyImage.checked;
-        state.page = 0;
-        renderList();
-      });
-    }
-
     var playerCount = document.getElementById('player-count');
     if(playerCount){
       playerCount.value = String(state.playerCount);
@@ -2391,6 +1931,171 @@
       roundContinue.addEventListener('click', hideRoundRankingModalAndContinue);
     }
   }
+
+  // Catàleg (Subfase B, Vue, bloc 1). La resta (configuració, partida,
+  // resultats i modal de rànquing) seguix estàtica dins de la mateixa arrel
+  // fins al bloc 2: Vue mai reescriu un node sense directives.
+  var app = Vue.createApp({
+    template: '#multiplayer-tpl',
+    data: function(){
+      return {
+        lang: lang,
+        loading: true,
+        quizzes: [],
+        page: 0,
+        sortOrder: 'plays',
+        search: '',
+        filters: { tags: [], minQuestions: '', maxQuestions: '', onlyImage: false },
+        tagFilterExpanded: false,
+        favoriteIds: loadFavorites(),
+        userRatings: loadUserRatings(),
+        thumbLoaded: {},
+        thumbFailed: {}
+      };
+    },
+    computed: {
+      // Es llig la llista "en cru" (toRaw) perquè marcar un favorit o
+      // valorar un quiz no reordene el llistat a l'instant: com abans de
+      // Vue, l'ordre només es refà en canviar filtres, cerca o ordre.
+      allTags: function(){
+        var map = {};
+        Vue.toRaw(this.quizzes).forEach(function(q){
+          (Array.isArray(q.tags) ? q.tags : []).forEach(function(tag){
+            var clean = (tag || '').toString().trim();
+            if(!clean) return;
+            var key = clean.toLowerCase();
+            if(!map[key]) map[key] = { tag: clean, count: 0 };
+            map[key].count++;
+          });
+        });
+        return Object.keys(map).map(function(k){ return map[k]; }).sort(function(a, b){
+          if(b.count !== a.count) return b.count - a.count;
+          return a.tag.localeCompare(b.tag);
+        });
+      },
+      tagToggleLabel: function(){
+        return this.tagFilterExpanded ? this.t('filterTagShowLess') : this.t('filterTagShowMore');
+      },
+      filteredQuizzes: function(){
+        var searchVal = (this.search || '').toLowerCase();
+        var tagsFilter = this.filters.tags.slice();
+        var minQ = parseInt(this.filters.minQuestions, 10);
+        var maxQ = parseInt(this.filters.maxQuestions, 10);
+        var onlyImage = this.filters.onlyImage;
+        var favorites = Vue.toRaw(this.favoriteIds);
+        var list = Vue.toRaw(this.quizzes).filter(function(q){
+          if(searchVal){
+            var haystack = (q.name || '') + ' ' + (Array.isArray(q.tags) ? q.tags.join(' ') : '');
+            if(!haystack.toLowerCase().includes(searchVal)) return false;
+          }
+          if(tagsFilter.length){
+            var tags = Array.isArray(q.tags) ? q.tags : [];
+            if(!tagsFilter.some(function(tag){ return tags.indexOf(tag) !== -1; })) return false;
+          }
+          var count = typeof q.questionsCount === 'number' ? q.questionsCount : 0;
+          if(!Number.isNaN(minQ) && count < minQ) return false;
+          if(!Number.isNaN(maxQ) && count > maxQ) return false;
+          if(onlyImage && !q.coverImage) return false;
+          return true;
+        });
+        var favs = list.filter(function(q){ return favorites.has(String(q.id)); });
+        var rest = list.filter(function(q){ return !favorites.has(String(q.id)); });
+        return sortPublicQuizzes(favs, this.sortOrder).concat(sortPublicQuizzes(rest, this.sortOrder));
+      },
+      totalPages: function(){
+        return Math.max(1, Math.ceil(this.filteredQuizzes.length / PAGE_SIZE));
+      },
+      currentPage: function(){
+        return Math.min(this.page, this.totalPages - 1);
+      },
+      pageItems: function(){
+        var start = this.currentPage * PAGE_SIZE;
+        return this.filteredQuizzes.slice(start, start + PAGE_SIZE).map(function(q){ return Vue.reactive(q); });
+      }
+    },
+    methods: {
+      t: function(key){
+        this.lang;
+        return t(key);
+      },
+      format: format,
+      thumbUrl: function(q){
+        return mediaThumb(q.coverImage || q.coverVideo) || '/icons/logo.svg';
+      },
+      cleanTags: function(q){
+        return (Array.isArray(q.tags) ? q.tags : []).map(function(tag){ return (tag || '').toString().trim(); }).filter(Boolean);
+      },
+      pruneTags: function(){
+        var existing = {};
+        this.allTags.forEach(function(it){ existing[it.tag.toLowerCase()] = true; });
+        this.filters.tags = this.filters.tags.filter(function(tag){
+          return !!existing[(tag || '').toString().trim().toLowerCase()];
+        });
+      },
+      selectAllTags: function(){
+        this.filters.tags = this.allTags.map(function(it){ return it.tag; });
+        this.tagFilterExpanded = true;
+        this.page = 0;
+      },
+      clearTags: function(){
+        this.filters.tags = [];
+        this.page = 0;
+      },
+      isFavorite: function(id){
+        return this.favoriteIds.has(String(id));
+      },
+      favoriteLabel: function(id){
+        return this.isFavorite(id) ? this.t('favoriteRemove') : this.t('favoriteAdd');
+      },
+      toggleFavorite: function(id){
+        var key = String(id);
+        if(this.favoriteIds.has(key)){
+          this.favoriteIds.delete(key);
+        }else{
+          this.favoriteIds.add(key);
+        }
+        saveFavorites(Vue.toRaw(this.favoriteIds));
+      },
+      displayRating: function(q){
+        var own = this.userRatings[String(q.id)];
+        if(own) return own;
+        var avg = Number(q.ratingAvg);
+        return Math.round(Number.isFinite(avg) ? avg : 0);
+      },
+      ratingSummary: function(q){
+        var avg = Number(q.ratingAvg);
+        if(!Number.isFinite(avg)) avg = 0;
+        var count = Number(q.ratingCount);
+        if(!Number.isFinite(count)) count = 0;
+        return formatRatingSummary(avg, Math.max(0, Math.round(count)));
+      },
+      rate: function(q, rating){
+        var self = this;
+        var key = String(q.id);
+        self.userRatings[key] = rating;
+        saveUserRatings(Vue.toRaw(self.userRatings));
+        fetch('/api/quizzes/' + encodeURIComponent(q.id) + '/rating', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ rating: rating, deviceId: deviceId })
+        })
+          .then(function(res){ return res.json().then(function(body){ return { ok: res.ok, body: body }; }); })
+          .then(function(payload){
+            if(!payload.ok) return;
+            var avg = Number(payload.body && payload.body.avg);
+            var count = Number(payload.body && payload.body.count);
+            q.ratingAvg = Number.isFinite(avg) ? avg : 0;
+            q.ratingCount = Number.isFinite(count) ? Math.max(0, Math.round(count)) : 0;
+            self.userRatings[key] = rating;
+            saveUserRatings(Vue.toRaw(self.userRatings));
+          })
+          .catch(function(){});
+      },
+      selectQuiz: function(id){
+        selectQuiz(id);
+      }
+    }
+  }).mount('#multiplayer-app');
 
   applyStaticText();
   bindEvents();
