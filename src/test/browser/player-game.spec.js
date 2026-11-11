@@ -138,9 +138,6 @@ test('respuesta múltiple: permite marcar varias opciones y enviarlas juntas', a
     }
 });
 
-// Bug conocido: las claves 'text_placeholder' y 'submit_free' no existen en
-// i18n-player.js, así que hoy se ven literales en vez de traducidas. El spec
-// fija el comportamiento real (con el bug), no el ideal.
 test('respuesta libre de texto corto: muestra el campo y la envía como texto', async ({ page }) => {
     await openGame(page);
     await serverEmit(page, 'playerQuestion', { question: '¿Capital de Italia?', type: 'short-answer', time: 20 });
@@ -149,8 +146,8 @@ test('respuesta libre de texto corto: muestra el campo y la envía como texto', 
     for (let i = 1; i <= 4; i++) {
         await expect(page.locator('#answer' + i)).toBeHidden();
     }
-    await expect(page.locator('#freeAnswerInput')).toHaveAttribute('placeholder', 'text_placeholder');
-    await expect(page.locator('#freeSubmitBtn')).toHaveText('submit_free');
+    await expect(page.locator('#freeAnswerInput')).toHaveAttribute('placeholder', 'Escribe tu respuesta');
+    await expect(page.locator('#freeSubmitBtn')).toHaveText('Enviar');
 
     await page.locator('#freeAnswerInput').fill('Roma');
     await page.locator('#freeSubmitBtn').click();
@@ -162,7 +159,7 @@ test('respuesta libre numérica: muestra el campo decimal y la envía como numbe
     await openGame(page);
     await serverEmit(page, 'playerQuestion', { question: '¿Cuánto es 6x7?', type: 'numeric', time: 20 });
 
-    await expect(page.locator('#freeAnswerInput')).toHaveAttribute('placeholder', 'numeric_placeholder');
+    await expect(page.locator('#freeAnswerInput')).toHaveAttribute('placeholder', 'Introduce un número');
     await expect(page.locator('#freeAnswerInput')).toHaveAttribute('inputmode', 'decimal');
 
     await page.locator('#freeAnswerInput').fill('42');
