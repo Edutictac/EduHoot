@@ -160,9 +160,16 @@ test('etiquetas: desplegar, filtrar por una, seleccionar todas y limpiar', async
     await expect(cardTitles(page)).toHaveText(['Geografia', 'Mixt']);
 });
 
-test('orden: alfabético ascendente/descendente y más recientes', async ({ page }) => {
+test('orden: alfabético ascendente/descendente, más recientes y mejor valorados', async ({ page }) => {
     await mockBackend(page);
     await openCatalog(page);
+
+    // Valorar Àlgebra (el mock responde avg 4.5) la pone por delante de Geografia (4).
+    await expect(page.locator('#sort option[value="rating"]')).toHaveText('Mejor valorados');
+    await cards(page).filter({ hasText: 'Àlgebra' }).locator('.rating-star[data-value="5"]').click();
+    await expect(cards(page).filter({ hasText: 'Àlgebra' }).locator('.rating-summary')).toHaveText('4.5 · 3 votos');
+    await page.locator('#sort').selectOption('rating');
+    await expect(cardTitles(page)).toHaveText(['Àlgebra', 'Geografia', 'Mixt']);
 
     await page.locator('#sort').selectOption('alpha');
     await expect(cardTitles(page)).toHaveText(['Àlgebra', 'Geografia', 'Mixt']);

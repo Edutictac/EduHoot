@@ -211,6 +211,7 @@
       sortPlays: 'Más jugados',
       sortLeastPlays: 'Menos jugados',
       sortNewest: 'Más recientes',
+      sortRating: 'Mejor valorados',
       sortAlphaAsc: 'A-Z',
       sortAlphaDesc: 'Z-A',
       playsShort: 'partidas',
@@ -284,6 +285,7 @@
       sortPlays: 'Most played',
       sortLeastPlays: 'Least played',
       sortNewest: 'Newest',
+      sortRating: 'Top rated',
       sortAlphaAsc: 'A-Z',
       sortAlphaDesc: 'Z-A',
       playsShort: 'plays',
@@ -357,6 +359,7 @@
       sortPlays: 'Més jugats',
       sortLeastPlays: 'Menys jugats',
       sortNewest: 'Més recents',
+      sortRating: 'Més ben valorats',
       sortAlphaAsc: 'A-Z',
       sortAlphaDesc: 'Z-A',
       playsShort: 'partides',
@@ -1263,6 +1266,14 @@
         var nda = (a && a.name ? a.name : '').toLowerCase();
         var ndb = (b && b.name ? b.name : '').toLowerCase();
         return ndb.localeCompare(nda);
+      }
+      if(state.sortOrder === 'rating'){
+        var ra = Number(a && a.ratingAvg) || 0;
+        var rb = Number(b && b.ratingAvg) || 0;
+        if(ra !== rb) return rb - ra;
+        var ca = Number(a && a.ratingCount) || 0;
+        var cb = Number(b && b.ratingCount) || 0;
+        if(ca !== cb) return cb - ca;
       }
       var pa = a && typeof a.playsCount === 'number' ? a.playsCount : 0;
       var pb = b && typeof b.playsCount === 'number' ? b.playsCount : 0;
