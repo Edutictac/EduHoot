@@ -74,7 +74,11 @@ problemes d'estil, variables sense usar, etc.
 - **`test/unit/`** — lògica aïllada sense servidor HTTP: idiomes
   (`language.test.js`), importació de CSV (`importCsv.test.js`), gestió
   de jugadors (`players.test.js`), utilitats de preguntes
-  (`questionUtils.test.js`), partides en directe (`liveGames.test.js`).
+  (`questionUtils.test.js`), partides en directe (`liveGames.test.js`),
+  repartiment de preguntes per mode (`gameHelpers.test.js`), puntuació
+  (`scoring.test.js`), exportació a Moodle (`moodleExport.test.js`), la
+  llista d'ús sense connexió de `sw.js` (`swAssets.test.js`), la CSP
+  (`csp.test.js`) i els noms únics en `player-join` (`playerJoinNames.test.js`).
 - **`test/integration/`** — alça el servidor Express real (amb Mongo en
   memòria) i prova l'API HTTP d'extrem a extrem: `api.test.js`,
   `sessionReport.test.js`, `auth-migration.test.js` i `authentik.test.js`
@@ -83,8 +87,9 @@ problemes d'estil, variables sense usar, etc.
   `devLoginOff.test.js` (`/dev/login` funciona en desenvolupament i dona 404
   fora d'ell), i `devOidc.test.js` (flux d'Authentik complet contra l'OIDC
   simulat de dev: rol del seed, rebuig sense rol docent i PKCE), i
-  `adminLogs.test.js` (visor de logs i configuració de nivell/mida de la
-  col·lecció capped, totes dos protegides per rol admin).
+  `adminLogs.test.js` (visor de logs, «Cargar más» amb `before`/`beforeId`
+  i configuració de nivell/mida de la col·lecció capped, tot protegit per
+  rol admin).
 - **`test/browser/`** — tests de navegador amb Playwright:
   `language.spec.js` (canvi d'idioma), `auth-state.spec.js` (estat de sessió
   i pont amb el xip), `player-game.spec.js` (joc de l'alumnat des del PIN a

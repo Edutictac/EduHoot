@@ -20,6 +20,8 @@
 - **Si alguna cosa falla en classe, es pot esbrinar**: el sistema guarda
   ara un registre de la partida, així que davant d'un problema es pot veure
   què ha passat i resoldre-ho més de pressa.
+- **Exportacions que no es confonen**: el CSV de preguntes d'un
+  qüestionari es descarrega amb la data i l'hora en el nom.
 
 ## Per a l'alumnat
 
@@ -33,6 +35,12 @@
   prompte encertes, més punts afigs.
 - **Juga amb els companys o al teu ritme**: fins a 4 jugadors compartint
   una sola pantalla, o mode individual per a practicar quan vulgues.
+- **Cada nom, una sola vegada**: dos alumnes no poden entrar amb el mateix
+  nom en una partida; si el teu ja està agafat, se t'avisa perquè en tries
+  un altre.
+- **Respostes còmodes en qualsevol pantalla**: en l'ordinador, els botons
+  queden centrats en una quadrícula de 2x2; en el mòbil, encara que la
+  pregunta porte imatge, les quatre respostes es veuen sense desplaçar.
 
 ## Pròximament
 
@@ -89,6 +97,8 @@
 - **Si algo falla en clase, se puede averiguar**: el sistema guarda ahora
   un registro de la partida, así que ante un problema se puede ver qué ha
   pasado y resolverlo más rápido.
+- **Exportaciones que no se confunden**: el CSV de preguntas de un
+  cuestionario se descarga con la fecha y la hora en el nombre.
 
 ## Para el alumnado
 
@@ -103,6 +113,12 @@
 - **Juega con tus compañeros o a tu ritmo**: hasta 4 jugadores
   compartiendo una sola pantalla, o modo individual para practicar cuando
   quieras.
+- **Cada nombre, una sola vez**: dos alumnos no pueden entrar con el mismo
+  nombre en una partida; si el tuyo ya está cogido, se te avisa para que
+  elijas otro.
+- **Respuestas cómodas en cualquier pantalla**: en el ordenador, los
+  botones quedan centrados en una cuadrícula de 2x2; en el móvil, aunque
+  la pregunta lleve imagen, las cuatro respuestas se ven sin desplazarse.
 
 ## Próximamente
 
@@ -159,6 +175,8 @@
 - **If something goes wrong in class, it can be traced**: the system now
   keeps a record of each game, so when a problem comes up you can see what
   happened and fix it faster.
+- **Exports you won't mix up**: a quiz's questions CSV now downloads with
+  the date and time in its name.
 
 ## For students
 
@@ -172,6 +190,11 @@
   right, the more you earn.
 - **Play together or at your own pace**: up to 4 players sharing one
   screen, or a solo mode to practise whenever you want.
+- **Every name, only once**: two students can't join a game with the same
+  name; if yours is already taken, you're told so you can pick another.
+- **Comfortable answers on any screen**: on a computer, the buttons sit
+  centred in a 2x2 grid; on a phone, even when the question has an image,
+  all four answers fit without scrolling.
 
 ## Coming soon
 

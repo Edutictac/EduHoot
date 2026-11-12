@@ -66,6 +66,7 @@ funcionament del projecte.
 src/
 ├── server/
 │   ├── server.js          # punt d'entrada: Express + Socket.IO, munta tot
+│   ├── csp.js             # Content Security Policy (Helmet)
 │   ├── data/
 │   │   ├── db.js              # connexió a MongoDB (MONGO_URL, MONGO_DB) i índexs
 │   │   └── repositories.js    # una funció per col·lecció (getGamesCollection...)
@@ -85,7 +86,7 @@ src/
 │   │   └── kahootImport.js    # importació de Kahoot i rèplica d'imatges
 │   ├── routes/
 │   │   ├── quizzes.js         # /api/quizzes..., /api/public-quizzes, /api/tags
-│   │   ├── games.js           # validate-pin, report.csv
+│   │   ├── games.js           # validate-pin, validate-name, report.csv
 │   │   ├── auth.js            # /api/auth/... (login, Google, Authentik, usuaris)
 │   │   ├── playerAuth.js      # /api/player-auth/... (Edutictac ID)
 │   │   ├── admin.js           # /api/admin/..., /admin
@@ -134,18 +135,21 @@ JS d'orquestració amb `<script>` clàssics (sense build step):
 | `/` (`index.html`) | *(sense JS propi; usa `i18n-player.js`, `pwa-install.js`)* | Portada: triar mode (aula / multijugador / solo), accés professorat, instal·lar com a PWA |
 | `/join.html` | `join.js` (ja amb Vue) | Alumnat: PIN + nom (o login EduTicTac) per a unir-se a una partida del mode "Jugar a l'aula" |
 | `/player/` | `lobby.js` (ja amb Vue) | Alumnat: sala d'espera des que s'uneix fins que el professorat inicia la partida |
-| `/player/game/` | `playerGame.js` | Alumnat: pantalla de joc — pregunta, respostes, resultat, rànquing, reconnexió |
+| `/player/game/` | `playerGame.js` (ja amb Vue) | Alumnat: pantalla de joc — pregunta, respostes, resultat, rànquing, reconnexió |
 | `/host/` | `host.js` (ja amb Vue, pilot fet) | Professorat: lobby amb PIN/QR, opcions de partida, llista de jugadors, botó d'inici |
-| `/host/game/` | `hostGame.js` | Professorat: pantalla de joc en directe — pregunta, temporitzador, rànquing, música/gong |
+| `/host/game/` | `hostGame.js` (ja amb Vue) | Professorat: pantalla de joc en directe — pregunta, temporitzador, rànquing, música/gong |
 | `/create/` | `create.js` + mòduls `create-*.js` + `i18n-create.js` (ja repartits, Subfase A, i amb Vue) | Professorat: biblioteca de qüestionaris — llistat, filtres, exportació, importació, panell d'admin |
 | `/create/quiz-creator/` | `quizCreator.js` (ja amb Vue) | Professorat: editor d'un qüestionari (preguntes, respostes, tipus) |
 | `/solo/` | `solo.js` + mòduls `solo-*.js` + `i18n-solo.js` (ja repartits, Subfase A, i amb Vue) | Mode individual, a ritme propi, fora de classe |
 | `/multiplayer/` | `multiplayer.js` (ja amb Vue) | Mode 2-4 jugadors compartint una sola pantalla |
 | `/admin-stats.html` | `admin-stats.js` (ja amb Vue) | Estadístiques del panell d'administració |
+| `/admin-logs.html` | `admin-logs.js` (ja amb Vue) | Logs del servidor: configuració, filtres, taula i detall |
 
 A banda, fitxers transversals que no pertanyen a una sola pantalla:
 `languages.js`, `i18n-host.js`/`i18n-player.js`/`i18n-solo.js`/
 `i18n-create.js`, `env-badge.js`, `edutictac-chip.js`,
+`session-bridge.js` (pont de sessió amb el xip, per a `/create/` i els
+panells `/admin-*`),
 `music-player.js`, `app-version.js`, `pwa-install.js`, i `js/libs/`
 (jQuery, deparam, Vue).
 
@@ -515,7 +519,7 @@ Per a no confondre un entorn de desenvolupament o stage amb producció,
 `src/public/js/env-badge.js` es carrega en totes les pantalles públiques
 principals (`index`, `join`, `create`, `create/quiz-creator`, `host`,
 `host/game`, `player`, `player/game`, `solo`, `multiplayer`,
-`admin-stats`) i consulta l'endpoint `GET /api/env` de `server.js`
+`admin-stats`, `admin-logs`) i consulta l'endpoint `GET /api/env` de `server.js`
 (retorna `{ env: process.env.NODE_ENV || '' }`).
 
 - Si `NODE_ENV` és `development` o `staging`, afig un distintiu fix a
@@ -823,9 +827,11 @@ poder importar un fitxer XML al banc de preguntes del seu propi curs.
   mida redimensiona la col·lecció en calent (`collMod` amb
   `cappedSize`); per defecte, nivell `info` i 10MB.
 - **Visor**: `/admin/logs` (`src/public/admin-logs.html` +
-  `src/public/js/admin-logs.js`, mateix patró vanilla JS que
-  `/admin/stats`, sense Vue), amb filtres per nivell, PIN, `hostId` i
-  text lliure (`GET /api/admin/logs`, mateixa protecció de rol). Les
+  `src/public/js/admin-logs.js`, app de Vue com `/admin/stats`), amb
+  filtres per nivell, `tag` (filtra en triar-lo), PIN i text lliure
+  (`GET /api/admin/logs`, mateixa protecció de rol). Mostra els 100 més
+  recents i, si n'hi ha més, «Cargar más» porta els següents (detall en
+  `docs/LOGGING.md`). Les
   files amb `meta` no buit (p. ex. `uncaughtException`) tenen un botó
   "Ver" que obri un `<dialog>` amb la resta de camps i el stack trace
   complet — l'API ja tornava `meta` sencer, només faltava pintar-lo.
