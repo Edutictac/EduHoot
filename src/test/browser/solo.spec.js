@@ -367,7 +367,7 @@ test('partida completa: tipos de pregunta, puntos, avisos y resultado', async ({
 
     // 5. Numérica con coma decimal y botón.
     await expect(page.locator('#question-progress')).toHaveText('Pregunta 5 de 5');
-    await expect(page.locator('#solo-free-input')).toHaveAttribute('placeholder', 'Escribe un número');
+    await expect(page.locator('#solo-free-input')).toHaveAttribute('placeholder', 'Introduce un número');
     await page.locator('#solo-free-input').fill('3,2');
     await page.locator('#solo-free-submit').click();
     await expect(page.locator('#feedback')).toHaveText('Respuesta incorrecta · Respuesta correcta: 3.14 ± 0.01');
