@@ -114,61 +114,69 @@
             <section id="game-panel" class="panel play-panel">
                 <div class="panel__header">
                     <div>
-                        <p class="eyebrow" data-i18n="soloEyebrow">Modo individual</p>
-                        <h2 id="selected-title" data-i18n="soloTitle">Elige un juego para empezar</h2>
+                        <p class="eyebrow">{{ t('soloEyebrow') }}</p>
+                        <h2 id="selected-title">{{ titleText }}</h2>
                     </div>
                 </div>
 
-                <div id="start-form" class="start-form hidden">
-                    <p id="selected-meta" class="muted" data-i18n="startSelect">Selecciona un juego público para empezar.</p>
+                <div id="start-form" class="start-form" :class="{ hidden: s.view !== 'start' }">
+                    <p id="selected-meta" class="muted">{{ selectedMeta }}</p>
 
-                    <label for="question-count" class="muted" data-i18n="questionCountLabel">Preguntas a responder</label>
+                    <label for="question-count" class="muted">{{ t('questionCountLabel') }}</label>
                     <div class="question-count-controls">
-                        <input id="question-count" type="number" min="1" step="1" inputmode="numeric" autocomplete="off">
-                        <span id="question-count-total" class="muted"></span>
+                        <input id="question-count" type="number" min="1" step="1" inputmode="numeric" autocomplete="off" :max="quizTotal ? String(quizTotal) : ''" :disabled="!quizTotal" :value="s.countInput" @input="onCountInput">
+                        <span id="question-count-total" class="muted">{{ quizTotal ? format(t('questionCountTotal'), { total: quizTotal }) : '' }}</span>
                     </div>
-                    <label for="question-time" class="muted" data-i18n="questionTimeLabel">Tiempo por pregunta (segundos)</label>
+                    <label for="question-time" class="muted">{{ t('questionTimeLabel') }}</label>
                     <div class="question-count-controls">
-                        <input id="question-time" type="number" min="5" max="120" step="1" inputmode="numeric" autocomplete="off" data-i18n-placeholder="questionTimePlaceholder" placeholder="Auto">
+                        <input id="question-time" type="number" min="5" max="120" step="1" inputmode="numeric" autocomplete="off" :placeholder="t('questionTimePlaceholder')" :value="s.timeInput" @input="onTimeInput">
                     </div>
 
-                    <button id="start-btn" class="btn btn-primary" data-i18n="startButton">Jugar en solitario</button>
-                    <p class="muted" data-i18n="startHint">El tiempo por pregunta se respeta si el quiz lo define.</p>
+                    <button id="start-btn" class="btn btn-primary" @click="start">{{ t('startButton') }}</button>
+                    <p class="muted">{{ t('startHint') }}</p>
                 </div>
 
-                <div id="game-area" class="game-area hidden">
+                <div id="game-area" class="game-area" :class="{ hidden: s.view !== 'game' }">
                     <div class="game-progress">
-                        <span id="question-progress" class="pill"></span>
-                        <span id="score-pill" class="pill pill-muted"></span>
-                        <span id="timer-pill" class="pill pill-timer"></span>
+                        <span id="question-progress" class="pill" :aria-label="(s.idx + 1) + ' / ' + s.questions.length">{{ progressText }}</span>
+                        <span id="score-pill" class="pill pill-muted">{{ t('score') + ': ' + s.score }}</span>
+                        <span id="timer-pill" class="pill pill-timer">{{ t('timer') + ': ' + Math.ceil(s.timerLeft) + 's' }}</span>
                     </div>
                     <div class="question-card">
-                        <p id="question-text" class="question-text"></p>
-                        <div id="question-media" class="question-media hidden">
-                            <img id="question-image" alt="">
-                            <video id="question-video" controls playsinline></video>
-                            <iframe id="question-iframe" title="video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        <p id="question-text" class="question-text">{{ question ? (question.question || '') : '' }}</p>
+                        <div id="question-media" class="question-media" :class="{ hidden: !hasMedia, show: hasMedia }">
+                            <img id="question-image" alt="" :src="media.image || null" :style="{ display: media.image ? 'block' : 'none' }">
+                            <video id="question-video" controls playsinline :src="media.video || null" :style="{ display: media.video ? 'block' : 'none' }"></video>
+                            <iframe id="question-iframe" title="video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen :src="media.youtube || null" :style="{ display: media.youtube ? 'block' : 'none' }"></iframe>
                         </div>
-                        <div id="answers" class="answers"></div>
+                        <div id="answers" class="answers">
+                            <div v-if="isFree" class="free-answer-row">
+                                <input id="solo-free-input" class="free-answer-input" type="text" autocomplete="off" :placeholder="meta.type === 'numeric' ? t('freeNumberPlaceholder') : t('freeTextPlaceholder')" v-model="s.freeText" :disabled="s.locked" @keydown.enter.prevent="submitFree">
+                                <button id="solo-free-submit" class="free-answer-submit" type="button" :disabled="s.locked" @click="submitFree">{{ t('submitFreeAnswer') }}</button>
+                            </div>
+                            <template v-else>
+                                <button v-for="(ans, i) in answers" :key="s.idx + '-' + i" class="answer" type="button" :class="answerClass(i + 1)" :data-answer="i + 1" :disabled="s.locked" @click="answer(i + 1)">{{ ans || ('Respuesta ' + (i + 1)) }}</button>
+                            </template>
+                        </div>
                         <div id="multi-submit-row" class="multi-submit-row">
-                            <button id="multi-submit" type="button" class="btn multi-submit hidden" data-i18n="submitAnswers">Enviar respuestas</button>
+                            <button id="multi-submit" type="button" class="btn multi-submit" :class="{ hidden: !showMultiSubmit, 'has-selection': showMultiSubmit && s.multiSelections.length > 0 }" :disabled="!s.multiSelections.length" @click="submitMulti">{{ t('submitAnswers') }}</button>
                         </div>
-                        <p id="feedback" class="feedback"></p>
+                        <p id="feedback" class="feedback" :class="s.feedback.kind ? 'feedback--' + s.feedback.kind : ''">{{ s.feedback.text }}</p>
                     </div>
                 </div>
 
-                <div id="result-area" class="result-area hidden">
-                    <h3 data-i18n="finishTitle">Partida terminada</h3>
-                    <p id="result-summary" class="subtext"></p>
-                    <div id="ranking" class="ranking hidden">
+                <div id="result-area" class="result-area" :class="{ hidden: s.view !== 'result' }">
+                    <h3>{{ t('finishTitle') }}</h3>
+                    <p id="result-summary" class="subtext">{{ resultSummary }}</p>
+                    <div id="ranking" class="ranking" :class="{ hidden: !s.rankingBox.visible }">
                         <div class="ranking__header">
-                            <h4 data-i18n="rankingTitle">Top 10 global</h4>
+                            <h4>{{ t('rankingTitle') }}</h4>
                         </div>
-                        <ol id="ranking-list"></ol>
+                        <ol id="ranking-list"><li v-for="(item, i) in s.rankingBox.items" :key="i">{{ itemText(item) }}</li></ol>
                     </div>
                     <div class="result-actions">
-                        <button id="play-again" class="btn btn-primary" data-i18n="playAgain">Volver a jugar</button>
-                        <button id="pick-another" class="btn btn-ghost" data-i18n="pickAnother">Elegir otro quiz</button>
+                        <button id="play-again" class="btn btn-primary" @click="playAgain">{{ t('playAgain') }}</button>
+                        <button id="pick-another" class="btn btn-ghost" @click="pickAnother">{{ t('pickAnother') }}</button>
                     </div>
                 </div>
             </section>
@@ -180,39 +188,39 @@
                 <button :disabled="currentPage >= totalPages - 1" @click="s.page = currentPage + 1">&gt;</button>
             </template>
         </div>
+        <div id="feedback-modal" class="solo-modal" :class="{ show: s.feedbackModalOpen }" @click.self="closeFeedback">
+            <div class="solo-modal__content">
+                <h3 id="feedback-title">{{ t('wrongText') }}</h3>
+                <p id="feedback-body">{{ feedbackBody }}</p>
+                <button id="feedback-close" class="btn btn-primary" @click="closeFeedback">OK</button>
+            </div>
+        </div>
+
+        <div id="ranking-modal" class="solo-modal" :class="{ show: s.rankingModal.open }" @click.self="closeRanking">
+            <div class="solo-modal__content ranking-modal__content">
+                <h3 id="ranking-modal-title">{{ t('rankingTitle') }}</h3>
+                <ol id="ranking-modal-list" class="ranking-list"><li v-for="(item, i) in s.rankingModal.items" :key="i">{{ itemText(item) }}</li></ol>
+                <button id="ranking-modal-close" class="btn btn-ghost" @click="closeRanking">{{ t('rankingClose') }}</button>
+            </div>
+        </div>
+
+        <div id="name-modal" class="solo-modal" :class="{ show: s.nameModalOpen }" @click.self="skipName">
+            <div class="solo-modal__content">
+                <h3>{{ t('nameTitle') }}</h3>
+                <p class="muted">{{ t('nameDesc') }}</p>
+                <input id="player-name" type="text" maxlength="3" pattern="[A-Za-z0-9]{1,3}" :placeholder="t('namePlaceholder')" autocomplete="off" :value="s.nameInput" @input="onNameInput">
+                <div class="modal-actions">
+                    <button id="name-cancel" class="btn btn-ghost" @click="skipName">{{ t('nameSkip') }}</button>
+                    <button id="name-save" class="btn btn-primary" @click="saveName">{{ t('nameSave') }}</button>
+                </div>
+            </div>
+        </div>
         </template>
 
         <div class="music-section bottom-music">
             <div id="solo-music-player" class="music-player-shell"></div>
         </div>
 
-        <div id="feedback-modal" class="solo-modal">
-            <div class="solo-modal__content">
-                <h3 id="feedback-title"></h3>
-                <p id="feedback-body"></p>
-                <button id="feedback-close" class="btn btn-primary">OK</button>
-            </div>
-        </div>
-
-        <div id="ranking-modal" class="solo-modal">
-            <div class="solo-modal__content ranking-modal__content">
-                <h3 id="ranking-modal-title" data-i18n="rankingTitle">Top 10 global</h3>
-                <ol id="ranking-modal-list" class="ranking-list"></ol>
-                <button id="ranking-modal-close" class="btn btn-ghost" data-i18n="rankingClose">Cerrar</button>
-            </div>
-        </div>
-
-        <div id="name-modal" class="solo-modal">
-            <div class="solo-modal__content">
-                <h3 data-i18n="nameTitle">Identifícate para el ranking</h3>
-                <p class="muted" data-i18n="nameDesc">Usa 3 letras o números.</p>
-                <input id="player-name" type="text" maxlength="3" pattern="[A-Za-z0-9]{1,3}" placeholder="AAA" data-i18n-placeholder="namePlaceholder" autocomplete="off">
-                <div class="modal-actions">
-                    <button id="name-cancel" class="btn btn-ghost" data-i18n="nameSkip">Omitir</button>
-                    <button id="name-save" class="btn btn-primary" data-i18n="nameSave">Guardar</button>
-                </div>
-            </div>
-        </div>
         <footer class="ett-footer">
             <p class="ett-footer__id">
                 <span class="ett-footer__brand">EduTicTac</span>

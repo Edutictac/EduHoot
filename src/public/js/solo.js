@@ -38,6 +38,20 @@ var state = Vue.reactive({
         loadError: false,
         tagFilterExpanded: false,
         thumbs: {},
+        // Panel de juego (bloque 2). view: 'none' | 'start' | 'game' | 'result'.
+        view: 'none',
+        title: { key: 'soloTitle' },
+        countInput: '',
+        timeInput: '',
+        nameInput: '',
+        freeText: '',
+        marks: { correct: [], wrong: [] },
+        feedback: { text: '', kind: '' },
+        result: { correct: 0, total: 0, score: 0, polls: 0 },
+        rankingBox: { visible: false, items: [] },
+        rankingModal: { open: false, items: [] },
+        feedbackModalOpen: false,
+        nameModalOpen: false,
         // Se incrementa al cambiar de idioma para que la plantilla se repinte.
         lang: 0
 });
@@ -105,20 +119,12 @@ function setLang(newLang){
     }
 
     function showFeedbackModal(){
-        var modal = document.getElementById('feedback-modal');
-        var title = document.getElementById('feedback-title');
-        var body = document.getElementById('feedback-body');
-        if(!modal || !title || !body || !state.lastWrong) return;
-        var label = t('correctLabel');
-        var correctText = state.lastWrong.correctText || '';
-        title.textContent = t('wrongText');
-        body.textContent = (label === 'correctLabel' ? '' : label + ' ') + correctText;
-        modal.classList.add('show');
+        if(!state.lastWrong) return;
+        state.feedbackModalOpen = true;
     }
 
     function hideFeedbackModal(){
-        var modal = document.getElementById('feedback-modal');
-        if(modal) modal.classList.remove('show');
+        state.feedbackModalOpen = false;
         if(state.awaitingConfirm){
             state.awaitingConfirm = false;
             state.idx += 1;
@@ -130,18 +136,9 @@ function setLang(newLang){
         state.quizData = null;
         state.currentQuiz = null;
         state.desiredQuestionCount = null;
-        var startForm = document.getElementById('start-form');
-        var gameArea = document.getElementById('game-area');
-        var resultArea = document.getElementById('result-area');
-        var title = document.getElementById('selected-title');
-        var meta = document.getElementById('selected-meta');
-        if(startForm) startForm.classList.add('hidden');
-        if(gameArea) gameArea.classList.add('hidden');
-        if(resultArea) resultArea.classList.add('hidden');
-        if(title) title.textContent = t('soloTitle');
-        if(meta) meta.textContent = t('startSelect');
+        state.view = 'none';
+        state.title = { key: 'soloTitle' };
         syncQuestionCountControls();
-        setMedia(null, null);
         document.body.classList.remove('playing');
         pauseSoloMusic();
         state.awaitingConfirm = false;
@@ -163,111 +160,11 @@ function setLang(newLang){
                 setLang(langSelect.value);
             });
         }
-        var startBtn = document.getElementById('start-btn');
-        if(startBtn){
-            startBtn.addEventListener('click', startQuiz);
-        }
-        var multiSubmitBtn = document.getElementById('multi-submit');
-        if(multiSubmitBtn){
-            multiSubmitBtn.addEventListener('click', submitSoloMultiAnswers);
-        }
-        var questionCount = document.getElementById('question-count');
-        if(questionCount){
-            questionCount.addEventListener('input', function(){
-                var total = getQuizTotalQuestions();
-                if(total <= 0) return;
-                var v = clampInt(questionCount.value, 1, total);
-                if(v == null) return;
-                questionCount.value = String(v);
-                state.desiredQuestionCount = v;
-            });
-        }
-        var questionTime = document.getElementById('question-time');
-        if(questionTime){
-            questionTime.addEventListener('input', function(){
-                if(!questionTime.value){
-                    state.desiredQuestionTime = null;
-                    return;
-                }
-                var v = clampInt(questionTime.value, 5, 120);
-                if(v == null) return;
-                questionTime.value = String(v);
-                state.desiredQuestionTime = v;
-            });
-        }
-        var playAgain = document.getElementById('play-again');
-        if(playAgain){
-            playAgain.addEventListener('click', function(){
-                if(state.quizData){
-                    startQuiz();
-                }
-            });
-        }
-        var pickAnother = document.getElementById('pick-another');
-        if(pickAnother){
-            pickAnother.addEventListener('click', resetSelection);
-        }
-        var nameInput = document.getElementById('player-name');
-        if(nameInput){
-            nameInput.addEventListener('input', function(){
-                nameInput.value = normalizeName(nameInput.value);
-            });
-        }
-        var feedbackClose = document.getElementById('feedback-close');
-        if(feedbackClose){
-            feedbackClose.addEventListener('click', hideFeedbackModal);
-        }
-        var feedbackModal = document.getElementById('feedback-modal');
-        if(feedbackModal){
-            feedbackModal.addEventListener('click', function(e){
-                if(e.target === feedbackModal){
-                    hideFeedbackModal();
-                }
-            });
-        }
-        var rankingModalClose = document.getElementById('ranking-modal-close');
-        if(rankingModalClose){
-            rankingModalClose.addEventListener('click', hideRankingModal);
-        }
-        var rankingModal = document.getElementById('ranking-modal');
-        if(rankingModal){
-            rankingModal.addEventListener('click', function(e){
-                if(e.target === rankingModal){
-                    hideRankingModal();
-                }
-            });
-        }
-        var nameSave = document.getElementById('name-save');
-        if(nameSave){
-            nameSave.addEventListener('click', function(){
-                var input = document.getElementById('player-name');
-                var clean = normalizeName(input ? input.value : '');
-                state.playerName = clean || t('namePlaceholder');
-                closeNameModal();
-                submitScore(state.playerName);
-            });
-        }
-        var nameCancel = document.getElementById('name-cancel');
-        if(nameCancel){
-            nameCancel.addEventListener('click', function(){
-                closeNameModal();
-                submitScore(state.playerName || t('namePlaceholder'));
-            });
-        }
-        var nameModal = document.getElementById('name-modal');
-        if(nameModal){
-            nameModal.addEventListener('click', function(e){
-                if(e.target === nameModal){
-                    closeNameModal();
-                    submitScore(state.playerName || t('namePlaceholder'));
-                }
-            });
-        }
     }
 
     Vue.createApp({
         template: '#solo-tpl',
-        mixins: [soloCatalog],
+        mixins: [soloCatalog, soloPlay],
         data: function(){
             return { s: state };
         },

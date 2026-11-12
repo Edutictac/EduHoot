@@ -1,12 +1,13 @@
 // Puntuación y ranking del modo individual (incluido el modal del nombre), extraído de solo.js
+// Las listas se guardan en state como elementos { row } (fila del ranking),
+// { key } (texto traducible) o { text } (mensaje del servidor); la
+// plantilla de Vue las pinta.
+    function rankingItemsFrom(rows){
+        return rows.slice(0, 10).map(function(row){ return { row: row }; });
+    }
+
     function submitScore(nameToUse){
-        var ranking = document.getElementById('ranking');
-        var rankingList = document.getElementById('ranking-list');
-        if(rankingList){
-            var li = document.createElement('li');
-            li.textContent = t('saving');
-            rankingList.appendChild(li);
-        }
+        state.rankingBox.items.push({ key: 'saving' });
         fetch('/api/quizzes/' + encodeURIComponent(state.currentQuiz) + '/solo-run', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -20,103 +21,57 @@
             .then(function(res){ return res.json().then(function(body){ return { ok: res.ok, body: body }; }); })
             .then(function(payload){
                 if(!payload.ok){
-                    if(rankingList){
-                        rankingList.innerHTML = '';
-                        var li = document.createElement('li');
-                        li.textContent = payload.body && payload.body.error ? payload.body.error : t('rankingError');
-                        rankingList.appendChild(li);
-                    }
-                    if(ranking) ranking.classList.remove('hidden');
+                    var error = payload.body && payload.body.error;
+                    state.rankingBox = { visible: true, items: [error ? { text: error } : { key: 'rankingError' }] };
                     return;
                 }
                 renderRanking(payload.body.top || []);
             })
             .catch(function(){
-                if(rankingList){
-                    rankingList.innerHTML = '';
-                    var li = document.createElement('li');
-                    li.textContent = t('rankingError');
-                    rankingList.appendChild(li);
-                }
-                if(ranking) ranking.classList.remove('hidden');
+                state.rankingBox = { visible: true, items: [{ key: 'rankingError' }] };
             });
     }
 
     function renderRanking(list){
-        var ranking = document.getElementById('ranking');
-        var rankingList = document.getElementById('ranking-list');
-        if(!ranking || !rankingList) return;
-        rankingList.innerHTML = '';
-        if(!list.length){
-            var empty = document.createElement('li');
-            empty.textContent = t('rankingError');
-            rankingList.appendChild(empty);
-            ranking.classList.remove('hidden');
-            return;
-        }
-        appendRankingRows(rankingList, list);
-        ranking.classList.remove('hidden');
-    }
-
-    function appendRankingRows(targetList, rows){
-        rows.slice(0, 10).forEach(function(row){
-            var li = document.createElement('li');
-            var name = row.playerName || t('namePlaceholder');
-            var score = row.score || 0;
-            li.textContent = name + ' — ' + score + ' ' + t('scoreLabel');
-            targetList.appendChild(li);
-        });
+        state.rankingBox = {
+            visible: true,
+            items: list.length ? rankingItemsFrom(list) : [{ key: 'rankingError' }]
+        };
     }
 
     function showQuizRanking(id){
-        var modal = document.getElementById('ranking-modal');
-        var list = document.getElementById('ranking-modal-list');
-        var title = document.getElementById('ranking-modal-title');
-        if(!modal || !list || !title) return;
-        title.textContent = t('rankingTitle');
-        list.innerHTML = '';
-        var loading = document.createElement('li');
-        loading.textContent = t('loading');
-        list.appendChild(loading);
-        modal.classList.add('show');
+        state.rankingModal = { open: true, items: [{ key: 'loading' }] };
         fetch('/api/quizzes/' + encodeURIComponent(id) + '/solo-ranking')
             .then(function(res){ return res.json().then(function(body){ return { ok: res.ok, body: body }; }); })
             .then(function(payload){
-                list.innerHTML = '';
                 var rows = payload.ok && payload.body && Array.isArray(payload.body.top) ? payload.body.top : [];
                 if(!rows.length){
-                    var empty = document.createElement('li');
-                    empty.textContent = (payload.body && payload.body.error) ? payload.body.error : t('rankingEmpty');
-                    list.appendChild(empty);
+                    var error = payload.body && payload.body.error;
+                    state.rankingModal.items = [error ? { text: error } : { key: 'rankingEmpty' }];
                     return;
                 }
-                appendRankingRows(list, rows);
+                state.rankingModal.items = rankingItemsFrom(rows);
             })
             .catch(function(){
-                list.innerHTML = '';
-                var empty = document.createElement('li');
-                empty.textContent = t('rankingError');
-                list.appendChild(empty);
+                state.rankingModal.items = [{ key: 'rankingError' }];
             });
     }
 
     function hideRankingModal(){
-        var modal = document.getElementById('ranking-modal');
-        if(modal) modal.classList.remove('show');
+        state.rankingModal.open = false;
     }
 
     function openNameModal(){
-        var modal = document.getElementById('name-modal');
-        var input = document.getElementById('player-name');
-        if(!modal || !input) return;
-        input.value = normalizeName(input.value || state.playerName || 'AAA');
-        modal.classList.add('show');
-        setTimeout(function(){ input.focus(); input.select(); }, 10);
+        state.nameInput = normalizeName(state.nameInput || state.playerName || 'AAA');
+        state.nameModalOpen = true;
+        setTimeout(function(){
+            var input = document.getElementById('player-name');
+            if(input){ input.focus(); input.select(); }
+        }, 10);
     }
 
     function closeNameModal(){
-        var modal = document.getElementById('name-modal');
-        if(modal) modal.classList.remove('show');
+        state.nameModalOpen = false;
     }
 
     function shouldPromptName(topList, newScore){
@@ -145,4 +100,16 @@
             .catch(function(){
                 submitScore(state.playerName || t('namePlaceholder'));
             });
+    }
+
+    function saveNameAndSubmit(){
+        var clean = normalizeName(state.nameInput || '');
+        state.playerName = clean || t('namePlaceholder');
+        closeNameModal();
+        submitScore(state.playerName);
+    }
+
+    function skipNameAndSubmit(){
+        closeNameModal();
+        submitScore(state.playerName || t('namePlaceholder'));
     }

@@ -329,38 +329,20 @@ function getQuizTotalQuestions(){
     return 0;
 }
 
+// El campo «Preguntas a responder»: por defecto el total del quiz.
 function syncQuestionCountControls(){
-    var input = document.getElementById('question-count');
-    var totalEl = document.getElementById('question-count-total');
     var total = getQuizTotalQuestions();
-
-    if(totalEl){
-        totalEl.textContent = total ? format(t('questionCountTotal'), { total: total }) : '';
-    }
-    if(!input) return;
-
     if(total > 0){
-        input.max = String(total);
-        input.disabled = false;
-        // Por defecto: máximo.
         if(state.desiredQuestionCount == null){
-            input.value = String(total);
+            state.countInput = String(total);
         }
     }else{
-        input.max = '';
-        input.value = '';
-        input.disabled = true;
+        state.countInput = '';
     }
 }
 
 function syncQuestionTimeControls(){
-    var input = document.getElementById('question-time');
-    if(!input) return;
-    if(state.desiredQuestionTime == null){
-        input.value = '';
-        return;
-    }
-    input.value = String(state.desiredQuestionTime);
+    state.timeInput = state.desiredQuestionTime == null ? '' : String(state.desiredQuestionTime);
 }
 
 function getDesiredQuestionCount(){
@@ -372,56 +354,36 @@ function getDesiredQuestionCount(){
         return Math.max(1, Math.min(total, Math.round(state.desiredQuestionCount)));
     }
 
-    var input = document.getElementById('question-count');
-    var chosen = input ? clampInt(input.value, 1, total) : null;
+    var chosen = clampInt(state.countInput, 1, total);
     if(chosen == null) chosen = total;
     return chosen;
 }
 
 function renderSelectedMeta(){
-    var meta = document.getElementById('selected-meta');
-    if(!meta) return;
-    if(!state.quizData){
-        meta.textContent = t('startSelect');
-        syncQuestionCountControls();
-        syncQuestionTimeControls();
-        return;
-    }
-    var count = Array.isArray(state.quizData.questions) ? state.quizData.questions.length : 0;
-    var tags = Array.isArray(state.quizData.tags) ? state.quizData.tags.join(', ') : (Array.isArray(state.quizData.questionsTags) ? state.quizData.questionsTags.join(', ') : '');
-    meta.textContent = format(t('selectedMeta'), { count: count, tags: tags || '—' });
     syncQuestionCountControls();
     syncQuestionTimeControls();
 }
 
     function selectQuiz(id){
-        var title = document.getElementById('selected-title');
-        var startForm = document.getElementById('start-form');
-        var gameArea = document.getElementById('game-area');
-        var resultArea = document.getElementById('result-area');
-        var gamePanel = document.getElementById('game-panel');
-        if(title) title.textContent = t('loading');
-        if(startForm) startForm.classList.add('hidden');
-        if(gameArea) gameArea.classList.add('hidden');
-        if(resultArea) resultArea.classList.add('hidden');
+        state.title = { key: 'loading' };
+        state.view = 'none';
         fetch('/api/quizzes/' + encodeURIComponent(id))
             .then(function(res){ return res.json().then(function(body){ return { ok: res.ok, body: body }; }); })
             .then(function(payload){
                 if(!payload.ok){
-                    if(title) title.textContent = t('startError');
+                    state.title = { key: 'startError' };
                     return;
                 }
                 state.quizData = payload.body;
                 state.currentQuiz = payload.body.id;
-                if(title) title.textContent = payload.body.name || t('soloTitle');
+                state.title = payload.body.name ? { text: payload.body.name } : { key: 'soloTitle' };
                 document.body.classList.add('playing');
-                if(gamePanel) gamePanel.classList.remove('hidden');
                 // Nuevo flujo: antes de empezar, elegir cuántas preguntas jugar.
                 state.desiredQuestionCount = null;
                 renderSelectedMeta();
-                if(startForm) startForm.classList.remove('hidden');
+                state.view = 'start';
             })
             .catch(function(){
-                if(title) title.textContent = t('startError');
+                state.title = { key: 'startError' };
             });
     }
