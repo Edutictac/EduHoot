@@ -103,10 +103,11 @@
       <section class="panel" id="logs-table-wrap">
         <table id="logs-table">
           <thead>
-            <tr><th>Fecha</th><th>Nivel</th><th>Tag</th><th>Mensaje</th><th>PIN</th><th>hostId</th><th>playerId</th><th>Detalle</th></tr>
+            <tr><th>Detalle</th><th>Fecha</th><th>Nivel</th><th>Tag</th><th>Mensaje</th><th>PIN</th><th>hostId</th><th>playerId</th></tr>
           </thead>
           <tbody id="logs-tbody">
             <tr v-for="(row, index) in rows" :key="index">
+              <td class="logs-detail-btn-cell"><button v-if="hasDetail(row)" type="button" class="logs-detail-btn" @click="openDetail(row)">Ver</button></td>
               <td>{{ formatDate(row.createdAt) }}</td>
               <td :class="'level-' + row.level">{{ row.level }}</td>
               <td>{{ row.tag }}</td>
@@ -114,7 +115,6 @@
               <td>{{ row.pin }}</td>
               <td>{{ row.hostId }}</td>
               <td>{{ row.playerId }}</td>
-              <td class="logs-detail-btn-cell"><button v-if="hasDetail(row)" type="button" class="logs-detail-btn" @click="openDetail(row)">Ver</button></td>
             </tr>
           </tbody>
         </table>

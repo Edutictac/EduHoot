@@ -19,6 +19,8 @@ fitxers corresponents, i els originals es van eliminar.
 ## [Sense publicar]
 
 ### Afegit
+- En el panell de logs, el botó «Ver» del detall passa a la primera
+  columna de la taula.
 
 - En acabar la partida, la pantalla de l'amfitrió mostra «Tornar» al
   costat de «Descarregar informe», per a tornar a la biblioteca
@@ -64,6 +66,9 @@ fitxers corresponents, i els originals es van eliminar.
   (`/admin-*`) també són ara apps de Vue 3. Funciona igual que abans.
 
 ### Corregit
+- En acabar la partida, la pantalla de l'amfitrió continuava mostrant
+  «Saltar pregunta», i l'avís «Ningú ha encertat…» de l'última pregunta
+  podia quedar damunt del podi.
 - En la sala d'espera (`/player/`), el missatge «Connectat a la partida»
   es podia substituir pel text inicial d'espera si la connexió arribava
   abans que la traducció de la pàgina.
