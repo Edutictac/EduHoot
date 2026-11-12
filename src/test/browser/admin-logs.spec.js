@@ -143,6 +143,7 @@ test('otro error al cargar los logs da el mensaje genérico', async ({ page }) =
 
 test('enlaza con el panel de estadísticas y alinea la configuración', async ({ page }) => {
     await openLogs(page);
+    await expect(page.locator('.admin-header p')).toHaveText('Eventos de partidas, jugadores, importaciones y errores del servidor.');
     await expect(page.locator('.admin-nav a')).toHaveText('← Panel de estadísticas');
     await expect(page.locator('.admin-nav a')).toHaveAttribute('href', '/admin/stats');
     const boxes = [];
