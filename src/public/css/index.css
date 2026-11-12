@@ -466,3 +466,5 @@ body.modal-open{
     color: inherit;
     text-decoration: underline;
 }
+
+#join-app{ display: contents; }

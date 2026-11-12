@@ -186,3 +186,10 @@ test('con código pero sin PIN personal muestra «Introduce el código y el PIN.
     expect(calls.student).toEqual([]);
     expect(page.url()).toContain('/join.html');
 });
+
+test('con ?pin= incorrecto el modal sigue abierto con el error', async ({ page }) => {
+    await openJoin(page, '?pin=777');
+    await expect(page.locator('#pinModalError')).toHaveText('PIN incorrecto. Intenta de nuevo.');
+    await expect(page.locator('#pinModal')).toBeVisible();
+    await expect(page.locator('#joinButton')).toBeDisabled();
+});

@@ -311,8 +311,8 @@ que fixar l'estructura final exacta.
 
 **Estat (2026-11-12)**: feta. Vue en les pantalles principals: `/host/`,
 `/player/game/`, `/host/game/`, `/multiplayer/`, `/create/quiz-creator/`,
-`/solo/` i `/create/`. Queden sense Vue les pàgines menudes (portada,
-`/join.html`, `/player/` i els panells `/admin-*`). El detall de cada
+`/solo/`, `/create/` i `/join.html`. Queden sense Vue les pàgines menudes
+(portada, `/player/` i els panells `/admin-*`). El detall de cada
 pantalla està en `ARCHITECTURE.md`.
 
 Esta secció només afecta al **frontend**; el backend ja queda resolt amb

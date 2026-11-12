@@ -104,9 +104,10 @@ problemes d'estil, variables sense usar, etc.
   `quiz-creator.spec.js` (crear, editar i guardar qüestionaris en
   `/create/quiz-creator/`, amb la REST i Socket.IO simulats) i
   `solo.spec.js` (catàleg, partida, rànquing i entrada des de Commons
-  de `/solo/`, amb el rellotge de Playwright controlat) i
+  de `/solo/`, amb el rellotge de Playwright controlat),
   `create.spec.js` (biblioteca, generador IA, importació i compte de
-  `/create/`, amb la REST i Socket.IO simulats).
+  `/create/`, amb la REST i Socket.IO simulats) i `join.spec.js` (PIN,
+  icona, nom i identitat d'alumne en `/join.html`).
 
 ### Scripts puntuals que NO són part del flux de test estàndard
 

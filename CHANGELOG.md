@@ -59,6 +59,8 @@ fitxers corresponents, i els originals es van eliminar.
   partida, resultat i rànquing. Funciona igual que abans.
 - La biblioteca (`/create/`) també usa ara Vue 3: biblioteca, generador
   IA, importació i compte. Funciona igual que abans.
+- La pantalla per a unir-se a una partida (`/join.html`) també és ara
+  una app de Vue 3. Funciona igual que abans.
 
 ### Corregit
 - En obrir `/create/` amb sessió, la sessió es comprovava dues vegades i

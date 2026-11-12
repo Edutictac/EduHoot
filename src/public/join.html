@@ -19,88 +19,64 @@
         <edutictac-account class="site-account site-account--fixed site-account--start" data-home-only data-base="https://commons.edutictac.es"></edutictac-account>
         <div id="lang-switcher" data-lang-buttons>
         </div>
-        <div id="pinModal" class="pin-modal" role="dialog" aria-modal="true">
+        <!-- Subfase B, Vue (join.js): modal del PIN i formulari d'entrada. -->
+        <div id="join-app"></div>
+        <template id="join-tpl">
+        <div id="pinModal" class="pin-modal" :class="{ hidden: !modalOpen }" role="dialog" aria-modal="true">
             <div class="pin-modal__card">
-                <h2 data-i18n="join_pin_prompt">Ingresa el PIN del juego</h2>
-                <p data-i18n="join_pin_blocked">Necesitas un PIN válido para continuar.</p>
-                <form id="pinModalForm" class="pin-modal__form">
-                    <label for="pinModalInput" data-i18n="join_pin">PIN de la partida</label>
+                <h2>{{ t('join_pin_prompt') }}</h2>
+                <p>{{ t('join_pin_blocked') }}</p>
+                <form id="pinModalForm" class="pin-modal__form" @submit.prevent="submitPinModal">
+                    <label for="pinModalInput">{{ t('join_pin') }}</label>
                     <div class="pin-modal__controls">
-                        <input id="pinModalInput" type="number" inputmode="numeric" placeholder="12345" autofocus>
+                        <input id="pinModalInput" ref="pinModalInput" type="number" inputmode="numeric" placeholder="12345" v-model="pinModalValue" :disabled="validating">
                     </div>
-                    <button id="pinModalSubmit" class="pin-modal__submit" type="submit" data-i18n="join_continue">Continuar</button>
-                    <a id="pinModalCancel" class="pin-modal__cancel" href="/" data-i18n="join_cancel">Cancelar</a>
-                    <p id="pinModalError" class="pin-modal__error" aria-live="assertive"></p>
+                    <button id="pinModalSubmit" class="pin-modal__submit" :class="{ 'is-loading': validating }" type="submit" :disabled="validating">{{ t('join_continue') }}</button>
+                    <a id="pinModalCancel" class="pin-modal__cancel" href="/">{{ t('join_cancel') }}</a>
+                    <p id="pinModalError" class="pin-modal__error" aria-live="assertive">{{ pinError }}</p>
                 </form>
             </div>
         </div>
         <img id="join-logo" src="/icons/logo.svg" alt="EduHoot logo">
         <h1 id="title">EduHoot</h1>
-        <div id="pin-display" class="pin-display hidden">
+        <div id="pin-display" class="pin-display" :class="{ hidden: !pinValidated }">
             <span class="pin-display__label">PIN</span>
-            <span id="pin-display-value" class="pin-display__value"></span>
+            <span id="pin-display-value" class="pin-display__value">{{ pin }}</span>
         </div>
-        <form action="/player/">
-                <input type="hidden" id="pin" name="pin"/>
+        <form ref="joinForm" action="/player/" @submit="submitJoin">
+                <input type="hidden" id="pin" name="pin" :value="pin"/>
                 <div class="form-field">
-                    <label id="label" data-i18n="join_icon">Icono</label>
-                    <input type="hidden" id="icon" name="icon">
+                    <label id="label">{{ t('join_icon') }}</label>
+                    <input type="hidden" id="icon" name="icon" :value="icon">
                     <div id="icon-picker">
-                        <button type="button" data-icon="🦊">🦊</button>
-                        <button type="button" data-icon="🐱">🐱</button>
-                        <button type="button" data-icon="🐶">🐶</button>
-                        <button type="button" data-icon="🐼">🐼</button>
-                        <button type="button" data-icon="🐧">🐧</button>
-                        <button type="button" data-icon="🐸">🐸</button>
-                        <button type="button" data-icon="🦉">🦉</button>
-                        <button type="button" data-icon="🦄">🦄</button>
-                        <button type="button" data-icon="🐰">🐰</button>
-                        <button type="button" data-icon="🐢">🐢</button>
-                        <button type="button" data-icon="🐙">🐙</button>
-                        <button type="button" data-icon="🦁">🦁</button>
-                        <button type="button" data-icon="🐨">🐨</button>
-                        <button type="button" data-icon="🐝">🐝</button>
-                        <button type="button" data-icon="🐯">🐯</button>
-                        <button type="button" data-icon="🐸">🐸</button>
-                        <button type="button" data-icon="🐻">🐻</button>
-                        <button type="button" data-icon="🦕">🦕</button>
-                        <button type="button" data-icon="🦖">🦖</button>
-                        <button type="button" data-icon="🐉">🐉</button>
-                        <button type="button" data-icon="🚀">🚀</button>
-                        <button type="button" data-icon="🌈">🌈</button>
-                        <button type="button" data-icon="⚽️">⚽️</button>
-                        <button type="button" data-icon="🏀">🏀</button>
-                        <button type="button" data-icon="🏆">🏆</button>
-                        <button type="button" data-icon="🎮">🎮</button>
-                        <button type="button" data-icon="🎧">🎧</button>
-                        <button type="button" data-icon="📚">📚</button>
-                        <button type="button" data-icon="🎨">🎨</button>
+                        <button v-for="(item, idx) in icons" :key="idx" type="button" :data-icon="item" :class="{ selected: idx === iconIndex }" @click="selectIcon(idx)">{{ item }}</button>
                     </div>
-                    <div id="icon-preview"></div>
+                    <div id="icon-preview">{{ icon }}</div>
                 </div>
-                <div class="form-field">
-                    <label id = "label" data-i18n="join_name">Display Name</label>
-                    <input id = "name" class="name-field" type = "text" name="name" autocomplete="name" maxlength="20" />
-                    <p class="join-name-hint" data-i18n="join_name_hint">Juega sin PIN, elige tú el nombre</p>
+                <div class="form-field" :class="{ hidden: studentAuthRequired }">
+                    <label id = "label">{{ t('join_name') }}</label>
+                    <input id = "name" ref="nameInput" class="name-field" type = "text" name="name" autocomplete="name" maxlength="20" :value="name" @input="onNameInput" />
+                    <p class="join-name-hint">{{ t('join_name_hint') }}</p>
                 </div>
-                <div id="student-auth-fields" class="student-auth hidden">
-                    <p class="student-auth__intro" data-i18n="join_student_intro">O entra con tu identidad EduTicTac</p>
+                <div id="student-auth-fields" class="student-auth" :class="{ hidden: !studentAuthEnabled }">
+                    <p class="student-auth__intro">{{ t('join_student_intro') }}</p>
                     <div class="form-field">
-                        <label id="label" for="student-code" data-i18n="join_student_code">Codi EduTicTac</label>
-                        <input id="student-code" class="name-three" type="text" autocomplete="username" maxlength="3" pattern="[A-Za-z0-9]{3}" />
+                        <label id="label" for="student-code">{{ t('join_student_code') }}</label>
+                        <input id="student-code" ref="studentCodeInput" class="name-three" type="text" autocomplete="username" maxlength="3" pattern="[A-Za-z0-9]{3}" :required="studentAuthRequired" :value="studentCode" @input="onStudentCodeInput" />
                     </div>
                     <div class="form-field">
-                        <label id="label" for="student-pin" data-i18n="join_student_pin">PIN personal</label>
-                        <input id="student-pin" class="name-three" type="password" inputmode="numeric" autocomplete="current-password" maxlength="6" pattern="[0-9]{4,6}" />
+                        <label id="label" for="student-pin">{{ t('join_student_pin') }}</label>
+                        <input id="student-pin" ref="studentPinInput" class="name-three" type="password" inputmode="numeric" autocomplete="current-password" maxlength="6" pattern="[0-9]{4,6}" :required="studentAuthRequired" :value="studentPin" @input="onStudentPinInput" />
                     </div>
-                    <p id="student-auth-status" class="student-auth__status" aria-live="assertive"></p>
+                    <p id="student-auth-status" class="student-auth__status" aria-live="assertive">{{ studentAuthStatus }}</p>
                 </div>
-                <input type="hidden" id="studentJoinToken" name="studentJoinToken">
-                <input type="hidden" id="token" name="token">
+                <input type="hidden" id="studentJoinToken" name="studentJoinToken" :value="studentJoinToken">
+                <input type="hidden" id="token" name="token" :value="token">
                 <div class="form-field">
-                    <button id = "joinButton" data-i18n="join_button" disabled>Join</button>
+                    <button id = "joinButton" :disabled="!pinValidated">{{ t('join_button') }}</button>
                 </div>
         </form>
+        </template>
         <footer class="ett-footer ett-footer--bottom">
             <p class="ett-footer__id">
                 <span class="ett-footer__brand">EduTicTac</span>
@@ -118,6 +94,7 @@
         <script src="/js/languages.js"></script>
         <script src="/js/env-badge.js"></script>
         <script src="js/i18n-player.js"></script>
+        <script src="/js/libs/vue.global.prod.js"></script>
         <script src="js/join.js"></script>
         <script src="js/app-version.js"></script>
     </body>

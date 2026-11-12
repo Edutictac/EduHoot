@@ -134,7 +134,7 @@ JS d'orquestració amb `<script>` clàssics (sense build step):
 | Pantalla | JS principal | Per a què servix |
 |---|---|---|
 | `/` (`index.html`) | *(sense JS propi; usa `i18n-player.js`, `pwa-install.js`)* | Portada: triar mode (aula / multijugador / solo), accés professorat, instal·lar com a PWA |
-| `/join.html` | `join.js` | Alumnat: PIN + nom (o login EduTicTac) per a unir-se a una partida del mode "Jugar a l'aula" |
+| `/join.html` | `join.js` (ja amb Vue) | Alumnat: PIN + nom (o login EduTicTac) per a unir-se a una partida del mode "Jugar a l'aula" |
 | `/player/` | `lobby.js` | Alumnat: sala d'espera des que s'uneix fins que el professorat inicia la partida |
 | `/player/game/` | `playerGame.js` | Alumnat: pantalla de joc — pregunta, respostes, resultat, rànquing, reconnexió |
 | `/host/` | `host.js` (ja amb Vue, pilot fet) | Professorat: lobby amb PIN/QR, opcions de partida, llista de jugadors, botó d'inici |
@@ -483,6 +483,20 @@ commit cada un.
   mostrant «No es pot connectar amb el compte…».
 - **Proves**: `src/test/browser/create.spec.js`, a més de
   `create-library.spec.js`, `auth-state.spec.js` i `chip-footer.spec.js`.
+
+### Pantalla d'entrada de l'alumnat amb Vue
+
+`/join.html` (`src/public/js/join.js`) és una app de Vue: l'arrel és
+`#join-app` (amb `display: contents`, perquè no canvie la maquetació) i la
+plantilla `#join-tpl` conté el modal del PIN i el formulari. La capçalera,
+el selector d'idioma i el peu queden fora.
+
+- **Textos**: la plantilla usa `t()` d'`i18n-player.js`. Canviar d'idioma
+  recarrega la pàgina, com abans.
+- **Enviament**: continua sent un formulari normal cap a `/player/`; els
+  camps ocults (PIN, icona, testimoni) es lliguen a l'estat i s'envia
+  després que Vue els haja actualitzat.
+- **Proves**: `src/test/browser/join.spec.js`.
 
 ## Distintiu visual d'entorn (dev/stage)
 
