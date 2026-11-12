@@ -147,8 +147,6 @@ fetch('/api/admin/import-public-activities/config', { credentials: 'include' })
     })
     .catch(function(){});
 
-// Start auth check on load
-fetchMe();
 
 var langSelector = document.getElementById('lang-select');
 if(langSelector){

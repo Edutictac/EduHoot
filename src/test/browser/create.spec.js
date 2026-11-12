@@ -44,7 +44,7 @@ const library = [
 ];
 
 async function mockBackend(page, options = {}) {
-    const calls = { quizQueries: [], tagPatches: [], sharing: [], deleted: [], cloned: [], claimed: [], uploads: [], kahoot: [], profile: [], admin: [] };
+    const calls = { quizQueries: [], tagPatches: [], sharing: [], deleted: [], cloned: [], claimed: [], me: 0, uploads: [], kahoot: [], profile: [], admin: [] };
     const state = { user: options.user || null, quizzes: options.quizzes || library };
     await page.route(/^https:\/\//, route => route.abort());
     await page.route('**/socket.io/socket.io.js', route => route.fulfill({ contentType: 'application/javascript', body: FAKE_SOCKET_IO }));
@@ -57,6 +57,7 @@ async function mockBackend(page, options = {}) {
         const { pathname } = url;
         const method = request.method();
         if (pathname === '/api/auth/me') {
+            calls.me++;
             return state.user ? route.fulfill({ json: state.user }) : route.fulfill({ status: 401, json: { error: 'no' } });
         }
         if (pathname === '/api/auth/authentik/config') return route.fulfill({ json: { enabled: !!options.authentik } });
@@ -193,10 +194,9 @@ test('con sesión: marca «Sólo mis cuestionarios», pide mine=1 y reclama el q
     await expect(page.locator('#filter-mine')).toBeChecked();
     await expect.poll(() => calls.quizQueries.some(q => q.includes('mine=1'))).toBe(true);
     await expect(page.locator('#filter-info')).toHaveText('Sólo mis cuestionarios');
-    // Comportamiento actual: create.js llama dos veces a fetchMe() al cargar y
-    // puede reclamar dos veces; basta con que se reclame con el token.
-    await expect.poll(() => calls.claimed.length > 0).toBe(true);
-    expect(calls.claimed.every(c => c.id === 'q2' && c.token === 'tok1')).toBe(true);
+    await expect.poll(() => calls.claimed.length).toBe(1);
+    expect(calls.claimed[0]).toEqual(expect.objectContaining({ id: 'q2', token: 'tok1' }));
+    expect(calls.me).toBe(1);
     await expect(page.locator('#auth-message')).toHaveText('Cuestionario guardado en tu cuenta.');
     await expect(page).toHaveTitle(/\[Profe\]$/);
     await expect(page.locator('#new-user-signin')).toBeHidden();
