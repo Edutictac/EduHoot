@@ -52,6 +52,9 @@ fitxers corresponents, i els originals es van eliminar.
   abans.
 - El mode Multijugador (`/multiplayer/`) també és ara una app de Vue 3:
   catàleg, configuració, partida i resultats. Funciona igual que abans.
+- L'editor de qüestionaris (`/create/quiz-creator/`) també és ara una
+  app de Vue 3. Funciona igual que abans; a més, en canviar d'idioma es
+  tradueixen també les preguntes ja creades.
 
 ### Corregit
 

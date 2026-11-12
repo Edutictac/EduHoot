@@ -121,7 +121,7 @@ src/
 Els fitxers més grans, per si cal ubicar alguna cosa ràpid: en el
 backend, `routes/quizzes.js` (~1.100 línies), `sockets/hostEvents.js`
 (~440) i `sockets/gameHelpers.js` (~370); en el frontend, `multiplayer.js` (~82 KB),
-`quizCreator.js` (~70 KB), `hostGame.js` (~51 KB), `i18n-create.js`
+`hostGame.js` (~51 KB), `i18n-create.js`
 (~41 KB, només traduccions) i `playerGame.js` (~35 KB). `create.js` i
 `solo.js` ja estan repartits en fitxers més menuts (cap passa de ~35 KB).
 
@@ -139,7 +139,7 @@ JS d'orquestració amb `<script>` clàssics (sense build step):
 | `/host/` | `host.js` (ja amb Vue, pilot fet) | Professorat: lobby amb PIN/QR, opcions de partida, llista de jugadors, botó d'inici |
 | `/host/game/` | `hostGame.js` | Professorat: pantalla de joc en directe — pregunta, temporitzador, rànquing, música/gong |
 | `/create/` | `create.js` + mòduls `create-*.js` + `i18n-create.js` (ja repartits, Subfase A) | Professorat: biblioteca de qüestionaris — llistat, filtres, exportació, importació, panell d'admin |
-| `/create/quiz-creator/` | `quizCreator.js` | Professorat: editor d'un qüestionari (preguntes, respostes, tipus) |
+| `/create/quiz-creator/` | `quizCreator.js` (ja amb Vue) | Professorat: editor d'un qüestionari (preguntes, respostes, tipus) |
 | `/solo/` | `solo.js` + mòduls `solo-*.js` + `i18n-solo.js` (ja repartits, Subfase A) | Mode individual, a ritme propi, fora de classe |
 | `/multiplayer/` | `multiplayer.js` (ja amb Vue) | Mode 2-4 jugadors compartint una sola pantalla |
 | `/admin-stats.html` | `admin-stats.js` | Estadístiques del panell d'administració |
@@ -406,6 +406,28 @@ cada un.
   simulada i `Math.random` fixat perquè l'ordre de preguntes i
   respostes siga previsible.
 
+### Editor de qüestionaris amb Vue
+
+Última pantalla de la Subfase B: `/create/quiz-creator/`
+(`src/public/js/quizCreator.js`). L'arrel de Vue és `#creator-app` i
+inclou els tres panells (dades del quiz, preguntes i botons); la
+capçalera (títol, idioma, subtítol) queda fora i la tradueix
+`applyI18n()`. Dos blocs, un commit cada un.
+
+- **Abans de migrar**: s'ha eliminat l'exportació a CSV, Moodle XML i
+  PDF que hi havia en `quizCreator.js` (~770 línies). La pàgina no tenia
+  botons per a usar-la; la de la biblioteca és `create-export.js`.
+- **Bloc 1**: les targetes de preguntes. Cada una és un objecte de
+  `questionCards` (reactiu) i «Guardar»/«Jugar» llegixen d'ací, no dels
+  camps. Els `id` (`q1`, `1a1`, `type1`…) es mantenen.
+- **Bloc 2**: dades del quiz (`form`), etiquetes suggerides, avís de
+  visibilitat i botons. Ja no queden `onclick` en l'HTML.
+- **Diferència mínima**: en canviar d'idioma també es tradueixen les
+  targetes i el text «Permetre còpia» (abans quedaven en l'idioma
+  anterior).
+- **Proves**: `src/test/browser/quiz-creator.spec.js`, amb la REST i
+  Socket.IO simulats.
+
 ## Distintiu visual d'entorn (dev/stage)
 
 Per a no confondre un entorn de desenvolupament o stage amb producció,
@@ -503,8 +525,7 @@ consulta `GET /api/version` de `server.js` (versió de `package.json`).
   no executaria el codi injectat ni enviaria dades a dominis no permesos.
   Seguiment en la [issue #20](https://github.com/Edutictac/EduHoot/issues/20).
   - **Requisit**: passar a `addEventListener` els atributs `on…=` que
-    queden (els `onclick` de `host/game/index.html` i
-    `create/quiz-creator/index.html`, i els `onerror` del widget de
+    queden (els `onclick` de `host/game/index.html` i els `onerror` del widget de
     Commons). Sense açò caldria `'unsafe-inline'` en els scripts, que
     anul·la quasi tota la protecció. En els estils, `'unsafe-inline'`
     sí és acceptable.

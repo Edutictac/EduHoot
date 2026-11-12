@@ -99,8 +99,10 @@ problemes d'estil, variables sense usar, etc.
   `host-game-timer.spec.js` (el temporitzador de l'amfitrió mostra el temps
   de cada pregunta des del primer moment), `host-game-end.spec.js`
   (enllaç «Tornar» a la biblioteca en acabar, també dins de l'iframe del
-  lobby) i `multiplayer.spec.js` (catàleg, configuració, partida i
-  resultats de `/multiplayer/`, amb la REST simulada).
+  lobby), `multiplayer.spec.js` (catàleg, configuració, partida i
+  resultats de `/multiplayer/`, amb la REST simulada) i
+  `quiz-creator.spec.js` (crear, editar i guardar qüestionaris en
+  `/create/quiz-creator/`, amb la REST i Socket.IO simulats).
 
 ### Scripts puntuals que NO són part del flux de test estàndard
 
