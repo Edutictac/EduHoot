@@ -505,7 +505,8 @@ missatges (`#lobby-app`); la connexió amb Socket.IO no canvia. Proves:
 `/admin-stats.html` (`admin-stats.js`, arrel `#stats-app`) i
 `/admin-logs.html` (`admin-logs.js`, arrel `#logs-app`) són apps de Vue.
 Les targetes, la taula de logs, els filtres, la configuració i el detall
-d'un log es pinten des de l'estat; el pont de sessió amb el xip no canvia.
+d'un log es pinten des de l'estat; el pont de sessió amb el xip és el
+comú (`session-bridge.js`).
 Proves: `src/test/browser/admin-stats.spec.js` i `admin-logs.spec.js`.
 
 ## Distintiu visual d'entorn (dev/stage)
@@ -585,18 +586,11 @@ consulta `GET /api/version` de `server.js` (versió de `package.json`).
   d'EduTicTac/Authentik com la resta de pàgines, i el seu formulari antic
   de correu+contrasenya/Google havia quedat trencat en producció amb
   `AUTHENTIK_ONLY=true`.~~ **Corregit.** Ara usa el mateix xip que
-  `/create/` (vore "Panell d'administració"). S'ha triat **no** extraure
-  un mòdul compartit amb `src/public/js/create-auth.js`: eixes funcions
-  no són un mòdul independent, operen sobre variables globals de
-  `create.js` (`authState`, `adminPanel`, etc.), i tocar-ho per a
-  parametritzar-les suposaria arriscar codi en producció de `/create/`
-  (biblioteca, IA, sockets) per a cap benefici real en `/admin/stats`
-  (que no comparteix res d'això). En lloc d'això, `admin-stats.js` porta
-  la seua pròpia còpia reduïda (~50 línies) de només les parts 100%
-  genèriques (`loginWithAuthentik`, `sameSiteAsPage`,
-  `syncCentralSession`, `applyCentralSession`), amb una clau de
-  `sessionStorage` pròpia (`eduh_auth_bridge_admin`) perquè no interferisca
-  amb la de `/create/`.
+  `/create/` (vore "Panell d'administració"). El pont de sessió amb el
+  xip és comú a `/create/` i als panells `/admin-*`:
+  `src/public/js/session-bridge.js` (`EduhootSessionBridge.create(...)`),
+  amb una clau de `sessionStorage` pròpia per pàgina perquè no
+  interferisquen entre elles.
 - La **CSP** (*Content Security Policy*) està desactivada
   (`contentSecurityPolicy: false` en la configuració de Helmet de
   `server.js`); Helmet només posa la resta de capçaleres. Activar-la
@@ -795,9 +789,8 @@ poder importar un fitxer XML al banc de preguntes del seu propi curs.
   que `/create/`, la pàgina carrega `<edutictac-account>` +
   `/js/edutictac-chip.js` + `account-widget.js` i registra `/admin/stats`
   en `CHIP_PAGES` (`server.js`) perquè la reescriptura
-  d'`EDUTICTAC_COMMONS_URL` també hi funcione. `admin-stats.js` porta una
-  versió reduïda i pròpia (sense dependències de la UI de `/create/`) del
-  pont de sessió de `src/public/js/create-auth.js`: si Commons té sessió
+  d'`EDUTICTAC_COMMONS_URL` també hi funcione. `admin-stats.js` usa el pont de
+  sessió comú (`src/public/js/session-bridge.js`): si Commons té sessió
   docent i EduHoot no, redirigix a
   `/api/auth/authentik/start?next=/admin/stats`; si la petició a
   `/api/admin/stats` falla amb 401, es mostra el botó "Entrar con

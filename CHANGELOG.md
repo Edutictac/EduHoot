@@ -61,11 +61,16 @@ fitxers corresponents, i els originals es van eliminar.
   partida, resultat i rànquing. Funciona igual que abans.
 - La biblioteca (`/create/`) també usa ara Vue 3: biblioteca, generador
   IA, importació i compte. Funciona igual que abans.
+- El pont de sessió amb el xip d'EduTicTac, que estava copiat en
+  `/create/` i en els dos panells d'administració, ara és un sol fitxer
+  comú (`session-bridge.js`).
 - La pantalla per a unir-se a una partida (`/join.html`), la sala
   d'espera (`/player/`) i els panells d'estadístiques i de logs
   (`/admin-*`) també són ara apps de Vue 3. Funciona igual que abans.
 
 ### Corregit
+- Si en obrir `/create/` o un panell `/admin-*` el xip de compte ja no
+  tenia sessió, EduHoot podia tancar la seua dues vegades seguides.
 - En la pantalla de joc de l'alumnat (`/player/game/`), en PC les
   respostes eixien desplaçades a l'esquerra; ara formen una quadrícula de
   2x2 centrada. En mòbil, quan la pregunta té imatge, esta s'ajusta a

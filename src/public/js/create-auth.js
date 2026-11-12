@@ -111,7 +111,7 @@ function fetchMe(){
         .then(function(user){
             authState.user = user;
             authState.checked = true;
-            try{ sessionStorage.removeItem(AUTH_BRIDGE_KEY); }catch(e){}
+            sessionBridge.clearAttempt();
             updateAuthUI();
             currentFilters.mineOnly = true;
             fetchWithFilters();
@@ -138,58 +138,19 @@ function logout(){
         .catch(function(){});
 }
 
-function loginWithAuthentik(){
-    var next = window.location.pathname + window.location.search;
-    window.location.href = '/api/auth/authentik/start?next=' + encodeURIComponent(next || '/create/');
-}
+// Pont de sessió amb el xip d'EduTicTac (session-bridge.js).
+var sessionBridge = EduhootSessionBridge.create({
+    storageKey: 'eduh_auth_bridge',
+    defaultNext: '/create/',
+    getUser: function(){ return authState.user; },
+    isChecked: function(){ return authState.checked; },
+    isAuthentikEnabled: function(){ return accountState.authentikEnabled; },
+    onCentralLogout: function(){ return logout(); },
+    listenChipEvents: true
+});
 
-function bridgeRecentlyTried(){
-    try{
-        var last = Number(sessionStorage.getItem(AUTH_BRIDGE_KEY) || 0);
-        return !!last && (Date.now() - last) < AUTH_BRIDGE_RETRY_MS;
-    }catch(e){
-        return true;
-    }
-}
-
-// Alinea la sessió d'EduHoot amb la del xip. Sense resposta de Commons no es toca res.
-function applyCentralSession(central){
-    if(!central || !authState.checked) return;
-    var centralTeacher = !!central.authenticated && central.kind === 'oidc';
-    if(centralTeacher && !authState.user){
-        if(!accountState.authentikEnabled || authBridgeFailed || bridgeRecentlyTried()) return;
-        try{ sessionStorage.setItem(AUTH_BRIDGE_KEY, String(Date.now())); }catch(e){ return; }
-        loginWithAuthentik();
-    }else if(!central.authenticated && authState.user){
-        logout();
-    }
-}
-
-// Només quan EduHoot i Commons són del mateix lloc: eduhoot.edutictac.es i
-// commons.edutictac.es, o el mateix host d'un Commons local (edutictac.local, IP).
-// Una instal·lació local no depén del Commons d'internet.
-function sameSiteAsPage(base){
-    try{
-        var baseHost = new URL(base).hostname;
-        var host = window.location.hostname;
-        // Amb IP (o un nom sense domini, com edutictac.local) ha de ser el mateix host.
-        if(/^[0-9.]+$|^\[|:/.test(baseHost) || baseHost.split('.').length < 3) return host === baseHost;
-        var site = baseHost.split('.').slice(-2).join('.');
-        return host === site || host.slice(-(site.length + 1)) === '.' + site;
-    }catch(e){
-        return false;
-    }
-}
-
-function syncCentralSession(){
-    if(!accountChip || !authState.checked) return;
-    var base = (accountChip.getAttribute('data-base') || '').replace(/\/+$/, '');
-    if(!base || !sameSiteAsPage(base)) return;
-    fetch(base + '/api/auth/session', { credentials: 'include', cache: 'no-store', headers: { Accept: 'application/json' } })
-        .then(function(res){ return res.ok ? res.json() : null; })
-        .then(applyCentralSession)
-        .catch(function(){});
-}
+function loginWithAuthentik(){ sessionBridge.login(); }
+function syncCentralSession(){ sessionBridge.sync(); }
 
 function removeLocalQuizId(id){
     if(!id) return;

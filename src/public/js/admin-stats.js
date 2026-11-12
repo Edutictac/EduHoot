@@ -2,13 +2,9 @@
   // Subfase B: el que es pinta (targetes, desglossament, errors i botó
   // d'entrada) és estat d'una app de Vue; la resta no canvia.
   var view = Vue.reactive({ cards: [], panels: [], error: '', loginStatus: '', fallbackVisible: false });
-  var accountChip = document.querySelector('edutictac-account');
 
   var authState = { user: null, checked: false };
   var authentikAuthEnabled = false;
-  var authBridgeFailed = false;
-  var AUTH_BRIDGE_KEY = 'eduh_auth_bridge_admin';
-  var AUTH_BRIDGE_RETRY_MS = 2 * 60 * 1000;
 
   function safeJson(res){
     return res.json().catch(function(){ return {}; });
@@ -18,64 +14,23 @@
     view.loginStatus = msg || '';
   }
 
-  // Puente de sesión con el xip de EduTicTac/Authentik. Versión reducida de
-  // create-auth.js: solo las partes genéricas, sin biblioteca/sockets/nicknames,
-  // con su propia clave de sessionStorage para no interferir con /create/.
-  function loginWithAuthentik(){
-    var next = window.location.pathname + window.location.search;
-    window.location.href = '/api/auth/authentik/start?next=' + encodeURIComponent(next || '/admin/stats');
-  }
-
-  function bridgeRecentlyTried(){
-    try{
-      var last = Number(sessionStorage.getItem(AUTH_BRIDGE_KEY) || 0);
-      return !!last && (Date.now() - last) < AUTH_BRIDGE_RETRY_MS;
-    }catch(e){
-      return true;
-    }
-  }
+  // Pont de sessió amb el xip d'EduTicTac (session-bridge.js), amb clau
+  // de sessionStorage pròpia per a no interferir amb /create/.
+  var sessionBridge = EduhootSessionBridge.create({
+    storageKey: 'eduh_auth_bridge_admin',
+    defaultNext: '/admin/stats',
+    getUser: function(){ return authState.user; },
+    isChecked: function(){ return authState.checked; },
+    isAuthentikEnabled: function(){ return authentikAuthEnabled; },
+    onCentralLogout: logoutLite
+  });
+  var loginWithAuthentik = sessionBridge.login;
+  var syncCentralSession = sessionBridge.sync;
 
   function logoutLite(){
     return fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
       .then(fetchMeLite)
       .then(loadStats)
-      .catch(function(){});
-  }
-
-  // Alinea la sesión de EduHoot con la del xip. Sin respuesta de Commons no se toca nada.
-  function applyCentralSession(central){
-    if(!central || !authState.checked) return;
-    var centralTeacher = !!central.authenticated && central.kind === 'oidc';
-    if(centralTeacher && !authState.user){
-      if(!authentikAuthEnabled || authBridgeFailed || bridgeRecentlyTried()) return;
-      try{ sessionStorage.setItem(AUTH_BRIDGE_KEY, String(Date.now())); }catch(e){ return; }
-      loginWithAuthentik();
-    }else if(!central.authenticated && authState.user){
-      logoutLite();
-    }
-  }
-
-  // Solo cuando EduHoot y Commons son el mismo sitio: eduhoot.edutictac.es y
-  // commons.edutictac.es, o el mismo host de un Commons local (edutictac.local, IP).
-  function sameSiteAsPage(base){
-    try{
-      var baseHost = new URL(base).hostname;
-      var host = window.location.hostname;
-      if(/^[0-9.]+$|^\[|:/.test(baseHost) || baseHost.split('.').length < 3) return host === baseHost;
-      var site = baseHost.split('.').slice(-2).join('.');
-      return host === site || host.slice(-(site.length + 1)) === '.' + site;
-    }catch(e){
-      return false;
-    }
-  }
-
-  function syncCentralSession(){
-    if(!accountChip || !authState.checked) return;
-    var base = (accountChip.getAttribute('data-base') || '').replace(/\/+$/, '');
-    if(!base || !sameSiteAsPage(base)) return;
-    fetch(base + '/api/auth/session', { credentials: 'include', cache: 'no-store', headers: { Accept: 'application/json' } })
-      .then(function(res){ return res.ok ? res.json() : null; })
-      .then(applyCentralSession)
       .catch(function(){});
   }
 
@@ -93,7 +48,7 @@
       .then(function(user){
         authState.user = user;
         authState.checked = true;
-        try{ sessionStorage.removeItem(AUTH_BRIDGE_KEY); }catch(e){}
+        sessionBridge.clearAttempt();
         updateFallbackButton();
       })
       .catch(function(){
@@ -104,18 +59,10 @@
   }
 
   function handleAuthentikReturnParam(){
-    try{
-      var url = new URL(window.location.href);
-      var result = url.searchParams.get('authentik');
-      if(result && result !== 'ok'){
-        authBridgeFailed = true;
-        setLoginStatus('No se pudo completar el acceso con EduTicTac. Inténtalo de nuevo.');
-      }
-      if(result){
-        url.searchParams.delete('authentik');
-        window.history.replaceState({}, '', url.pathname + url.search + url.hash);
-      }
-    }catch(e){}
+    var result = sessionBridge.handleReturnParam();
+    if(result && result !== 'ok'){
+      setLoginStatus('No se pudo completar el acceso con EduTicTac. Inténtalo de nuevo.');
+    }
   }
 
   function renderCards(data){

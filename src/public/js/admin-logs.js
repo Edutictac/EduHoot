@@ -8,14 +8,10 @@
     rows: [],
     detail: { title: 'Detalle del log', fields: [], stack: '' }
   });
-  var accountChip = document.querySelector('edutictac-account');
   var detailModal = null;
 
   var authState = { user: null, checked: false };
   var authentikAuthEnabled = false;
-  var authBridgeFailed = false;
-  var AUTH_BRIDGE_KEY = 'eduh_auth_bridge_admin_logs';
-  var AUTH_BRIDGE_RETRY_MS = 2 * 60 * 1000;
 
   function safeJson(res){
     return res.json().catch(function(){ return {}; });
@@ -25,61 +21,23 @@
     view.loginStatus = msg || '';
   }
 
-  // Puente de sesión con el xip de EduTicTac/Authentik. Misma lógica que
-  // admin-stats.js, adaptada a esta página (clave de sessionStorage propia
-  // para no interferir con /admin/stats).
-  function loginWithAuthentik(){
-    var next = window.location.pathname + window.location.search;
-    window.location.href = '/api/auth/authentik/start?next=' + encodeURIComponent(next || '/admin/logs');
-  }
-
-  function bridgeRecentlyTried(){
-    try{
-      var last = Number(sessionStorage.getItem(AUTH_BRIDGE_KEY) || 0);
-      return !!last && (Date.now() - last) < AUTH_BRIDGE_RETRY_MS;
-    }catch(e){
-      return true;
-    }
-  }
+  // Pont de sessió amb el xip d'EduTicTac (session-bridge.js), amb clau
+  // de sessionStorage pròpia per a no interferir amb /create/.
+  var sessionBridge = EduhootSessionBridge.create({
+    storageKey: 'eduh_auth_bridge_admin_logs',
+    defaultNext: '/admin/logs',
+    getUser: function(){ return authState.user; },
+    isChecked: function(){ return authState.checked; },
+    isAuthentikEnabled: function(){ return authentikAuthEnabled; },
+    onCentralLogout: logoutLite
+  });
+  var loginWithAuthentik = sessionBridge.login;
+  var syncCentralSession = sessionBridge.sync;
 
   function logoutLite(){
     return fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
       .then(fetchMeLite)
       .then(loadLogs)
-      .catch(function(){});
-  }
-
-  function applyCentralSession(central){
-    if(!central || !authState.checked) return;
-    var centralTeacher = !!central.authenticated && central.kind === 'oidc';
-    if(centralTeacher && !authState.user){
-      if(!authentikAuthEnabled || authBridgeFailed || bridgeRecentlyTried()) return;
-      try{ sessionStorage.setItem(AUTH_BRIDGE_KEY, String(Date.now())); }catch(e){ return; }
-      loginWithAuthentik();
-    }else if(!central.authenticated && authState.user){
-      logoutLite();
-    }
-  }
-
-  function sameSiteAsPage(base){
-    try{
-      var baseHost = new URL(base).hostname;
-      var host = window.location.hostname;
-      if(/^[0-9.]+$|^\[|:/.test(baseHost) || baseHost.split('.').length < 3) return host === baseHost;
-      var site = baseHost.split('.').slice(-2).join('.');
-      return host === site || host.slice(-(site.length + 1)) === '.' + site;
-    }catch(e){
-      return false;
-    }
-  }
-
-  function syncCentralSession(){
-    if(!accountChip || !authState.checked) return;
-    var base = (accountChip.getAttribute('data-base') || '').replace(/\/+$/, '');
-    if(!base || !sameSiteAsPage(base)) return;
-    fetch(base + '/api/auth/session', { credentials: 'include', cache: 'no-store', headers: { Accept: 'application/json' } })
-      .then(function(res){ return res.ok ? res.json() : null; })
-      .then(applyCentralSession)
       .catch(function(){});
   }
 
@@ -97,7 +55,7 @@
       .then(function(user){
         authState.user = user;
         authState.checked = true;
-        try{ sessionStorage.removeItem(AUTH_BRIDGE_KEY); }catch(e){}
+        sessionBridge.clearAttempt();
         updateFallbackButton();
       })
       .catch(function(){
@@ -108,18 +66,10 @@
   }
 
   function handleAuthentikReturnParam(){
-    try{
-      var url = new URL(window.location.href);
-      var result = url.searchParams.get('authentik');
-      if(result && result !== 'ok'){
-        authBridgeFailed = true;
-        setLoginStatus('No se pudo completar el acceso con EduTicTac. Inténtalo de nuevo.');
-      }
-      if(result){
-        url.searchParams.delete('authentik');
-        window.history.replaceState({}, '', url.pathname + url.search + url.hash);
-      }
-    }catch(e){}
+    var result = sessionBridge.handleReturnParam();
+    if(result && result !== 'ok'){
+      setLoginStatus('No se pudo completar el acceso con EduTicTac. Inténtalo de nuevo.');
+    }
   }
 
   function showError(msg){

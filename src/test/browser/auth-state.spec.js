@@ -130,9 +130,47 @@ test('si Commons no respon, «Entrar» va directament a l’accés propi d’Edu
 test('mateix lloc: domini compartit o, amb IP o nom local, el mateix host', async ({ page }) => {
     await stubServers(page, newState());
     await page.goto('/create/?lang=va');
-    const check = base => page.evaluate(b => window.sameSiteAsPage(b), base);
+    const check = base => page.evaluate(b => window.EduhootSessionBridge.sameSiteAsPage(b), base);
     expect(await check('http://127.0.0.1:8082')).toBe(true);
     expect(await check('http://10.0.1.1:8082')).toBe(false);
     expect(await check('http://edutictac.local:8082')).toBe(false);
     expect(await check('https://commons.edutictac.es')).toBe(false);
 });
+
+// Els panells d'administració usen el mateix pont (session-bridge.js), cadascun
+// amb la seua clau de sessionStorage.
+for (const panel of ['/admin-stats.html', '/admin-logs.html']) {
+    test(`${panel}: amb sessió de professorat al xip, entra per SSO una sola vegada`, async ({ page }) => {
+        const state = newState({ central: { authenticated: true, kind: 'oidc', role: 'docent' } });
+        await stubServers(page, state);
+        await page.goto(SITE + panel);
+        await expect.poll(() => state.starts.length).toBe(1);
+        expect(state.starts[0]).toBe(panel);
+        await page.goto(SITE + panel);
+        await page.waitForTimeout(500);
+        expect(state.starts.length).toBe(1);
+    });
+
+    test(`${panel}: si el xip no té sessió, tanca la d’EduHoot`, async ({ page }) => {
+        const state = newState({ user: TEACHER, central: { authenticated: false, kind: 'anonymous' } });
+        await stubServers(page, state);
+        await page.goto(SITE + panel);
+        await expect.poll(() => state.logouts).toBe(1);
+        // Es crida a sync() dues vegades en carregar; només un tancament.
+        await page.waitForTimeout(500);
+        expect(state.logouts).toBe(1);
+        expect(state.starts).toEqual([]);
+    });
+}
+
+
+test('/create/: si al cargar el xip no té sessió, tanca la d’EduHoot una sola vegada', async ({ page }) => {
+    const state = newState({ user: TEACHER, central: { authenticated: false, kind: 'anonymous' } });
+    await stubServers(page, state);
+    await page.goto(SITE + '/create/?lang=va');
+    await expect.poll(() => state.logouts).toBe(1);
+    await page.waitForTimeout(500);
+    expect(state.logouts).toBe(1);
+    await expect(page.locator('#new-user-signin')).toBeVisible();
+});
+

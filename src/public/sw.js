@@ -1,6 +1,6 @@
 // IMPORTANTE: cuando cambiemos JS/CSS y queramos evitar servir una versión antigua,
 // incrementa esta versión para invalidar el precache.
-const CACHE_NAME = 'eduh-pwa-v1.1.43';
+const CACHE_NAME = 'eduh-pwa-v1.1.44';
 
 // App shell: recursos críticos para que la app cargue incluso sin red.
 // El resto de recursos se cachean en runtime con stale-while-revalidate.
@@ -78,6 +78,7 @@ const ASSETS = [
   '/js/lobby.js',
   '/js/admin-stats.js',
   '/js/admin-logs.js',
+  '/js/session-bridge.js',
 
   '/manifest.webmanifest',
   '/icons/logo.svg',

@@ -31,13 +31,8 @@ function setLang(newLang){
 }
 
 // --- Auth ---
-// L'accés és el xip de compte d'EduTicTac (Commons). EduHoot manté la seua sessió
-// Authentik: quan el xip ja té sessió de professorat, s'entra a EduHoot sense
-// demanar res més (SSO), i quan el xip la tanca, EduHoot també.
-var accountChip = document.querySelector('edutictac-account');
-var AUTH_BRIDGE_KEY = 'eduh_auth_bridge';
-var AUTH_BRIDGE_RETRY_MS = 2 * 60 * 1000;
-var authBridgeFailed = false;
+// L'accés és el xip de compte d'EduTicTac (Commons); el pont de sessió està
+// en session-bridge.js i es configura en create-auth.js.
 var authState = Vue.reactive({ user: null, checked: false });
 
 var openAccountBtn = document.getElementById('open-account');
@@ -47,10 +42,6 @@ document.addEventListener('keydown', function(e){
     if(e.key === 'Escape' && accountState.modalOpen){
         closeAuthModal();
     }
-});
-
-window.addEventListener('edutictac:sessionchange', function(e){
-    if(accountChip && sameSiteAsPage(accountChip.getAttribute('data-base') || '')) applyCentralSession(e.detail);
 });
 
 // Tareas de administración que solo informan del resultado.
@@ -114,20 +105,11 @@ var accountApp = {
 };
 Vue.createApp(accountApp).mount('#account-app');
 
-// Start auth check on load
-try{
-    var authParams = new URLSearchParams(window.location.search);
-    var authentikResult = authParams.get('authentik');
-    if(authentikResult){
-        if(authentikResult !== 'ok'){
-            authBridgeFailed = true;
-            accountState.authMessage = t('loginError');
-        }
-        authParams.delete('authentik');
-        var cleanUrl = window.location.pathname + (authParams.toString() ? '?' + authParams.toString() : '') + window.location.hash;
-        window.history.replaceState({}, '', cleanUrl);
-    }
-}catch(e){}
+// Tornada d'Authentik (?authentik=…)
+var authentikResult = sessionBridge.handleReturnParam();
+if(authentikResult && authentikResult !== 'ok'){
+    accountState.authMessage = t('loginError');
+}
 fetchMe().then(syncCentralSession);
 fetchTags();
 
