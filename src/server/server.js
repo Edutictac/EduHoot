@@ -51,6 +51,7 @@ const {
   finishedSessionReports,
   FINISHED_SESSION_REPORT_DIR,
   buildReportFileName,
+  buildQuizCsvFileName,
   slugifyForFilename
 } = require('./services/sessionReport')({ players });
 const { sessions, parseCookies } = require('./services/sessions');
@@ -330,6 +331,7 @@ app.use(createQuizzesRouter({
   quizToCsv,
   quizToMoodleXml,
   slugifyForFilename,
+  buildQuizCsvFileName,
   GLOBAL_OWNER_ID,
   GLOBAL_OWNER_EMAIL,
   PUBLIC_IMPORT_SOURCE_URL

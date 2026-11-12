@@ -41,6 +41,12 @@ function buildReportFileName({ quizName, pin, timestampMs }) {
   return `${parts.join('-')}.csv`;
 }
 
+// CSV de preguntes d'un quiz: slug del nom i data/hora de la descàrrega, per a
+// no sobreescriure ni confondre dos exportacions del mateix quiz.
+function buildQuizCsvFileName(quizName, timestampMs) {
+  return `${slugifyForFilename(quizName) || 'quiz'}-${formatTimestampForFilename(timestampMs)}.csv`;
+}
+
 function quizToCsv(quiz) {
   const header = 'tipo;pregunta;r1;r2;r3;r4;tiempo;correcta;imagen;video;texto;numero;tolerancia';
   const lines = (quiz.questions || []).map((q) => {
@@ -372,6 +378,7 @@ module.exports = function createSessionReportService({ players }) {
     finishedSessionReports,
     FINISHED_SESSION_REPORT_DIR,
     buildReportFileName,
+    buildQuizCsvFileName,
     slugifyForFilename
   };
 };

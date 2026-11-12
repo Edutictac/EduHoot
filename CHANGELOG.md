@@ -19,6 +19,9 @@ fitxers corresponents, i els originals es van eliminar.
 ## [Sense publicar]
 
 ### Afegit
+- El CSV de preguntes d'un qüestionari es descarrega amb la data i l'hora
+  en el nom (`<nom>-AAAAMMDD-HHMMSS.csv`), per a no confondre dos
+  exportacions del mateix qüestionari.
 - En el panell de logs, si hi ha més dels 100 més recents, la taula ho
   avisa i «Cargar más» mostra els següents, amb els mateixos filtres.
 - En el panell de logs, triar un tag en el desplegable ja filtra, sense
