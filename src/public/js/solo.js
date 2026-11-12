@@ -1,5 +1,7 @@
 // Modo individual: listado de quizzes públicos + juego auto-dirigido con ranking global
-var state = {
+// El estado es reactivo: la plantilla de Vue (#solo-tpl) lo lee directamente
+// (Subfase B); el resto de funciones solo lo modifican.
+var state = Vue.reactive({
         quizzes: [],
         currentQuiz: null,
         quizData: null,
@@ -29,11 +31,19 @@ var state = {
         awaitingConfirm: false,
         lastWrong: null,
         multiSelections: [],
-        favoriteIds: new Set()
-};
+        favoriteIds: new Set(),
+        // Catálogo (bloque 1)
+        search: '',
+        loading: false,
+        loadError: false,
+        tagFilterExpanded: false,
+        thumbs: {},
+        // Se incrementa al cambiar de idioma para que la plantilla se repinte.
+        lang: 0
+});
 
 state.favoriteIds = loadFavorites();
-userRatings = loadUserRatings();
+userRatings = Vue.reactive(loadUserRatings());
 deviceId = getDeviceId();
 
 function t(key){
@@ -50,8 +60,7 @@ function applyStaticText(){
 
 function setLang(newLang){
     window.applySoloTranslations(newLang);
-    updateTagFilterOptions();
-    renderList();
+    state.lang += 1;
     renderSelectedMeta();
     updateSoloMusicLabels();
 }
@@ -152,74 +161,6 @@ function setLang(newLang){
         if(langSelect){
             langSelect.addEventListener('change', function(){
                 setLang(langSelect.value);
-            });
-        }
-        var search = document.getElementById('search');
-        if(search){
-            search.addEventListener('input', function(){
-                state.page = 0;
-                renderList();
-            });
-        }
-        var sortSelect = document.getElementById('sort');
-        if(sortSelect){
-            sortSelect.value = state.sortOrder;
-            sortSelect.addEventListener('change', function(){
-                state.sortOrder = sortSelect.value;
-                state.page = 0;
-                renderList();
-            });
-        }
-        var tagsSelectAll = document.getElementById('tags-select-all');
-        if(tagsSelectAll){
-            tagsSelectAll.addEventListener('click', function(){
-                // Selecciona todas las etiquetas (y las muestra)
-                var all = getAllTagsFromQuizzes().map(function(it){ return it.tag; });
-                state.filters.tags = all;
-                tagFilterExpanded = true;
-                updateTagFilterOptions();
-                state.page = 0;
-                renderList();
-            });
-        }
-        var tagsClear = document.getElementById('tags-clear');
-        if(tagsClear){
-            tagsClear.addEventListener('click', function(){
-                state.filters.tags = [];
-                updateTagFilterOptions();
-                state.page = 0;
-                renderList();
-            });
-        }
-        var tagFilter = document.getElementById('tag-filter');
-        if(tagFilter){
-            updateTagFilterOptions();
-        }
-        var minQuestions = document.getElementById('min-questions');
-        if(minQuestions){
-            minQuestions.value = state.filters.minQuestions;
-            minQuestions.addEventListener('input', function(){
-                state.filters.minQuestions = minQuestions.value;
-                state.page = 0;
-                renderList();
-            });
-        }
-        var maxQuestions = document.getElementById('max-questions');
-        if(maxQuestions){
-            maxQuestions.value = state.filters.maxQuestions;
-            maxQuestions.addEventListener('input', function(){
-                state.filters.maxQuestions = maxQuestions.value;
-                state.page = 0;
-                renderList();
-            });
-        }
-        var onlyImage = document.getElementById('only-image');
-        if(onlyImage){
-            onlyImage.checked = !!state.filters.onlyImage;
-            onlyImage.addEventListener('change', function(){
-                state.filters.onlyImage = !!onlyImage.checked;
-                state.page = 0;
-                renderList();
             });
         }
         var startBtn = document.getElementById('start-btn');
@@ -323,6 +264,21 @@ function setLang(newLang){
             });
         }
     }
+
+    Vue.createApp({
+        template: '#solo-tpl',
+        mixins: [soloCatalog],
+        data: function(){
+            return { s: state };
+        },
+        methods: {
+            t: function(key){
+                this.s.lang;
+                return t(key);
+            },
+            format: format
+        }
+    }).mount('#solo-app');
 
     applyStaticText();
     initSoloMusicPlayer();

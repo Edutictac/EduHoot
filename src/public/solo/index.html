@@ -30,6 +30,8 @@
                 </label>
             </div>
         </header>
+        <div id="solo-app"></div>
+        <template id="solo-tpl">
         <main class="grid">
             <section id="catalog-panel" class="panel">
                 <div class="panel__header">
@@ -38,41 +40,75 @@
                         <h2></h2>
                     </div>
                     <div class="panel__actions">
-                        <input id="search" type="search" placeholder="Buscar por nombre o etiqueta" data-i18n-placeholder="searchPlaceholder">
-                        <label for="sort" class="muted" data-i18n="sortLabel">Ordenar por</label>
-                        <select id="sort">
-                            <option value="plays" data-i18n="sortPlays">Más jugados</option>
-                            <option value="recent" data-i18n="sortNewest">Más recientes</option>
-                            <option value="rating" data-i18n="sortRating">Mejor valorados</option>
-                            <option value="alpha" data-i18n="sortAlphaAsc">A-Z</option>
-                            <option value="alpha-desc" data-i18n="sortAlphaDesc">Z-A</option>
+                        <input id="search" type="search" v-model="s.search" @input="resetPage" :placeholder="t('searchPlaceholder')">
+                        <label for="sort" class="muted">{{ t('sortLabel') }}</label>
+                        <select id="sort" v-model="s.sortOrder" @change="resetPage">
+                            <option value="plays">{{ t('sortPlays') }}</option>
+                            <option value="recent">{{ t('sortNewest') }}</option>
+                            <option value="rating">{{ t('sortRating') }}</option>
+                            <option value="alpha">{{ t('sortAlphaAsc') }}</option>
+                            <option value="alpha-desc">{{ t('sortAlphaDesc') }}</option>
                         </select>
                     </div>
                 </div>
                 <div class="panel__filters">
-                    <label for="tag-filter" class="muted" data-i18n="filterTagLabel">Etiquetas</label>
-                    <div id="tag-filter" class="tag-filter" role="group" aria-label="Etiquetas"></div>
+                    <label for="tag-filter" class="muted">{{ t('filterTagLabel') }}</label>
+                    <div id="tag-filter" class="tag-filter" role="group" aria-label="Etiquetas">
+                        <template v-if="s.tagFilterExpanded">
+                            <label v-for="item in allTags" :key="item.tag" class="tag-filter__item">
+                                <input type="checkbox" :value="item.tag" v-model="s.filters.tags" @change="resetPage">
+                                <span>{{ item.tag }}</span>
+                            </label>
+                        </template>
+                    </div>
                     <div class="tag-filter__actions">
-                        <button id="tags-select-all" class="tag-filter__btn is-icon" type="button" data-i18n="filterTagSelectAll" aria-label="Seleccionar todas">
+                        <button id="tags-select-all" class="tag-filter__btn is-icon" type="button" :aria-label="t('filterTagSelectAll')" @click="selectAllTags">
                             <span class="tag-filter__icon" aria-hidden="true">✓</span>
-                            <span class="sr-only">Seleccionar todas</span>
+                            <span class="sr-only">{{ t('filterTagSelectAll') }}</span>
                         </button>
-                        <button id="tags-clear" class="tag-filter__btn is-icon" type="button" data-i18n="filterTagClear" aria-label="Limpiar">
+                        <button id="tags-toggle" v-show="allTags.length > 0" class="tag-filter__btn is-icon" type="button" :aria-label="tagToggleLabel" @click="s.tagFilterExpanded = !s.tagFilterExpanded">
+                            <span class="tag-filter__icon" aria-hidden="true">{{ s.tagFilterExpanded ? '▴' : '▾' }}</span>
+                            <span class="sr-only">{{ tagToggleLabel }}</span>
+                        </button>
+                        <button id="tags-clear" class="tag-filter__btn is-icon" type="button" :aria-label="t('filterTagClear')" @click="clearTags">
                             <span class="tag-filter__icon" aria-hidden="true">×</span>
-                            <span class="sr-only">Limpiar</span>
+                            <span class="sr-only">{{ t('filterTagClear') }}</span>
                         </button>
                     </div>
-                    <label for="min-questions" class="muted" data-i18n="filterQuestionsLabel">Preguntas</label>
-                    <input id="min-questions" type="number" min="1" inputmode="numeric" data-i18n-placeholder="filterMinPlaceholder" placeholder="mín">
+                    <label for="min-questions" class="muted">{{ t('filterQuestionsLabel') }}</label>
+                    <input id="min-questions" type="number" min="1" inputmode="numeric" v-model="s.filters.minQuestions" @input="resetPage" :placeholder="t('filterMinPlaceholder')">
                     <span class="muted">-</span>
-                    <input id="max-questions" type="number" min="1" inputmode="numeric" data-i18n-placeholder="filterMaxPlaceholder" placeholder="máx">
+                    <input id="max-questions" type="number" min="1" inputmode="numeric" v-model="s.filters.maxQuestions" @input="resetPage" :placeholder="t('filterMaxPlaceholder')">
                     <label class="checkbox-inline">
-                        <input id="only-image" type="checkbox">
-                        <span data-i18n="filterOnlyImage">Solo con imagen</span>
+                        <input id="only-image" type="checkbox" v-model="s.filters.onlyImage" @change="resetPage">
+                        <span>{{ t('filterOnlyImage') }}</span>
                     </label>
                 </div>
-                <div id="public-list" class="cards"></div>
-                <p id="public-empty" class="muted"></p>
+                <div id="public-list" class="cards">
+                    <div v-for="q in pageItems" :key="q.id" class="card">
+                        <div class="card-thumb" :class="thumb(q).loaded ? 'has-media' : 'placeholder'">
+                            <img alt="" :src="thumb(q).src" @load="thumb(q).loaded = true" @error="onThumbError(q)">
+                        </div>
+                        <div class="card-header">
+                            <h3>{{ q.name || 'Quiz' }}</h3>
+                            <button type="button" class="favorite-btn" :class="{ 'is-active': isFavorite(q.id) }" :aria-pressed="isFavorite(q.id) ? 'true' : 'false'" :aria-label="favoriteLabel(q.id)" :title="favoriteLabel(q.id)" @click.stop="toggleFavorite(q.id)">{{ isFavorite(q.id) ? '❤' : '♡' }}</button>
+                        </div>
+                        <p class="muted">{{ format(t('byline'), { count: q.questionsCount || 0 }) }}</p>
+                        <div><span v-for="(tag, i) in cleanTags(q)" :key="i" class="tag">{{ tag }}</span></div>
+                        <div class="card-rating">
+                            <div class="rating-stars">
+                                <button v-for="stars in 5" :key="stars" type="button" class="rating-star" :class="{ 'is-filled': stars <= displayRating(q) }" :data-value="stars" :aria-label="format(t('ratingStarLabel'), { stars: stars })" :title="format(t('ratingStarLabel'), { stars: stars })" @click.stop="rate(q, stars)">★</button>
+                            </div>
+                            <span class="rating-summary muted">{{ ratingSummary(q) }}</span>
+                        </div>
+                        <div class="card-stats">{{ (q.playsCount || 0) + ' ' + t('playsShort') + ' · ' + (q.playersCount || 0) + ' ' + t('playersShort') }}</div>
+                        <div class="card-links">
+                            <button type="button" class="card-link" @click.stop="showRanking(q.id)">{{ t('viewRanking') }}</button>
+                        </div>
+                        <button class="btn btn-primary" @click="play(q.id)">{{ t('playCta') }}</button>
+                    </div>
+                </div>
+                <p id="public-empty" class="muted">{{ emptyText }}</p>
             </section>
 
             <section id="game-panel" class="panel play-panel">
@@ -137,7 +173,14 @@
                 </div>
             </section>
         </main>
-        <div id="public-pagination" class="pagination hidden"></div>
+        <div id="public-pagination" class="pagination" :class="{ hidden: totalPages <= 1 }">
+            <template v-if="totalPages > 1">
+                <button :disabled="currentPage === 0" @click="s.page = currentPage - 1">&lt;</button>
+                <span>{{ (currentPage + 1) + ' / ' + totalPages }}</span>
+                <button :disabled="currentPage >= totalPages - 1" @click="s.page = currentPage + 1">&gt;</button>
+            </template>
+        </div>
+        </template>
 
         <div class="music-section bottom-music">
             <div id="solo-music-player" class="music-player-shell"></div>
@@ -186,6 +229,7 @@
         </footer>
 
         <script src="../js/music-player.js"></script>
+        <script src="/js/libs/vue.global.prod.js"></script>
         <script src="/js/languages.js"></script>
         <script src="/js/env-badge.js"></script>
         <script src="../js/i18n-solo.js"></script>

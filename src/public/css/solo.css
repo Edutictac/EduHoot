@@ -888,3 +888,6 @@ body.playing #game-panel{
         flex: 0 0 100%;
     }
 }
+
+/* Raíz de la app de Vue: no altera el maquetado (main y la paginación siguen siendo hijos directos del body a efectos de layout). */
+#solo-app{ display: contents; }
