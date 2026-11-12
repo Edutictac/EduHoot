@@ -310,3 +310,28 @@ test('reconexión: al desconectar avisa, y al reconectar vuelve a unirse a la pa
     await serverEmit(page, 'connect');
     expect(await emitsNamed(page, 'player-join-game')).toHaveLength(2);
 });
+
+// Maquetació: en PC les respostes formen una quadrícula de 2x2 centrada; en
+// mòbil, amb imatge, les quatre respostes caben en pantalla.
+test('las respuestas están centradas y, con imagen, caben en pantalla', async ({ page }, testInfo) => {
+    const IMG = '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800"><rect width="1200" height="800" fill="#4a8"/></svg>';
+    await page.route('**/big.svg', r => r.fulfill({ contentType: 'image/svg+xml', body: IMG }));
+    // Mòbil menut i habitual (el Pixel 7 del projecte és molt alt).
+    if (testInfo.project.name === 'mobile') await page.setViewportSize({ width: 360, height: 640 });
+    await openGame(page);
+    await serverEmit(page, 'playerQuestion', { question: 'Quin instrument es toca pinçant les cordes amb els dits?', answers: ANSWERS, type: 'quiz', time: 20 });
+    await serverEmit(page, 'questionMedia', { image: '/big.svg' });
+    await expect(page.locator('#playerQuestionImage')).toBeVisible();
+    const viewport = page.viewportSize();
+    const boxes = [];
+    for (const id of ['#answer1', '#answer2', '#answer3', '#answer4']) boxes.push(await page.locator(id).boundingBox());
+    for (const box of boxes) expect(box.y + box.height).toBeLessThanOrEqual(viewport.height);
+    const left = Math.min(...boxes.map(b => b.x));
+    const right = Math.max(...boxes.map(b => b.x + b.width));
+    expect(Math.abs(left - (viewport.width - right))).toBeLessThan(4);
+    if (testInfo.project.name === 'desktop') {
+        expect(boxes[0].y).toBe(boxes[1].y);
+        expect(boxes[2].y).toBe(boxes[3].y);
+        expect(boxes[2].y).toBeGreaterThan(boxes[0].y);
+    }
+});

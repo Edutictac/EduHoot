@@ -46,11 +46,12 @@
                 <input id="freeAnswerInput" ref="freeAnswerInput" type="text" autocomplete="off" :inputmode="questionType === 'numeric' ? 'decimal' : 'text'" :placeholder="freePlaceholder" v-model="freeAnswerValue" @keydown.enter.prevent="submitFree" />
                 <button type="button" id="freeSubmitBtn" class="button free-submit" @click="submitFree">{{ t('submit_free', 'Enviar') }}</button>
             </div>
-            <button id = "answer1" class = "button" :class="{ 'multi-selected': isMultiSelected(1) }" v-show="buttonVisible(0)" :aria-label="buttonAriaLabel(0)" v-html="buttonHtml(0)" @click="onAnswerClick(1)"></button>
-            <button id = "answer2" class = "button" :class="{ 'multi-selected': isMultiSelected(2) }" v-show="buttonVisible(1)" :aria-label="buttonAriaLabel(1)" v-html="buttonHtml(1)" @click="onAnswerClick(2)"></button>
-            <br>
-            <button id = "answer3" class = "button" :class="{ 'multi-selected': isMultiSelected(3) }" v-show="buttonVisible(2)" :aria-label="buttonAriaLabel(2)" v-html="buttonHtml(2)" @click="onAnswerClick(3)"></button>
-            <button id = "answer4" class = "button" :class="{ 'multi-selected': isMultiSelected(4) }" v-show="buttonVisible(3)" :aria-label="buttonAriaLabel(3)" v-html="buttonHtml(3)" @click="onAnswerClick(4)"></button>
+            <div id="answerGrid">
+                <button id = "answer1" class = "button" :class="{ 'multi-selected': isMultiSelected(1) }" v-show="buttonVisible(0)" :aria-label="buttonAriaLabel(0)" v-html="buttonHtml(0)" @click="onAnswerClick(1)"></button>
+                <button id = "answer2" class = "button" :class="{ 'multi-selected': isMultiSelected(2) }" v-show="buttonVisible(1)" :aria-label="buttonAriaLabel(1)" v-html="buttonHtml(1)" @click="onAnswerClick(2)"></button>
+                <button id = "answer3" class = "button" :class="{ 'multi-selected': isMultiSelected(3) }" v-show="buttonVisible(2)" :aria-label="buttonAriaLabel(2)" v-html="buttonHtml(2)" @click="onAnswerClick(3)"></button>
+                <button id = "answer4" class = "button" :class="{ 'multi-selected': isMultiSelected(4) }" v-show="buttonVisible(3)" :aria-label="buttonAriaLabel(3)" v-html="buttonHtml(3)" @click="onAnswerClick(4)"></button>
+            </div>
             <div id="multiSubmitRow" :style="{ display: multiRowVisible ? 'flex' : 'none' }">
                 <button type="button" id="multiSubmitBtn" class="button multi-submit" @click="submitMultiAnswers">{{ t('submit_multiple', 'Submit answers') }}</button>
             </div>
