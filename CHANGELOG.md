@@ -19,6 +19,9 @@ fitxers corresponents, i els originals es van eliminar.
 ## [Sense publicar]
 
 ### Afegit
+- Els panells d'estadístiques i de logs s'enllacen entre ells amb un botó
+  visible; en logs, la configuració (nivell, mida i «Guardar») queda
+  alineada.
 - S'activa la CSP (*Content Security Policy*): el navegador només executa
   scripts del propi EduHoot, de les llibreries de `/create/` i del Commons
   configurat, i no executa cap script en línia. És una segona barrera

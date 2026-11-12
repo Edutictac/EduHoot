@@ -83,3 +83,9 @@ test('al volver de Authentik con error lo dice y limpia la URL', async ({ page }
     await expect(page.locator('#login-status')).toHaveText('No se pudo completar el acceso con EduTicTac. Inténtalo de nuevo.');
     expect(new URL(page.url()).search).toBe('?x=1');
 });
+
+test('enlaza con el panel de logs', async ({ page }) => {
+    await openStats(page, { user: { id: 'a', role: 'admin' } });
+    await expect(page.locator('.admin-nav a')).toHaveText('Logs del servidor →');
+    await expect(page.locator('.admin-nav a')).toHaveAttribute('href', '/admin/logs');
+});

@@ -34,9 +34,26 @@ body{
   flex-wrap: wrap;
 }
 .admin-header p{
-  margin: 0 0 16px;
+  margin: 0 0 10px;
   color: var(--muted);
 }
+/* Enllaç entre els dos panells (estadístiques ↔ logs). */
+.admin-nav{ margin: 0 0 16px; }
+.admin-nav a{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--card-stroke);
+  background: var(--card);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.admin-nav a:hover{ border-color: var(--accent-2); color: #fff; }
+.admin-nav a:focus-visible{ outline: 2px solid var(--accent-2); outline-offset: 2px; }
 
 .login-inline{
   display: inline-flex;
@@ -160,6 +177,14 @@ body{
   flex-wrap: wrap;
   gap: 10px;
   align-items: center;
+}
+.logs-settings-row{
+  /* Etiquetes damunt dels controls: tot alineat per baix, amb el botó. */
+  align-items: flex-end;
+}
+.logs-settings-row select, .logs-settings-row input,
+.logs-settings-row button{
+  height: 34px;
 }
 .logs-settings-row label{
   display: flex;

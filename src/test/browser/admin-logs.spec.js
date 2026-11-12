@@ -140,3 +140,16 @@ test('otro error al cargar los logs da el mensaje genérico', async ({ page }) =
     await openLogs(page, { logs: { status: 500, json: {} } });
     await expect(page.locator('#logs-error')).toHaveText('No se pudieron cargar los logs.');
 });
+
+test('enlaza con el panel de estadísticas y alinea la configuración', async ({ page }) => {
+    await openLogs(page);
+    await expect(page.locator('.admin-nav a')).toHaveText('← Panel de estadísticas');
+    await expect(page.locator('.admin-nav a')).toHaveAttribute('href', '/admin/stats');
+    const boxes = [];
+    for (const id of ['#logs-level-select', '#logs-capped-mb', '#logs-settings-save']) boxes.push(await page.locator(id).boundingBox());
+    if (boxes[2].y > boxes[0].y + 20) return; // pantalla estrecha: el botón baja de línea
+    for (const box of boxes) {
+        expect(Math.abs(box.y - boxes[0].y)).toBeLessThan(1);
+        expect(Math.abs(box.height - boxes[0].height)).toBeLessThan(1);
+    }
+});
