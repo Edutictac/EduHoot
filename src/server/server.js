@@ -275,7 +275,7 @@ if (require.main === module) {
   });
 }
 
-app.use(createGamesRouter({ games, finishedSessionReports, liveSessionToCsv, FINISHED_SESSION_REPORT_DIR, buildReportFileName }));
+app.use(createGamesRouter({ games, players, finishedSessionReports, liveSessionToCsv, FINISHED_SESSION_REPORT_DIR, buildReportFileName }));
 
 app.use('/api/player-auth', createPlayerAuthRouter({ commons, authRateLimiter }));
 

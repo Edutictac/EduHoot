@@ -72,6 +72,7 @@
                 </div>
                 <input type="hidden" id="studentJoinToken" name="studentJoinToken" :value="studentJoinToken">
                 <input type="hidden" id="token" name="token" :value="token">
+                <p id="join-name-error" class="join-name-error" aria-live="assertive" v-show="nameError">{{ nameError }}</p>
                 <div class="form-field">
                     <button id = "joinButton" :disabled="!pinValidated">{{ t('join_button') }}</button>
                 </div>

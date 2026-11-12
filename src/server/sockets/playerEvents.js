@@ -121,6 +121,14 @@ module.exports = function createPlayerEvents({
         return;
       }
 
+      // Issue #28: un nom no es pot repetir en la mateixa partida. (La
+      // reconnexió de qui ja tenia eixe nom s'ha resolt just abans.)
+      if (players.findByName(hostId, safeName, socket.id)) {
+        logger.info('Nom ja en ús en la partida', { tag: 'player-join', pin: game.pin, hostId, name: safeName });
+        socket.emit('playerJoinRejected', { code: 'nameTaken', error: 'Ese nombre ya está en uso en esta partida. Elige otro.' });
+        return;
+      }
+
       players.addPlayer(hostId, socket.id, safeName, {
         score: 0,
         answer: 0,

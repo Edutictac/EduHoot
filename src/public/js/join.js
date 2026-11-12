@@ -27,6 +27,13 @@
         return Array.from(arr).map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
     }
 
+    function checkNameAvailable(pin, name){
+        return fetch('/api/validate-name?pin=' + encodeURIComponent(pin) + '&name=' + encodeURIComponent(name), { headers: { 'Accept': 'application/json' } })
+            .then(function(res){ return res.json(); })
+            .then(function(data){ return !(data && data.available === false); })
+            .catch(function(){ return true; });
+    }
+
     function normalizeStudentCode(value){
         return (value || '').replace(/[^0-9a-zA-Z]/g, '').toUpperCase().slice(0, 3);
     }
@@ -72,6 +79,7 @@
                 studentCode: '',
                 studentPin: '',
                 studentAuthStatus: '',
+                nameError: '',
                 studentJoinToken: '',
                 token: '',
                 submitting: false
@@ -100,7 +108,7 @@
                 this.modalOpen = true;
                 this.focusRef('pinModalInput');
             },
-            onNameInput: function(ev){ this.name = filterInput(ev, normalizeGuestNameLive); },
+            onNameInput: function(ev){ this.name = filterInput(ev, normalizeGuestNameLive); this.nameError = ''; },
             onStudentCodeInput: function(ev){ this.studentCode = filterInput(ev, normalizeStudentCode); },
             onStudentPinInput: function(ev){ this.studentPin = filterInput(ev, normalizeStudentPin); },
             configureStudentAuth: function(config){
@@ -221,26 +229,42 @@
                             self.focusRef('nameInput');
                             return;
                         }
-                        var tokens = loadTokens();
-                        var key = pinVal + ':' + name;
-                        if(!tokens[key]){
-                            tokens[key] = genToken();
-                            saveTokens(tokens);
-                        }
-                        self.token = tokens[key];
-                        self.submitting = true;
-                        // Espera que els camps ocults tinguen els valors nous.
-                        return Vue.nextTick().then(function(){ self.$refs.joinForm.submit(); });
+                        // Issue #28: el nom no es pot repetir en la partida. Si la
+                        // consulta falla, s'entra igual: el servidor també ho comprova.
+                        return checkNameAvailable(pinVal, name).then(function(available){
+                            if(!available){
+                                self.nameError = t('join_name_taken');
+                                self.focusRef(self.studentAuthRequired ? 'studentCodeInput' : 'nameInput');
+                                return;
+                            }
+                            return self.enterGame(pinVal, name);
+                        });
                     })
                     .catch(function(err){
                         self.studentAuthStatus = err && err.message ? err.message : t('join_student_error', 'Codi o PIN incorrecte.');
                         self.focusRef('studentPinInput');
                     });
+            },
+            enterGame: function(pinVal, name){
+                var self = this;
+                var tokens = loadTokens();
+                var key = pinVal + ':' + name;
+                if(!tokens[key]){
+                    tokens[key] = genToken();
+                    saveTokens(tokens);
+                }
+                self.token = tokens[key];
+                self.submitting = true;
+                // Espera que els camps ocults tinguen els valors nous.
+                return Vue.nextTick().then(function(){ self.$refs.joinForm.submit(); });
             }
         },
         mounted: function(){
             // Si la URL ya trae un pin, validarlo automáticamente para agilizar
-            var presetPin = new URLSearchParams(window.location.search).get('pin');
+            var query = new URLSearchParams(window.location.search);
+            var presetPin = query.get('pin');
+            // Tornada des de la sala d'espera: el nom ja estava en ús (issue #28).
+            if(query.get('nameTaken')) this.nameError = t('join_name_taken');
             if(presetPin){
                 this.pinModalValue = presetPin;
                 this.validatePin(presetPin.trim());

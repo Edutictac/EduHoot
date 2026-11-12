@@ -88,6 +88,16 @@ socket.on('playerJoinRejected', function(data){
         clearTimeout(joinRetryTimer);
         joinRetryTimer = null;
     }
+    // Issue #28: el nom ja està en ús (dos alumnes entrant alhora amb el
+    // mateix nom). Torna a l'entrada amb el PIN per a triar-ne un altre.
+    if(data && data.code === 'nameTaken'){
+        var joinParams = jQuery.deparam(window.location.search);
+        setLobbyStatus(tLobby('join_name_taken'), '');
+        setTimeout(function(){
+            window.location.href = '/join.html?pin=' + encodeURIComponent(joinParams.pin || '') + '&nameTaken=1';
+        }, 1200);
+        return;
+    }
     var message = data && data.error ? data.error : 'No se pudo validar el acceso.';
     setLobbyStatus(message, 'Vuelve a entrar con tu código y PIN.');
     setTimeout(function(){

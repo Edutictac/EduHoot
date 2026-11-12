@@ -20,6 +20,7 @@
       join_student_missing: 'Introduce el código y el PIN.',
       join_student_checking: 'Validando credenciales...',
       join_student_error: 'Código o PIN incorrecto.',
+      join_name_taken: 'Ese nombre ya está en uso en esta partida. Elige otro.',
       install_title: 'Instala EduHoot como app',
       install_subtitle: 'Acceso directo y pantalla completa desde tu dispositivo.',
       install_now: 'Instalar',
@@ -93,6 +94,7 @@
       join_student_missing: 'Introdueix el codi i el PIN.',
       join_student_checking: 'Validant credencials...',
       join_student_error: 'Codi o PIN incorrecte.',
+      join_name_taken: 'Aquest nom ja està en ús en aquesta partida. Tria\'n un altre.',
       install_title: 'Instal·la EduHoot com a app',
       install_subtitle: 'Accés directe i pantalla completa al teu dispositiu.',
       install_now: 'Instal·lar',
@@ -151,7 +153,8 @@
       join_student_intro: 'O entra amb la teua identitat EduTicTac',
       join_host: 'Fes clic ací per crear una partida',
       lobby_wait: 'Esperant que l\'amfitrió inicie la partida',
-      reconnecting_kicked: 'Has eixit de la partida'
+      reconnecting_kicked: 'Has eixit de la partida',
+      join_name_taken: 'Eixe nom ja està en ús en esta partida. Tria\'n un altre.'
     },
     en: {
       back: 'Back',
@@ -172,6 +175,7 @@
       join_student_missing: 'Enter your code and PIN.',
       join_student_checking: 'Checking credentials...',
       join_student_error: 'Invalid code or PIN.',
+      join_name_taken: 'That name is already in use in this game. Choose another one.',
       install_title: 'Install EduHoot as an app',
       install_subtitle: 'Quick access and fullscreen on your device.',
       install_now: 'Install',

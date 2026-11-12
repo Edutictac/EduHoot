@@ -45,6 +45,17 @@ class Players {
     getPlayers(hostId){
         return this.players.filter((player) => player.hostId === hostId);
     }
+    // Jugador de la partida amb el mateix nom (sense distingir majúscules ni
+    // espais repetits), llevat de `exceptPlayerId`. Issue #28: dos alumnes no
+    // poden tindre el mateix nom en una partida.
+    findByName(hostId, name, exceptPlayerId){
+        var key = Players.nameKey(name);
+        if(!key) return null;
+        return this.getPlayers(hostId).find((player) => player.playerId !== exceptPlayerId && Players.nameKey(player.name) === key) || null;
+    }
+    static nameKey(name){
+        return (name || '').toString().replace(/\s+/g, ' ').trim().toLowerCase();
+    }
 }
 
 module.exports = {Players};

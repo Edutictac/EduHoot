@@ -468,3 +468,11 @@ body.modal-open{
 }
 
 #join-app{ display: contents; }
+
+/* Avís de nom ja en ús en la partida (issue #28). */
+.join-name-error{
+    margin: 4px 0 0;
+    color: #fecaca;
+    font-weight: 600;
+    text-align: center;
+}

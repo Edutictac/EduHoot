@@ -858,6 +858,23 @@ d'ells està pensat per a una classe amb un dispositiu per alumne:
 Per a una classe amb molts alumnes, cada un amb el seu propi dispositiu,
 l'única opció correcta hui és **"Jugar a l'aula"**.
 
+### Noms únics en "Jugar a l'aula"
+
+Dos alumnes no poden tindre el mateix nom en una partida
+([issue #28](https://github.com/Edutictac/EduHoot/issues/28)). Es compara
+sense distingir majúscules ni espais repetits (`Players.findByName()` en
+`src/server/utils/players.js`).
+
+- **Servidor** (la regla de veritat): `player-join` rebutja el nom repetit
+  amb `playerJoinRejected` i `code: 'nameTaken'`. Abans ja ha resolt les
+  reconnexions (pel token o, si no resol, per una fila amb eixe nom que ja
+  no està connectada), que no es rebutgen.
+- **`/join.html`**: abans d'entrar pregunta a `GET /api/validate-name` i,
+  si el nom està en ús, ho avisa en el formulari («Ese nombre ya está en
+  uso en esta partida. Elige otro.»).
+- **Sala d'espera**: si dos alumnes entren alhora amb el mateix nom, el
+  segon torna a `/join.html?pin=…&nameTaken=1`, amb l'avís.
+
 ### Opció "Mostra la pregunta a l'alumnat" (pantalla `/host/`)
 
 Casella en `#host-options` (plantilla del lobby en

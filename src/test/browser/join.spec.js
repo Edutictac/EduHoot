@@ -8,7 +8,7 @@ if (process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH) {
 // join.js (modal del PIN, icones, nom, identitat d'alumne i enviament).
 
 async function mockBackend(page, options = {}) {
-    const calls = { pins: [], student: [] };
+    const calls = { pins: [], student: [], names: [] };
     await page.addInitScript(() => { localStorage.setItem('lang', 'es'); });
     await page.route(/^https:\/\//, route => route.abort());
     await page.route('**/player/?*', route => route.fulfill({ contentType: 'text/html', body: '<p>lobby</p>' }));
@@ -19,6 +19,12 @@ async function mockBackend(page, options = {}) {
         if (m) {
             calls.pins.push(decodeURIComponent(m[1]));
             return route.fulfill({ json: { valid: (options.validPins || ['12345']).includes(decodeURIComponent(m[1])) } });
+        }
+        if (pathname === '/api/validate-name') {
+            const q = new URL(request.url()).searchParams;
+            calls.names.push(q.get('pin') + ':' + q.get('name'));
+            if (options.nameCheckFails) return route.abort();
+            return route.fulfill({ json: { available: !(options.takenNames || []).includes(q.get('name')) } });
         }
         if (pathname === '/api/player-auth/config') return route.fulfill({ json: options.studentAuth || { enabled: false, required: false } });
         if (pathname === '/api/player-auth/student') {
@@ -192,4 +198,33 @@ test('con ?pin= incorrecto el modal sigue abierto con el error', async ({ page }
     await expect(page.locator('#pinModalError')).toHaveText('PIN incorrecto. Intenta de nuevo.');
     await expect(page.locator('#pinModal')).toBeVisible();
     await expect(page.locator('#joinButton')).toBeDisabled();
+});
+
+// Issue #28: no es pot entrar amb un nom que ja està en la partida.
+test('si el nombre ya está en uso avisa, no entra y el aviso se borra al cambiarlo', async ({ page }) => {
+    const calls = await openJoin(page, '?pin=12345', { takenNames: ['Ana'] });
+    await page.locator('#name').fill('Ana');
+    await page.locator('#joinButton').click();
+    await expect(page.locator('#join-name-error')).toHaveText('Ese nombre ya está en uso en esta partida. Elige otro.');
+    await expect(page.locator('#name')).toBeFocused();
+    expect(page.url()).toContain('/join.html');
+    expect(calls.names).toEqual(['12345:Ana']);
+    await page.locator('#name').pressSequentially('2');
+    await expect(page.locator('#join-name-error')).toBeHidden();
+    await page.locator('#joinButton').click();
+    await page.waitForURL('**/player/?*');
+    expect(submittedParams(page).name).toBe('Ana2');
+});
+
+test('al volver de la sala de espera con ?nameTaken=1 enseña el aviso', async ({ page }) => {
+    await openJoin(page, '?pin=12345&nameTaken=1');
+    await expect(page.locator('#pin-display-value')).toHaveText('12345');
+    await expect(page.locator('#join-name-error')).toHaveText('Ese nombre ya está en uso en esta partida. Elige otro.');
+});
+
+test('si la comprobación del nombre falla, entra igual (el servidor también lo comprueba)', async ({ page }) => {
+    await openJoin(page, '?pin=12345', { nameCheckFails: true });
+    await page.locator('#name').fill('Ana');
+    await page.locator('#joinButton').click();
+    await page.waitForURL('**/player/?*');
 });

@@ -31,6 +31,7 @@ async function openLobby(page, query) {
     await page.route('**/socket.io/socket.io.js', route => route.fulfill({ contentType: 'application/javascript', body: FAKE_SOCKET_IO }));
     await page.route('**/player/game/**', route => route.fulfill({ contentType: 'text/html', body: '<p>joc</p>' }));
     await page.route(url => url.pathname === '/', route => route.fulfill({ contentType: 'text/html', body: '<p>portada</p>' }));
+    await page.route('**/join.html?*', route => route.fulfill({ contentType: 'text/html', body: '<p>entrada</p>' }));
     await page.goto('/player/' + (query || '?pin=12345&icon=%F0%9F%90%BC&name=Ana&studentJoinToken=&token=tok1'));
     await page.waitForLoadState('load');
 }
@@ -123,4 +124,12 @@ test('al empezar la partida oculta el idioma y va a /player/game/ con sus datos'
     await page.waitForURL('**/player/game/**');
     const params = Object.fromEntries(new URL(page.url()).searchParams);
     expect(params).toEqual({ id: 'p1', pin: '12345', token: 'tok1', name: 'Ana' });
+});
+
+test('nombre ya en uso: lo avisa y vuelve a la entrada con el PIN', async ({ page }) => {
+    await openLobby(page);
+    await serverEmit(page, 'playerJoinRejected', { code: 'nameTaken', error: 'x' });
+    await expect(page.locator('#title1')).toHaveText('Ese nombre ya está en uso en esta partida. Elige otro.');
+    await page.waitForURL('**/join.html?*');
+    expect(Object.fromEntries(new URL(page.url()).searchParams)).toEqual({ pin: '12345', nameTaken: '1' });
 });

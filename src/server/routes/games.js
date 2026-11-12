@@ -2,7 +2,7 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 
-module.exports = function createGamesRouter({ games, finishedSessionReports, liveSessionToCsv, FINISHED_SESSION_REPORT_DIR, buildReportFileName }) {
+module.exports = function createGamesRouter({ games, players, finishedSessionReports, liveSessionToCsv, FINISHED_SESSION_REPORT_DIR, buildReportFileName }) {
   const router = express.Router();
 
   router.get('/api/validate-pin/:pin', (req, res) => {
@@ -12,6 +12,15 @@ module.exports = function createGamesRouter({ games, finishedSessionReports, liv
     }
     const game = games.getGameByPin(rawPin);
     res.json({ valid: !!game });
+  });
+
+  // /join.html pregunta abans d'entrar si el nom ja està en ús en la
+  // partida (issue #28). La regla de veritat és la de 'player-join'.
+  router.get('/api/validate-name', (req, res) => {
+    const game = games.getGameByPin((req.query.pin || '').toString().trim());
+    const name = (req.query.name || '').toString();
+    if (!game || !name.trim()) return res.json({ available: true });
+    res.json({ available: !players.findByName(game.hostId, name) });
   });
 
   router.get('/api/live-games/:pin/report.csv', async (req, res) => {

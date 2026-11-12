@@ -82,6 +82,9 @@ fitxers corresponents, i els originals es van eliminar.
   (`/admin-*`) també són ara apps de Vue 3. Funciona igual que abans.
 
 ### Corregit
+- En "Jugar a l'aula", dos alumnes podien unir-se a la mateixa partida
+  amb el mateix nom. Ara el segon rep l'avís «Ese nombre ya está en uso en
+  esta partida. Elige otro.» i en tria un altre (issue #28).
 - En els desplegables, les opcions no seleccionades es veien molt
   clares (text blanc sobre la llista clara del sistema); ara la llista és
   fosca i es llig bé en totes les pantalles.
