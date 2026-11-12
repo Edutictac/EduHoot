@@ -14,9 +14,13 @@
     </head>
     <body>
         <edutictac-account class="site-account site-account--fixed site-account--start" data-home-only data-base="https://commons.edutictac.es"></edutictac-account>
-        <h1 id = "title1" data-i18n="lobby_wait">Waiting on host to start game</h1>
-        <h3 id = "title2" data-i18n="lobby_check">Do you see your name on the screen?</h3>
+        <!-- Subfase B, Vue (lobby.js): missatges d'espera de la sala. -->
+        <div id="lobby-app"></div>
+        <template id="lobby-tpl">
+        <h1 id = "title1">{{ title }}</h1>
+        <h3 id = "title2">{{ detail }}</h3>
         <div class="loader"></div>
+        </template>
         <br/>
         <div id="lang-switcher" data-lang-buttons>
         </div>
@@ -42,6 +46,7 @@
     <script src = "../socket.io/socket.io.js"></script>
     <script src = "../js/libs/jqueryLibrary.js"></script>
     <script src = "../js/libs/deparam.js"></script>
+    <script src = "../js/libs/vue.global.prod.js"></script>
     <script src = "../js/lobby.js"></script>
     
 </html>

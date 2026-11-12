@@ -59,10 +59,13 @@ fitxers corresponents, i els originals es van eliminar.
   partida, resultat i rànquing. Funciona igual que abans.
 - La biblioteca (`/create/`) també usa ara Vue 3: biblioteca, generador
   IA, importació i compte. Funciona igual que abans.
-- La pantalla per a unir-se a una partida (`/join.html`) també és ara
-  una app de Vue 3. Funciona igual que abans.
+- La pantalla per a unir-se a una partida (`/join.html`) i la sala
+  d'espera (`/player/`) també són ara apps de Vue 3. Funciona igual que abans.
 
 ### Corregit
+- En la sala d'espera (`/player/`), el missatge «Connectat a la partida»
+  es podia substituir pel text inicial d'espera si la connexió arribava
+  abans que la traducció de la pàgina.
 - En obrir `/create/` amb sessió, la sessió es comprovava dues vegades i
   un quiz pendent de desar en el compte es podia reclamar dues vegades.
 - En el mode individual (`/solo/`), qui entrava des de Commons apareixia

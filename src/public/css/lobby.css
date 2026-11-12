@@ -68,3 +68,5 @@ body{
 @media (max-width: 640px){
     html.has-account-chip #title1{ margin-top: 48px; }
 }
+
+#lobby-app{ display: contents; }

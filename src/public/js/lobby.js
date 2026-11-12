@@ -32,14 +32,22 @@ function resolveLobbyToken(params){
     return '';
 }
 
-function setLobbyStatus(waiting, detail){
-    var title1 = document.getElementById('title1');
-    var title2 = document.getElementById('title2');
-    if(title1){
-        title1.textContent = waiting || title1.textContent;
+function tLobby(key){
+    return window.i18nPlayer ? window.i18nPlayer.t(key) : key;
+}
+
+// Subfase B: els dos missatges de la sala són estat d'una app de Vue.
+var lobby = Vue.createApp({
+    template: '#lobby-tpl',
+    data: function(){
+        return { title: tLobby('lobby_wait'), detail: tLobby('lobby_check') };
     }
-    if(title2 && detail !== undefined){
-        title2.textContent = detail;
+}).mount('#lobby-app');
+
+function setLobbyStatus(waiting, detail){
+    lobby.title = waiting || lobby.title;
+    if(detail !== undefined){
+        lobby.detail = detail;
     }
 }
 

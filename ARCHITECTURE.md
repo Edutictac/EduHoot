@@ -135,7 +135,7 @@ JS d'orquestració amb `<script>` clàssics (sense build step):
 |---|---|---|
 | `/` (`index.html`) | *(sense JS propi; usa `i18n-player.js`, `pwa-install.js`)* | Portada: triar mode (aula / multijugador / solo), accés professorat, instal·lar com a PWA |
 | `/join.html` | `join.js` (ja amb Vue) | Alumnat: PIN + nom (o login EduTicTac) per a unir-se a una partida del mode "Jugar a l'aula" |
-| `/player/` | `lobby.js` | Alumnat: sala d'espera des que s'uneix fins que el professorat inicia la partida |
+| `/player/` | `lobby.js` (ja amb Vue) | Alumnat: sala d'espera des que s'uneix fins que el professorat inicia la partida |
 | `/player/game/` | `playerGame.js` | Alumnat: pantalla de joc — pregunta, respostes, resultat, rànquing, reconnexió |
 | `/host/` | `host.js` (ja amb Vue, pilot fet) | Professorat: lobby amb PIN/QR, opcions de partida, llista de jugadors, botó d'inici |
 | `/host/game/` | `hostGame.js` | Professorat: pantalla de joc en directe — pregunta, temporitzador, rànquing, música/gong |
@@ -497,6 +497,10 @@ el selector d'idioma i el peu queden fora.
   camps ocults (PIN, icona, testimoni) es lliguen a l'estat i s'envia
   després que Vue els haja actualitzat.
 - **Proves**: `src/test/browser/join.spec.js`.
+
+La sala d'espera `/player/` (`lobby.js`) també usa Vue, només per als dos
+missatges (`#lobby-app`); la connexió amb Socket.IO no canvia. Proves:
+`src/test/browser/player-lobby.spec.js`.
 
 ## Distintiu visual d'entorn (dev/stage)
 
