@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const express = require('express');
 const { getUsersCollection } = require('../data/repositories');
 
@@ -14,7 +15,7 @@ function escapeHtml(value) {
     .replace(/'/g, '&#39;');
 }
 
-function renderPage(seedUsers, oidcEnabled) {
+function renderPage(seedUsers, oidcEnabled, nonce) {
   const userButtons = seedUsers.length
     ? seedUsers.map((user) => `
         <li>
@@ -81,7 +82,7 @@ function renderPage(seedUsers, oidcEnabled) {
     </form>
   </section>
 
-<script>
+<script nonce="${nonce}">
 (function(){
   var statusEl = document.getElementById('status');
 
@@ -144,8 +145,14 @@ module.exports = function createDevLoginRouter({ authentikConfigured }) {
     } catch (err) {
       console.error('dev-login: no s\'han pogut llegir els usuaris de prova', err.message);
     }
+    // L'script en línia d'esta pàgina només s'executa amb el nonce (issue #20).
+    const nonce = crypto.randomBytes(16).toString('base64');
+    for (const header of ['Content-Security-Policy', 'Content-Security-Policy-Report-Only']) {
+      const value = res.getHeader(header);
+      if (value) res.setHeader(header, String(value).replace('script-src ', `script-src 'nonce-${nonce}' `));
+    }
     res.set('Cache-Control', 'no-store');
-    res.type('html').send(renderPage(seedUsers, authentikConfigured()));
+    res.type('html').send(renderPage(seedUsers, authentikConfigured(), nonce));
   });
 
   return router;

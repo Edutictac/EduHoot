@@ -77,6 +77,14 @@
     document.documentElement.classList.add('has-account-chip');
   }
 
+  // Si account-widget.js no carrega, respost de seguida (abans era un
+  // onerror="…" en cada HTML, que la CSP no permet). Els errors de càrrega
+  // d'un <script> no pugen, però es veuen en la fase de captura.
+  document.addEventListener('error', function (event) {
+    var el = event.target;
+    if (el && el.tagName === 'SCRIPT' && /\/assets\/account-widget\.js(\?|$)/.test(el.src || '')) fallback();
+  }, true);
+
   var timer = window.setTimeout(function () {
     if (!document.querySelector('edutictac-account nav.eta')) fallback();
   }, ACCOUNT_TIMEOUT_MS);

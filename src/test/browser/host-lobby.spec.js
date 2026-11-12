@@ -174,3 +174,12 @@ test('al cambiar de idioma, el error visible se traduce y no pasa a ser el gené
     await expect(page.locator('#host-error')).toHaveText('Missing quiz to create the game. Please pick it again.');
     expect(errors).toEqual([]);
 });
+
+// Issue #20 (CSP): el botó ja no és un onclick="…" en el HTML.
+test('«Cancelar partida» vuelve a la portada', async ({ page }) => {
+    await page.route(url => url.pathname === '/', route => route.fulfill({ contentType: 'text/html', body: '<p>portada</p>' }));
+    await openLobby(page, '?id=q1&lang=es');
+    await expect(page.locator('#cancel')).not.toHaveAttribute('onclick');
+    await page.locator('#cancel').click();
+    await page.waitForURL(url => url.pathname === '/');
+});

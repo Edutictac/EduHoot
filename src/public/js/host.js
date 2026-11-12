@@ -405,6 +405,9 @@ function startGame(){
 function endGame(){
     window.location.href = "/";
 }
+// Abans era onclick="endGame()" en el HTML, que la CSP no permet.
+var cancelButton = document.getElementById('cancel');
+if(cancelButton) cancelButton.addEventListener('click', endGame);
 
 //When server starts the game
 socket.on('gameStarted', function(id){

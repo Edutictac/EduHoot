@@ -19,6 +19,10 @@ fitxers corresponents, i els originals es van eliminar.
 ## [Sense publicar]
 
 ### Afegit
+- S'activa la CSP (*Content Security Policy*): el navegador només executa
+  scripts del propi EduHoot, de les llibreries de `/create/` i del Commons
+  configurat, i no executa cap script en línia. És una segona barrera
+  contra XSS (issue #20). Amb `CSP_REPORT_ONLY=true` només avisa.
 - En el panell de logs, el botó «Ver» del detall passa a la primera
   columna de la taula.
 

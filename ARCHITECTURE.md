@@ -591,28 +591,24 @@ consulta `GET /api/version` de `server.js` (versió de `package.json`).
   `src/public/js/session-bridge.js` (`EduhootSessionBridge.create(...)`),
   amb una clau de `sessionStorage` pròpia per pàgina perquè no
   interferisquen entre elles.
-- La **CSP** (*Content Security Policy*) està desactivada
-  (`contentSecurityPolicy: false` en la configuració de Helmet de
-  `server.js`); Helmet només posa la resta de capçaleres. Activar-la
-  afegiria una segona barrera contra XSS: si algun `innerHTML` deixa
-  passar text d'usuari (noms de jugador, quizzes importats), el navegador
-  no executaria el codi injectat ni enviaria dades a dominis no permesos.
-  Seguiment en la [issue #20](https://github.com/Edutictac/EduHoot/issues/20).
-  - **Requisit**: passar a `addEventListener` els atributs `on…=` que
-    queden (ja només els `onerror` del widget de
-    Commons). Sense açò caldria `'unsafe-inline'` en els scripts, que
-    anul·la quasi tota la protecció. En els estils, `'unsafe-inline'`
-    sí és acceptable.
-  - **Orígens a permetre hui**: `cdn.jsdelivr.net` (llibreries de
-    `/create/`), `commons.edutictac.es` (widget i API),
-    `www.youtube-nocookie.com` (vídeos) i imatges `https:`/`data:` (QR,
-    miniatures, quizzes).
-  - **Com**: primer amb `reportOnly: true` en dev i stage (només avisa
-    en la consola, no bloqueja), després en mode real.
-  - **Vue**: el lobby de `/host/` i les pantalles de joc de `/player/game/`
-    i `/host/game/` ja l'usen, i el seu compilador de plantilles necessita
-    també `'unsafe-eval'`. Risc baix mentre les plantilles no continguen
-    text d'usuari.
+- ~~La **CSP** (*Content Security Policy*) estava desactivada.~~
+  **Corregit** ([issue #20](https://github.com/Edutictac/EduHoot/issues/20)).
+  Ara està activa i bloqueja (`src/server/csp.js`, amb test en
+  `src/test/unit/csp.test.js`):
+  - **Scripts**: només del propi servidor, de `cdn.jsdelivr.net`
+    (llibreries de `/create/`) i del Commons configurat
+    (`EDUTICTAC_COMMONS_URL`). No s'admeten scripts en línia: ja no queda
+    cap atribut `on…=` en els HTML (el respost del widget de Commons el
+    detecta `edutictac-chip.js`). Porta `'unsafe-eval'` perquè Vue
+    compila les plantilles en el navegador; les plantilles són fixes i el
+    text d'usuari hi entra com a dades.
+  - **Altres orígens**: imatges i vídeos `https:`/`data:`/`blob:`, iframes
+    de `www.youtube-nocookie.com`, i peticions al propi servidor (també el
+    WebSocket) i al Commons. Estils en línia permesos (risc baix).
+  - **`/dev/login`** (només en desenvolupament) porta un script en línia
+    autoritzat amb un *nonce* per petició.
+  - **Mode informe**: `CSP_REPORT_ONLY=true` fa que només avise en la
+    consola, sense bloquejar, per si cal provar un origen nou.
 - **Reconnexió trencada a `/player/game/` després de la primera**
   (trobat provant en real la Subfase B de `playerGame.js`, 2026-11-08;
   [issue #23](https://github.com/Edutictac/EduHoot/issues/23)):

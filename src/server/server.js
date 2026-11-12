@@ -4,6 +4,7 @@ const http = require('http');
 const express = require('express');
 const socketIO = require('socket.io');
 const helmet = require('helmet');
+const { cspOptions } = require('./csp');
 
 const { LiveGames } = require('./utils/liveGames');
 const { Players } = require('./utils/players');
@@ -197,7 +198,7 @@ const CHIP_PAGES = {
 
 // Body parsers (bump limit to allow quizzes con recursos más pesados)
 app.use(helmet({
-  contentSecurityPolicy: false,
+  contentSecurityPolicy: cspOptions(EDUTICTAC_COMMONS_URL, process.env.CSP_REPORT_ONLY === 'true'),
   crossOriginEmbedderPolicy: false
 }));
 app.use(express.json({ limit: BODY_LIMIT }));
