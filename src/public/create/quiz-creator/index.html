@@ -74,6 +74,46 @@
                     <button class="btn btn-ghost" onclick="addQuestion()" data-i18n="addQuestion">+ Añadir pregunta</button>
                 </div>
                 <div id="allQuestions" class="question-grid"></div>
+                <template id="questions-tpl">
+                    <div v-for="(card, index) in cards" :key="card.uid" class="question-card" :data-question="index + 1">
+                        <div class="question-card-head">
+                            <span class="pill pill-muted">{{ pillText(index + 1) }}</span>
+                            <button class="btn btn-ghost btn-small" type="button" title="Eliminar" @click="removeCard(index)">✕</button>
+                        </div>
+                        <label>{{ t('questionLabel') }}</label>
+                        <textarea class="question" :id="'q' + (index + 1)" rows="3" placeholder="?" v-model="card.question"></textarea>
+                        <div class="question-type-row">
+                            <label>{{ t('questionTypeLabel') }}</label>
+                            <select class="question-type" :id="'type' + (index + 1)" v-model="card.type" @change="onTypeChange(card)">
+                                <option v-for="opt in typeOptions" :key="opt[0]" :value="opt[0]">{{ t(opt[1]) }}</option>
+                            </select>
+                        </div>
+                        <div class="answers" v-show="card.type !== 'short-answer' && card.type !== 'numeric'">
+                            <label v-for="n in 4" :key="n" v-show="!(card.type === 'true-false' && n > 2)">{{ t('answerLabel') + ' ' + n }}<input :id="(index + 1) + 'a' + n" type="text" :placeholder="t('answerLabel') + ' ' + n" v-model="card.answers[n - 1]"></label>
+                        </div>
+                        <div class="multi-correct" :class="{ hidden: card.type !== 'multiple' }">
+                            <p class="multi-correct__hint">{{ t('questionTypeMultiHint') }}</p>
+                            <label v-for="n in 4" :key="n" class="multi-correct__label"><input type="checkbox" :value="String(n)" :data-answer="n" v-model="card.multi[n - 1]"> {{ t('answerLabel') + ' ' + n }}</label>
+                        </div>
+                        <label v-show="showCorrect(card)">{{ t('correctLabel') }}</label>
+                        <input v-show="showCorrect(card)" class="correct" :id="'correct' + (index + 1)" type="number" min="1" max="4" v-model="card.correct">
+                        <label>{{ t('questionTimeLabel') }}<input class="question-time" :id="'time' + (index + 1)" type="number" min="5" max="120" step="1" v-model="card.time"></label>
+                        <label v-show="card.type === 'short-answer'">{{ t('shortAnswersLabel') }}<input :id="'short' + (index + 1)" type="text" placeholder="madrid|barcelona" v-model="card.short"></label>
+                        <label v-show="card.type === 'numeric'">{{ t('numericAnswerLabel') }}<input :id="'num' + (index + 1)" type="text" placeholder="3,14" v-model="card.num"></label>
+                        <label v-show="card.type === 'numeric'">{{ t('numericToleranceLabel') }}<input :id="'tol' + (index + 1)" type="text" placeholder="0,1" v-model="card.tol"></label>
+                        <label>{{ t('imageLabel') }}</label>
+                        <input :id="'img' + (index + 1)" type="text" :placeholder="t('urlPlaceholder')" v-model="card.image" @input="onImageInput(card)">
+                        <div class="image-preview">
+                            <img alt="Vista previa" class="image-thumb" :class="{ hidden: !card.imageOk || !imageSrc(card) }" :src="imageSrc(card)" @load="card.imageOk = true" @error="card.imageOk = false">
+                        </div>
+                        <label>{{ t('videoLabel') }}</label>
+                        <input :id="'vid' + (index + 1)" type="text" :placeholder="t('urlPlaceholder')" v-model="card.video" @input="onVideoInput(card)">
+                        <div class="video-preview">
+                            <video controls class="video-thumb" :class="{ hidden: !card.videoOk || !videoSrc(card) }" :src="videoSrc(card)" @loadeddata="card.videoOk = true" @error="card.videoOk = false"></video>
+                            <iframe class="video-thumb" :class="{ hidden: !youTubeEmbed(card) }" allowfullscreen loading="lazy" :src="youTubeEmbed(card)"></iframe>
+                        </div>
+                    </div>
+                </template>
             </div>
 
             <div class="panel actions">
@@ -94,6 +134,7 @@
         </div>
 
         <script src = "../../socket.io/socket.io.js"></script>
+        <script src="/js/libs/vue.global.prod.js"></script>
         <script src="/js/languages.js"></script>
         <script src="/js/env-badge.js"></script>
         <script src = "../../js/quizCreator.js"></script>

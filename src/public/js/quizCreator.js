@@ -6,9 +6,11 @@ try{
 }catch(e){
     socket = null;
 }
-var questionNum = 0; // Se incrementa cuando se añaden tarjetas
+// Estado reactivo: las tarjetas de preguntas y el idioma de la interfaz.
+var questionCards = Vue.reactive([]);
+var nextQuestionUid = 1;
 var editingId = null;
-var lang = EduhootLang.init();
+var ui = Vue.reactive({ lang: EduhootLang.init() });
 var knownTags = [];
 var isUserAuthenticated = false;
 function getAnonOwnerToken(){
@@ -223,7 +225,7 @@ var i18n = {
 };
 
 function t(key){
-    var chain = lang === 'va' ? ['va', 'ca', 'es'] : [lang, 'es'];
+    var chain = ui.lang === 'va' ? ['va', 'ca', 'es'] : [ui.lang, 'es'];
     for(var i = 0; i < chain.length; i++){
         var dict = i18n[chain[i]];
         if(dict && dict[key]) return dict[key];
@@ -255,7 +257,7 @@ function applyI18n(){
     var descriptionInput = document.getElementById('description');
     if(descriptionInput) descriptionInput.placeholder = t('descriptionPlaceholder');
     var langSelect = document.getElementById('lang-select');
-    if(langSelect) langSelect.value = lang;
+    if(langSelect) langSelect.value = ui.lang;
     renderTagSuggestions();
 }
 
@@ -333,32 +335,20 @@ function buildQuizPayload(){
     var language = document.getElementById('language') ? document.getElementById('language').value.trim() : '';
     var license = document.getElementById('license') ? document.getElementById('license').value.trim() : '';
     var description = document.getElementById('description') ? document.getElementById('description').value.trim() : '';
-    for(var i = 1; i <= questionNum; i++){
-        var question = document.getElementById('q' + i).value;
-        var answer1 = document.getElementById(i + 'a1').value;
-        var answer2 = document.getElementById(i + 'a2').value;
-        var answer3 = document.getElementById(i + 'a3').value;
-        var answer4 = document.getElementById(i + 'a4').value;
-        var correct = document.getElementById('correct' + i).value;
-        var shortText = document.getElementById('short' + i) ? document.getElementById('short' + i).value : '';
-        var numText = document.getElementById('num' + i) ? document.getElementById('num' + i).value : '';
-        var tolText = document.getElementById('tol' + i) ? document.getElementById('tol' + i).value : '';
-        var timeText = document.getElementById('time' + i) ? document.getElementById('time' + i).value : '';
-        var image = document.getElementById('img' + i) ? document.getElementById('img' + i).value : '';
-        var video = document.getElementById('vid' + i) ? document.getElementById('vid' + i).value : '';
-        var card = document.querySelector('.question-card[data-question="' + i + '"]');
-        var typeEl = document.getElementById('type' + i);
-        var questionType = typeEl ? typeEl.value : 'quiz';
+    questionCards.forEach(function(card){
+        var question = card.question;
+        var correct = card.correct;
+        var shortText = card.short;
+        var numText = card.num;
+        var tolText = card.tol;
+        var timeText = card.time;
+        var image = card.image;
+        var video = card.video;
+        var questionType = card.type || 'quiz';
         var correctValues = [];
-        if(questionType === 'multiple' && card){
-            var checkboxes = card.querySelectorAll('.multi-correct input[type="checkbox"]');
-            checkboxes.forEach(function(cb){
-                if(cb.checked){
-                    var val = parseInt(cb.value, 10);
-                    if(!Number.isNaN(val)){
-                        correctValues.push(val);
-                    }
-                }
+        if(questionType === 'multiple'){
+            card.multi.forEach(function(checked, idx){
+                if(checked) correctValues.push(idx + 1);
             });
         }
         if(!correctValues.length && questionType !== 'poll'){
@@ -368,7 +358,7 @@ function buildQuizPayload(){
             }
             correctValues.push(single);
         }
-        var answers = [answer1, answer2, answer3, answer4];
+        var answers = card.answers.slice();
         var time = parseInt(timeText, 10);
         if(Number.isNaN(time) || time < 5) time = 20;
         if(time > 120) time = 120;
@@ -431,7 +421,7 @@ function buildQuizPayload(){
         }
 
         questions.push(base);
-    }
+    });
     return {
         name: name,
         tags: tags,
@@ -528,302 +518,50 @@ function normalizeSvgDataUrlForImg(url){
     return raw;
 }
 
-function buildQuestionCard(num, data){
-    var card = document.createElement('div');
-    card.className = 'question-card';
-    card.setAttribute('data-question', String(num));
+// Tarjetas de preguntas (Subfase B, bloque 1). Cada tarjeta es un objeto de
+// questionCards y la plantilla #questions-tpl lo pinta; buildQuizPayload lee
+// de aquí, no del DOM. Los campos de texto se guardan como texto, igual que
+// los valores de los <input> de antes.
+function clampTime(value){
+    var time = Number(value);
+    if(!Number.isFinite(time) || time < 5) return 20;
+    if(time > 120) return 120;
+    return Math.round(time);
+}
 
-    var head = document.createElement('div');
-    head.className = 'question-card-head';
-    var pill = document.createElement('span');
-    pill.className = 'pill pill-muted';
-    pill.textContent = (lang === 'en' ? 'Question ' : (lang === 'ca' ? 'Pregunta ' : 'Pregunta ')) + String(num);
-    head.appendChild(pill);
-    var removeBtn = document.createElement('button');
-    removeBtn.className = 'btn btn-ghost btn-small';
-    removeBtn.type = 'button';
-    removeBtn.textContent = '✕';
-    removeBtn.title = 'Eliminar';
-    removeBtn.onclick = function(){
-        var confirmMsg = lang === 'en' ? 'Delete this question?' : (lang === 'va' ? 'Eliminar esta pregunta?' : (lang === 'ca' ? 'Eliminar aquesta pregunta?' : '¿Eliminar esta pregunta?'));
-        if(window.confirm(confirmMsg)){
-            card.remove();
-            renumberQuestions();
-        }
+// Lo que antes hacía refreshTypeDependent al cambiar de tipo: V/F solo usa
+// dos respuestas y respuesta corta/numérica ninguna.
+function applyTypeRules(card){
+    if(card.type === 'true-false'){
+        card.answers[2] = '';
+        card.answers[3] = '';
+    }
+    if(card.type === 'short-answer' || card.type === 'numeric'){
+        card.answers = ['', '', '', ''];
+    }
+}
+
+function makeQuestionCard(data){
+    data = data || {};
+    var correctAnswers = Array.isArray(data.correctAnswers) ? data.correctAnswers : [];
+    var card = {
+        uid: nextQuestionUid++,
+        question: data.question || '',
+        type: data.type || 'quiz',
+        answers: [0, 1, 2, 3].map(function(i){ return (data.answers && data.answers[i]) || ''; }),
+        multi: [1, 2, 3, 4].map(function(n){ return correctAnswers.indexOf(n) !== -1; }),
+        correct: correctAnswers.length ? correctAnswers[0] : (data.correct || 1),
+        time: String(clampTime(data.time)),
+        short: Array.isArray(data.acceptedAnswers) ? data.acceptedAnswers.join('|') : '',
+        num: (data.numericAnswer !== undefined && data.numericAnswer !== null) ? String(data.numericAnswer) : '',
+        tol: (data.tolerance !== undefined && data.tolerance !== null) ? String(data.tolerance) : '0',
+        image: data.image || '',
+        video: data.video || '',
+        imageOk: false,
+        videoOk: false
     };
-    head.appendChild(removeBtn);
-
-    var questionLabel = document.createElement('label');
-    questionLabel.textContent = t('questionLabel');
-    var questionField = document.createElement('textarea');
-    questionField.className = 'question';
-    questionField.id = 'q' + String(num);
-    questionField.rows = 3;
-    questionField.placeholder = '?';
-    questionField.value = (data && data.question) || '';
-
-    var typeRow = document.createElement('div');
-    typeRow.className = 'question-type-row';
-    var typeLabel = document.createElement('label');
-    typeLabel.textContent = t('questionTypeLabel');
-    var typeSelect = document.createElement('select');
-    typeSelect.className = 'question-type';
-    typeSelect.id = 'type' + String(num);
-    [['quiz', 'questionTypeSingle'], ['multiple', 'questionTypeMultiple'], ['true-false', 'questionTypeTf'], ['short-answer', 'questionTypeShort'], ['numeric', 'questionTypeNumeric'], ['poll', 'questionTypePoll']].forEach(function(pair){
-        var option = document.createElement('option');
-        option.value = pair[0];
-        option.textContent = t(pair[1]);
-        typeSelect.appendChild(option);
-    });
-    typeRow.appendChild(typeLabel);
-    typeRow.appendChild(typeSelect);
-
-    var answersWrap = document.createElement('div');
-    answersWrap.className = 'answers';
-    var answerGroups = [];
-    for(var n = 1; n <= 4; n++){
-        var answerLabel = document.createElement('label');
-        answerLabel.textContent = t('answerLabel') + ' ' + n;
-        var answerField = document.createElement('input');
-        answerField.id = String(num) + 'a' + n;
-        answerField.type = 'text';
-        answerField.placeholder = t('answerLabel') + ' ' + n;
-        var ans = data && data.answers && data.answers[n-1];
-        answerField.value = ans || '';
-        answerLabel.appendChild(answerField);
-        answersWrap.appendChild(answerLabel);
-        answerGroups.push({ label: answerLabel, input: answerField });
-    }
-
-    var multiCorrect = document.createElement('div');
-    multiCorrect.className = 'multi-correct hidden';
-    var multiHint = document.createElement('p');
-    multiHint.className = 'multi-correct__hint';
-    multiHint.textContent = t('questionTypeMultiHint');
-    multiCorrect.appendChild(multiHint);
-    var multiCheckboxes = [];
-    for(var m = 1; m <= 4; m++){
-        var multiLabel = document.createElement('label');
-        multiLabel.className = 'multi-correct__label';
-        var multiInput = document.createElement('input');
-        multiInput.type = 'checkbox';
-        multiInput.value = String(m);
-        multiInput.dataset.answer = String(m);
-        multiLabel.appendChild(multiInput);
-        multiLabel.append(' ' + t('answerLabel') + ' ' + m);
-        multiCorrect.appendChild(multiLabel);
-        multiCheckboxes.push(multiInput);
-    }
-
-    var correctLabel = document.createElement('label');
-    correctLabel.textContent = t('correctLabel');
-    var correctField = document.createElement('input');
-    correctField.className = 'correct';
-    correctField.id = 'correct' + String(num);
-    correctField.type = 'number';
-    correctField.min = '1';
-    correctField.max = '4';
-    var providedCorrect = (data && Array.isArray(data.correctAnswers) && data.correctAnswers.length)
-        ? data.correctAnswers[0]
-        : ((data && data.correct) ? data.correct : 1);
-    correctField.value = providedCorrect;
-
-    var timeLabel = document.createElement('label');
-    timeLabel.textContent = t('questionTimeLabel');
-    var timeField = document.createElement('input');
-    timeField.className = 'question-time';
-    timeField.id = 'time' + String(num);
-    timeField.type = 'number';
-    timeField.min = '5';
-    timeField.max = '120';
-    timeField.step = '1';
-    var providedTime = data && Number(data.time);
-    if(!Number.isFinite(providedTime) || providedTime < 5){
-        providedTime = 20;
-    }else if(providedTime > 120){
-        providedTime = 120;
-    }
-    timeField.value = String(Math.round(providedTime));
-    timeLabel.appendChild(timeField);
-
-    var shortLabel = document.createElement('label');
-    shortLabel.textContent = t('shortAnswersLabel');
-    var shortField = document.createElement('input');
-    shortField.id = 'short' + String(num);
-    shortField.type = 'text';
-    shortField.placeholder = 'madrid|barcelona';
-    shortField.value = (data && Array.isArray(data.acceptedAnswers)) ? data.acceptedAnswers.join('|') : '';
-    shortLabel.appendChild(shortField);
-
-    var numLabel = document.createElement('label');
-    numLabel.textContent = t('numericAnswerLabel');
-    var numField = document.createElement('input');
-    numField.id = 'num' + String(num);
-    numField.type = 'text';
-    numField.placeholder = '3,14';
-    numField.value = (data && data.numericAnswer !== undefined && data.numericAnswer !== null) ? String(data.numericAnswer) : '';
-    numLabel.appendChild(numField);
-
-    var tolLabel = document.createElement('label');
-    tolLabel.textContent = t('numericToleranceLabel');
-    var tolField = document.createElement('input');
-    tolField.id = 'tol' + String(num);
-    tolField.type = 'text';
-    tolField.placeholder = '0,1';
-    tolField.value = (data && data.tolerance !== undefined && data.tolerance !== null) ? String(data.tolerance) : '0';
-    tolLabel.appendChild(tolField);
-
-    var initialType = (data && data.type) ? data.type : 'quiz';
-    typeSelect.value = initialType;
-    var initialCorrectAnswers = data && Array.isArray(data.correctAnswers) ? data.correctAnswers : [];
-    multiCheckboxes.forEach(function(cb){
-        cb.checked = initialCorrectAnswers.indexOf(parseInt(cb.value, 10)) !== -1;
-    });
-    function refreshTypeDependent(){
-        var currentType = typeSelect.value;
-        var showMultiple = currentType === 'multiple';
-        var showTf = currentType === 'true-false';
-        var showShort = currentType === 'short-answer';
-        var showNumeric = currentType === 'numeric';
-        var showPoll = currentType === 'poll';
-        multiCorrect.classList.toggle('hidden', !showMultiple);
-        correctLabel.style.display = (showMultiple || showShort || showNumeric || showPoll) ? 'none' : '';
-        correctField.style.display = (showMultiple || showShort || showNumeric || showPoll) ? 'none' : '';
-
-        answersWrap.style.display = (showShort || showNumeric) ? 'none' : '';
-
-        shortLabel.style.display = showShort ? '' : 'none';
-        numLabel.style.display = showNumeric ? '' : 'none';
-        tolLabel.style.display = showNumeric ? '' : 'none';
-
-        answerGroups.forEach(function(group, idx){
-            if(showTf && idx >= 2){
-                group.label.style.display = 'none';
-                group.input.value = '';
-            }else{
-                group.label.style.display = '';
-            }
-        });
-
-        if(showShort || showNumeric){
-            answerGroups.forEach(function(group){ group.input.value = ''; });
-        }
-    }
-    typeSelect.addEventListener('change', refreshTypeDependent);
-    refreshTypeDependent();
-
-    var imageLabel = document.createElement('label');
-    imageLabel.textContent = t('imageLabel');
-    var imageField = document.createElement('input');
-    imageField.id = 'img' + String(num);
-    imageField.type = 'text';
-    imageField.placeholder = t('urlPlaceholder');
-    imageField.value = (data && data.image) || '';
-
-    var imagePreview = document.createElement('div');
-    imagePreview.className = 'image-preview';
-    var imageTag = document.createElement('img');
-    imageTag.alt = 'Vista previa';
-    imageTag.className = 'image-thumb hidden';
-    imagePreview.appendChild(imageTag);
-
-    var videoLabel = document.createElement('label');
-    videoLabel.textContent = t('videoLabel');
-    var videoField = document.createElement('input');
-    videoField.id = 'vid' + String(num);
-    videoField.type = 'text';
-    videoField.placeholder = t('urlPlaceholder');
-    videoField.value = (data && data.video) || '';
-    var videoPreview = document.createElement('div');
-    videoPreview.className = 'video-preview';
-    var videoTag = document.createElement('video');
-    videoTag.controls = true;
-    videoTag.className = 'video-thumb hidden';
-    var videoFrame = document.createElement('iframe');
-    videoFrame.className = 'video-thumb hidden';
-    videoFrame.allowFullscreen = true;
-    videoFrame.loading = 'lazy';
-    videoPreview.appendChild(videoTag);
-    videoPreview.appendChild(videoFrame);
-
-    imageField.addEventListener('input', function(){
-        updateImagePreview(imageField, imageTag);
-    });
-    // set initial preview
-    updateImagePreview(imageField, imageTag);
-    videoField.addEventListener('input', function(){
-        updateVideoPreview(videoField, videoTag, videoFrame);
-    });
-    updateVideoPreview(videoField, videoTag, videoFrame);
-
-    card.appendChild(head);
-    card.appendChild(questionLabel);
-    card.appendChild(questionField);
-    card.appendChild(typeRow);
-    card.appendChild(answersWrap);
-    card.appendChild(multiCorrect);
-    card.appendChild(correctLabel);
-    card.appendChild(correctField);
-    card.appendChild(timeLabel);
-    card.appendChild(shortLabel);
-    card.appendChild(numLabel);
-    card.appendChild(tolLabel);
-    card.appendChild(imageLabel);
-    card.appendChild(imageField);
-    card.appendChild(imagePreview);
-    card.appendChild(videoLabel);
-    card.appendChild(videoField);
-    card.appendChild(videoPreview);
-
+    applyTypeRules(card);
     return card;
-}
-
-function updateImagePreview(inputEl, imgEl){
-    if(!inputEl || !imgEl) return;
-    var url = (inputEl.value || '').trim();
-    if(!url){
-        imgEl.classList.add('hidden');
-        imgEl.src = '';
-        return;
-    }
-    // Usar la misma normalización que en la exportación y el juego. Los SVG
-    // introducidos como data URL pueden contener #, comillas o markup sin
-    // codificar, lo que rompe el atributo src si se asignan directamente.
-    imgEl.src = normalizeSvgDataUrlForImg(url);
-    imgEl.onload = function(){ imgEl.classList.remove('hidden'); };
-    imgEl.onerror = function(){ imgEl.classList.add('hidden'); };
-}
-
-function updateVideoPreview(inputEl, videoEl, iframeEl){
-    if(!inputEl || !videoEl) return;
-    var url = (inputEl.value || '').trim();
-    if(!url){
-        videoEl.classList.add('hidden');
-        videoEl.removeAttribute('src');
-        videoEl.load();
-        if(iframeEl){
-            iframeEl.classList.add('hidden');
-            iframeEl.removeAttribute('src');
-        }
-        return;
-    }
-    var ytId = parseYouTubeId(url);
-    if(ytId && iframeEl){
-        videoEl.classList.add('hidden');
-        videoEl.removeAttribute('src');
-        videoEl.pause();
-        iframeEl.src = 'https://www.youtube-nocookie.com/embed/' + ytId;
-        iframeEl.classList.remove('hidden');
-    }else{
-        if(iframeEl){
-            iframeEl.classList.add('hidden');
-            iframeEl.removeAttribute('src');
-        }
-        videoEl.src = url;
-        videoEl.load();
-        videoEl.onloadeddata = function(){ videoEl.classList.remove('hidden'); };
-        videoEl.onerror = function(){ videoEl.classList.add('hidden'); };
-    }
 }
 
 function parseYouTubeId(url){
@@ -844,49 +582,68 @@ function parseYouTubeId(url){
 }
 
 function addQuestion(prefill){
-    questionNum += 1;
-    var questionsDiv = document.getElementById('allQuestions');
-    var card = buildQuestionCard(questionNum, prefill);
-    questionsDiv.appendChild(card);
-    card.querySelector('.question').focus();
-}
-
-function renumberQuestions(){
-    var cards = document.querySelectorAll('.question-card');
-    questionNum = 0;
-    cards.forEach(function(card, idx){
-        var num = idx + 1;
-        questionNum = num;
-        card.setAttribute('data-question', String(num));
-        var pill = card.querySelector('.pill');
-        if(pill){
-            pill.textContent = (lang === 'en' ? 'Question ' : (lang === 'ca' ? 'Pregunta ' : 'Pregunta ')) + String(num);
-        }
-        // update ids to keep order consistent
-        var qField = card.querySelector('.question');
-        if(qField) qField.id = 'q' + num;
-        ['a1','a2','a3','a4'].forEach(function(suffix, idxAns){
-            var inp = card.querySelector('input[id$="'+suffix+'"]');
-            if(inp) inp.id = num + suffix;
-        });
-        var typeSelect = card.querySelector('.question-type');
-        if(typeSelect) typeSelect.id = 'type' + num;
-        var correct = card.querySelector('.correct');
-        if(correct) correct.id = 'correct' + num;
-        var shortField = card.querySelector('input[id^="short"]');
-        if(shortField) shortField.id = 'short' + num;
-        var numField = card.querySelector('input[id^="num"]');
-        if(numField) numField.id = 'num' + num;
-        var tolField = card.querySelector('input[id^="tol"]');
-        if(tolField) tolField.id = 'tol' + num;
-        var timeField = card.querySelector('input[id^="time"]');
-        if(timeField) timeField.id = 'time' + num;
-        var img = card.querySelector('input[id^="img"]');
-        if(img) img.id = 'img' + num;
-        var vid = card.querySelector('input[id^="vid"]');
-        if(vid) vid.id = 'vid' + num;
+    questionCards.push(makeQuestionCard(prefill));
+    Vue.nextTick(function(){
+        var fields = document.querySelectorAll('#allQuestions .question');
+        if(fields.length) fields[fields.length - 1].focus();
     });
 }
+
+Vue.createApp({
+    template: '#questions-tpl',
+    data: function(){
+        return {
+            cards: questionCards,
+            ui: ui,
+            typeOptions: [
+                ['quiz', 'questionTypeSingle'], ['multiple', 'questionTypeMultiple'],
+                ['true-false', 'questionTypeTf'], ['short-answer', 'questionTypeShort'],
+                ['numeric', 'questionTypeNumeric'], ['poll', 'questionTypePoll']
+            ]
+        };
+    },
+    methods: {
+        t: function(key){
+            return t(key);
+        },
+        pillText: function(num){
+            return (this.ui.lang === 'en' ? 'Question ' : 'Pregunta ') + num;
+        },
+        removeCard: function(index){
+            var l = this.ui.lang;
+            var msg = l === 'en' ? 'Delete this question?' : (l === 'va' ? 'Eliminar esta pregunta?' : (l === 'ca' ? 'Eliminar aquesta pregunta?' : '¿Eliminar esta pregunta?'));
+            if(window.confirm(msg)){
+                this.cards.splice(index, 1);
+            }
+        },
+        onTypeChange: function(card){
+            applyTypeRules(card);
+        },
+        showCorrect: function(card){
+            return ['multiple', 'short-answer', 'numeric', 'poll'].indexOf(card.type) === -1;
+        },
+        imageSrc: function(card){
+            var url = (card.image || '').trim();
+            // Misma normalización que en el juego: un SVG en data URL con #,
+            // comillas o markup sin codificar rompe el src.
+            return url ? normalizeSvgDataUrlForImg(url) : null;
+        },
+        youTubeEmbed: function(card){
+            var id = parseYouTubeId((card.video || '').trim());
+            return id ? 'https://www.youtube-nocookie.com/embed/' + id : null;
+        },
+        videoSrc: function(card){
+            var url = (card.video || '').trim();
+            return (url && !parseYouTubeId(url)) ? url : null;
+        },
+        onImageInput: function(card){
+            if(!(card.image || '').trim()) card.imageOk = false;
+        },
+        onVideoInput: function(card){
+            if(!(card.video || '').trim() || parseYouTubeId(card.video.trim())) card.videoOk = false;
+        }
+    }
+}).mount('#allQuestions');
 
 //Called when user wants to exit quiz creator
 function cancelQuiz(){
@@ -969,13 +726,11 @@ async function loadQuiz(id){
         if(document.getElementById('description')){
             document.getElementById('description').value = quiz.description || '';
         }
-        var container = document.getElementById('allQuestions');
-        container.innerHTML = '';
-        questionNum = 0;
+        questionCards.splice(0);
         (quiz.questions || []).forEach(function(q){
             addQuestion(q);
         });
-        if(questionNum === 0){
+        if(questionCards.length === 0){
             addQuestion();
         }
         var subtitle = document.getElementById('subtitle');
@@ -1051,10 +806,10 @@ function fetchKnownTags(){
 
 var langSelector = document.getElementById('lang-select');
 if(langSelector){
-    langSelector.value = lang;
+    langSelector.value = ui.lang;
     langSelector.addEventListener('change', function(){
-        lang = langSelector.value;
-        EduhootLang.persist(lang);
+        ui.lang = langSelector.value;
+        EduhootLang.persist(ui.lang);
         applyI18n();
     });
 }
