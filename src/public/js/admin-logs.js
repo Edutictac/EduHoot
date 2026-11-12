@@ -1,28 +1,15 @@
 (function(){
-  var errorEl = document.getElementById('logs-error');
-  var loginFallbackBtn = document.getElementById('login-fallback');
-  var loginStatus = document.getElementById('login-status');
+  // Subfase B: el que es pinta (configuració, filtres, taula, detall i
+  // missatges) és estat d'una app de Vue; la sessió i les crides no canvien.
+  var view = Vue.reactive({
+    error: '', loginStatus: '', fallbackVisible: false,
+    settings: { level: 'error', cappedMb: '' }, settingsStatus: '',
+    filters: { level: '', tag: '', q: '', pin: '' },
+    rows: [],
+    detail: { title: 'Detalle del log', fields: [], stack: '' }
+  });
   var accountChip = document.querySelector('edutictac-account');
-
-  var levelSelect = document.getElementById('logs-level-select');
-  var cappedMbInput = document.getElementById('logs-capped-mb');
-  var settingsSaveBtn = document.getElementById('logs-settings-save');
-  var settingsStatus = document.getElementById('logs-settings-status');
-
-  var filterLevel = document.getElementById('logs-filter-level');
-  var filterTag = document.getElementById('logs-filter-tag');
-  var filterQ = document.getElementById('logs-filter-q');
-  var filterPin = document.getElementById('logs-filter-pin');
-  var filterApplyBtn = document.getElementById('logs-filter-apply');
-  var filterRefreshBtn = document.getElementById('logs-filter-refresh');
-  var exportCsvBtn = document.getElementById('logs-export-csv');
-  var exportNdjsonBtn = document.getElementById('logs-export-ndjson');
-  var tbody = document.getElementById('logs-tbody');
-  var detailModal = document.getElementById('logs-detail-modal');
-  var detailModalTitle = document.getElementById('logs-detail-modal-title');
-  var detailModalMeta = document.getElementById('logs-detail-modal-meta');
-  var detailModalStack = document.getElementById('logs-detail-modal-stack');
-  var currentRows = [];
+  var detailModal = null;
 
   var authState = { user: null, checked: false };
   var authentikAuthEnabled = false;
@@ -35,7 +22,7 @@
   }
 
   function setLoginStatus(msg){
-    if(loginStatus) loginStatus.textContent = msg || '';
+    view.loginStatus = msg || '';
   }
 
   // Puente de sesión con el xip de EduTicTac/Authentik. Misma lógica que
@@ -97,9 +84,8 @@
   }
 
   function updateFallbackButton(){
-    if(!loginFallbackBtn) return;
     var chipMounted = document.documentElement.classList.contains('has-account-chip');
-    loginFallbackBtn.style.display = (authentikAuthEnabled && !authState.user && !chipMounted) ? '' : 'none';
+    view.fallbackVisible = authentikAuthEnabled && !authState.user && !chipMounted;
   }
 
   function fetchMeLite(){
@@ -137,7 +123,7 @@
   }
 
   function showError(msg){
-    if(errorEl) errorEl.textContent = msg || '';
+    view.error = msg || '';
   }
 
   function fetchJson(url, opts){
@@ -165,8 +151,8 @@
       .then(function(payload){
         var data = payload && payload.data;
         if(!data) return;
-        if(levelSelect) levelSelect.value = data.level;
-        if(cappedMbInput) cappedMbInput.value = Math.round(data.cappedSizeBytes / (1024 * 1024));
+        view.settings.level = data.level;
+        view.settings.cappedMb = Math.round(data.cappedSizeBytes / (1024 * 1024));
       })
       .catch(function(err){
         var authMsg = describeAuthError(err);
@@ -175,54 +161,43 @@
   }
 
   function saveSettings(){
-    if(settingsStatus) settingsStatus.textContent = 'Guardando...';
-    var body = {};
-    if(levelSelect) body.level = levelSelect.value;
-    if(cappedMbInput && cappedMbInput.value) body.cappedSizeBytes = Math.round(Number(cappedMbInput.value) * 1024 * 1024);
+    view.settingsStatus = 'Guardando...';
+    var body = { level: view.settings.level };
+    if(view.settings.cappedMb !== '' && view.settings.cappedMb !== null) body.cappedSizeBytes = Math.round(Number(view.settings.cappedMb) * 1024 * 1024);
     fetchJson('/api/admin/settings/logging', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
     })
       .then(function(){
-        if(settingsStatus) settingsStatus.textContent = 'Guardado.';
-        setTimeout(function(){ if(settingsStatus) settingsStatus.textContent = ''; }, 2000);
+        view.settingsStatus = 'Guardado.';
+        setTimeout(function(){ view.settingsStatus = ''; }, 2000);
       })
       .catch(function(err){
-        if(settingsStatus) settingsStatus.textContent = (err && err.message) || 'Error al guardar.';
+        view.settingsStatus = (err && err.message) || 'Error al guardar.';
       });
   }
 
-  function escapeHtml(str){
-    return String(str == null ? '' : str).replace(/[&<>"']/g, function(ch){
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', '\'': '&#39;' }[ch];
-    });
+  function formatDate(value){
+    return value ? new Date(value).toLocaleString() : '';
   }
 
   function openLogDetail(row){
     if(!detailModal) return;
-    if(detailModalTitle) detailModalTitle.textContent = row.tag ? ('Detalle: ' + row.tag) : 'Detalle del log';
-    if(detailModalMeta){
-      var date = row.createdAt ? new Date(row.createdAt).toLocaleString() : '';
-      var fields = [
-        ['Fecha', date],
+    var meta = row.meta || {};
+    view.detail = {
+      title: row.tag ? ('Detalle: ' + row.tag) : 'Detalle del log',
+      fields: [
+        ['Fecha', formatDate(row.createdAt)],
         ['Nivel', row.level],
         ['Tag', row.tag],
         ['Mensaje', row.message],
         ['PIN', row.pin],
         ['hostId', row.hostId],
         ['playerId', row.playerId]
-      ];
-      detailModalMeta.innerHTML = fields
-        .filter(function(f){ return f[1] !== null && f[1] !== undefined && f[1] !== ''; })
-        .map(function(f){ return '<dt>' + escapeHtml(f[0]) + '</dt><dd>' + escapeHtml(f[1]) + '</dd>'; })
-        .join('');
-    }
-    if(detailModalStack){
-      var meta = row.meta || {};
-      var text = meta.stack || meta.error || (Object.keys(meta).length ? JSON.stringify(meta, null, 2) : 'Sin detalle adicional.');
-      detailModalStack.textContent = text;
-    }
+      ].filter(function(f){ return f[1] !== null && f[1] !== undefined && f[1] !== ''; }),
+      stack: meta.stack || meta.error || (Object.keys(meta).length ? JSON.stringify(meta, null, 2) : 'Sin detalle adicional.')
+    };
     if(typeof detailModal.showModal === 'function'){
       detailModal.showModal();
     }
@@ -232,40 +207,13 @@
     return !!(row.meta && (row.meta.stack || row.meta.error || Object.keys(row.meta).length));
   }
 
-  function renderLogs(rows){
-    if(!tbody) return;
-    currentRows = rows;
-    tbody.innerHTML = '';
-    rows.forEach(function(row, index){
-      var tr = document.createElement('tr');
-      var date = row.createdAt ? new Date(row.createdAt).toLocaleString() : '';
-      tr.innerHTML =
-        '<td>' + escapeHtml(date) + '</td>' +
-        '<td class="level-' + escapeHtml(row.level) + '">' + escapeHtml(row.level) + '</td>' +
-        '<td>' + escapeHtml(row.tag) + '</td>' +
-        '<td>' + escapeHtml(row.message) + '</td>' +
-        '<td>' + escapeHtml(row.pin) + '</td>' +
-        '<td>' + escapeHtml(row.hostId) + '</td>' +
-        '<td>' + escapeHtml(row.playerId) + '</td>' +
-        '<td class="logs-detail-btn-cell"></td>';
-      if(hasDetail(row)){
-        var btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'logs-detail-btn';
-        btn.textContent = 'Ver';
-        btn.addEventListener('click', function(){ openLogDetail(currentRows[index]); });
-        tr.lastElementChild.appendChild(btn);
-      }
-      tbody.appendChild(tr);
-    });
-  }
-
   function buildFilterParams(){
     var params = new URLSearchParams();
-    if(filterLevel && filterLevel.value) params.set('level', filterLevel.value);
-    if(filterTag && filterTag.value) params.set('tag', filterTag.value);
-    if(filterQ && filterQ.value) params.set('q', filterQ.value);
-    if(filterPin && filterPin.value) params.set('pin', filterPin.value);
+    var f = view.filters;
+    if(f.level) params.set('level', f.level);
+    if(f.tag) params.set('tag', f.tag);
+    if(f.q) params.set('q', f.q);
+    if(f.pin) params.set('pin', f.pin);
     return params;
   }
 
@@ -279,7 +227,7 @@
     var params = buildFilterParams();
     fetchJson('/api/admin/logs?' + params.toString())
       .then(function(payload){
-        renderLogs((payload && payload.data) || []);
+        view.rows = (payload && payload.data) || [];
         showError('');
         updateFallbackButton();
       })
@@ -290,6 +238,21 @@
         updateFallbackButton();
       });
   }
+
+  Vue.createApp({
+    template: '#logs-tpl',
+    data: function(){ return view; },
+    methods: {
+      login: loginWithAuthentik,
+      saveSettings: saveSettings,
+      loadLogs: loadLogs,
+      download: downloadLogs,
+      formatDate: formatDate,
+      hasDetail: hasDetail,
+      openDetail: openLogDetail
+    },
+    mounted: function(){ detailModal = this.$refs.detailModal; }
+  }).mount('#logs-app');
 
   handleAuthentikReturnParam();
   loadSettings();
@@ -304,23 +267,4 @@
       syncCentralSession();
     })
     .catch(function(){});
-
-  if(loginFallbackBtn){
-    loginFallbackBtn.addEventListener('click', loginWithAuthentik);
-  }
-  if(settingsSaveBtn){
-    settingsSaveBtn.addEventListener('click', saveSettings);
-  }
-  if(filterApplyBtn){
-    filterApplyBtn.addEventListener('click', loadLogs);
-  }
-  if(filterRefreshBtn){
-    filterRefreshBtn.addEventListener('click', loadLogs);
-  }
-  if(exportCsvBtn){
-    exportCsvBtn.addEventListener('click', function(){ downloadLogs('csv'); });
-  }
-  if(exportNdjsonBtn){
-    exportNdjsonBtn.addEventListener('click', function(){ downloadLogs('ndjson'); });
-  }
 })();
