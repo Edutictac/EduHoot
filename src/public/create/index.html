@@ -119,167 +119,164 @@
                 </div>
             </div>
 
+            <div id="tools-app"></div>
+            <template id="tools-tpl">
             <details id="ia-box" class="panel">
                 <summary class="panel-summary">
                     <div class="panel-header">
                         <div>
-                            <p class="eyebrow" data-i18n="aiEyebrow">Ayuda IA</p>
-                            <h3 data-i18n="aiTitle">Generador IA (CSV)</h3>
-                            <p class="subtext" data-i18n="aiDesc">Rellena los campos y copia el prompt para generar tu cuestionario por IA.</p>
+                            <p class="eyebrow">{{ t('aiEyebrow') }}</p>
+                            <h3>{{ t('aiTitle') }}</h3>
+                            <p class="subtext">{{ t('aiDesc') }}</p>
                         </div>
                         <span class="panel-toggle">
-                            <span class="panel-toggle__label panel-toggle__label--closed" data-i18n="panelExpand">Desplegar</span>
-                            <span class="panel-toggle__label panel-toggle__label--open" data-i18n="panelCollapse">Ocultar</span>
+                            <span class="panel-toggle__label panel-toggle__label--closed">{{ t('panelExpand') }}</span>
+                            <span class="panel-toggle__label panel-toggle__label--open">{{ t('panelCollapse') }}</span>
                             <span class="panel-toggle__chevron" aria-hidden="true"></span>
                         </span>
                     </div>
                 </summary>
 
                 <div class="ia-grid">
-                    <label data-i18n="iaNameLabel">Nombre del quiz (opcional)
-                        <input id="ia-name" type="text" placeholder="Nombre para guardar">
+                    <label>{{ t('iaNameLabel') }}
+                        <input id="ia-name" type="text" :placeholder="t('namePlaceholder')" v-model="ia.name">
                     </label>
-                    <label data-i18n="iaLevel">Nivel del alumnado
-                        <input id="ia-nivel" type="text" placeholder="Ej: 2º ESO">
+                    <label>{{ t('iaLevel') }}
+                        <input id="ia-nivel" type="text" :placeholder="t('iaLevelPlaceholder')" v-model="ia.nivel">
                     </label>
-                    <label data-i18n="iaTopic">Tema del cuestionario
-                        <input id="ia-tema" type="text" placeholder="Ej: Energía y calor">
+                    <label>{{ t('iaTopic') }}
+                        <input id="ia-tema" type="text" :placeholder="t('iaTopicPlaceholder')" v-model="ia.tema" :disabled="ia.useDocs">
                     </label>
 
-                    <label data-i18n="iaLang">Idioma del cuestionario
-                        <select id="ia-idioma">
-                            <option value="Español" data-i18n="optSpanish">Español</option>
-                            <option value="Catalán" data-i18n="optCatalan">Catalán</option>
-                            <option value="Inglés" data-i18n="optEnglish">Inglés</option>
-                            <option value="otro" data-i18n="optOther">Otro</option>
+                    <label>{{ t('iaLang') }}
+                        <select id="ia-idioma" v-model="ia.idioma" @change="onIdioma">
+                            <option value="Español">{{ t('optSpanish') }}</option>
+                            <option value="Catalán">{{ t('optCatalan') }}</option>
+                            <option value="Inglés">{{ t('optEnglish') }}</option>
+                            <option value="otro">{{ t('optOther') }}</option>
                         </select>
-                        <input id="ia-idioma-custom" class="hidden" type="text" placeholder="Otro idioma">
+                        <input id="ia-idioma-custom" :class="{ hidden: ia.idioma !== 'otro' }" type="text" :placeholder="t('iaLangCustomPlaceholder')" v-model="ia.idiomaCustom">
                     </label>
-                    <label data-i18n="iaNum">Número de preguntas
-                        <input id="ia-num" type="number" min="1" max="50" value="10">
+                    <label>{{ t('iaNum') }}
+                        <input id="ia-num" type="number" min="1" max="50" v-model="ia.num">
                     </label>
-                    <label data-i18n="iaExtra">Instrucciones adicionales
-                        <textarea id="ia-extra" rows="2" placeholder="Tono, nivel cognitivo, formato..."></textarea>
+                    <label>{{ t('iaExtra') }}
+                        <textarea id="ia-extra" rows="2" :placeholder="t('iaExtraPlaceholder')" v-model="ia.extra"></textarea>
                     </label>
                 </div>
 
                 <div class="subpanel">
                     <label class="checkbox-inline">
-                        <input type="checkbox" id="ia-use-docs">
-                        <span data-i18n="iaUseDocs">Usar documentos como conocimiento exclusivo</span>
+                        <input type="checkbox" id="ia-use-docs" v-model="ia.useDocs" @change="onUseDocs">
+                        <span>{{ t('iaUseDocs') }}</span>
                     </label>
-                    <label class="checkbox-inline hidden" id="ia-gen-svg-wrap">
-                        <input type="checkbox" id="ia-gen-svg">
-                        <span data-i18n="iaGenSvg">Pedir a la IA imágenes SVG</span>
+                    <label class="checkbox-inline" id="ia-gen-svg-wrap" :class="{ hidden: !auth.user }">
+                        <input type="checkbox" id="ia-gen-svg" v-model="ia.genSvg" @change="onGenSvg">
+                        <span>{{ t('iaGenSvg') }}</span>
                     </label>
-                    <p id="ia-docs-hint" class="subtext hidden" data-i18n="iaDocsHint">Cuando ejecutes este prompt en la IA, te pedirá que adjuntes los documentos. No subas nada aquí: adjunta los archivos allí y las preguntas se generarán exclusivamente a partir de esos documentos.</p>
+                    <p id="ia-docs-hint" class="subtext" :class="{ hidden: !ia.useDocs }">{{ t('iaDocsHint') }}</p>
                 </div>
 
                 <div class="subpanel">
-                    <p class="eyebrow" data-i18n="iaTypesLabel">Tipos de pregunta</p>
-                    <label class="checkbox-inline">
-                        <input type="checkbox" id="ia-type-quiz" checked>
-                        <span data-i18n="iaTypeQuiz">Quiz (1 correcta)</span>
-                    </label>
-                    <label class="checkbox-inline">
-                        <input type="checkbox" id="ia-type-multiple">
-                        <span data-i18n="iaTypeMultiple">Respuesta Múltiple</span>
-                    </label>
-                    <label class="checkbox-inline">
-                        <input type="checkbox" id="ia-type-tf">
-                        <span data-i18n="iaTypeTf">Verdadero / Falso</span>
-                    </label>
-                    <label class="checkbox-inline">
-                        <input type="checkbox" id="ia-type-short">
-                        <span data-i18n="iaTypeShort">Respuesta corta</span>
-                    </label>
-                    <label class="checkbox-inline">
-                        <input type="checkbox" id="ia-type-numeric">
-                        <span data-i18n="iaTypeNumeric">Numérica</span>
-                    </label>
+                    <p class="eyebrow">{{ t('iaTypesLabel') }}</p>
+                    <label class="checkbox-inline"><input type="checkbox" id="ia-type-quiz" v-model="ia.types.quiz"> <span>{{ t('iaTypeQuiz') }}</span></label>
+                    <label class="checkbox-inline"><input type="checkbox" id="ia-type-multiple" v-model="ia.types.multiple"> <span>{{ t('iaTypeMultiple') }}</span></label>
+                    <label class="checkbox-inline"><input type="checkbox" id="ia-type-tf" v-model="ia.types.tf"> <span>{{ t('iaTypeTf') }}</span></label>
+                    <label class="checkbox-inline"><input type="checkbox" id="ia-type-short" v-model="ia.types.short"> <span>{{ t('iaTypeShort') }}</span></label>
+                    <label class="checkbox-inline"><input type="checkbox" id="ia-type-numeric" v-model="ia.types.numeric"> <span>{{ t('iaTypeNumeric') }}</span></label>
                 </div>
 
                 <div class="actions-row">
-                    <button id="ia-generate" type="button" data-i18n="btnGenPrompt">Generar prompt</button>
-                    <button id="ia-copy" type="button" class="secondary" data-i18n="btnCopyPrompt">Copiar prompt</button>
+                    <button id="ia-generate" type="button" @click="generatePrompt">{{ t('btnGenPrompt') }}</button>
+                    <button id="ia-copy" type="button" class="secondary" @click="copyPrompt">{{ t('btnCopyPrompt') }}</button>
                 </div>
 
                 <ol class="ia-steps" aria-label="Pasos">
-                    <li data-i18n="iaStep1">Pulsa <strong>Generar prompt</strong> y luego <strong>Copiar prompt</strong>.</li>
-                    <li data-i18n="iaStep2">Abre una IA (ChatGPT, Gemini, Copilot…) y pega el prompt en el chat. Si activaste "Usar documentos", adjunta tus archivos allí.</li>
-                    <li data-i18n="iaStep3">La IA te devolverá un bloque de texto CSV. Cópialo entero.</li>
-                    <li data-i18n="iaStep4">Pégalo en el cuadro de abajo y pulsa <strong>Importar CSV en el cuestionario</strong>.</li>
+                    <li>{{ t('iaStep1') }}</li>
+                    <li>{{ t('iaStep2') }}</li>
+                    <li>{{ t('iaStep3') }}</li>
+                    <li>{{ t('iaStep4') }}</li>
                 </ol>
 
-                <pre id="ia-prompt" data-i18n="promptPlaceholder">El prompt aparecerá aquí...</pre>
+                <pre id="ia-prompt">{{ ia.prompt || t('promptPlaceholder') }}</pre>
 
-                <label data-i18n="iaCsvLabel">Contenido CSV generado por la IA
-                    <textarea id="ia-csv" rows="6" placeholder="Pega aquí el CSV devuelto por la IA"></textarea>
+                <label>{{ t('iaCsvLabel') }}
+                    <textarea id="ia-csv" rows="6" :placeholder="t('iaCsvPlaceholder')" v-model="ia.csv"></textarea>
                 </label>
-                <input id="ia-csv-file" type="file" accept=".csv,text/csv" class="hidden">
+                <input id="ia-csv-file" ref="iaCsvFile" type="file" accept=".csv,text/csv" class="hidden" @change="onCsvFile">
 
                 <div class="actions-row">
-                    <button id="ia-open" class="btn btn-ghost" type="button" data-i18n="btnOpenCsv">Abrir CSV</button>
-                    <button id="ia-download" class="btn btn-ghost btn-with-icon" type="button">
-                        <span data-i18n="btnDownloadCsv">Descargar CSV</span>
-                        
+                    <button id="ia-open" class="btn btn-ghost" type="button" @click="openCsv">{{ t('btnOpenCsv') }}</button>
+                    <button id="ia-download" class="btn btn-ghost btn-with-icon" type="button" @click="downloadCsv">
+                        <span>{{ t('btnDownloadCsv') }}</span>
                     </button>
-                    <button id="ia-preview" class="btn btn-ghost" type="button" data-i18n="btnPreviewCsv">Vista previa</button>
+                    <button id="ia-preview" class="btn btn-ghost" type="button" @click="preview">{{ t('btnPreviewCsv') }}</button>
                 </div>
 
-                <div id="ia-preview-box" class="subpanel hidden">
-                    <p class="eyebrow" data-i18n="previewTitle">Vista previa</p>
-                    <div id="ia-preview-content" class="ia-preview"></div>
+                <div id="ia-preview-box" class="subpanel" :class="{ hidden: !ia.preview.visible }">
+                    <p class="eyebrow">{{ t('previewTitle') }}</p>
+                    <div id="ia-preview-content" class="ia-preview">
+                        <template v-if="ia.preview.questions.length">
+                            <div v-for="(q, qi) in ia.preview.questions" :key="qi" class="ia-preview__q">
+                                <div class="ia-preview__qtitle">{{ q.title }}</div>
+                                <div class="ia-preview__answers">
+                                    <div v-for="(a, ai) in q.answers" :key="ai" class="ia-preview__answer" :class="{ 'is-correct': a.correct }"><span class="ia-preview__bullet">{{ a.correct ? '✓' : '•' }}</span><span class="ia-preview__text">{{ a.text }}</span></div>
+                                </div>
+                            </div>
+                        </template>
+                        <template v-else>{{ t('alertPasteCsv') }}</template>
+                    </div>
                 </div>
 
                 <div class="actions-row">
-                    <button id="ia-upload" type="button" data-i18n="btnImportIa">Importar CSV en el cuestionario</button>
-                    <button id="ia-edit" class="btn btn-ghost" type="button" data-i18n="btnEditCreator" disabled>Editar en creador</button>
+                    <button id="ia-upload" type="button" @click="uploadIa">{{ t('btnImportIa') }}</button>
+                    <button id="ia-edit" class="btn btn-ghost" type="button" :disabled="!ia.lastUploadedId" @click="editIaQuiz">{{ t('btnEditCreator') }}</button>
                 </div>
-                <p id="ia-status"></p>
+                <p id="ia-status">{{ ia.status.text }}<button v-if="ia.status.playId" class="btn btn-primary" style="margin-left: 8px" @click="startGame(ia.status.playId)">{{ t('play') }}</button></p>
             </details>
 
             <details id="csv-import" class="panel">
                 <summary class="panel-summary">
                     <div class="panel-header">
                         <div>
-                            <p class="eyebrow" data-i18n="importEyebrow">Importación</p>
-                            <h3 data-i18n="importTitle">Importar cuestionario (CSV o Kahoot público)</h3>
-                            <p class="subtext" data-i18n="importDesc">Sube un archivo CSV con tus preguntas para guardarlo en tu biblioteca.</p>
+                            <p class="eyebrow">{{ t('importEyebrow') }}</p>
+                            <h3>{{ t('importTitle') }}</h3>
+                            <p class="subtext">{{ t('importDesc') }}</p>
                         </div>
                         <span class="panel-toggle">
-                            <span class="panel-toggle__label panel-toggle__label--closed" data-i18n="panelExpand">Desplegar</span>
-                            <span class="panel-toggle__label panel-toggle__label--open" data-i18n="panelCollapse">Ocultar</span>
+                            <span class="panel-toggle__label panel-toggle__label--closed">{{ t('panelExpand') }}</span>
+                            <span class="panel-toggle__label panel-toggle__label--open">{{ t('panelCollapse') }}</span>
                             <span class="panel-toggle__chevron" aria-hidden="true"></span>
                         </span>
                     </div>
                 </summary>
-            <form id="csv-form">
-                <input id="csv-file" type="file" accept=".csv,text/csv" required>
-                <input id="csv-name" type="text" placeholder="Nombre del quiz (opcional)">
-                <button type="submit" data-i18n="btnUploadCsv">Subir CSV</button>
+            <form id="csv-form" ref="csvForm" @submit.prevent="uploadCsv">
+                <input id="csv-file" ref="csvFile" type="file" accept=".csv,text/csv" required>
+                <input id="csv-name" type="text" :placeholder="t('namePlaceholder')" v-model="imp.csvName">
+                <button type="submit">{{ t('btnUploadCsv') }}</button>
             </form>
-            <p id="csv-status"></p>
+            <p id="csv-status">{{ imp.csvStatus.text }}<button v-if="imp.csvStatus.playId" @click="startGame(imp.csvStatus.playId)">{{ t('startNow') || t('play') }}</button></p>
             <div class="split-import">
                 <div>
-                    <h3 data-i18n="kahootTitle">Importar Kahoot público</h3>
-                    
-                    <p class="subtext" data-i18n="kahootHelp">Pega la URL o el ID de un Kahoot público.</p>
-                    <p class="subtext warning-legal" data-i18n="kahootWarning">⚠️ Esta función está diseñada para importar tus propios Kahoots. EduHoot no se hace responsable del mal uso de esta funcionalidad ni de posibles infracciones de derechos de autor.</p>
+                    <h3>{{ t('kahootTitle') }}</h3>
+
+                    <p class="subtext">{{ t('kahootHelp') }}</p>
+                    <p class="subtext warning-legal">{{ t('kahootWarning') }}</p>
                     <br>
-                    <form id="kahoot-form">
-                        <input id="kahoot-url" type="text" inputmode="url" autocomplete="off" placeholder="https://create.kahoot.it/details/..." required>
-                        <select id="kahoot-visibility">
-                            <option value="public" data-i18n="visibilityPublic">Público</option>
-                            <option value="unlisted" data-i18n="visibilityUnlisted">Por enlace/ID</option>
-                            <option value="private" data-i18n="visibilityPrivate">Solo yo (privado)</option>
+                    <form id="kahoot-form" @submit.prevent="importKahoot">
+                        <input id="kahoot-url" type="text" inputmode="url" autocomplete="off" :placeholder="t('kahootUrlPlaceholder')" required v-model="imp.kahootUrl">
+                        <select id="kahoot-visibility" v-model="imp.kahootVisibility">
+                            <option value="public">{{ t('visibilityPublic') }}</option>
+                            <option value="unlisted">{{ t('visibilityUnlisted') }}</option>
+                            <option value="private">{{ t('visibilityPrivate') }}</option>
                         </select>
-                        <button type="submit" data-i18n="btnImportKahoot">Importar desde Kahoot</button>
+                        <button type="submit" :disabled="imp.kahootBusy">{{ t('btnImportKahoot') }}</button>
                     </form>
-                    <p id="kahoot-status" class="subtext"></p>
+                    <p id="kahoot-status" class="subtext">{{ imp.kahootStatus.text }}<button v-if="imp.kahootStatus.playId" class="btn btn-primary btn-small" @click="startGame(imp.kahootStatus.playId)">{{ t('play') }}</button><button v-if="imp.kahootStatus.editId" class="btn btn-ghost btn-small" @click="editQuiz(imp.kahootStatus.editId)">{{ t('editQuiz') }}</button></p>
                 </div>
             </div>
             </details>
+            </template>
 
             <div id="library-app"></div>
             <template id="library-tpl">

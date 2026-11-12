@@ -89,12 +89,10 @@ function updateAuthUI(){
         adminPanel.classList.toggle('hidden', !(isLogged && authState.user.role === 'admin'));
     }
 
-    if(iaGenSvgWrap){
-        iaGenSvgWrap.classList.toggle('hidden', !isLogged);
-        if(!isLogged && iaGenSvg){
-            iaGenSvg.checked = false;
-            try{ localStorage.setItem('eduh_ia_gen_svg', '0'); }catch(e){}
-        }
+    // Las imágenes SVG de la IA solo con sesión (la plantilla oculta la casilla).
+    if(!isLogged){
+        iaState.genSvg = false;
+        try{ localStorage.setItem('eduh_ia_gen_svg', '0'); }catch(e){}
     }
 
     updateTitleUserId();

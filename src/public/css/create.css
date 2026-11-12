@@ -1139,3 +1139,4 @@ body.modal-open{
 
 /* Raíz de la app de Vue de la biblioteca: no altera el maquetado. */
 #library-app{ display: contents; }
+#tools-app{ display: contents; }
