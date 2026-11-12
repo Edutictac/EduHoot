@@ -50,9 +50,10 @@ funcionament del projecte.
   `src/public/`, sense bundler (webpack/vite). Cada pantalla (`create`,
   `host`, `player`, `solo`, `multiplayer`) carrega els seus propis
   `<script>` solts. Excepcions de framework, totes amb Vue 3 i sense build
-  step: el lobby de `/host/` i les pantalles de joc `/player/game/` i
-  `/host/game/` (vore "Lobby de l'amfitrió amb Vue" i les seccions de
-  Subfase B).
+  step: el lobby de `/host/`, les pantalles de joc `/player/game/` i
+  `/host/game/`, `/multiplayer/` i `/create/quiz-creator/` (vore "Lobby
+  de l'amfitrió amb Vue" i les seccions de Subfase B). `/create/` i
+  `/solo/` estan repartits en fitxers (Subfase A), però encara sense Vue.
 - **Dependències de producció mínimes** (`src/package.json`): `express`,
   `socket.io`, `mongodb` (driver natiu, sense ORM/Mongoose), `helmet`
   (capçaleres de seguretat), `multer` (pujada d'imatges), `moment`,
