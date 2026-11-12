@@ -521,9 +521,8 @@ test('entrada desde Commons: canjea el token, lo quita de la URL y no pide nombr
     await answerButtons(page).nth(0).click();
     await page.clock.runFor(1300);
     await expect.poll(() => calls.soloRuns.length).toBe(1);
-    // Comportamiento actual: el canje guarda public_code («XE9») como nombre,
-    // pero startQuiz() lo pisa con el campo de nombre vacío y se envía «AAA».
-    expect(calls.soloRuns[0].body).toMatchObject({ name: 'AAA', studentJoinToken: 'join-1' });
+    // public_code normalizado como un nombre de 3 caracteres.
+    expect(calls.soloRuns[0].body).toMatchObject({ name: 'XE9', studentJoinToken: 'join-1' });
     await expect(page.locator('#name-modal')).not.toHaveClass(/\bshow\b/);
 });
 

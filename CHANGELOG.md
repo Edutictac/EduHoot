@@ -59,6 +59,8 @@ fitxers corresponents, i els originals es van eliminar.
   partida, resultat i rànquing. Funciona igual que abans.
 
 ### Corregit
+- En el mode individual (`/solo/`), qui entrava des de Commons apareixia
+  en el rànquing com «AAA» en lloc del seu codi públic.
 
 - En canviar d'idioma en el lobby de `/host/`, l'error visible (p. ex.
   «Falta el quiz…») es convertia en el missatge genèric; ara es traduïx.

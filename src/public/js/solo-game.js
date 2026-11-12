@@ -19,7 +19,8 @@ function startQuiz(){
             state.questions = randomized;
         }
         var cleanName = state.nameInput ? normalizeName(state.nameInput) : '';
-        state.playerName = cleanName || t('namePlaceholder');
+        // Si se entró desde Commons, el código público es el nombre por defecto.
+        state.playerName = cleanName || state.commonsPublicCode || t('namePlaceholder');
         state.nameInput = cleanName;
         state.view = 'game';
         renderQuestion();

@@ -449,10 +449,9 @@ la app com a *mixin* de Vue: `soloCatalog` (`solo-library.js`) i
   temporitzador, resultat, rànquing i modals (error, rànquing i nom).
   La lògica de puntuació no canvia; les funcions que tocaven el DOM ara
   només escriuen en `state`.
-- **Comportament conservat (possible error)**: en entrar des de Commons,
-  el codi públic de l'alumne es guarda com a nom, però `startQuiz()` el
-  substituïx pel camp de nom (buit) i la puntuació s'envia com «AAA».
-  La spec ho fixa tal com està.
+- **Corregit després de migrar**: en entrar des de Commons, la puntuació
+  s'enviava com «AAA» perquè `startQuiz()` substituïa el codi públic de
+  l'alumne pel camp de nom buit. Ara el codi públic és el nom per defecte.
 - **Proves**: `src/test/browser/solo.spec.js` (amb `page.clock` per al
   temporitzador), a més de `solo-library.spec.js` i `solo-poll.spec.js`.
 
