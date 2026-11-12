@@ -306,3 +306,26 @@ body{
 }
 
 #stats-app, #logs-app{ display: contents; }
+
+/* Avís i botó «Cargar más» al peu de la taula de logs. */
+.logs-more{
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.logs-more p{ margin: 0; }
+.logs-more button{
+  background: var(--accent-2);
+  border: none;
+  border-radius: 8px;
+  color: #0b1220;
+  font-weight: 700;
+  padding: 7px 14px;
+  cursor: pointer;
+}
+.logs-more button:disabled{ opacity: 0.6; cursor: default; }

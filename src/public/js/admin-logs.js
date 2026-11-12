@@ -5,7 +5,7 @@
     error: '', loginStatus: '', fallbackVisible: false,
     settings: { level: 'error', cappedMb: '' }, settingsStatus: '',
     filters: { level: '', tag: '', q: '', pin: '' },
-    rows: [],
+    rows: [], hasMore: false, loadingMore: false,
     detail: { title: 'Detalle del log', fields: [], stack: '' }
   });
   var detailModal = null;
@@ -173,11 +173,17 @@
     window.location.href = '/api/admin/logs/export?' + params.toString();
   }
 
+  // Filtres de l'última càrrega: «Carregar més» continua amb els mateixos,
+  // encara que després s'haja escrit en els camps sense prémer «Filtrar».
+  var appliedParams = '';
+
   function loadLogs(){
     var params = buildFilterParams();
-    fetchJson('/api/admin/logs?' + params.toString())
+    appliedParams = params.toString();
+    fetchJson('/api/admin/logs?' + appliedParams)
       .then(function(payload){
         view.rows = (payload && payload.data) || [];
+        view.hasMore = !!(payload && payload.hasMore);
         showError('');
         updateFallbackButton();
       })
@@ -189,6 +195,27 @@
       });
   }
 
+  // Els 100 següents, a partir de l'última fila que es veu.
+  function loadMoreLogs(){
+    var last = view.rows[view.rows.length - 1];
+    if(!last || view.loadingMore) return;
+    var params = new URLSearchParams(appliedParams);
+    params.set('before', last.createdAt);
+    if(last._id) params.set('beforeId', last._id);
+    view.loadingMore = true;
+    fetchJson('/api/admin/logs?' + params.toString())
+      .then(function(payload){
+        view.rows = view.rows.concat((payload && payload.data) || []);
+        view.hasMore = !!(payload && payload.hasMore);
+        showError('');
+      })
+      .catch(function(err){
+        console.error(err);
+        showError(describeAuthError(err) || 'No se pudieron cargar los logs.');
+      })
+      .finally(function(){ view.loadingMore = false; });
+  }
+
   Vue.createApp({
     template: '#logs-tpl',
     data: function(){ return view; },
@@ -196,6 +223,7 @@
       login: loginWithAuthentik,
       saveSettings: saveSettings,
       loadLogs: loadLogs,
+      loadMore: loadMoreLogs,
       download: downloadLogs,
       formatDate: formatDate,
       hasDetail: hasDetail,

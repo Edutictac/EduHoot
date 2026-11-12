@@ -31,7 +31,8 @@ async function openLogs(page, options = {}) {
         }
         if (pathname === '/api/admin/logs') {
             calls.logQueries.push(url.search);
-            return route.fulfill(options.logs || { json: { data: LOGS } });
+            const logs = typeof options.logs === 'function' ? options.logs(url) : options.logs;
+            return route.fulfill(logs || { json: { data: LOGS } });
         }
         if (pathname === '/api/admin/logs/export') return route.fulfill({ contentType: 'text/plain', body: 'export' });
         return route.fulfill({ json: {} });
@@ -166,4 +167,33 @@ test('cambiar el tag filtra al momento', async ({ page }) => {
     await page.locator('#logs-filter-tag').selectOption('');
     await expect.poll(() => calls.logQueries.length).toBe(3);
     expect(calls.logQueries[2]).toBe('');
+});
+
+test('si hay más logs, avisa y «Cargar más» añade los siguientes con los mismos filtros', async ({ page }) => {
+    const older = { createdAt: '2026-10-01T09:00:00Z', level: 'info', tag: 'game-end', message: 'Antic', pin: '', hostId: '', playerId: '', meta: {} };
+    const first = LOGS.map((row, i) => Object.assign({ _id: 'id' + i }, row));
+    const calls = await openLogs(page, {
+        logs: url => url.searchParams.get('before')
+            ? { json: { data: [older], hasMore: false } }
+            : { json: { data: first, hasMore: true } }
+    });
+    await expect(page.locator('#logs-tbody tr')).toHaveCount(3);
+    await expect(page.locator('#logs-more p')).toHaveText('Se muestran los 3 más recientes. Hay más: cárgalos, filtra o descarga el CSV/NDJSON, que incluye todos.');
+    await page.locator('#logs-filter-level').selectOption('info');
+    await page.locator('#logs-filter-apply').click();
+    await expect.poll(() => calls.logQueries.length).toBe(2);
+    // Escriure sense prémer «Filtrar» no canvia el que continua «Cargar más».
+    await page.locator('#logs-filter-q').fill('sense aplicar');
+    await page.locator('#logs-load-more').click();
+    await expect(page.locator('#logs-tbody tr')).toHaveCount(4);
+    await expect(page.locator('#logs-tbody tr').nth(3).locator('td').nth(4)).toHaveText('Antic');
+    const params = new URLSearchParams(calls.logQueries[2]);
+    expect(Object.fromEntries(params)).toEqual({ level: 'info', before: '2026-11-01T10:02:00Z', beforeId: 'id2' });
+    await expect(page.locator('#logs-more')).toHaveCount(0);
+});
+
+test('sin más logs no hay aviso ni botón', async ({ page }) => {
+    await openLogs(page);
+    await expect(page.locator('#logs-tbody tr')).toHaveCount(3);
+    await expect(page.locator('#logs-more')).toHaveCount(0);
 });

@@ -145,3 +145,27 @@ test('GET /api/admin/logs filtra por nivel, pin y texto libre', async () => {
   assert.ok(byTagJson.data.length >= 1);
   assert.ok(byTagJson.data.every((row) => row.tag === 'player-rejoin-stale'));
 });
+
+test('GET /api/admin/logs: «Carregar més» amb before/beforeId, sense repetir ni saltar files', async () => {
+  const cookie = await loginAsAdmin();
+  const headers = { Cookie: cookie };
+  for (let i = 0; i < 7; i++) logger.info('Paginació ' + i, { tag: 'pagina-test', pin: 'PAG' });
+  await new Promise((resolve) => setTimeout(resolve, 300));
+
+  const seen = [];
+  let url = '/api/admin/logs?tag=pagina-test&limit=3';
+  let pages = 0;
+  for (;;) {
+    const res = await request(url, { headers });
+    const json = await res.json();
+    seen.push(...json.data.map((row) => row.message));
+    pages++;
+    if (!json.hasMore) break;
+    const last = json.data[json.data.length - 1];
+    url = `/api/admin/logs?tag=pagina-test&limit=3&before=${encodeURIComponent(last.createdAt)}&beforeId=${last._id}`;
+  }
+  assert.equal(pages, 3);
+  assert.equal(seen.length, 7);
+  assert.equal(new Set(seen).size, 7);
+  assert.deepEqual(seen, [6, 5, 4, 3, 2, 1, 0].map((i) => 'Paginació ' + i));
+});

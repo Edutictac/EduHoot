@@ -120,6 +120,10 @@
             </tr>
           </tbody>
         </table>
+        <div id="logs-more" class="logs-more" v-if="hasMore">
+          <p>Se muestran los {{ rows.length }} más recientes. Hay más: cárgalos, filtra o descarga el CSV/NDJSON, que incluye todos.</p>
+          <button type="button" id="logs-load-more" :disabled="loadingMore" @click="loadMore">{{ loadingMore ? 'Cargando...' : 'Cargar más' }}</button>
+        </div>
       </section>
     </main>
     <div id="logs-error" class="error">{{ error }}</div>

@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const multer = require('multer');
+const { ObjectId } = require('mongodb');
 const { getGamesCollection, getEphemeralCollection, getLogsCollection, getSettingsCollection } = require('../data/repositories');
 const { getDb, LOGS_COLLECTION, DEFAULT_LOGS_CAPPED_SIZE_BYTES } = require('../data/db');
 const { logger, setLevel, LOG_LEVELS, DEFAULT_LEVEL } = require('../logger');
@@ -395,6 +396,15 @@ module.exports = function createAdminRouter({
     return query;
   }
 
+  function logsCursorQuery(reqQuery) {
+    if (!reqQuery.before) return null;
+    const date = new Date(String(reqQuery.before));
+    if (Number.isNaN(date.getTime())) return null;
+    const older = { createdAt: { $lt: date } };
+    if (!reqQuery.beforeId || !ObjectId.isValid(String(reqQuery.beforeId))) return older;
+    return { $or: [older, { createdAt: date, _id: { $lt: new ObjectId(String(reqQuery.beforeId)) } }] };
+  }
+
   function csvField(value) {
     const str = value === null || value === undefined ? '' : String(value);
     if (/[",\n;]/.test(str)) {
@@ -409,8 +419,14 @@ module.exports = function createAdminRouter({
       const collection = await getLogsCollection();
       const query = buildLogsQuery(req.query);
       const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 100, 1), 500);
-      const docs = await collection.find(query).sort({ createdAt: -1 }).limit(limit).toArray();
-      return res.json({ ok: true, data: docs });
+      // «Carregar més»: continua després de l'última fila vista (data i _id,
+      // per si diverses entrades comparteixen mil·lisegon). Amb un cursor
+      // en lloc de pàgines numerades, els logs nous no descuadren la llista.
+      const cursorQuery = logsCursorQuery(req.query);
+      const finalQuery = cursorQuery ? { $and: [query, cursorQuery] } : query;
+      const docs = await collection.find(finalQuery).sort({ createdAt: -1, _id: -1 }).limit(limit + 1).toArray();
+      const hasMore = docs.length > limit;
+      return res.json({ ok: true, data: hasMore ? docs.slice(0, limit) : docs, hasMore });
     } catch (err) {
       console.error('admin-logs error', err);
       return res.status(500).json({ error: 'No s\'han pogut obtindre els logs.' });

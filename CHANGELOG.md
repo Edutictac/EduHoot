@@ -19,6 +19,8 @@ fitxers corresponents, i els originals es van eliminar.
 ## [Sense publicar]
 
 ### Afegit
+- En el panell de logs, si hi ha més dels 100 més recents, la taula ho
+  avisa i «Cargar más» mostra els següents, amb els mateixos filtres.
 - En el panell de logs, triar un tag en el desplegable ja filtra, sense
   haver de prémer «Filtrar».
 - Els distintius de dev i stage són més transparents i deixen veure el

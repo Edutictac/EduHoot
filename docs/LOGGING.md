@@ -33,9 +33,12 @@ stage (vore l'historial d'issues del projecte).
   col·lecció, guardats en una col·lecció `appSettings` i editables
   sense redesplegar, des del propi visor o per API
   (`GET`/`POST /api/admin/settings/logging`).
-- **Visor web**: `/admin/logs` (mateix patró vanilla JS que
-  `/admin/stats`, protegit amb rol `admin`), amb filtres per nivell,
-  `tag` i text lliure (cerca a `message`, `tag` i `meta`).
+- **Visor web**: `/admin/logs` (app de Vue, com `/admin/stats`,
+  protegit amb rol `admin`), amb filtres per nivell, `tag` (filtra en
+  triar-lo) i text lliure (cerca a `message`, `tag` i `meta`). Mostra els
+  100 més recents; si n'hi ha més, ho avisa i «Cargar más» porta els 100
+  següents (`GET /api/admin/logs?before=…&beforeId=…`, la data i l'`_id`
+  de l'última fila; la resposta du `hasMore`).
 - **Descàrrega**: botons CSV i NDJSON al visor
   (`GET /api/admin/logs/export`), amb els mateixos filtres, per a
   analitzar els logs fora de l'aplicació.
