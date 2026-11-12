@@ -102,7 +102,9 @@ problemes d'estil, variables sense usar, etc.
   lobby), `multiplayer.spec.js` (catàleg, configuració, partida i
   resultats de `/multiplayer/`, amb la REST simulada) i
   `quiz-creator.spec.js` (crear, editar i guardar qüestionaris en
-  `/create/quiz-creator/`, amb la REST i Socket.IO simulats).
+  `/create/quiz-creator/`, amb la REST i Socket.IO simulats) i
+  `solo.spec.js` (catàleg, partida, rànquing i entrada des de Commons
+  de `/solo/`, amb el rellotge de Playwright controlat).
 
 ### Scripts puntuals que NO són part del flux de test estàndard
 

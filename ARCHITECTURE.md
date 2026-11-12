@@ -51,9 +51,9 @@ funcionament del projecte.
   `host`, `player`, `solo`, `multiplayer`) carrega els seus propis
   `<script>` solts. Excepcions de framework, totes amb Vue 3 i sense build
   step: el lobby de `/host/`, les pantalles de joc `/player/game/` i
-  `/host/game/`, `/multiplayer/` i `/create/quiz-creator/` (vore "Lobby
-  de l'amfitrió amb Vue" i les seccions de Subfase B). `/create/` i
-  `/solo/` estan repartits en fitxers (Subfase A), però encara sense Vue.
+  `/host/game/`, `/multiplayer/`, `/create/quiz-creator/` i `/solo/`
+  (vore "Lobby de l'amfitrió amb Vue" i les seccions de Subfase B).
+  `/create/` està repartit en fitxers (Subfase A), però encara sense Vue.
 - **Dependències de producció mínimes** (`src/package.json`): `express`,
   `socket.io`, `mongodb` (driver natiu, sense ORM/Mongoose), `helmet`
   (capçaleres de seguretat), `multer` (pujada d'imatges), `moment`,
@@ -141,7 +141,7 @@ JS d'orquestració amb `<script>` clàssics (sense build step):
 | `/host/game/` | `hostGame.js` | Professorat: pantalla de joc en directe — pregunta, temporitzador, rànquing, música/gong |
 | `/create/` | `create.js` + mòduls `create-*.js` + `i18n-create.js` (ja repartits, Subfase A) | Professorat: biblioteca de qüestionaris — llistat, filtres, exportació, importació, panell d'admin |
 | `/create/quiz-creator/` | `quizCreator.js` (ja amb Vue) | Professorat: editor d'un qüestionari (preguntes, respostes, tipus) |
-| `/solo/` | `solo.js` + mòduls `solo-*.js` + `i18n-solo.js` (ja repartits, Subfase A) | Mode individual, a ritme propi, fora de classe |
+| `/solo/` | `solo.js` + mòduls `solo-*.js` + `i18n-solo.js` (ja repartits, Subfase A, i amb Vue) | Mode individual, a ritme propi, fora de classe |
 | `/multiplayer/` | `multiplayer.js` (ja amb Vue) | Mode 2-4 jugadors compartint una sola pantalla |
 | `/admin-stats.html` | `admin-stats.js` | Estadístiques del panell d'administració |
 
@@ -409,7 +409,7 @@ cada un.
 
 ### Editor de qüestionaris amb Vue
 
-Última pantalla de la Subfase B: `/create/quiz-creator/`
+Cinquena pantalla de la Subfase B: `/create/quiz-creator/`
 (`src/public/js/quizCreator.js`). L'arrel de Vue és `#creator-app` i
 inclou els tres panells (dades del quiz, preguntes i botons); la
 capçalera (títol, idioma, subtítol) queda fora i la tradueix
@@ -428,6 +428,33 @@ capçalera (títol, idioma, subtítol) queda fora i la tradueix
   anterior).
 - **Proves**: `src/test/browser/quiz-creator.spec.js`, amb la REST i
   Socket.IO simulats.
+
+### Mode individual amb Vue
+
+Sexta pantalla de la Subfase B: `/solo/`. Com `/multiplayer/`, només
+parla amb el servidor per REST. Una sola app (`#solo-app`, amb
+`display: contents`) cobreix el catàleg, la paginació, el panell de joc
+i els tres modals; la música de fons i el peu queden fora. L'estat
+(`state`, en `solo.js`) és reactiu, i cada mòdul aporta la seua part de
+la app com a *mixin* de Vue: `soloCatalog` (`solo-library.js`) i
+`soloPlay` (`solo-game.js`). Dos blocs, un commit cada un.
+
+- **Bloc 1**: el catàleg (cerca, filtres, etiquetes amb el mode
+  `any`/`all` i la URL, ordre, paginació, preferits, valoracions i
+  miniatures). Com en `/multiplayer/`, marcar un preferit no reordena la
+  llista a l'instant. La miniatura de reserva (buscar imatge entre les
+  preguntes) es demana una vegada per quiz; abans es repetia en cada
+  repintat.
+- **Bloc 2**: formulari d'inici, pregunta, respostes (els sis tipus),
+  temporitzador, resultat, rànquing i modals (error, rànquing i nom).
+  La lògica de puntuació no canvia; les funcions que tocaven el DOM ara
+  només escriuen en `state`.
+- **Comportament conservat (possible error)**: en entrar des de Commons,
+  el codi públic de l'alumne es guarda com a nom, però `startQuiz()` el
+  substituïx pel camp de nom (buit) i la puntuació s'envia com «AAA».
+  La spec ho fixa tal com està.
+- **Proves**: `src/test/browser/solo.spec.js` (amb `page.clock` per al
+  temporitzador), a més de `solo-library.spec.js` i `solo-poll.spec.js`.
 
 ## Distintiu visual d'entorn (dev/stage)
 

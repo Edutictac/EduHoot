@@ -55,6 +55,8 @@ fitxers corresponents, i els originals es van eliminar.
 - L'editor de qüestionaris (`/create/quiz-creator/`) també és ara una
   app de Vue 3. Funciona igual que abans; a més, en canviar d'idioma es
   tradueixen també les preguntes ja creades.
+- El mode individual (`/solo/`) també és ara una app de Vue 3: catàleg,
+  partida, resultat i rànquing. Funciona igual que abans.
 
 ### Corregit
 
