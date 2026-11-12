@@ -1,9 +1,7 @@
 (function(){
-  var cardsEl = document.getElementById('cards');
-  var breakdownEl = document.getElementById('breakdown');
-  var errorEl = document.getElementById('stats-error');
-  var loginFallbackBtn = document.getElementById('login-fallback');
-  var loginStatus = document.getElementById('login-status');
+  // Subfase B: el que es pinta (targetes, desglossament, errors i botó
+  // d'entrada) és estat d'una app de Vue; la resta no canvia.
+  var view = Vue.reactive({ cards: [], panels: [], error: '', loginStatus: '', fallbackVisible: false });
   var accountChip = document.querySelector('edutictac-account');
 
   var authState = { user: null, checked: false };
@@ -17,7 +15,7 @@
   }
 
   function setLoginStatus(msg){
-    if(loginStatus) loginStatus.textContent = msg || '';
+    view.loginStatus = msg || '';
   }
 
   // Puente de sesión con el xip de EduTicTac/Authentik. Versión reducida de
@@ -82,9 +80,8 @@
   }
 
   function updateFallbackButton(){
-    if(!loginFallbackBtn) return;
     var chipMounted = document.documentElement.classList.contains('has-account-chip');
-    loginFallbackBtn.style.display = (authentikAuthEnabled && !authState.user && !chipMounted) ? '' : 'none';
+    view.fallbackVisible = authentikAuthEnabled && !authState.user && !chipMounted;
   }
 
   function fetchMeLite(){
@@ -122,9 +119,7 @@
   }
 
   function renderCards(data){
-    if(!cardsEl) return;
-    cardsEl.innerHTML = '';
-    var cardData = [
+    view.cards = [
       { label: 'Total de quizzes', value: data.totalQuizzes, badge: 'Todos' },
       { label: 'Preguntas totales', value: data.totalQuestions, badge: 'Contenido' },
       { label: 'Partidas jugadas', value: data.totalPlays, badge: 'Histórico' },
@@ -134,62 +129,28 @@
       { label: 'Jugadores activos', value: data.livePlayers, badge: 'En vivo' },
       { label: 'Quizzes efímeros', value: data.ephemeral.totalQuizzes, badge: 'Local' }
     ];
-    cardData.forEach(function(item, idx){
-      var card = document.createElement('div');
-      card.className = 'card';
-      var h3 = document.createElement('h3');
-      h3.textContent = item.label;
-      var val = document.createElement('p');
-      val.className = 'value';
-      val.textContent = item.value || 0;
-      var sub = document.createElement('div');
-      sub.className = 'sub';
-      sub.textContent = item.badge;
-      card.appendChild(h3);
-      card.appendChild(val);
-      card.appendChild(sub);
-      cardsEl.appendChild(card);
-    });
   }
 
   function renderBreakdown(data){
-    if(!breakdownEl) return;
-    breakdownEl.innerHTML = '';
-    var visPanel = document.createElement('div');
-    visPanel.className = 'panel';
-    var visTitle = document.createElement('h4');
-    visTitle.textContent = 'Visibilidad';
-    var ul = document.createElement('ul');
-    ['public','unlisted','private'].forEach(function(key){
-      var li = document.createElement('li');
-      li.innerHTML = '<span>'+key+'</span><span class="value">'+(data.visibilityCounts[key] || 0)+'</span>';
-      ul.appendChild(li);
-    });
-    visPanel.appendChild(visTitle);
-    visPanel.appendChild(ul);
-
-    var ephPanel = document.createElement('div');
-    ephPanel.className = 'panel';
-    var ephTitle = document.createElement('h4');
-    ephTitle.textContent = 'Quizzes efímeros';
-    var ul2 = document.createElement('ul');
-    var li1 = document.createElement('li');
-    li1.innerHTML = '<span>Quizzes</span><span class="value">'+(data.ephemeral.totalQuizzes || 0)+'</span>';
-    var li2 = document.createElement('li');
-    li2.innerHTML = '<span>Preguntas</span><span class="value">'+(data.ephemeral.totalQuestions || 0)+'</span>';
-    ul2.appendChild(li1);
-    ul2.appendChild(li2);
-    ephPanel.appendChild(ephTitle);
-    ephPanel.appendChild(ul2);
-
-    breakdownEl.appendChild(visPanel);
-    breakdownEl.appendChild(ephPanel);
+    view.panels = [
+      {
+        title: 'Visibilidad',
+        rows: ['public', 'unlisted', 'private'].map(function(key){
+          return { label: key, value: data.visibilityCounts[key] };
+        })
+      },
+      {
+        title: 'Quizzes efímeros',
+        rows: [
+          { label: 'Quizzes', value: data.ephemeral.totalQuizzes },
+          { label: 'Preguntas', value: data.ephemeral.totalQuestions }
+        ]
+      }
+    ];
   }
 
   function showError(msg){
-    if(errorEl){
-      errorEl.textContent = msg || 'No se pudieron cargar las estadísticas.';
-    }
+    view.error = msg || 'No se pudieron cargar las estadísticas.';
   }
 
   function loadStats(){
@@ -208,7 +169,7 @@
         if(!payload || !payload.data) throw new Error('Respuesta incompleta');
         renderCards(payload.data);
         renderBreakdown(payload.data);
-        if(errorEl) errorEl.textContent = '';
+        view.error = '';
         updateFallbackButton();
       })
       .catch(function(err){
@@ -228,6 +189,12 @@
       });
   }
 
+  Vue.createApp({
+    template: '#stats-tpl',
+    data: function(){ return view; },
+    methods: { login: loginWithAuthentik }
+  }).mount('#stats-app');
+
   handleAuthentikReturnParam();
   loadStats();
   fetchMeLite().then(syncCentralSession);
@@ -240,8 +207,4 @@
       syncCentralSession();
     })
     .catch(function(){});
-
-  if(loginFallbackBtn){
-    loginFallbackBtn.addEventListener('click', loginWithAuthentik);
-  }
 })();

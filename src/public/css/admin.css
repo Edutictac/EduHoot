@@ -279,3 +279,5 @@ body{
   .card .value{ font-size: 26px; }
   #logs-table-wrap{ overflow-x: auto; }
 }
+
+#stats-app, #logs-app{ display: contents; }

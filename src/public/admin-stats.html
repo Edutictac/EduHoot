@@ -14,21 +14,39 @@
   </head>
   <body>
     <edutictac-account class="site-account site-account--top" data-base="https://commons.edutictac.es"></edutictac-account>
+    <!-- Subfase B, Vue (admin-stats.js): tot el panell és una app de Vue. -->
+    <div id="stats-app"></div>
+    <template id="stats-tpl">
     <header class="admin-header">
       <div>
         <h1>Panel de estadísticas</h1>
         <p>Datos agregados y anónimos de todos los juegos.</p>
       </div>
       <div class="login-inline" id="auth-area">
-        <button type="button" id="login-fallback">Entrar con EduTicTac</button>
-        <span id="login-status"></span>
+        <button type="button" id="login-fallback" v-show="fallbackVisible" @click="login">Entrar con EduTicTac</button>
+        <span id="login-status">{{ loginStatus }}</span>
       </div>
     </header>
     <main class="admin-content">
-      <section class="cards" id="cards"></section>
-      <section class="breakdown" id="breakdown"></section>
+      <section class="cards" id="cards">
+        <div class="card" v-for="item in cards" :key="item.label">
+          <h3>{{ item.label }}</h3>
+          <p class="value">{{ item.value || 0 }}</p>
+          <div class="sub">{{ item.badge }}</div>
+        </div>
+      </section>
+      <section class="breakdown" id="breakdown">
+        <div class="panel" v-for="panel in panels" :key="panel.title">
+          <h4>{{ panel.title }}</h4>
+          <ul>
+            <li v-for="row in panel.rows" :key="row.label"><span>{{ row.label }}</span><span class="value">{{ row.value || 0 }}</span></li>
+          </ul>
+        </div>
+      </section>
     </main>
-    <div id="stats-error" class="error"></div>
+    <div id="stats-error" class="error">{{ error }}</div>
+    </template>
+    <script src="/js/libs/vue.global.prod.js"></script>
     <script src="/js/admin-stats.js"></script>
     <script src="/js/env-badge.js"></script>
   </body>
