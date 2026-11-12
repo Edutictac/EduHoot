@@ -19,8 +19,8 @@ for (const lang of ['ca', 'va', 'es', 'en']) {
         await page.goto('/create/quiz-creator/');
         await expect(page.locator('#lang-select')).toHaveValue(lang);
         expect(await page.locator('#lang-select option').evaluateAll(options => options.map(option => option.value))).toEqual(['ca', 'va', 'es', 'en']);
-        const expected = lang === 'en' ? ['True', 'False'] : lang === 'es' ? ['Verdadero', 'Falso'] : ['Cert', 'Fals'];
-        expect(await page.evaluate(() => getTfFallbackAnswers())).toEqual(expected);
+        const playLocal = { ca: 'Jugar sense desar', va: 'Jugar sense guardar', es: 'Jugar sin guardar', en: 'Play without saving' };
+        await expect(page.locator('[data-i18n="btnPlayLocal"]')).toHaveText(playLocal[lang]);
     });
 
     test(`${lang}: joc renderitza preguntes i respostes sense errors`, async ({ page }) => {
