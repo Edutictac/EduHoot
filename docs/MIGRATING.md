@@ -309,6 +309,12 @@ que fixar l'estructura final exacta.
 
 ## Subfase B — Proposta concreta d'implementació amb Vue
 
+**Estat (2026-11-12)**: feta. Vue en les pantalles principals: `/host/`,
+`/player/game/`, `/host/game/`, `/multiplayer/`, `/create/quiz-creator/`,
+`/solo/` i `/create/`. Queden sense Vue les pàgines menudes (portada,
+`/join.html`, `/player/` i els panells `/admin-*`). El detall de cada
+pantalla està en `ARCHITECTURE.md`.
+
 Esta secció només afecta al **frontend**; el backend ja queda resolt amb
 la separació de la Subfase A (`routes/`, `sockets/`,
 `services/`, `data/`) — Vue es monta sobre eixos mateixos endpoints i

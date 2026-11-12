@@ -51,9 +51,9 @@ funcionament del projecte.
   `host`, `player`, `solo`, `multiplayer`) carrega els seus propis
   `<script>` solts. Excepcions de framework, totes amb Vue 3 i sense build
   step: el lobby de `/host/`, les pantalles de joc `/player/game/` i
-  `/host/game/`, `/multiplayer/`, `/create/quiz-creator/` i `/solo/`
-  (vore "Lobby de l'amfitrió amb Vue" i les seccions de Subfase B).
-  `/create/` està repartit en fitxers (Subfase A), però encara sense Vue.
+  `/host/game/`, `/multiplayer/`, `/create/quiz-creator/`, `/solo/` i
+  `/create/` (vore "Lobby de l'amfitrió amb Vue" i les seccions de
+  Subfase B).
 - **Dependències de producció mínimes** (`src/package.json`): `express`,
   `socket.io`, `mongodb` (driver natiu, sense ORM/Mongoose), `helmet`
   (capçaleres de seguretat), `multer` (pujada d'imatges), `moment`,
@@ -139,7 +139,7 @@ JS d'orquestració amb `<script>` clàssics (sense build step):
 | `/player/game/` | `playerGame.js` | Alumnat: pantalla de joc — pregunta, respostes, resultat, rànquing, reconnexió |
 | `/host/` | `host.js` (ja amb Vue, pilot fet) | Professorat: lobby amb PIN/QR, opcions de partida, llista de jugadors, botó d'inici |
 | `/host/game/` | `hostGame.js` | Professorat: pantalla de joc en directe — pregunta, temporitzador, rànquing, música/gong |
-| `/create/` | `create.js` + mòduls `create-*.js` + `i18n-create.js` (ja repartits, Subfase A) | Professorat: biblioteca de qüestionaris — llistat, filtres, exportació, importació, panell d'admin |
+| `/create/` | `create.js` + mòduls `create-*.js` + `i18n-create.js` (ja repartits, Subfase A, i amb Vue) | Professorat: biblioteca de qüestionaris — llistat, filtres, exportació, importació, panell d'admin |
 | `/create/quiz-creator/` | `quizCreator.js` (ja amb Vue) | Professorat: editor d'un qüestionari (preguntes, respostes, tipus) |
 | `/solo/` | `solo.js` + mòduls `solo-*.js` + `i18n-solo.js` (ja repartits, Subfase A, i amb Vue) | Mode individual, a ritme propi, fora de classe |
 | `/multiplayer/` | `multiplayer.js` (ja amb Vue) | Mode 2-4 jugadors compartint una sola pantalla |
@@ -454,6 +454,37 @@ la app com a *mixin* de Vue: `soloCatalog` (`solo-library.js`) i
   l'alumne pel camp de nom buit. Ara el codi públic és el nom per defecte.
 - **Proves**: `src/test/browser/solo.spec.js` (amb `page.clock` per al
   temporitzador), a més de `solo-library.spec.js` i `solo-poll.spec.js`.
+
+### Biblioteca de qüestionaris amb Vue
+
+Setena pantalla de la Subfase B: `/create/`. És la més gran i té zones
+separades en l'HTML, així que no hi ha una sola arrel: són tres apps de
+Vue menudes, cadascuna en el seu lloc (`#account-app`, `#tools-app`,
+`#library-app`, totes amb `display: contents`), que compartixen estat
+reactiu (`authState`, `currentFilters`, `libState`, `iaState`,
+`accountState`). La capçalera, l'avís de Stage (`env-badge.js`) i el peu
+queden fora i els tradueix `applyStaticTranslations()`. Tres blocs, un
+commit cada un.
+
+- **Bloc 1** (`create-library.js`): biblioteca. Cerca, orde, carpetes
+  amb pes per freqüència i «Veure més», mode totes/qualsevol, filtres en
+  la URL, paginació i targetes amb permisos (`quizPermissions()`),
+  edició d'etiquetes, permisos de compartir i exportació. Els esborranys
+  d'etiqueta i de permisos es reinicien cada vegada que arriba la
+  biblioteca, com quan abans es repintava tot.
+- **Bloc 2** (`create-ia.js` i `create.js`): generador IA (prompt,
+  modes, vista prèvia, descàrrega i importació) i importació de CSV i de
+  Kahoot.
+- **Bloc 3** (`create-auth.js`, `create-admin.js` i `create.js`): avís
+  d'entrada, missatge de sessió i modal de preferències amb les eines
+  d'administració.
+- **No canvia**: `create-export.js` (genera fitxers, no pinta res).
+- **Comportament conservat**: en carregar es crida dues vegades a
+  `fetchMe()`, i amb un quiz pendent de desar es pot reclamar dues
+  vegades. Sense el xip de Commons, «Desar en el meu compte» acaba
+  mostrant «No es pot connectar amb el compte…».
+- **Proves**: `src/test/browser/create.spec.js`, a més de
+  `create-library.spec.js`, `auth-state.spec.js` i `chip-footer.spec.js`.
 
 ## Distintiu visual d'entorn (dev/stage)
 

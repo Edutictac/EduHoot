@@ -57,6 +57,8 @@ fitxers corresponents, i els originals es van eliminar.
   tradueixen també les preguntes ja creades.
 - El mode individual (`/solo/`) també és ara una app de Vue 3: catàleg,
   partida, resultat i rànquing. Funciona igual que abans.
+- La biblioteca (`/create/`) també usa ara Vue 3: biblioteca, generador
+  IA, importació i compte. Funciona igual que abans.
 
 ### Corregit
 - En el mode individual (`/solo/`), qui entrava des de Commons apareixia
