@@ -61,6 +61,8 @@ fitxers corresponents, i els originals es van eliminar.
   IA, importació i compte. Funciona igual que abans.
 
 ### Corregit
+- En obrir `/create/` amb sessió, la sessió es comprovava dues vegades i
+  un quiz pendent de desar en el compte es podia reclamar dues vegades.
 - En el mode individual (`/solo/`), qui entrava des de Commons apareixia
   en el rànquing com «AAA» en lloc del seu codi públic.
 

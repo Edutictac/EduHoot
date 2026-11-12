@@ -479,9 +479,7 @@ commit cada un.
   d'entrada, missatge de sessió i modal de preferències amb les eines
   d'administració.
 - **No canvia**: `create-export.js` (genera fitxers, no pinta res).
-- **Comportament conservat**: en carregar es crida dues vegades a
-  `fetchMe()`, i amb un quiz pendent de desar es pot reclamar dues
-  vegades. Sense el xip de Commons, «Desar en el meu compte» acaba
+- **Comportament conservat**: sense el xip de Commons, «Desar en el meu compte» acaba
   mostrant «No es pot connectar amb el compte…».
 - **Proves**: `src/test/browser/create.spec.js`, a més de
   `create-library.spec.js`, `auth-state.spec.js` i `chip-footer.spec.js`.
