@@ -11,8 +11,10 @@ var questionCards = Vue.reactive([]);
 var nextQuestionUid = 1;
 var editingId = null;
 var ui = Vue.reactive({ lang: EduhootLang.init() });
-var knownTags = [];
-var isUserAuthenticated = false;
+// Datos del quiz (panel «Configuración») y estado de la sesión. La plantilla
+// de Vue los lee y los escribe directamente (Subfase B, bloque 2).
+var form = Vue.reactive({ name: '', tags: '', visibility: 'private', allowClone: false, language: '', license: '', description: '' });
+var session = Vue.reactive({ authenticated: false, knownTags: [] });
 function getAnonOwnerToken(){
     var key = 'anonOwnerToken';
     var existing = localStorage.getItem(key);
@@ -25,7 +27,7 @@ function getAnonOwnerToken(){
 }
 
 function rememberClaimableQuizId(id){
-    if(id === undefined || id === null || isUserAuthenticated) return;
+    if(id === undefined || id === null || session.authenticated) return;
     try{
         var stored = JSON.parse(localStorage.getItem('localQuizzes') || '[]');
         var idText = String(id);
@@ -233,44 +235,20 @@ function t(key){
     return key;
 }
 
+// Solo traduce lo que queda fuera de la app de Vue (cabecera y subtítulo);
+// dentro, la plantilla usa t() y se repinta sola al cambiar ui.lang.
 function applyI18n(){
     document.querySelectorAll('[data-i18n]').forEach(function(el){
+        if(el.closest('#creator-app')) return;
         var key = el.getAttribute('data-i18n');
-        // skip labels with form controls to avoid hiding inputs
-        if(el.tagName === 'LABEL' && el.querySelector('input,select,textarea,textarea')){
-            return;
-        }
-        if(key === 'subtitle' || key === 'localInfo'){
+        if(key === 'subtitle'){
             el.innerHTML = t(key);
         }else{
             el.textContent = t(key);
         }
     });
-    var nameInput = document.getElementById('name');
-    if(nameInput) nameInput.placeholder = t('namePlaceholder');
-    var tagsInput = document.getElementById('tags');
-    if(tagsInput) tagsInput.placeholder = t('tagsPlaceholder');
-    var languageInput = document.getElementById('language');
-    if(languageInput) languageInput.placeholder = t('languagePlaceholder');
-    var licenseInput = document.getElementById('license');
-    if(licenseInput) licenseInput.placeholder = t('licensePlaceholder');
-    var descriptionInput = document.getElementById('description');
-    if(descriptionInput) descriptionInput.placeholder = t('descriptionPlaceholder');
     var langSelect = document.getElementById('lang-select');
     if(langSelect) langSelect.value = ui.lang;
-    renderTagSuggestions();
-}
-
-function updateVisibilityWarning(){
-    var warning = document.getElementById('public-warning');
-    if(!warning) return;
-    var visibilitySelect = document.getElementById('visibility');
-    var show = false;
-    if(visibilitySelect){
-        var value = visibilitySelect.value;
-        show = !isUserAuthenticated && value && value !== 'private';
-    }
-    warning.classList.toggle('hidden', !show);
 }
 
 function updateTitleUserId(name){
@@ -285,13 +263,11 @@ function refreshAuthStatus(){
             return res.json();
         })
         .then(function(user){
-            isUserAuthenticated = true;
-            updateVisibilityWarning();
+            session.authenticated = true;
             updateTitleUserId(user && (user.nickname || user.email));
         })
         .catch(function(){
-            isUserAuthenticated = false;
-            updateVisibilityWarning();
+            session.authenticated = false;
             updateTitleUserId(null);
         });
 }
@@ -328,13 +304,13 @@ function updateDatabase(){
 
 function buildQuizPayload(){
     var questions = [];
-    var name = document.getElementById('name').value;
+    var name = form.name;
     var tags = parseTagsInput();
-    var visibility = document.getElementById('visibility') ? document.getElementById('visibility').value : 'private';
-    var allowClone = document.getElementById('allow-clone') ? document.getElementById('allow-clone').checked : false;
-    var language = document.getElementById('language') ? document.getElementById('language').value.trim() : '';
-    var license = document.getElementById('license') ? document.getElementById('license').value.trim() : '';
-    var description = document.getElementById('description') ? document.getElementById('description').value.trim() : '';
+    var visibility = form.visibility || 'private';
+    var allowClone = !!form.allowClone;
+    var language = form.language.trim();
+    var license = form.license.trim();
+    var description = form.description.trim();
     questionCards.forEach(function(card){
         var question = card.question;
         var correct = card.correct;
@@ -519,7 +495,7 @@ function normalizeSvgDataUrlForImg(url){
 }
 
 // Tarjetas de preguntas (Subfase B, bloque 1). Cada tarjeta es un objeto de
-// questionCards y la plantilla #questions-tpl lo pinta; buildQuizPayload lee
+// questionCards y la plantilla #creator-tpl lo pinta; buildQuizPayload lee
 // de aquí, no del DOM. Los campos de texto se guardan como texto, igual que
 // los valores de los <input> de antes.
 function clampTime(value){
@@ -590,11 +566,13 @@ function addQuestion(prefill){
 }
 
 Vue.createApp({
-    template: '#questions-tpl',
+    template: '#creator-tpl',
     data: function(){
         return {
             cards: questionCards,
             ui: ui,
+            form: form,
+            session: session,
             typeOptions: [
                 ['quiz', 'questionTypeSingle'], ['multiple', 'questionTypeMultiple'],
                 ['true-false', 'questionTypeTf'], ['short-answer', 'questionTypeShort'],
@@ -602,10 +580,23 @@ Vue.createApp({
             ]
         };
     },
+    computed: {
+        showPublicWarning: function(){
+            return !this.session.authenticated && this.form.visibility !== 'private';
+        },
+        selectedTags: function(){
+            return parseTagsInput();
+        }
+    },
     methods: {
         t: function(key){
             return t(key);
         },
+        addTag: addTagToInput,
+        addQuestion: function(){ addQuestion(); },
+        save: function(){ updateDatabase(); },
+        playLocal: function(){ saveLocal(); },
+        cancel: function(){ cancelQuiz(); },
         pillText: function(num){
             return (this.ui.lang === 'en' ? 'Question ' : 'Pregunta ') + num;
         },
@@ -643,7 +634,7 @@ Vue.createApp({
             if(!(card.video || '').trim() || parseYouTubeId(card.video.trim())) card.videoOk = false;
         }
     }
-}).mount('#allQuestions');
+}).mount('#creator-app');
 
 //Called when user wants to exit quiz creator
 function cancelQuiz(){
@@ -706,26 +697,13 @@ async function loadQuiz(id){
             return;
         }
         editingId = quiz.id;
-        document.getElementById('name').value = quiz.name || '';
-        if(quiz.tags && quiz.tags.length){
-            document.getElementById('tags').value = quiz.tags.join(', ');
-            renderTagSuggestions();
-        }
-        if(document.getElementById('visibility')){
-            document.getElementById('visibility').value = quiz.visibility || 'public';
-        }
-        if(document.getElementById('allow-clone')){
-            document.getElementById('allow-clone').checked = !!quiz.allowClone;
-        }
-        if(document.getElementById('language')){
-            document.getElementById('language').value = quiz.language || '';
-        }
-        if(document.getElementById('license')){
-            document.getElementById('license').value = quiz.license || '';
-        }
-        if(document.getElementById('description')){
-            document.getElementById('description').value = quiz.description || '';
-        }
+        form.name = quiz.name || '';
+        form.tags = (quiz.tags && quiz.tags.length) ? quiz.tags.join(', ') : form.tags;
+        form.visibility = quiz.visibility || 'public';
+        form.allowClone = !!quiz.allowClone;
+        form.language = quiz.language || '';
+        form.license = quiz.license || '';
+        form.description = quiz.description || '';
         questionCards.splice(0);
         (quiz.questions || []).forEach(function(q){
             addQuestion(q);
@@ -755,52 +733,26 @@ initQuizCreator();
 fetchKnownTags();
 
 function parseTagsInput(){
-    var raw = document.getElementById('tags') ? document.getElementById('tags').value : '';
+    var raw = form.tags;
     if(!raw) return [];
     return raw.split(',').map(function(t){ return t.trim().toLowerCase(); }).filter(function(t){ return t.length; });
 }
 
 function addTagToInput(tag){
-    var input = document.getElementById('tags');
-    if(!input) return;
     var tags = parseTagsInput();
     if(tags.indexOf(tag) !== -1) return;
     tags.push(tag);
-    input.value = tags.join(', ');
+    form.tags = tags.join(', ');
 }
-
-function renderTagSuggestions(){
-    var wrap = document.getElementById('tag-suggestions');
-    if(!wrap) return;
-    wrap.innerHTML = '';
-    if(!knownTags.length){
-        return;
-    }
-    var label = document.createElement('span');
-    label.className = 'label';
-    label.textContent = t('suggestedTags');
-    wrap.appendChild(label);
-    knownTags.forEach(function(tag){
-        var btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'tag' + (parseTagsInput().indexOf(tag) !== -1 ? ' active' : '');
-        btn.textContent = tag;
-        btn.onclick = function(){ addTagToInput(tag); renderTagSuggestions(); };
-        wrap.appendChild(btn);
-    });
-}
-
 
 function fetchKnownTags(){
     return fetch('/api/tags', { credentials: 'include' })
         .then(function(res){ return res.json(); })
         .then(function(data){
-            knownTags = Array.isArray(data.tags) ? data.tags : [];
-            renderTagSuggestions();
+            session.knownTags = Array.isArray(data.tags) ? data.tags : [];
         })
         .catch(function(){
-            knownTags = [];
-            renderTagSuggestions();
+            session.knownTags = [];
         });
 }
 
@@ -813,16 +765,5 @@ if(langSelector){
         applyI18n();
     });
 }
-var tagsInputEl = document.getElementById('tags');
-if(tagsInputEl){
-    tagsInputEl.addEventListener('input', function(){
-        renderTagSuggestions();
-    });
-}
-var visibilitySelect = document.getElementById('visibility');
-if(visibilitySelect){
-    visibilitySelect.addEventListener('change', updateVisibilityWarning);
-}
 applyI18n();
-updateVisibilityWarning();
 refreshAuthStatus();
