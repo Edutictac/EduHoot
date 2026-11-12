@@ -19,6 +19,10 @@ fitxers corresponents, i els originals es van eliminar.
 ## [Sense publicar]
 
 ### Afegit
+- En el panell de logs, triar un tag en el desplegable ja filtra, sense
+  haver de prémer «Filtrar».
+- Els distintius de dev i stage són més transparents i deixen veure el
+  que hi ha darrere.
 - Els panells d'estadístiques i de logs s'enllacen entre ells amb un botó
   visible; en logs, la configuració (nivell, mida i «Guardar») queda
   alineada.

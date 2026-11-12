@@ -106,15 +106,17 @@ test('Filtrar y Refrescar piden los logs con los filtros', async ({ page }) => {
     const calls = await openLogs(page);
     await expect(page.locator('#logs-tbody tr')).toHaveCount(3);
     await page.locator('#logs-filter-level').selectOption('error');
+    // Cambiar el tag ya filtra (vore el test de més avall).
     await page.locator('#logs-filter-tag').selectOption('game-end');
+    await expect.poll(() => calls.logQueries.length).toBe(2);
     await page.locator('#logs-filter-q').fill('Ana');
     await page.locator('#logs-filter-pin').fill('123');
     await page.locator('#logs-filter-apply').click();
-    await expect.poll(() => calls.logQueries.length).toBe(2);
-    expect(calls.logQueries[1]).toBe('?level=error&tag=game-end&q=Ana&pin=123');
-    await page.locator('#logs-filter-refresh').click();
     await expect.poll(() => calls.logQueries.length).toBe(3);
     expect(calls.logQueries[2]).toBe('?level=error&tag=game-end&q=Ana&pin=123');
+    await page.locator('#logs-filter-refresh').click();
+    await expect.poll(() => calls.logQueries.length).toBe(4);
+    expect(calls.logQueries[3]).toBe('?level=error&tag=game-end&q=Ana&pin=123');
 });
 
 test('las descargas llevan los filtros y el formato', async ({ page }) => {
@@ -153,4 +155,15 @@ test('enlaza con el panel de estadísticas y alinea la configuración', async ({
         expect(Math.abs(box.y - boxes[0].y)).toBeLessThan(1);
         expect(Math.abs(box.height - boxes[0].height)).toBeLessThan(1);
     }
+});
+
+test('cambiar el tag filtra al momento', async ({ page }) => {
+    const calls = await openLogs(page);
+    await expect.poll(() => calls.logQueries.length).toBe(1);
+    await page.locator('#logs-filter-tag').selectOption('player-join');
+    await expect.poll(() => calls.logQueries.length).toBe(2);
+    expect(calls.logQueries[1]).toBe('?tag=player-join');
+    await page.locator('#logs-filter-tag').selectOption('');
+    await expect.poll(() => calls.logQueries.length).toBe(3);
+    expect(calls.logQueries[2]).toBe('');
 });

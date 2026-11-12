@@ -58,7 +58,7 @@
             <option value="info">info</option>
             <option value="debug">debug</option>
           </select>
-          <select id="logs-filter-tag" v-model="filters.tag">
+          <select id="logs-filter-tag" v-model="filters.tag" @change="loadLogs">
             <option value="">Cualquier tag</option>
             <optgroup label="Partida">
               <option value="host-join">host-join</option>

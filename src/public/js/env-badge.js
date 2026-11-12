@@ -3,7 +3,7 @@
         development: {
             label: '🛠️ Entorn: desenvolupament',
             titlePrefix: '🛠️ DEV — ',
-            badgeBg: 'rgba(249,115,22,0.9)',
+            badgeBg: 'rgba(249,115,22,0.35)',
             badgeColor: '#fff7ed',
             tint: 'rgba(124,45,18,0.16)',
             href: '/dev/login',
@@ -12,7 +12,7 @@
         staging: {
             label: '🧪 Entorn: stage',
             titlePrefix: '🧪 STAGE — ',
-            badgeBg: 'rgba(22,163,74,0.9)',
+            badgeBg: 'rgba(22,163,74,0.35)',
             badgeColor: '#f0fdf4',
             tint: 'rgba(20,83,45,0.16)',
             href: '/',
@@ -56,7 +56,10 @@
         badgeStyle.color = cfg.badgeColor;
         badgeStyle.pointerEvents = cfg.href ? 'auto' : 'none';
         badgeStyle.textDecoration = 'none';
-        badgeStyle.boxShadow = '0 2px 8px rgba(0,0,0,0.25)';
+        // Fons molt transparent per a veure el que hi ha darrere; l'ombra
+        // del text el manté llegible sobre qualsevol fons.
+        badgeStyle.boxShadow = '0 2px 8px rgba(0,0,0,0.12)';
+        badgeStyle.textShadow = '0 1px 3px rgba(0,0,0,0.7)';
 
         var tint = document.createElement('div');
         var tintStyle = tint.style;
