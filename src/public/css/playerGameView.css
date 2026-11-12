@@ -351,6 +351,8 @@ body{
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 14px;
+    padding: 0 16px;
 }
 #answer1::before, #answer2::before, #answer3::before, #answer4::before{
     content: "";
