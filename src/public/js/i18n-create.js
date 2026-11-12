@@ -719,6 +719,8 @@ function t(key){
     return key;
 }
 
+// Traduce lo que queda fuera de las apps de Vue (cabecera, aviso de Stage y
+// pie); dentro, las plantillas usan t() directamente.
 function applyStaticTranslations(){
     document.querySelectorAll('[data-i18n]').forEach(function(el){
         var key = el.getAttribute('data-i18n');
@@ -746,32 +748,12 @@ function applyStaticTranslations(){
             }
             return;
         }
-        if(key === 'subtitle' || key === 'promptPlaceholder' || key === 'visibilityHelp'){
+        if(key === 'subtitle'){
             el.innerHTML = t(key);
         }else{
             el.textContent = t(key);
         }
     });
-    var authNick = document.getElementById('auth-nick');
-    if(authNick) authNick.placeholder = t('authNickPlaceholder');
-    var iaName = document.getElementById('ia-name');
-    if(iaName) iaName.placeholder = t('namePlaceholder');
-    var iaNivel = document.getElementById('ia-nivel');
-    if(iaNivel) iaNivel.placeholder = t('iaLevelPlaceholder');
-    var iaTema = document.getElementById('ia-tema');
-    if(iaTema) iaTema.placeholder = t('iaTopicPlaceholder');
-    var iaLangCustom = document.getElementById('ia-idioma-custom');
-    if(iaLangCustom) iaLangCustom.placeholder = t('iaLangCustomPlaceholder');
-    var iaExtra = document.getElementById('ia-extra');
-    if(iaExtra) iaExtra.placeholder = t('iaExtraPlaceholder');
-    var iaCsv = document.getElementById('ia-csv');
-    if(iaCsv) iaCsv.placeholder = t('iaCsvPlaceholder');
-    var csvName = document.getElementById('csv-name');
-    if(csvName) csvName.placeholder = t('namePlaceholder');
-    var kahootUrl = document.getElementById('kahoot-url');
-    if(kahootUrl) kahootUrl.placeholder = t('kahootUrlPlaceholder');
     var langSelect = document.getElementById('lang-select');
     if(langSelect) langSelect.value = lang;
-    var libSearch = document.getElementById('library-search');
-    if(libSearch) libSearch.placeholder = t('searchPlaceholder');
 }

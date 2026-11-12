@@ -1,4 +1,22 @@
 // Sesión y cuenta en /create/: login, chip de EduTicTac, propiedad de quizzes anónimos y reclamarlos al entrar, extraído de create.js
+// Estado de la zona de cuenta (aviso de entrada, mensajes y modal de
+// preferencias/admin), Subfase B, bloque 3. La plantilla #account-tpl lo lee.
+var accountState = Vue.reactive({
+    modalOpen: false,
+    authMessage: '',
+    accountMessage: '',
+    nick: '',
+    authentikEnabled: false,
+    importPublicEnabled: false,
+    adminReplace: false,
+    adminImportStatus: '',
+    jobs: {
+        kahoot: { busy: false, text: '' },
+        external: { busy: false, text: '' },
+        importPublic: { busy: false, text: '' }
+    }
+});
+
 function getAnonOwnerToken(){
     var key = 'anonOwnerToken';
     var existing = localStorage.getItem(key);
@@ -21,15 +39,15 @@ function ownsLocal(id){
 }
 
 function openAuthModal(){
-    if(!authModal) return;
-    authModal.classList.remove('hidden');
+    accountState.modalOpen = true;
     document.body.classList.add('modal-open');
-    try{ if(authNick) authNick.focus(); }catch(e){}
+    Vue.nextTick(function(){
+        try{ document.getElementById('auth-nick').focus(); }catch(e){}
+    });
 }
 
 function closeAuthModal(){
-    if(!authModal) return;
-    authModal.classList.add('hidden');
+    accountState.modalOpen = false;
     document.body.classList.remove('modal-open');
 }
 
@@ -37,8 +55,8 @@ function openCentralAccountMenu(){
     var menu = document.querySelector('edutictac-account details.eta-account');
     if(!menu){
         // Sense xip (Commons no respon): l'accés propi d'EduHoot fa de respost.
-        if(authentikAuthEnabled) loginWithAuthentik();
-        else if(authMsg) authMsg.textContent = t('accountUnavailable');
+        if(accountState.authentikEnabled) loginWithAuthentik();
+        else accountState.authMessage = t('accountUnavailable');
         return;
     }
     // El xip tanca el menú amb qualsevol clic de fora: s'obri quan este clic ja ha passat.
@@ -49,7 +67,7 @@ function openCentralAccountMenu(){
 }
 
 function requireLogin(message){
-    if(authMsg) authMsg.textContent = message || t('loginToSave');
+    accountState.authMessage = message || t('loginToSave');
     openCentralAccountMenu();
 }
 
@@ -68,26 +86,12 @@ function updateTitleUserId(){
     document.title = name ? (base + ' [' + name + ']') : base;
 }
 
+// Lo que depende de la sesión fuera de las plantillas de Vue (botón de
+// preferencias de la cabecera y título de la pestaña).
 function updateAuthUI(){
     var isLogged = !!(authState && authState.user);
-    if(newUserSignin){
-        newUserSignin.classList.toggle('hidden', !authentikAuthEnabled || isLogged);
-    }
+    var openAccountBtn = document.getElementById('open-account');
     if(openAccountBtn) openAccountBtn.classList.toggle('hidden', !isLogged);
-
-    if(authStatus){
-        if(isLogged){
-            var nickPart = authState.user.nickname ? ' · ' + authState.user.nickname : '';
-            authStatus.textContent = authState.user.email + nickPart + ' (' + authState.user.role + ')';
-            authStatus.classList.remove('pill-muted');
-        }else{
-            authStatus.textContent = t('authStatus');
-            authStatus.classList.add('pill-muted');
-        }
-    }
-    if(adminPanel){
-        adminPanel.classList.toggle('hidden', !(isLogged && authState.user.role === 'admin'));
-    }
 
     // Las imágenes SVG de la IA solo con sesión (la plantilla oculta la casilla).
     if(!isLogged){
@@ -153,7 +157,7 @@ function applyCentralSession(central){
     if(!central || !authState.checked) return;
     var centralTeacher = !!central.authenticated && central.kind === 'oidc';
     if(centralTeacher && !authState.user){
-        if(!authentikAuthEnabled || authBridgeFailed || bridgeRecentlyTried()) return;
+        if(!accountState.authentikEnabled || authBridgeFailed || bridgeRecentlyTried()) return;
         try{ sessionStorage.setItem(AUTH_BRIDGE_KEY, String(Date.now())); }catch(e){ return; }
         loginWithAuthentik();
     }else if(!central.authenticated && authState.user){
@@ -217,7 +221,7 @@ async function claimQuizToAccount(id, options){
         requireLogin(t('loginToSave'));
         return false;
     }
-    if(authMsg && !silent) authMsg.textContent = t('savingToAccount');
+    if(!silent) accountState.authMessage = t('savingToAccount');
     try{
         var res = await fetch('/api/quizzes/' + encodeURIComponent(id) + '/claim', {
             method: 'POST',
@@ -227,19 +231,19 @@ async function claimQuizToAccount(id, options){
         var body = {};
         try{ body = await res.json(); }catch(e){}
         if(!res.ok){
-            if(authMsg && !silent) authMsg.textContent = body.error || t('saveToAccountError');
+            if(!silent) accountState.authMessage = body.error || t('saveToAccountError');
             if(!silent) alert(body.error || t('saveToAccountError'));
             return false;
         }
         removeLocalQuizId(body.previousId || id);
         try{ localStorage.removeItem(PENDING_ACCOUNT_SAVE_KEY); }catch(e){}
-        if(authMsg) authMsg.textContent = t('saveToAccountOk');
+        accountState.authMessage = t('saveToAccountOk');
         socket.emit('requestDbNames');
         fetchWithFilters();
         fetchTags();
         return true;
     }catch(err){
-        if(authMsg && !silent) authMsg.textContent = t('saveToAccountError');
+        if(!silent) accountState.authMessage = t('saveToAccountError');
         if(!silent) alert(t('saveToAccountError'));
         return false;
     }
@@ -255,9 +259,8 @@ async function claimPendingQuizAfterLogin(){
 
 async function saveNickname(){
     if(!authState.user) return;
-    if(!authNick) return;
-    var nick = authNick.value.trim();
-    accountMsg.textContent = t('savingNick') || t('resetWaiting');
+    var nick = accountState.nick.trim();
+    accountState.accountMessage = t('savingNick') || t('resetWaiting');
     try{
         var res = await fetch('/api/auth/profile', {
             method: 'PATCH',
@@ -268,12 +271,12 @@ async function saveNickname(){
         var body = {};
         try { body = await res.json(); } catch(e){}
         if(!res.ok){
-            accountMsg.textContent = body.error || t('nickSaveError') || t('resetUpdateError');
+            accountState.accountMessage = body.error || t('nickSaveError') || t('resetUpdateError');
             return;
         }
-        accountMsg.textContent = t('nickSaved') || t('saveOk');
+        accountState.accountMessage = t('nickSaved') || t('saveOk');
         fetchMe();
     }catch(err){
-        accountMsg.textContent = t('nickSaveError') || t('resetUpdateError');
+        accountState.accountMessage = t('nickSaveError') || t('resetUpdateError');
     }
 }

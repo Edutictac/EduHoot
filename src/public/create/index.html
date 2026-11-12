@@ -37,80 +37,82 @@
                 </div>
             </aside>
 
-            <section id="new-user-signin" class="signin-callout hidden" aria-labelledby="new-user-signin-title">
+            <div id="account-app"></div>
+            <template id="account-tpl">
+            <section id="new-user-signin" class="signin-callout" :class="{ hidden: !acc.authentikEnabled || !!auth.user }" aria-labelledby="new-user-signin-title">
                 <div>
-                    <p class="eyebrow" data-i18n="signinEyebrow">Nuevo en EduHoot</p>
-                    <h2 id="new-user-signin-title" data-i18n="signinTitle">Guarda tus cuestionarios desde el primer minuto</h2>
-                    <p class="subtext" data-i18n="signinDesc">Entra con tu cuenta EduTicTac para tener biblioteca propia, editar después y lanzar tus juegos desde cualquier equipo.</p>
+                    <p class="eyebrow">{{ t('signinEyebrow') }}</p>
+                    <h2 id="new-user-signin-title">{{ t('signinTitle') }}</h2>
+                    <p class="subtext">{{ t('signinDesc') }}</p>
                 </div>
                 <div class="signin-callout__actions">
-                    <button id="open-account-menu" type="button" class="btn btn-primary btn-google-prominent" data-i18n="btnLogin">Entrar</button>
+                    <button id="open-account-menu" type="button" class="btn btn-primary btn-google-prominent" @click="openAccountMenu">{{ t('btnLogin') }}</button>
                 </div>
             </section>
-            <p class="subtext auth-message" id="auth-message" role="status"></p>
+            <p class="subtext auth-message" id="auth-message" role="status">{{ acc.authMessage }}</p>
 
-            <div id="auth-modal" class="modal hidden" role="dialog" aria-modal="true">
-                <div class="modal__backdrop" data-modal-close></div>
+            <div id="auth-modal" class="modal" :class="{ hidden: !acc.modalOpen }" role="dialog" aria-modal="true">
+                <div class="modal__backdrop" @click="close"></div>
                 <div class="modal__content" role="document">
-                    <button id="auth-modal-close" type="button" class="btn btn-ghost btn-small modal__close" data-i18n="modalClose" data-modal-close>Cerrar</button>
+                    <button id="auth-modal-close" type="button" class="btn btn-ghost btn-small modal__close" @click="close">{{ t('modalClose') }}</button>
                     <div id="auth-panel" class="panel">
                 <div class="panel-header">
                     <div>
-                        <p class="eyebrow" data-i18n="accessEyebrow">Acceso</p>
-                        <h3 data-i18n="accessTitle">Usuarios</h3>
-                        <p class="subtext" data-i18n="accessDesc">Inicia sesión para crear, editar o borrar quizzes.</p>
+                        <p class="eyebrow">{{ t('accessEyebrow') }}</p>
+                        <h3>{{ t('accessTitle') }}</h3>
+                        <p class="subtext">{{ t('accessDesc') }}</p>
                     </div>
                 </div>
-                <p id="auth-status" class="pill pill-muted" data-i18n="authStatus">No has iniciado sesión</p>
+                <p id="auth-status" class="pill" :class="{ 'pill-muted': !auth.user }">{{ statusText }}</p>
                 <div class="auth-grid">
-                    <label data-i18n="labelNick">Nombre visible (opcional)
-                        <input id="auth-nick" name="nickname" type="text" autocomplete="nickname" placeholder="Tu nick público">
+                    <label>{{ t('labelNick') }}
+                        <input id="auth-nick" name="nickname" type="text" autocomplete="nickname" :placeholder="t('authNickPlaceholder')" v-model="acc.nick">
                     </label>
                 </div>
                 <div class="actions-row">
-                    <button id="auth-save-nick" type="button" class="btn btn-ghost" data-i18n="btnSaveNick">Guardar nombre visible</button>
+                    <button id="auth-save-nick" type="button" class="btn btn-ghost" @click="saveNickname">{{ t('btnSaveNick') }}</button>
                 </div>
-                <p class="subtext" id="account-message" role="status"></p>
-                <div id="user-admin" class="subpanel hidden">
-                    <p class="eyebrow" data-i18n="adminOnly">Solo admins</p>
-                    <h4 data-i18n="adminBackupTitle">Importar / Exportar todos los quizzes</h4>
-                    <p class="subtext" data-i18n="adminBackupDesc">Crea un backup completo (JSON) o restaura todos los quizzes desde un archivo.</p>
+                <p class="subtext" id="account-message" role="status">{{ acc.accountMessage }}</p>
+                <div id="user-admin" class="subpanel" :class="{ hidden: !isAdmin }">
+                    <p class="eyebrow">{{ t('adminOnly') }}</p>
+                    <h4>{{ t('adminBackupTitle') }}</h4>
+                    <p class="subtext">{{ t('adminBackupDesc') }}</p>
                     <div class="actions-row">
-                        <button id="admin-export-quizzes" class="btn btn-ghost btn-with-icon">
-                            <span data-i18n="btnExportAllQuizzes">Exportar todos</span>
+                        <button id="admin-export-quizzes" class="btn btn-ghost btn-with-icon" @click="exportAll">
+                            <span>{{ t('btnExportAllQuizzes') }}</span>
                         </button>
                     </div>
                     <div class="auth-grid">
-                        <label data-i18n="labelImportAllQuizzes">Archivo JSON
-                            <input id="admin-import-quizzes-file" type="file" accept="application/json">
+                        <label>{{ t('labelImportAllQuizzes') }}
+                            <input id="admin-import-quizzes-file" ref="adminImportFile" type="file" accept="application/json">
                         </label>
                         <label class="checkbox-inline">
-                            <input id="admin-import-quizzes-replace" type="checkbox">
-                            <span data-i18n="adminReplaceAll">Reemplazar todo</span>
+                            <input id="admin-import-quizzes-replace" type="checkbox" v-model="acc.adminReplace">
+                            <span>{{ t('adminReplaceAll') }}</span>
                         </label>
                     </div>
                     <div class="actions-row">
-                        <button id="admin-import-quizzes" class="btn btn-ghost" data-i18n="btnImportAllQuizzes">Importar</button>
-                        <span id="admin-import-quizzes-status" class="subtext"></span>
+                        <button id="admin-import-quizzes" class="btn btn-ghost" @click="importAll">{{ t('btnImportAllQuizzes') }}</button>
+                        <span id="admin-import-quizzes-status" class="subtext">{{ acc.adminImportStatus }}</span>
                     </div>
-                    <h4 data-i18n="adminMirrorKahootTitle">Migrar imágenes de Kahoot</h4>
-                    <p class="subtext" data-i18n="adminMirrorKahootDesc">Descarga al servidor las imágenes de quizzes importados desde Kahoot para evitar dependencia de su CDN.</p>
+                    <h4>{{ t('adminMirrorKahootTitle') }}</h4>
+                    <p class="subtext">{{ t('adminMirrorKahootDesc') }}</p>
                     <div class="actions-row">
-                        <button id="admin-mirror-kahoot-images" class="btn btn-ghost" data-i18n="btnMirrorKahootImages">Migrar imágenes</button>
-                        <span id="admin-mirror-kahoot-status" class="subtext"></span>
+                        <button id="admin-mirror-kahoot-images" class="btn btn-ghost" :disabled="acc.jobs.kahoot.busy" @click="mirrorKahoot">{{ t('btnMirrorKahootImages') }}</button>
+                        <span id="admin-mirror-kahoot-status" class="subtext">{{ acc.jobs.kahoot.text }}</span>
                     </div>
-                    <h4 data-i18n="adminMirrorExternalTitle">Migrar imágenes externas (S3, etc.)</h4>
-                    <p class="subtext" data-i18n="adminMirrorExternalDesc">Descarga al servidor las imágenes alojadas en servidores externos (Amazon S3 y similares) para evitar que desaparezcan si la fuente cierra.</p>
+                    <h4>{{ t('adminMirrorExternalTitle') }}</h4>
+                    <p class="subtext">{{ t('adminMirrorExternalDesc') }}</p>
                     <div class="actions-row">
-                        <button id="admin-mirror-external-images" class="btn btn-ghost" data-i18n="btnMirrorExternalImages">Migrar imágenes externas</button>
-                        <span id="admin-mirror-external-status" class="subtext"></span>
+                        <button id="admin-mirror-external-images" class="btn btn-ghost" :disabled="acc.jobs.external.busy" @click="mirrorExternal">{{ t('btnMirrorExternalImages') }}</button>
+                        <span id="admin-mirror-external-status" class="subtext">{{ acc.jobs.external.text }}</span>
                     </div>
-                    <div id="admin-import-public-wrap" class="hidden">
-                        <h4 data-i18n="adminImportPublicTitle">Importar actividades públicas (demo)</h4>
-                        <p class="subtext" data-i18n="adminImportPublicDesc">Descarga todas las actividades públicas de eduhoot.edutictac.es para tener contenido de prueba en esta instancia.</p>
+                    <div id="admin-import-public-wrap" :class="{ hidden: !acc.importPublicEnabled }">
+                        <h4>{{ t('adminImportPublicTitle') }}</h4>
+                        <p class="subtext">{{ t('adminImportPublicDesc') }}</p>
                         <div class="actions-row">
-                            <button id="admin-import-public-btn" class="btn btn-ghost" data-i18n="btnImportPublic">Importar actividades públicas</button>
-                            <span id="admin-import-public-status" class="subtext"></span>
+                            <button id="admin-import-public-btn" class="btn btn-ghost" :disabled="acc.jobs.importPublic.busy" @click="importPublic">{{ t('btnImportPublic') }}</button>
+                            <span id="admin-import-public-status" class="subtext">{{ acc.jobs.importPublic.text }}</span>
                         </div>
                     </div>
                 </div>
@@ -118,6 +120,7 @@
 
                 </div>
             </div>
+            </template>
 
             <div id="tools-app"></div>
             <template id="tools-tpl">

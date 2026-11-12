@@ -34,118 +34,86 @@ function setLang(newLang){
 // L'accés és el xip de compte d'EduTicTac (Commons). EduHoot manté la seua sessió
 // Authentik: quan el xip ja té sessió de professorat, s'entra a EduHoot sense
 // demanar res més (SSO), i quan el xip la tanca, EduHoot també.
-var authModal = document.getElementById('auth-modal');
-var openAccountBtn = document.getElementById('open-account');
-var openAccountMenuBtn = document.getElementById('open-account-menu');
-var newUserSignin = document.getElementById('new-user-signin');
 var accountChip = document.querySelector('edutictac-account');
 var AUTH_BRIDGE_KEY = 'eduh_auth_bridge';
 var AUTH_BRIDGE_RETRY_MS = 2 * 60 * 1000;
 var authBridgeFailed = false;
+var authState = Vue.reactive({ user: null, checked: false });
 
+var openAccountBtn = document.getElementById('open-account');
 if(openAccountBtn) openAccountBtn.addEventListener('click', openAuthModal);
 
-if(authModal){
-    authModal.querySelectorAll('[data-modal-close]').forEach(function(el){
-        el.addEventListener('click', function(){
-            closeAuthModal();
-        });
-    });
-}
-
 document.addEventListener('keydown', function(e){
-    if(e.key === 'Escape' && authModal && !authModal.classList.contains('hidden')){
+    if(e.key === 'Escape' && accountState.modalOpen){
         closeAuthModal();
     }
 });
-
-var authNick = document.getElementById('auth-nick');
-var authStatus = document.getElementById('auth-status');
-var authMsg = document.getElementById('auth-message');
-var accountMsg = document.getElementById('account-message');
-var authSaveNickBtn = document.getElementById('auth-save-nick');
-var adminPanel = document.getElementById('user-admin');
-var adminExportAllBtn = document.getElementById('admin-export-quizzes');
-var adminImportFile = document.getElementById('admin-import-quizzes-file');
-var adminImportReplace = document.getElementById('admin-import-quizzes-replace');
-var adminImportBtn = document.getElementById('admin-import-quizzes');
-var adminImportStatus = document.getElementById('admin-import-quizzes-status');
-var adminMirrorKahootBtn = document.getElementById('admin-mirror-kahoot-images');
-var adminMirrorKahootStatus = document.getElementById('admin-mirror-kahoot-status');
-var adminMirrorExternalBtn = document.getElementById('admin-mirror-external-images');
-var adminMirrorExternalStatus = document.getElementById('admin-mirror-external-status');
-var adminImportPublicWrap = document.getElementById('admin-import-public-wrap');
-var adminImportPublicBtn = document.getElementById('admin-import-public-btn');
-var adminImportPublicStatus = document.getElementById('admin-import-public-status');
-var authState = Vue.reactive({ user: null, checked: false });
-var authentikAuthEnabled = false;
 
 window.addEventListener('edutictac:sessionchange', function(e){
     if(accountChip && sameSiteAsPage(accountChip.getAttribute('data-base') || '')) applyCentralSession(e.detail);
 });
 
-if(openAccountMenuBtn){
-    openAccountMenuBtn.addEventListener('click', openCentralAccountMenu);
+// Tareas de administración que solo informan del resultado.
+async function runAdminJob(job, url, workingKey, onOk, errorKey){
+    job.text = t(workingKey);
+    job.busy = true;
+    try{
+        var res = await fetch(url, { method: 'POST', credentials: 'include' });
+        var data = await res.json();
+        if(!res.ok) throw new Error(data.error || '');
+        job.text = onOk(data);
+    }catch(e){
+        job.text = t(errorKey) + (e.message ? ' ' + e.message : '');
+    }finally{
+        job.busy = false;
+    }
 }
-if(authSaveNickBtn){
-    authSaveNickBtn.addEventListener('click', saveNickname);
-}
-if(adminExportAllBtn){
-    adminExportAllBtn.addEventListener('click', exportAllQuizzesAsAdmin);
-}
-if(adminImportBtn){
-    adminImportBtn.addEventListener('click', importAllQuizzesAsAdmin);
-}
-if(adminMirrorKahootBtn){
-    adminMirrorKahootBtn.addEventListener('click', async function(){
-        if(adminMirrorKahootStatus) adminMirrorKahootStatus.textContent = t('mirrorKahootWorking');
-        adminMirrorKahootBtn.disabled = true;
-        try{
-            var res = await fetch('/api/admin/mirror-kahoot-images', { method: 'POST', credentials: 'include' });
-            var data = await res.json();
-            if(!res.ok) throw new Error(data.error || '');
-            if(adminMirrorKahootStatus) adminMirrorKahootStatus.textContent = t('mirrorKahootOk');
-        }catch(e){
-            if(adminMirrorKahootStatus) adminMirrorKahootStatus.textContent = t('mirrorKahootError') + (e.message ? ' ' + e.message : '');
-        }finally{
-            adminMirrorKahootBtn.disabled = false;
+
+// App de Vue de la zona de cuenta (#account-tpl): aviso de entrada, mensaje
+// de sesión y modal de preferencias con las herramientas de administración.
+var accountApp = {
+    template: '#account-tpl',
+    data: function(){
+        return { acc: accountState, auth: authState, lib: libState };
+    },
+    computed: {
+        isAdmin: function(){
+            return !!(this.auth.user && this.auth.user.role === 'admin');
+        },
+        statusText: function(){
+            var user = this.auth.user;
+            if(!user) return this.t('authStatus');
+            return user.email + (user.nickname ? ' · ' + user.nickname : '') + ' (' + user.role + ')';
         }
-    });
-}
-if(adminMirrorExternalBtn){
-    adminMirrorExternalBtn.addEventListener('click', async function(){
-        if(adminMirrorExternalStatus) adminMirrorExternalStatus.textContent = t('mirrorExternalWorking');
-        adminMirrorExternalBtn.disabled = true;
-        try{
-            var res = await fetch('/api/admin/mirror-external-images', { method: 'POST', credentials: 'include' });
-            var data = await res.json();
-            if(!res.ok) throw new Error(data.error || '');
-            if(adminMirrorExternalStatus) adminMirrorExternalStatus.textContent = t('mirrorExternalOk');
-        }catch(e){
-            if(adminMirrorExternalStatus) adminMirrorExternalStatus.textContent = t('mirrorExternalError') + (e.message ? ' ' + e.message : '');
-        }finally{
-            adminMirrorExternalBtn.disabled = false;
+    },
+    methods: {
+        t: function(key){
+            this.lib.lang;
+            return t(key);
+        },
+        openAccountMenu: function(){ openCentralAccountMenu(); },
+        close: function(){ closeAuthModal(); },
+        saveNickname: function(){ saveNickname(); },
+        exportAll: function(){ exportAllQuizzesAsAdmin(); },
+        importAll: function(){ importAllQuizzesAsAdmin(this.$refs.adminImportFile); },
+        mirrorKahoot: function(){
+            runAdminJob(this.acc.jobs.kahoot, '/api/admin/mirror-kahoot-images', 'mirrorKahootWorking',
+                function(){ return t('mirrorKahootOk'); }, 'mirrorKahootError');
+        },
+        mirrorExternal: function(){
+            runAdminJob(this.acc.jobs.external, '/api/admin/mirror-external-images', 'mirrorExternalWorking',
+                function(){ return t('mirrorExternalOk'); }, 'mirrorExternalError');
+        },
+        importPublic: function(){
+            runAdminJob(this.acc.jobs.importPublic, '/api/admin/import-public-activities', 'importPublicWorking', function(data){
+                socket.emit('requestDbNames');
+                return t('importPublicOk') + ': ' + data.imported + ' / ' + data.total + ' (' + data.skipped + ' ' + t('importPublicSkipped') + ')';
+            }, 'importPublicError');
         }
-    });
-}
-if(adminImportPublicBtn){
-    adminImportPublicBtn.addEventListener('click', async function(){
-        if(adminImportPublicStatus) adminImportPublicStatus.textContent = t('importPublicWorking');
-        adminImportPublicBtn.disabled = true;
-        try{
-            var res = await fetch('/api/admin/import-public-activities', { method: 'POST', credentials: 'include' });
-            var data = await res.json();
-            if(!res.ok) throw new Error(data.error || '');
-            if(adminImportPublicStatus) adminImportPublicStatus.textContent =
-                t('importPublicOk') + ': ' + data.imported + ' / ' + data.total + ' (' + data.skipped + ' ' + t('importPublicSkipped') + ')';
-            socket.emit('requestDbNames');
-        }catch(e){
-            if(adminImportPublicStatus) adminImportPublicStatus.textContent = t('importPublicError') + (e.message ? ' ' + e.message : '');
-        }finally{
-            adminImportPublicBtn.disabled = false;
-        }
-    });
-}
+    }
+};
+Vue.createApp(accountApp).mount('#account-app');
+
 // Start auth check on load
 try{
     var authParams = new URLSearchParams(window.location.search);
@@ -153,7 +121,7 @@ try{
     if(authentikResult){
         if(authentikResult !== 'ok'){
             authBridgeFailed = true;
-            if(authMsg) authMsg.textContent = t('loginError');
+            accountState.authMessage = t('loginError');
         }
         authParams.delete('authentik');
         var cleanUrl = window.location.pathname + (authParams.toString() ? '?' + authParams.toString() : '') + window.location.hash;
@@ -166,7 +134,7 @@ fetchTags();
 fetch('/api/auth/authentik/config', { credentials: 'include' })
     .then(function(res){ return res.ok ? res.json() : { enabled: false }; })
     .then(function(cfg){
-        authentikAuthEnabled = !!cfg.enabled;
+        accountState.authentikEnabled = !!cfg.enabled;
         updateAuthUI();
         syncCentralSession();
     })
@@ -175,7 +143,7 @@ fetch('/api/auth/authentik/config', { credentials: 'include' })
 fetch('/api/admin/import-public-activities/config', { credentials: 'include' })
     .then(function(res){ return res.ok ? res.json() : { enabled: false }; })
     .then(function(cfg){
-        if(adminImportPublicWrap) adminImportPublicWrap.classList.toggle('hidden', !cfg.enabled);
+        accountState.importPublicEnabled = !!cfg.enabled;
     })
     .catch(function(){});
 
