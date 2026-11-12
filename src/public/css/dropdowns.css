@@ -1,0 +1,15 @@
+/* Desplegables (<select>) sobre fons fosc. La llista d'opcions la pinta el
+   sistema amb fons clar, però les opcions heretaven el text blanc del
+   <select> i les no seleccionades quasi no es llegien. color-scheme fa la
+   llista fosca en Chrome/Edge/Safari; el fons de cada opció, en Firefox. */
+select{
+    color-scheme: dark;
+}
+select option,
+select optgroup{
+    background-color: #1e1b2e;
+    color: #f1f5f9;
+}
+select option:disabled{
+    color: #94a3b8;
+}

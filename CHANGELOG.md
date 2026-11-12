@@ -73,6 +73,9 @@ fitxers corresponents, i els originals es van eliminar.
   (`/admin-*`) també són ara apps de Vue 3. Funciona igual que abans.
 
 ### Corregit
+- En els desplegables, les opcions no seleccionades es veien molt
+  clares (text blanc sobre la llista clara del sistema); ara la llista és
+  fosca i es llig bé en totes les pantalles.
 - Si en obrir `/create/` o un panell `/admin-*` el xip de compte ja no
   tenia sessió, EduHoot podia tancar la seua dues vegades seguides.
 - En la pantalla de joc de l'alumnat (`/player/game/`), en PC les
