@@ -59,8 +59,9 @@ fitxers corresponents, i els originals es van eliminar.
   partida, resultat i rànquing. Funciona igual que abans.
 - La biblioteca (`/create/`) també usa ara Vue 3: biblioteca, generador
   IA, importació i compte. Funciona igual que abans.
-- La pantalla per a unir-se a una partida (`/join.html`) i la sala
-  d'espera (`/player/`) també són ara apps de Vue 3. Funciona igual que abans.
+- La pantalla per a unir-se a una partida (`/join.html`), la sala
+  d'espera (`/player/`) i els panells d'estadístiques i de logs
+  (`/admin-*`) també són ara apps de Vue 3. Funciona igual que abans.
 
 ### Corregit
 - En la sala d'espera (`/player/`), el missatge «Connectat a la partida»

@@ -49,11 +49,9 @@ funcionament del projecte.
 - **Sense build step**: el client és JS vanilla servit directament des de
   `src/public/`, sense bundler (webpack/vite). Cada pantalla (`create`,
   `host`, `player`, `solo`, `multiplayer`) carrega els seus propis
-  `<script>` solts. Excepcions de framework, totes amb Vue 3 i sense build
-  step: el lobby de `/host/`, les pantalles de joc `/player/game/` i
-  `/host/game/`, `/multiplayer/`, `/create/quiz-creator/`, `/solo/` i
-  `/create/` (vore "Lobby de l'amfitrió amb Vue" i les seccions de
-  Subfase B).
+  `<script>` solts. Totes les pantalles amb JS propi usen Vue 3, sense
+  build step; només la portada (`/`), que no en té, queda fora (vore
+  "Lobby de l'amfitrió amb Vue" i les seccions de Subfase B).
 - **Dependències de producció mínimes** (`src/package.json`): `express`,
   `socket.io`, `mongodb` (driver natiu, sense ORM/Mongoose), `helmet`
   (capçaleres de seguretat), `multer` (pujada d'imatges), `moment`,
@@ -143,7 +141,7 @@ JS d'orquestració amb `<script>` clàssics (sense build step):
 | `/create/quiz-creator/` | `quizCreator.js` (ja amb Vue) | Professorat: editor d'un qüestionari (preguntes, respostes, tipus) |
 | `/solo/` | `solo.js` + mòduls `solo-*.js` + `i18n-solo.js` (ja repartits, Subfase A, i amb Vue) | Mode individual, a ritme propi, fora de classe |
 | `/multiplayer/` | `multiplayer.js` (ja amb Vue) | Mode 2-4 jugadors compartint una sola pantalla |
-| `/admin-stats.html` | `admin-stats.js` | Estadístiques del panell d'administració |
+| `/admin-stats.html` | `admin-stats.js` (ja amb Vue) | Estadístiques del panell d'administració |
 
 A banda, fitxers transversals que no pertanyen a una sola pantalla:
 `languages.js`, `i18n-host.js`/`i18n-player.js`/`i18n-solo.js`/
@@ -501,6 +499,14 @@ el selector d'idioma i el peu queden fora.
 La sala d'espera `/player/` (`lobby.js`) també usa Vue, només per als dos
 missatges (`#lobby-app`); la connexió amb Socket.IO no canvia. Proves:
 `src/test/browser/player-lobby.spec.js`.
+
+### Panells d'administració amb Vue
+
+`/admin-stats.html` (`admin-stats.js`, arrel `#stats-app`) i
+`/admin-logs.html` (`admin-logs.js`, arrel `#logs-app`) són apps de Vue.
+Les targetes, la taula de logs, els filtres, la configuració i el detall
+d'un log es pinten des de l'estat; el pont de sessió amb el xip no canvia.
+Proves: `src/test/browser/admin-stats.spec.js` i `admin-logs.spec.js`.
 
 ## Distintiu visual d'entorn (dev/stage)
 

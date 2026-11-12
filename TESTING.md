@@ -107,8 +107,9 @@ problemes d'estil, variables sense usar, etc.
   de `/solo/`, amb el rellotge de Playwright controlat),
   `create.spec.js` (biblioteca, generador IA, importació i compte de
   `/create/`, amb la REST i Socket.IO simulats) i `join.spec.js` (PIN,
-  icona, nom i identitat d'alumne en `/join.html`) i
-  `player-lobby.spec.js` (sala d'espera `/player/` amb Socket.IO fals).
+  icona, nom i identitat d'alumne en `/join.html`),
+  `player-lobby.spec.js` (sala d'espera `/player/` amb Socket.IO fals),
+  `admin-stats.spec.js` i `admin-logs.spec.js` (panells d'administració).
 
 ### Scripts puntuals que NO són part del flux de test estàndard
 
