@@ -70,7 +70,8 @@ fitxers corresponents, i els originals es van eliminar.
   respostes eixien desplaçades a l'esquerra; ara formen una quadrícula de
   2x2 centrada. En mòbil, quan la pregunta té imatge, esta s'ajusta a
   l'alçada de la pantalla perquè les quatre respostes es vegen sense
-  desplaçar. El símbol i el text de cada resposta tenen més separació.
+  desplaçar. El text de cada resposta s'alinea a l'esquerra, després del
+  símbol, amb més separació entre tots dos.
 - En acabar la partida, la pantalla de l'amfitrió continuava mostrant
   «Saltar pregunta», i l'avís «Ningú ha encertat…» de l'última pregunta
   podia quedar damunt del podi.
