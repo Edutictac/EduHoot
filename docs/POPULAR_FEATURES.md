@@ -155,9 +155,8 @@ decisió de producte.
    prevaldria: cap de les dos es retomarà sense guardar un històric de
    resultats de l'alumnat identificable entre partides, cosa que no es
    farà.
-7. **23 (Compte arrere 3-2-1)** — ja implementada en el mode "Jugar a
-   l'aula" des del commit `9b8c345`; l'únic pendent és portar-la al mode
-   Solo, que és justament el que cobrix la seua Fase 1a.
+7. **23 (Compte arrere 3-2-1)** — ✅ implementada en el mode "Jugar a
+   l'aula" i, des del 2026-11-13, també en el mode Solo.
 8. **26 (Mode fantasma)** — compara el jugador contra la seua pròpia
    millor marca, no contra companys: pedagògicament més sa que un
    rànquing competitiu, encara que no aporte aprenentatge directe per si
@@ -344,9 +343,9 @@ el context, que ja estan en la taula).
     protecció de dades.
 
 23. 🟨 **Kahoot** — Pantalla "¡Prepara't!" amb compte arrere 3-2-1 — 🟢 Baixa
-    Ja implementada en el mode "Jugar a l'aula" des del commit `9b8c345`
-    (`sockets/gameHelpers.js`, esdeveniment `questionCountdown`). No
-    existix en Solo; l'únic pendent és portar `showQuestionCountdown`.
+    ✅ Implementada en el mode "Jugar a l'aula" (`sockets/gameHelpers.js`,
+    esdeveniment `questionCountdown`) i en Solo (`runCountdown` en
+    `solo-game.js`), amb el mateix aspecte (`css/countdown.css`).
     → **Criteri pedagògic:** ✖️ Aprenentatge: Cap · 🙂 Clima: Segur ·
     ➖ Inclusió: Neutra → sense valor pedagògic directe, però s'implementa
     igualment: el cost real és mínim (ja existix en multijugador, només
@@ -520,8 +519,8 @@ realista, no només una llista d'idees.
   - **23 (compte arrere 3-2-1)** — ja implementada abans de cada
     pregunta en el mode "Jugar a l'aula" (commit `9b8c345`,
     `sockets/gameHelpers.js`, `scheduleQuestionCountdown()`,
-    esdeveniment `questionCountdown`). **No
-    existix en Solo**: ahí només faltaria portar `showQuestionCountdown`.
+    esdeveniment `questionCountdown`) i, des del 2026-11-13, també en
+    Solo.
   - **4 (power-ups)** — el submecanisme de "doble puntuació" ja existix
     (commit `ef9cb40`, `services/scoring.js` i
     `services/kahootImport.js`), però només
@@ -562,10 +561,8 @@ un suggeriment ajornable:
   en mòduls per responsabilitat, en JS vanilla i sense build step. Vore
   `docs/MIGRATING.md` (Subfase A) — fet (vore `ARCHITECTURE.md`).
 
-Fora d'esta fase (no és requisit): la Subfase B de `docs/MIGRATING.md`
-(Vue 3, també sense build step) està en marxa. La prova pilot en el lobby
-de `/host/` ja està feta i s'ha decidit continuar; la pròxima pantalla és
-`playerGame.js`.
+✅ Fora d'esta fase (no era requisit): la Subfase B de `docs/MIGRATING.md`
+(Vue 3, també sense build step) està FET. 
 
 ### Fase 1a — Millores cosmètiques/aïllades, sense tocar la lògica de joc
 
@@ -691,6 +688,11 @@ la numeració 1-32 de dalt.
   portada/destacada per al qüestionari, que aparega en diversos llocs
   (p. ex. la llista pública de qüestionaris o la pantalla d'entrada a
   un d'ells).
+- **W7 — Tipus de pregunta de correspondència.** Un tipus nou de
+  pregunta en què l'alumnat relaciona els elements d'una columna amb els
+  d'una altra (p. ex. paraula–definició, país–capital). Caldria
+  definir-lo en el model de pregunta, l'editor, la importació/exportació
+  (CSV, Moodle) i les pantalles de joc.
 
 ## Nota sobre drets d'autor
 

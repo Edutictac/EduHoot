@@ -19,6 +19,8 @@ fitxers corresponents, i els originals es van eliminar.
 ## [Sense publicar]
 
 ### Afegit
+- El mode individual (`/solo/`) també mostra el compte arrere 3-2-1
+  abans de cada pregunta, amb el mateix aspecte que "Jugar a l'aula".
 - El CSV de preguntes d'un qüestionari es descarrega amb la data i l'hora
   en el nom (`<nom>-AAAAMMDD-HHMMSS.csv`), per a no confondre dos
   exportacions del mateix qüestionari.

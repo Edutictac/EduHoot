@@ -4,6 +4,7 @@
         <meta charset="utf-8">
         <title>Modo individual | EduHoot</title>
         <link rel="stylesheet" href="../css/solo.css">
+        <link rel="stylesheet" href="/css/countdown.css">
         <link rel="stylesheet" href="/css/dropdowns.css">
         <link rel="stylesheet" href="../css/music-player.css">
         <link href="/css/fonts.css" rel="stylesheet">
@@ -144,6 +145,13 @@
                         <span id="timer-pill" class="pill pill-timer">{{ t('timer') + ': ' + Math.ceil(s.timerLeft) + 's' }}</span>
                     </div>
                     <div class="question-card">
+                        <!-- Compte arrere 3-2-1 abans de cada pregunta (proposta 23). -->
+                        <div id="solo-countdown" class="question-countdown" :class="{ 'is-visible': s.countdown > 0, 'is-ticking': s.countdown > 0 }" aria-live="polite" v-if="s.countdown > 0">
+                            <div class="question-countdown__label">{{ t('countdownLabel') }}</div>
+                            <div class="question-countdown__dial" :key="'dial-' + s.countdown"><span>{{ s.countdown }}</span></div>
+                            <div class="question-countdown__hint">{{ t('countdownHint') }}</div>
+                        </div>
+                        <template v-else>
                         <p id="question-text" class="question-text">{{ question ? (question.question || '') : '' }}</p>
                         <div id="question-media" class="question-media" :class="{ hidden: !hasMedia, show: hasMedia }">
                             <img id="question-image" alt="" :src="media.image || null" :style="{ display: media.image ? 'block' : 'none' }">
@@ -163,6 +171,7 @@
                             <button id="multi-submit" type="button" class="btn multi-submit" :class="{ hidden: !showMultiSubmit, 'has-selection': showMultiSubmit && s.multiSelections.length > 0 }" :disabled="!s.multiSelections.length" @click="submitMulti">{{ t('submitAnswers') }}</button>
                         </div>
                         <p id="feedback" class="feedback" :class="s.feedback.kind ? 'feedback--' + s.feedback.kind : ''">{{ s.feedback.text }}</p>
+                        </template>
                     </div>
                 </div>
 

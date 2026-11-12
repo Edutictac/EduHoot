@@ -22,6 +22,8 @@ var state = Vue.reactive({
         score: 0,
         correct: 0,
         timer: null,
+        // Segons que queden del compte arrere 3-2-1 (0 = no se'n mostra cap).
+        countdown: 0,
         timerTotal: 20,
         timerLeft: 20,
         locked: false,
@@ -140,6 +142,7 @@ function setLang(newLang){
         state.title = { key: 'soloTitle' };
         syncQuestionCountControls();
         document.body.classList.remove('playing');
+        stopCountdown();
         pauseSoloMusic();
         state.awaitingConfirm = false;
         state.lastWrong = null;

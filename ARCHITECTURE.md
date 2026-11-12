@@ -454,6 +454,11 @@ la app com a *mixin* de Vue: `soloCatalog` (`solo-library.js`) i
 - **Corregit després de migrar**: en entrar des de Commons, la puntuació
   s'enviava com «AAA» perquè `startQuiz()` substituïa el codi públic de
   l'alumne pel camp de nom buit. Ara el codi públic és el nom per defecte.
+- **Compte arrere 3-2-1** abans de cada pregunta, com en "Jugar a
+  l'aula": `runCountdown()` en `solo-game.js` (`state.countdown`) amaga la
+  pregunta i les respostes i no arranca el temporitzador fins que acaba.
+  L'aspecte és el mateix que en `/player/game/`: els estils estan en
+  `css/countdown.css`, compartit per les dos pantalles.
 - **Proves**: `src/test/browser/solo.spec.js` (amb `page.clock` per al
   temporitzador), a més de `solo-library.spec.js` i `solo-poll.spec.js`.
 

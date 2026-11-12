@@ -1,0 +1,112 @@
+/* Compte arrere 3-2-1 abans de cada pregunta: «Jugar a l'aula»
+   (/player/game/) i mode individual (/solo/). */
+@keyframes countdownGlow {
+    0% { transform: scale(0.96); opacity: 0.4; }
+    65% { transform: scale(1.02); opacity: 0.75; }
+    100% { transform: scale(1.06); opacity: 0.15; }
+}
+
+@keyframes countdownPulse {
+    0% { transform: scale(0.9); }
+    60% { transform: scale(1.04); }
+    100% { transform: scale(1); }
+}
+
+@keyframes countdownNumber {
+    0% { transform: scale(0.72); opacity: 0.35; }
+    55% { transform: scale(1.1); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.question-countdown{
+    position: relative;
+    display: none;
+    width: min(420px, 100%);
+    margin: 8px auto 18px;
+    padding: 18px 16px 22px;
+    text-align: center;
+    isolation: isolate;
+}
+
+.question-countdown.is-visible{
+    display: grid;
+    place-items: center;
+    gap: 12px;
+}
+
+.question-countdown::before,
+.question-countdown::after{
+    content: "";
+    position: absolute;
+    inset: 14px 28px;
+    border-radius: 999px;
+    z-index: -1;
+}
+
+.question-countdown::before{
+    background: conic-gradient(from 90deg, #22c55e, #f97316, #3b82f6, #f43f5e, #22c55e);
+    filter: blur(16px);
+    opacity: 0.6;
+    animation: countdownGlow 1s ease-out infinite;
+}
+
+.question-countdown::after{
+    background: rgba(7, 12, 32, 0.5);
+    border: 1px solid rgba(255,255,255,0.2);
+    box-shadow: var(--shadow, 0 18px 50px rgba(0,0,0,0.25));
+}
+
+.question-countdown__label,
+.question-countdown__hint{
+    color: #f8fafc;
+    font-weight: 800;
+    text-shadow: 0 8px 28px rgba(0,0,0,0.45);
+}
+
+.question-countdown__label{
+    font-size: clamp(20px, 6vw, 32px);
+    line-height: 1.08;
+}
+
+.question-countdown__hint{
+    color: #dbeafe;
+    font-size: clamp(13px, 3.5vw, 18px);
+    text-transform: uppercase;
+}
+
+.question-countdown__dial{
+    width: clamp(130px, 34vw, 190px);
+    aspect-ratio: 1;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle at center, rgba(255,255,255,0.18) 0 45%, transparent 47%),
+        conic-gradient(#facc15, #fb7185, #60a5fa, #34d399, #facc15);
+    box-shadow:
+        inset 0 0 0 10px rgba(7,12,32,0.72),
+        0 18px 55px rgba(0,0,0,0.32);
+}
+
+.question-countdown__dial span{
+    width: 68%;
+    aspect-ratio: 1;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: rgba(8,13,34,0.88);
+    color: #fff;
+    font-family: 'Poppins', 'Inter', sans-serif;
+    font-size: clamp(64px, 16vw, 110px);
+    font-weight: 800;
+    line-height: 1;
+    text-shadow: 0 10px 34px rgba(0,0,0,0.45);
+}
+
+.question-countdown.is-ticking .question-countdown__dial{
+    animation: countdownPulse 1s ease-out;
+}
+
+.question-countdown.is-ticking .question-countdown__dial span{
+    animation: countdownNumber 1s ease-out;
+}

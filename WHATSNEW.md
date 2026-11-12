@@ -35,6 +35,8 @@
   prompte encertes, més punts afigs.
 - **Juga amb els companys o al teu ritme**: fins a 4 jugadors compartint
   una sola pantalla, o mode individual per a practicar quan vulgues.
+- **Compte arrere també quan practiques sol**: el mode individual mostra
+  el mateix 3-2-1 abans de cada pregunta.
 - **Cada nom, una sola vegada**: dos alumnes no poden entrar amb el mateix
   nom en una partida; si el teu ja està agafat, se t'avisa perquè en tries
   un altre.
@@ -113,6 +115,8 @@
 - **Juega con tus compañeros o a tu ritmo**: hasta 4 jugadores
   compartiendo una sola pantalla, o modo individual para practicar cuando
   quieras.
+- **Cuenta atrás también cuando practicas solo**: el modo individual
+  muestra el mismo 3-2-1 antes de cada pregunta.
 - **Cada nombre, una sola vez**: dos alumnos no pueden entrar con el mismo
   nombre en una partida; si el tuyo ya está cogido, se te avisa para que
   elijas otro.
@@ -190,6 +194,8 @@
   right, the more you earn.
 - **Play together or at your own pace**: up to 4 players sharing one
   screen, or a solo mode to practise whenever you want.
+- **Countdown when practising alone too**: solo mode shows the same
+  3-2-1 before each question.
 - **Every name, only once**: two students can't join a game with the same
   name; if yours is already taken, you're told so you can pick another.
 - **Comfortable answers on any screen**: on a computer, the buttons sit

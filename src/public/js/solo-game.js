@@ -42,13 +42,44 @@ function startQuiz(){
         var time = (typeof state.desiredQuestionTime === 'number' && state.desiredQuestionTime > 0)
             ? state.desiredQuestionTime
             : ((typeof q.time === 'number' && q.time > 0) ? q.time : 20);
-        startTimer(time);
-        if(meta.type === 'short-answer' || meta.type === 'numeric'){
-            setTimeout(function(){
-                var input = document.getElementById('solo-free-input');
-                try{ if(input) input.focus(); }catch(e){}
-            }, 50);
+        state.timerTotal = Math.max(5, Math.min(120, time));
+        state.timerLeft = state.timerTotal;
+        // Compte arrere 3-2-1 (com en «Jugar a l'aula»): la pregunta, les
+        // respostes i el temporitzador no comencen fins que acaba.
+        state.locked = true;
+        runCountdown(SOLO_COUNTDOWN_SECONDS, function(){
+            state.locked = false;
+            startTimer(time);
+            if(meta.type === 'short-answer' || meta.type === 'numeric'){
+                setTimeout(function(){
+                    var input = document.getElementById('solo-free-input');
+                    try{ if(input) input.focus(); }catch(e){}
+                }, 50);
+            }
+        });
+    }
+
+    var SOLO_COUNTDOWN_SECONDS = 3;
+    var countdownTimer = null;
+
+    function runCountdown(seconds, done){
+        stopCountdown();
+        state.countdown = seconds;
+        countdownTimer = setInterval(function(){
+            state.countdown -= 1;
+            if(state.countdown <= 0){
+                stopCountdown();
+                if(state.view === 'game') done();
+            }
+        }, 1000);
+    }
+
+    function stopCountdown(){
+        if(countdownTimer){
+            clearInterval(countdownTimer);
+            countdownTimer = null;
         }
+        state.countdown = 0;
     }
 
     // Lo que se muestra de la pregunta actual (texto, medios, respuestas); lo

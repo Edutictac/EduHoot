@@ -97,9 +97,18 @@ async function openQuizDirect(page, id, query = '&lang=es') {
     await page.clock.pauseAt(await page.evaluate(() => Date.now() + 1000));
 }
 
+// Compte arrere 3-2-1 abans de cada pregunta (proposta 23): es veu el 3 i
+// es deixa passar sencer; el temporitzador de la pregunta encara no ha corregut.
+async function countdown(page) {
+    await expect(page.locator('#solo-countdown span')).toHaveText('3');
+    await page.clock.runFor(3000);
+    await expect(page.locator('#solo-countdown')).toHaveCount(0);
+}
+
 async function start(page) {
     await page.locator('#start-btn').click();
     await expect(page.locator('#game-area')).toBeVisible();
+    await countdown(page);
 }
 
 test('catálogo: tarjetas ordenadas por partidas, con datos, sin paginación', async ({ page }) => {
@@ -312,7 +321,7 @@ test('partida completa: tipos de pregunta, puntos, avisos y resultado', async ({
     await expect(answerButtons(page).nth(1)).toBeDisabled();
     await expect(page.locator('#score-pill')).toHaveText('Puntos: 1000');
     // 1200 justos: la siguiente pregunta arranca su temporizador sin consumir nada.
-    await page.clock.runFor(1200);
+    await page.clock.runFor(1200 + 3000);
 
     // 2. Múltiple, acierto parcial (2 y 4 → solo 2 es correcta): 1 acierto − 1 fallo = 0.
     // Se prueba primero marcar/desmarcar.
@@ -341,6 +350,7 @@ test('partida completa: tipos de pregunta, puntos, avisos y resultado', async ({
     await expect(page.locator('#feedback-body')).toHaveText('Respuesta correcta: 2, 5');
     await page.locator('#feedback-close').click();
     await expect(modal).not.toHaveClass(/\bshow\b/);
+    await countdown(page);
 
     // 3. Verdadero/falso: solo dos botones; fallo con el modal y el texto correcto.
     await expect(page.locator('#question-progress')).toHaveText('Pregunta 3 de 5');
@@ -351,6 +361,7 @@ test('partida completa: tipos de pregunta, puntos, avisos y resultado', async ({
     await expect(answerButtons(page).nth(1)).toHaveClass(/\bwrong\b/);
     await expect(modal).toHaveClass(/\bshow\b/);
     await modal.click({ position: { x: 5, y: 5 } });
+    await countdown(page);
 
     // 4. Respuesta corta: sin tildes ni mayúsculas, con Enter.
     await expect(page.locator('#question-progress')).toHaveText('Pregunta 4 de 5');
@@ -363,7 +374,7 @@ test('partida completa: tipos de pregunta, puntos, avisos y resultado', async ({
     await expect(input).toBeDisabled();
     await expect(page.locator('#solo-free-submit')).toBeDisabled();
     await expect(page.locator('#score-pill')).toHaveText('Puntos: 2425');
-    await page.clock.runFor(1300);
+    await page.clock.runFor(1300 + 3000);
 
     // 5. Numérica con coma decimal y botón.
     await expect(page.locator('#question-progress')).toHaveText('Pregunta 5 de 5');
@@ -393,6 +404,8 @@ test('se acaba el tiempo: aviso, modal y siguiente pregunta', async ({ page }) =
     await page.locator('#feedback-close').click();
     await expect(page.locator('#question-progress')).toHaveText('Pregunta 2 de 5');
     await expect(page.locator('#timer-pill')).toHaveText('Tiempo: 5s');
+    await countdown(page);
+    await expect(page.locator('#timer-pill')).toHaveText('Tiempo: 5s');
 });
 
 test('elegir cuántas preguntas: juega solo esas y «Volver a jugar» las mantiene', async ({ page }) => {
@@ -402,7 +415,7 @@ test('elegir cuántas preguntas: juega solo esas y «Volver a jugar» las mantie
     await start(page);
     await expect(page.locator('#question-progress')).toHaveText('Pregunta 1 de 1');
     await answerButtons(page).nth(0).click();
-    await page.clock.runFor(1300);
+    await page.clock.runFor(1300 + 3000);
     await expect(page.locator('#result-area')).toBeVisible();
     await expect(page.locator('#result-summary')).toHaveText('Acertadas 1/1 · 1000 pts');
 
@@ -419,7 +432,7 @@ test('final: pide el nombre, lo normaliza y guarda la puntuación en el ranking'
     await openQuizDirect(page, 'q2');
     await start(page);
     await answerButtons(page).nth(0).click();
-    await page.clock.runFor(1300);
+    await page.clock.runFor(1300 + 3000);
 
     const nameModal = page.locator('#name-modal');
     await expect(nameModal).toHaveClass(/\bshow\b/);
@@ -440,7 +453,7 @@ test('final: «Omitir» guarda como AAA y con el top lleno y peor nota no pregun
     await openQuizDirect(page, 'q2');
     await start(page);
     await answerButtons(page).nth(0).click();
-    await page.clock.runFor(1300);
+    await page.clock.runFor(1300 + 3000);
     await page.locator('#name-cancel').click();
     await expect.poll(() => calls.soloRuns.length).toBe(1);
     expect(calls.soloRuns[0].body.name).toBe('AAA');
@@ -451,7 +464,7 @@ test('final: «Omitir» guarda como AAA y con el top lleno y peor nota no pregun
     await openQuizDirect(page2, 'q2');
     await start(page2);
     await answerButtons(page2).nth(0).click();
-    await page2.clock.runFor(1300);
+    await page2.clock.runFor(1300 + 3000);
     await expect.poll(() => calls2.soloRuns.length).toBe(1);
     await expect(page2.locator('#name-modal')).not.toHaveClass(/\bshow\b/);
 });
@@ -462,7 +475,7 @@ test('error al guardar la puntuación se muestra en el ranking', async ({ page }
     await openQuizDirect(page, 'q2');
     await start(page);
     await answerButtons(page).nth(0).click();
-    await page.clock.runFor(1300);
+    await page.clock.runFor(1300 + 3000);
     await page.locator('#name-save').click();
     await expect(page.locator('#ranking-list li')).toHaveText(['Massa intents']);
     await expect(page.locator('#ranking')).toBeVisible();
@@ -473,7 +486,7 @@ test('«Elegir otro quiz» vuelve al estado inicial del panel', async ({ page })
     await openQuizDirect(page, 'q2');
     await start(page);
     await answerButtons(page).nth(0).click();
-    await page.clock.runFor(1300);
+    await page.clock.runFor(1300 + 3000);
     await page.locator('#name-cancel').click();
     await page.locator('#pick-another').click();
     await expect(page.locator('#result-area')).toBeHidden();
@@ -502,7 +515,7 @@ test('imagen y vídeo de YouTube de la pregunta', async ({ page }) => {
     // Respuestas vacías se pintan como «Respuesta N».
     await expect(answerButtons(page)).toHaveText(['a', 'b', 'Respuesta 3', 'Respuesta 4']);
     await answerButtons(page).nth(0).click();
-    await page.clock.runFor(1300);
+    await page.clock.runFor(1300 + 3000);
     await expect(page.locator('#question-image')).toBeHidden();
     await expect(page.locator('#question-iframe')).toBeVisible();
     await expect(page.locator('#question-iframe')).toHaveAttribute('src', 'https://www.youtube-nocookie.com/embed/abc123');
@@ -519,7 +532,7 @@ test('entrada desde Commons: canjea el token, lo quita de la URL y no pide nombr
     expect(calls.launch).toEqual([{ launch_token: 'tok-9' }]);
     await start(page);
     await answerButtons(page).nth(0).click();
-    await page.clock.runFor(1300);
+    await page.clock.runFor(1300 + 3000);
     await expect.poll(() => calls.soloRuns.length).toBe(1);
     // public_code normalizado como un nombre de 3 caracteres.
     expect(calls.soloRuns[0].body).toMatchObject({ name: 'XE9', studentJoinToken: 'join-1' });
@@ -536,3 +549,28 @@ test('cambiar de idioma traduce el catálogo y el panel', async ({ page }) => {
     await expect(page.locator('#selected-title')).toHaveText('Pick a game to start');
     await expect(page.locator('#search')).toHaveAttribute('placeholder', 'Search by name or tag');
 });
+
+test('compte arrere 3-2-1 abans de cada pregunta: amaga la pregunta i no gasta temps', async ({ page }) => {
+    await mockBackend(page);
+    await openQuizDirect(page, 'q1');
+    await page.locator('#start-btn').click();
+    const cd = page.locator('#solo-countdown');
+    await expect(cd).toBeVisible();
+    await expect(cd.locator('.question-countdown__label')).toHaveText('¡Prepárate!');
+    await expect(cd.locator('.question-countdown__hint')).toHaveText('La pregunta empieza en');
+    await expect(cd.locator('span')).toHaveText('3');
+    await expect(page.locator('#question-text')).toHaveCount(0);
+    await expect(answerButtons(page)).toHaveCount(0);
+    await expect(page.locator('#timer-pill')).toHaveText('Tiempo: 20s');
+    await page.clock.runFor(1000);
+    await expect(cd.locator('span')).toHaveText('2');
+    await page.clock.runFor(1000);
+    await expect(cd.locator('span')).toHaveText('1');
+    await page.clock.runFor(1000);
+    await expect(cd).toHaveCount(0);
+    await expect(answerButtons(page)).toHaveText(['París', 'Berlín', 'Roma', 'Londres']);
+    await expect(page.locator('#timer-pill')).toHaveText('Tiempo: 20s');
+    await page.clock.runFor(2000);
+    await expect(page.locator('#timer-pill')).toHaveText('Tiempo: 18s');
+});
+
