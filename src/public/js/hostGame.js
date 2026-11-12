@@ -254,6 +254,11 @@ var app = Vue.createApp({
         t: function(key){
             return t(key, this.lang);
         },
+        // Antes eran onclick="…" en el HTML; con @click no hacen falta
+        // atributos on… y la CSP puede prohibir los scripts en línea.
+        toggleFullscreen: function(){ toggleHostFullscreen(); },
+        goNextQuestion: function(){ nextQuestion(); },
+        showRankingToggle: function(){ toggleRanking(); },
         answerHasContent: function(i){
             if(this.questionType === 'short-answer' || this.questionType === 'numeric') return false;
             if(this.questionType === 'true-false' && i >= 2) return false;

@@ -308,3 +308,20 @@ test('cambiar de idioma traduce los textos en el sitio, sin recargar', async ({ 
     await expect(page.locator('#nextQButton')).toHaveText('Next question');
     await expect(page).toHaveURL(/\/host\/game\//);
 });
+
+// Estos botones usaban onclick="…" en el HTML; ahora son @click de Vue.
+test('«Siguiente pregunta» pide la siguiente y ⛶ pide pantalla completa', async ({ page }) => {
+    await page.addInitScript(() => {
+        window.__fullscreenRequests = 0;
+        Element.prototype.requestFullscreen = function(){ window.__fullscreenRequests++; return Promise.resolve(); };
+    });
+    await openGame(page);
+    await serverEmit(page, 'gameQuestions', gameQuestionsPayload());
+
+    await page.locator('#nextQButton').dispatchEvent('click');
+    expect(await emitsNamed(page, 'nextQuestion')).toHaveLength(1);
+    await expect(page.locator('#nextQButton')).toBeHidden();
+
+    await page.locator('#fullscreenToggle').click();
+    expect(await page.evaluate(() => window.__fullscreenRequests)).toBe(1);
+});

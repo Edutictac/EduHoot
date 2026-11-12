@@ -22,7 +22,7 @@
             <div class="host-top">
                 <div id="pin-badge" class="pin-badge" title="PIN del juego" :style="{ display: pin ? 'inline-flex' : 'none' }">{{ pinText }}</div>
                 <div class="spacer"></div>
-                <button type="button" id="fullscreenToggle" class="fullscreen-toggle" onclick="toggleHostFullscreen()" aria-pressed="false">⛶</button>
+                <button type="button" id="fullscreenToggle" class="fullscreen-toggle" @click="toggleFullscreen" aria-pressed="false">⛶</button>
                 <label class="lang-switch">
                     <span data-i18n="langLabel">Idioma</span>
                     <select id="lang-select" data-lang-options="name"></select>
@@ -62,8 +62,8 @@
 
         <div class="control-row">
             <button @click="skipQuestion" id="skipQButton" :style="{ display: skipVisible ? 'inline-block' : 'none' }" :disabled="skipDisabled">{{ t('skip') }}</button>
-            <button onclick = "nextQuestion()" id = "nextQButton">Next Question</button>
-            <button onclick="toggleRanking()" id="showRanking">{{ t('showRanking') }}</button>
+            <button type="button" @click="goNextQuestion" id="nextQButton">Next Question</button>
+            <button type="button" @click="showRankingToggle" id="showRanking">{{ t('showRanking') }}</button>
             <button type="button" id="downloadReportBtn" @click="downloadReport" :style="{ display: downloadReportVisible ? 'inline-block' : 'none' }">{{ t('downloadReport') }}</button>
             <a id="backToLibraryBtn" href="/create/" target="_top" :style="{ display: backToLibraryVisible ? 'inline-block' : 'none' }" :title="t('backToLibraryTitle')">{{ t('backToLibrary') }}</a>
         </div>
