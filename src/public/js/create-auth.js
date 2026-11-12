@@ -112,8 +112,6 @@ function fetchMe(){
             try{ sessionStorage.removeItem(AUTH_BRIDGE_KEY); }catch(e){}
             updateAuthUI();
             currentFilters.mineOnly = true;
-            var mineCb = document.getElementById('filter-mine');
-            if(mineCb) mineCb.checked = true;
             fetchWithFilters();
             claimPendingQuizAfterLogin();
         })
@@ -130,8 +128,6 @@ function logout(){
         .then(function(){
             authState.user = null;
             currentFilters.mineOnly = false;
-            var mineCb = document.getElementById('filter-mine');
-            if(mineCb) mineCb.checked = false;
             updateAuthUI();
             closeAuthModal();
             reconnectSocket();

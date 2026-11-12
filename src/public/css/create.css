@@ -1136,3 +1136,6 @@ body.modal-open{
         margin: 6px 0;
     }
 }
+
+/* Raíz de la app de Vue de la biblioteca: no altera el maquetado. */
+#library-app{ display: contents; }

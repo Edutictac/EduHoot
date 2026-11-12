@@ -9,22 +9,15 @@ socket.on('gameNamesData', function(data){
     fetchTags();
 });
 
-var currentFilters = {
+// Filtros de la biblioteca; reactivos porque la plantilla de Vue los usa.
+var currentFilters = Vue.reactive({
     tags: [],
     mineOnly: false,
     search: '',
     tagMode: 'all'
-};
-var currentSort = 'newest';
-var knownTags = [];
-var currentDisplayedQuizzes = [];
+});
 var TAG_SUGGESTIONS_LIMIT = 12;
-var tagSuggestionsExpanded = false;
-
 var LIBRARY_PAGE_SIZE = 12;
-var libraryCurrentPage = 1;
-var libraryTotalPages = 1;
-var libraryLatestData = [];
 var PENDING_ACCOUNT_SAVE_KEY = 'eduhoot-pending-account-save';
 
 readFiltersFromUrl();
@@ -33,60 +26,8 @@ function setLang(newLang){
     lang = newLang;
     EduhootLang.persist(lang);
     applyStaticTranslations();
-    renderTagSuggestions();
+    libState.lang += 1;
     socket.emit('requestDbNames');
-}
-
-var mineFilter = document.getElementById('filter-mine');
-if(mineFilter){
-    mineFilter.addEventListener('change', function(){
-        currentFilters.mineOnly = mineFilter.checked;
-        fetchWithFilters();
-    });
-}
-var clearFiltersBtn = document.getElementById('clear-filters');
-if(clearFiltersBtn){
-    clearFiltersBtn.addEventListener('click', clearFilters);
-}
-var tagModeToggleBtn = document.getElementById('tag-mode-toggle');
-if(tagModeToggleBtn){
-    tagModeToggleBtn.addEventListener('click', toggleTagMode);
-    renderTagModeToggle();
-}
-
-var librarySearch = document.getElementById('library-search');
-if(librarySearch){
-    librarySearch.addEventListener('input', function(){
-        currentFilters.search = librarySearch.value || '';
-        fetchWithFilters();
-    });
-}
-
-var librarySortSelect = document.getElementById('library-sort');
-if(librarySortSelect){
-    librarySortSelect.value = currentSort;
-    librarySortSelect.addEventListener('change', function(){
-        currentSort = librarySortSelect.value;
-        libraryCurrentPage = 1;
-        renderGames(libraryLatestData);
-    });
-}
-
-var paginationPrevBtn = document.getElementById('library-pagination-prev');
-if(paginationPrevBtn){
-    paginationPrevBtn.addEventListener('click', function(){
-        if(libraryCurrentPage <= 1) return;
-        libraryCurrentPage -= 1;
-        renderGames(libraryLatestData);
-    });
-}
-var paginationNextBtn = document.getElementById('library-pagination-next');
-if(paginationNextBtn){
-    paginationNextBtn.addEventListener('click', function(){
-        if(libraryCurrentPage >= libraryTotalPages) return;
-        libraryCurrentPage += 1;
-        renderGames(libraryLatestData);
-    });
 }
 
 var csvForm = document.getElementById('csv-form');
@@ -193,7 +134,7 @@ var adminMirrorExternalStatus = document.getElementById('admin-mirror-external-s
 var adminImportPublicWrap = document.getElementById('admin-import-public-wrap');
 var adminImportPublicBtn = document.getElementById('admin-import-public-btn');
 var adminImportPublicStatus = document.getElementById('admin-import-public-status');
-var authState = { user: null, checked: false };
+var authState = Vue.reactive({ user: null, checked: false });
 var authentikAuthEnabled = false;
 
 window.addEventListener('edutictac:sessionchange', function(e){
@@ -485,7 +426,6 @@ if(langSelector){
     });
 }
 applyStaticTranslations();
-renderTagModeToggle();
 
 function reconnectSocket(){
     try{
@@ -558,3 +498,5 @@ if(kahootForm){
         }
     });
 }
+
+Vue.createApp(libraryApp).mount('#library-app');

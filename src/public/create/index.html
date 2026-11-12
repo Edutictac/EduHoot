@@ -281,57 +281,114 @@
             </div>
             </details>
 
+            <div id="library-app"></div>
+            <template id="library-tpl">
             <div id="library" class="panel">
                 <div class="panel-header">
                     <div>
-                        <p class="eyebrow" data-i18n="libraryEyebrow">Biblioteca</p>
-                        <h3 data-i18n="libraryTitle">Cuestionarios importados</h3>
-                        <p class="subtext" data-i18n="libraryDesc">Selecciona un cuestionario para hostearlo o gestiona su nombre y estado.</p>
+                        <p class="eyebrow">{{ t('libraryEyebrow') }}</p>
+                        <h3>{{ t('libraryTitle') }}</h3>
+                        <p class="subtext">{{ t('libraryDesc') }}</p>
                     </div>
-                    <div id="game-count" class="pill pill-muted">0 cuestionarios</div>
+                    <div id="game-count" class="pill pill-muted">{{ countText }}</div>
                 </div>
                 <div class="filter-bar extra-gap">
-                    <input id="library-search" type="search" placeholder="Buscar por nombre o etiqueta">
+                    <input id="library-search" type="search" :placeholder="t('searchPlaceholder')" v-model="filters.search" @input="onSearch">
                     <div class="sort-control">
-                        <label for="library-sort" data-i18n="sortLabel">Ordenar por</label>
-                        <select id="library-sort">
-                            <option value="newest" data-i18n="sortNewest">Más recientes primero</option>
-                            <option value="oldest" data-i18n="sortOldest">Más antiguos primero</option>
-                            <option value="rating" data-i18n="sortRating">Mejor valorados</option>
-                            <option value="alpha-asc" data-i18n="sortAlphaAsc">Orden alfabético A-Z</option>
-                            <option value="alpha-desc" data-i18n="sortAlphaDesc">Orden alfabético Z-A</option>
+                        <label for="library-sort">{{ t('sortLabel') }}</label>
+                        <select id="library-sort" v-model="lib.sort" @change="onSort">
+                            <option value="newest">{{ t('sortNewest') }}</option>
+                            <option value="oldest">{{ t('sortOldest') }}</option>
+                            <option value="rating">{{ t('sortRating') }}</option>
+                            <option value="alpha-asc">{{ t('sortAlphaAsc') }}</option>
+                            <option value="alpha-desc">{{ t('sortAlphaDesc') }}</option>
                         </select>
                     </div>
                 </div>
                 <div id="filter-bar" class="filter-bar">
-                    <div class="pill pill-muted" id="filter-info" data-i18n="noFilters">Sin filtros</div>
-                    <button id="clear-filters" type="button" class="btn btn-ghost btn-small" data-i18n="clearFilters">Limpiar filtros</button>
-                    <button id="tag-mode-toggle" type="button" class="btn btn-ghost btn-small" data-i18n="matchAnyTags">Cualquiera</button>
+                    <div class="pill pill-muted" id="filter-info">{{ filterInfo }}</div>
+                    <button id="clear-filters" type="button" class="btn btn-ghost btn-small" @click="clearFilters">{{ t('clearFilters') }}</button>
+                    <button id="tag-mode-toggle" type="button" class="btn btn-ghost btn-small" :class="{ 'is-active': filters.tagMode === 'all' }" :aria-pressed="filters.tagMode === 'all' ? 'true' : 'false'" @click="toggleTagMode">{{ filters.tagMode === 'all' ? t('matchAllTags') : t('matchAnyTags') }}</button>
                     <label class="checkbox-inline">
-                        <input type="checkbox" id="filter-mine">
-                        <span data-i18n="filterMine">Sólo mis cuestionarios</span>
+                        <input type="checkbox" id="filter-mine" v-model="filters.mineOnly" @change="onMine">
+                        <span>{{ t('filterMine') }}</span>
                     </label>
                 </div>
                 <div class="library-body">
                     <div class="folder-sidebar">
-                        <div id="tag-suggestions" class="tag-suggestions"></div>
+                        <div id="tag-suggestions" class="tag-suggestions"><template v-if="folders">
+                            <span class="label">{{ t('foldersTitle') }}</span>
+                            <button type="button" class="tag" :class="{ active: !filters.tags.length }" style="--tag-weight: 0.3" @click="showAllFolders">{{ t('foldersAll') }}</button>
+                            <button v-for="f in folders.tags" :key="f.tag" type="button" class="tag" :class="{ active: filters.tags.indexOf(f.tag) !== -1 }" :style="{ '--tag-weight': f.weight }" :data-weight="f.weight.toFixed(2)" @click="toggleTag(f.tag)">{{ f.tag }}</button>
+                            <button v-if="folders.showToggle" type="button" class="tag tag-more" style="--tag-weight: 0" @click="lib.tagsExpanded = !lib.tagsExpanded">{{ foldersMoreText() }}</button>
+                        </template></div>
                     </div>
                     <div class="library-main">
-                        <p class="subtext" data-i18n="visibilityHelp">
-                            <strong>Solo yo:</strong> si no inicias sesión, el quiz se guarda solo en tu sesión y caduca en 24h.<br>
-                            <strong>Por enlace / Público:</strong> aunque no tengas cuenta, se guardan de forma global en el servidor y sobreviven a reinicios. Si inicias sesión, quedan ligados a tu usuario.
-                            Puedes permitir o no las copias.
-                        </p>
+                        <!-- visibilityHelp es texto propio del diccionario i18n (con <strong> y <br>). -->
+                        <p class="subtext" v-html="t('visibilityHelp')"></p>
                         <div id="game-list" class="game-grid">
+                            <div v-if="!sortedQuizzes.length" class="empty-state"><p>{{ t('noGames') }}</p><p>{{ t('noGamesHint') }}</p></div>
+                            <div v-for="quiz in pageQuizzes" :key="quiz.id" class="game-card">
+                                <div class="game-card-head">
+                                    <div class="game-title">{{ quiz.name || 'Quiz sin nombre' }}</div>
+                                    <span class="badge">{{ (t('idLabel') || 'ID') + ' ' + quiz.id }}</span>
+                                </div>
+                                <p class="game-subtitle"></p>
+                                <div class="game-meta">{{ metaText(quiz) }}</div>
+                                <div class="game-stats">
+                                    <span class="game-stats__item">{{ (quiz.playsCount || 0) + ' ' + t('playsShort') }}</span>
+                                    <span class="game-stats__item">{{ (quiz.playersCount || 0) + ' ' + t('playersShort') }}</span>
+                                </div>
+                                <div class="tag-wrap">
+                                    <template v-for="tagValue in quizTags(quiz)" :key="tagValue">
+                                        <span v-if="!perms(quiz).canEdit" class="tag" @click="toggleTag(tagValue)">{{ tagValue }}</span>
+                                        <span v-else class="tag tag-editable"><span class="tag-text" @click="toggleTag(tagValue)">{{ tagValue }}</span><button type="button" class="tag-remove" aria-label="Remove" @click.prevent.stop="removeTag(quiz, tagValue)">×</button></span>
+                                    </template>
+                                </div>
+                                <div v-if="perms(quiz).canEdit" class="tag-editor">
+                                    <input type="text" :placeholder="t('editTagsPlaceholder')" v-model="tagDrafts[quiz.id]" @keydown="onTagKey($event, quiz)">
+                                    <button type="button" class="btn btn-ghost btn-small" @click="submitTags(quiz)">{{ t('editTagsAdd') }}</button>
+                                </div>
+                                <div class="share-controls">
+                                    <div class="share-row"><strong>{{ t('saveSharing') }}</strong></div>
+                                    <div class="share-row">
+                                        <select v-model="share(quiz).visibility" :disabled="!perms(quiz).canEdit">
+                                            <option value="private">{{ t('visibilityPrivate') }}</option>
+                                            <option value="unlisted">{{ t('visibilityUnlisted') }}</option>
+                                            <option value="public">{{ t('visibilityPublic') }}</option>
+                                        </select>
+                                        <label class="checkbox-label"><input type="checkbox" v-model="share(quiz).allowClone" :disabled="!perms(quiz).canEdit">{{ t('allowClone') }}</label>
+                                        <button class="btn btn-ghost" :title="perms(quiz).canEdit ? null : t('cannotEditNotOwner')" :disabled="!perms(quiz).canEdit" @click="saveSharing(quiz)">{{ t('saveSharing') }}</button>
+                                    </div>
+                                </div>
+                                <div class="game-actions">
+                                    <button v-if="perms(quiz).canSaveToAccount" class="btn btn-primary" @click="saveToAccount(quiz)">{{ t('saveToAccount') }}</button>
+                                    <button class="btn btn-primary" :title="perms(quiz).canStart ? null : t('cannotStartPrivate')" :disabled="!perms(quiz).canStart" @click="launch(quiz, 'host')">{{ t('play') }}</button>
+                                    <button class="btn btn-ghost" :title="perms(quiz).canStart ? null : t('cannotStartPrivate')" :disabled="!perms(quiz).canStart" @click="launch(quiz, 'multiplayer')">{{ t('playMultiplayer') }}</button>
+                                    <button class="btn btn-ghost" :title="perms(quiz).canStart ? null : t('cannotStartPrivate')" :disabled="!perms(quiz).canStart" @click="launch(quiz, 'solo')">{{ t('playSolo') }}</button>
+                                    <button class="btn btn-ghost icon-only" :title="perms(quiz).canEdit ? t('edit') : t('cannotEditNotOwner')" :disabled="!perms(quiz).canEdit" @click="edit(quiz)">✏️</button>
+                                    <button class="btn btn-ghost icon-only" :title="t('download')" @click="downloadCsv(quiz)">⬇️</button>
+                                    <button class="btn btn-ghost icon-only" :title="t('exportMoodleXml')" @click="downloadMoodle(quiz)"><img src="/icons/moodle.png" alt="Moodle" class="moodle-icon-img"></button>
+                                    <button class="btn btn-ghost icon-only" :title="perms(quiz).canClone ? t('clone') : t('cannotCloneNotOwner')" :disabled="!perms(quiz).canClone" @click="clone(quiz)">📄</button>
+                                    <button class="btn btn-danger icon-only" :title="perms(quiz).canEdit ? t('delete') : t('cannotDeleteNotOwner')" :disabled="!perms(quiz).canEdit" @click="remove(quiz)">🗑️</button>
+                                    <select class="export-select" :aria-label="t('exportSelectLabel')" :title="t('exportSelectLabel')" @change="exportAs($event, quiz)">
+                                        <option value="" selected disabled>{{ t('exportSelectPlaceholder') }}</option>
+                                        <optgroup v-for="group in exportGroups" :key="group.label" :label="group.label">
+                                            <option v-for="opt in group.options" :key="opt[0]" :value="opt[0]">{{ t(opt[1]) }}</option>
+                                        </optgroup>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
-                        <div id="library-pagination" class="pagination hidden">
-                            <button id="library-pagination-prev" class="btn btn-ghost" data-i18n="paginationPrev">Anterior</button>
-                            <span id="library-pagination-info"></span>
-                            <button id="library-pagination-next" class="btn btn-ghost" data-i18n="paginationNext">Siguiente</button>
+                        <div id="library-pagination" class="pagination" :class="{ hidden: !sortedQuizzes.length || totalPages <= 1 }">
+                            <button id="library-pagination-prev" class="btn btn-ghost" :disabled="currentPage <= 1" @click="prevPage">{{ t('paginationPrev') }}</button>
+                            <span id="library-pagination-info">{{ paginationInfo }}</span>
+                            <button id="library-pagination-next" class="btn btn-ghost" :disabled="currentPage >= totalPages" @click="nextPage">{{ t('paginationNext') }}</button>
                         </div>
                     </div>
                 </div>
             </div>
+            </template>
         </div>
         
         <footer class="ett-footer ett-footer--page ett-footer--bottom">
@@ -352,6 +409,7 @@
         <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+        <script src="/js/libs/vue.global.prod.js"></script>
         <script src="/js/languages.js"></script>
         <script src="/js/env-badge.js"></script>
         <script src="../js/i18n-create.js"></script>
