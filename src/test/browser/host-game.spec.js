@@ -325,3 +325,19 @@ test('«Siguiente pregunta» pide la siguiente y ⛶ pide pantalla completa', as
     await page.locator('#fullscreenToggle').click();
     expect(await page.evaluate(() => window.__fullscreenRequests)).toBe(1);
 });
+
+test('al acabar la partida no quedan ni «Saltar pregunta» ni la celebración de grupo', async ({ page }) => {
+    await openGame(page);
+    await serverEmit(page, 'gameQuestions', gameQuestionsPayload());
+    await serverEmit(page, 'questionOver', PLAYER_DATA, { type: 'quiz', correctAnswers: [1], groupResult: 'allWrong' });
+    await expect(page.locator('#groupCelebration')).toBeVisible();
+    // Pasar de la última pregunta vuelve a enseñar «Saltar pregunta» hasta que
+    // llega GameOver.
+    await page.locator('#rankingNextBtn').click();
+    await page.locator('#rankingNextBtn').click();
+    await expect(page.locator('#skipQButton')).toBeVisible();
+    await serverEmit(page, 'GameOver', { num1: 'Ana', num2: 'Pau', num3: '', num4: '', num5: '' });
+    await expect(page.locator('#question')).toHaveText('FIN DE LA PARTIDA');
+    await expect(page.locator('#skipQButton')).toBeHidden();
+    await expect(page.locator('#groupCelebration')).toBeHidden();
+});

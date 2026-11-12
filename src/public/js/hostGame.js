@@ -1243,6 +1243,11 @@ socket.on('GameOver', function(data){
     document.getElementById('square3').style.display = "none";
     document.getElementById('square4').style.display = "none";
     
+    // nextQuestion() vuelve a mostrar «Saltar pregunta» al pasar de la última
+    // pregunta, y la celebración de grupo podía seguir encima del podio.
+    app.skipVisible = false;
+    if(groupCelebrationHideTimer) clearTimeout(groupCelebrationHideTimer);
+    app.groupCelebrationVisible = false;
     app.answers = ['', '', '', ''];
     app.timerText = "";
     app.questionText = t('gameOver');
