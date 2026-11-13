@@ -5,6 +5,7 @@
         <title>Modo individual | EduHoot</title>
         <link rel="stylesheet" href="../css/solo.css">
         <link rel="stylesheet" href="/css/countdown.css">
+        <link rel="stylesheet" href="/css/answers.css">
         <link rel="stylesheet" href="/css/dropdowns.css">
         <link rel="stylesheet" href="../css/music-player.css">
         <link href="/css/fonts.css" rel="stylesheet">
@@ -117,7 +118,7 @@
                 <div class="panel__header">
                     <div>
                         <p class="eyebrow">{{ t('soloEyebrow') }}</p>
-                        <h2 id="selected-title">{{ titleText }}</h2>
+                        <h2 id="selected-title" v-show="s.view !== 'game'">{{ titleText }}</h2>
                     </div>
                 </div>
 
@@ -139,10 +140,18 @@
                 </div>
 
                 <div id="game-area" class="game-area" :class="{ hidden: s.view !== 'game' }">
+                    <!-- Mateixa estructura que «Jugar a l'aula»: franja amb el títol,
+                         el progrés i els punts, i barra de temps davall. -->
                     <div class="game-progress">
-                        <span id="question-progress" class="pill" :aria-label="(s.idx + 1) + ' / ' + s.questions.length">{{ progressText }}</span>
-                        <span id="score-pill" class="pill pill-muted">{{ t('score') + ': ' + s.score }}</span>
-                        <span id="timer-pill" class="pill pill-timer">{{ t('timer') + ': ' + Math.ceil(s.timerLeft) + 's' }}</span>
+                        <span class="game-progress__title">{{ titleText }}</span>
+                        <span class="game-progress__stats">
+                            <span id="question-progress" class="pill" :aria-label="(s.idx + 1) + ' / ' + s.questions.length">{{ progressText }}</span>
+                            <span id="score-pill" class="pill pill-muted">{{ t('score') + ': ' + s.score }}</span>
+                        </span>
+                    </div>
+                    <div class="game-timer solo-timer" role="timer">
+                        <div class="game-timer__fill" :style="{ width: timerPct + '%', background: timerColor }"></div>
+                        <span id="timer-pill" class="game-timer__text">{{ t('timer') + ': ' + Math.ceil(s.timerLeft) + 's' }}</span>
                     </div>
                     <div class="question-card">
                         <!-- Compte arrere 3-2-1 abans de cada pregunta (proposta 23). -->
@@ -158,13 +167,13 @@
                             <video id="question-video" controls playsinline :src="media.video || null" :style="{ display: media.video ? 'block' : 'none' }"></video>
                             <iframe id="question-iframe" title="video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen :src="media.youtube || null" :style="{ display: media.youtube ? 'block' : 'none' }"></iframe>
                         </div>
-                        <div id="answers" class="answers">
+                        <div id="answers" class="answers answer-grid">
                             <div v-if="isFree" class="free-answer-row">
                                 <input id="solo-free-input" class="free-answer-input" type="text" autocomplete="off" :placeholder="meta.type === 'numeric' ? t('freeNumberPlaceholder') : t('freeTextPlaceholder')" v-model="s.freeText" :disabled="s.locked" @keydown.enter.prevent="submitFree">
                                 <button id="solo-free-submit" class="free-answer-submit" type="button" :disabled="s.locked" @click="submitFree">{{ t('submitFreeAnswer') }}</button>
                             </div>
                             <template v-else>
-                                <button v-for="(ans, i) in answers" :key="s.idx + '-' + i" class="answer" type="button" :class="answerClass(i + 1)" :data-answer="i + 1" :disabled="s.locked" @click="answer(i + 1)">{{ ans || ('Respuesta ' + (i + 1)) }}</button>
+                                <button v-for="(ans, i) in answers" :key="s.idx + '-' + i" class="answer answer-shape" type="button" :class="['answer-shape--' + (i + 1), answerClass(i + 1)]" :data-answer="i + 1" :disabled="s.locked" @click="answer(i + 1)">{{ ans || ('Respuesta ' + (i + 1)) }}</button>
                             </template>
                         </div>
                         <div id="multi-submit-row" class="multi-submit-row">

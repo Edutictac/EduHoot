@@ -391,6 +391,17 @@ var soloPlay = {
         hasMedia: function(){
             return !!(this.media.image || this.media.youtube || this.media.video);
         },
+        // Barra de temps: mateix percentatge i colors que en «Jugar a l'aula».
+        timerPct: function(){
+            var total = this.s.timerTotal || 1;
+            return Math.max(0, Math.min(100, (this.s.timerLeft / total) * 100));
+        },
+        timerColor: function(){
+            var pct = this.timerPct;
+            if(pct < 35) return 'linear-gradient(135deg, #f97316, #ef4444)';
+            if(pct < 60) return 'linear-gradient(135deg, #facc15, #f97316)';
+            return 'linear-gradient(135deg, #22c55e, #16a34a)';
+        },
         progressText: function(){
             var total = getQuestions().length;
             return format(this.t('questionOf'), { current: this.s.idx + 1, total: total });

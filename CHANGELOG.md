@@ -19,6 +19,10 @@ fitxers corresponents, i els originals es van eliminar.
 ## [Sense publicar]
 
 ### Afegit
+- La partida del mode individual (`/solo/`) té la mateixa estructura i
+  grandàries que "Jugar a l'aula": franja amb el títol, el progrés i els
+  punts, barra de temps i respostes grans amb forma i color, en 2x2 en
+  l'ordinador i en una columna en el mòbil.
 - El mode individual (`/solo/`) també mostra el compte arrere 3-2-1
   abans de cada pregunta, amb el mateix aspecte que "Jugar a l'aula".
 - El CSV de preguntes d'un qüestionari es descarrega amb la data i l'hora
@@ -87,6 +91,8 @@ fitxers corresponents, i els originals es van eliminar.
   (`/admin-*`) també són ara apps de Vue 3. Funciona igual que abans.
 
 ### Corregit
+- En "Jugar a l'aula", en el mòbil la barra de temps de l'alumnat es
+  quedava sense alçada i quasi no es veia.
 - En "Jugar a l'aula", dos alumnes podien unir-se a la mateixa partida
   amb el mateix nom. Ara el segon rep l'avís «Ese nombre ya está en uso en
   esta partida. Elige otro.» i en tria un altre (issue #28).

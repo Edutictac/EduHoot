@@ -667,10 +667,6 @@ body.playing #game-panel{
     box-shadow: var(--shadow);
     transition: transform 0.14s ease, filter 0.14s ease;
 }
-.answer:nth-child(1){ background: linear-gradient(135deg, #22c55e, #16a34a); }
-.answer:nth-child(2){ background: linear-gradient(135deg, #f97316, #ea580c); }
-.answer:nth-child(3){ background: linear-gradient(135deg, #3b82f6, #2563eb); }
-.answer:nth-child(4){ background: linear-gradient(135deg, #f43f5e, #e11d48); }
 .answer:hover{ transform: translateY(-1px); filter: brightness(1.05); }
 .answer:active{ transform: translateY(0); filter: brightness(0.95); }
 .answer.multi-selected{
@@ -891,3 +887,82 @@ body.playing #game-panel{
 
 /* Raíz de la app de Vue: no altera el maquetado (main y la paginación siguen siendo hijos directos del body a efectos de layout). */
 #solo-app{ display: contents; }
+
+/* Partida: mateixa estructura i grandàries que «Jugar a l'aula»
+   (/player/game/), amb els colors de /solo/. La barra de temps i els
+   botons de resposta són de css/answers.css, compartit amb l'aula. */
+body.playing #game-panel{
+    width: 100%;
+    max-width: 760px;
+    /* Dins de la quadrícula de la pàgina: sense açò, la franja d'una sola
+       línia l'eixamplava més que la pantalla en mòbils menuts. */
+    min-width: 0;
+}
+.game-progress{
+    justify-content: space-between;
+    flex-wrap: nowrap;
+    gap: 10px;
+    padding: 12px 16px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid var(--card-stroke);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+}
+.game-progress__title{
+    min-width: 0;
+    font-size: 16px;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.game-progress__stats{
+    display: inline-flex;
+    flex-shrink: 0;
+    gap: 8px;
+}
+.game-progress .pill{ font-size: 14px; }
+.solo-timer{
+    display: block;
+    margin: 12px 0;
+}
+.game-area .question-card{
+    margin-top: 0;
+    padding: 0;
+    border: none;
+    background: none;
+    box-shadow: none;
+}
+.game-area .question-text{
+    font-size: 24px;
+    font-weight: 700;
+    margin: 18px 0;
+}
+.game-area .question-media img,
+.game-area .question-media video,
+.game-area .question-media iframe{
+    width: auto;
+    max-width: 90%;
+    max-height: min(260px, 32vh);
+    margin: 0 auto;
+}
+.game-area .question-media iframe{ width: 90%; height: min(260px, 32vh); }
+.game-area .feedback{ font-size: 18px; }
+
+@media (max-width: 600px){
+    /* Tot en una fila, perquè les respostes càpien amb imatge en mòbils
+       menuts: el títol es retalla amb «…» si no hi cap. */
+    body.playing #game-panel{ padding: 12px; }
+    .game-area{ margin-top: 8px; }
+    .game-progress{ padding: 8px 10px; gap: 6px; }
+    .game-progress__title{ flex: 1 1 auto; font-size: 14px; }
+    .game-progress__stats{ gap: 4px; }
+    .game-progress .pill{ font-size: 12px; padding: 4px 8px; }
+    .solo-timer{ margin: 8px 0; }
+    .game-area .question-text{ font-size: 20px; margin: 8px 0; }
+    /* Un poc més baixa que en l'aula (24vh): ací també hi ha «Volver» i
+       «MODO INDIVIDUAL», i les quatre respostes han de cabre. */
+    .game-area .question-media img,
+    .game-area .question-media video{ max-width: 100%; max-height: 19vh; }
+    .game-area .question-media iframe{ width: 100%; height: 220px; }
+}

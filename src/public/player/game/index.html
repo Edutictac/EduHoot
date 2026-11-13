@@ -4,6 +4,7 @@
         <meta charset="utf-8">
         <title>Game | EduHoot</title>
         <link rel="stylesheet" href="/css/countdown.css">
+        <link rel="stylesheet" href="/css/answers.css">
         <link rel = "stylesheet" href = "../../css/playerGameView.css">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link href="/css/fonts.css" rel="stylesheet">
@@ -31,9 +32,9 @@
             </div>
             <div id="playerPointsBadge" class="player-points-badge points-badge-pop" :key="'badge-' + badgeKey" :style="{ display: badgeVisible ? 'inline-flex' : 'none' }">{{ badgeText }}</div>
             <div id="playerStatusRow">
-                <div id="playerTimer">
-                    <div id="playerTimerFill" :style="{ width: timerPct + '%', background: timerColor }"></div>
-                    <span id="playerTimerText">{{ timerText }}</span>
+                <div id="playerTimer" class="game-timer">
+                    <div id="playerTimerFill" class="game-timer__fill" :style="{ width: timerPct + '%', background: timerColor }"></div>
+                    <span id="playerTimerText" class="game-timer__text">{{ timerText }}</span>
                 </div>
                 <div id="playerAnswerStatus" :class="{ hidden: !answerStatusVisible }">{{ answerStatusText }}</div>
             </div>
@@ -47,11 +48,11 @@
                 <input id="freeAnswerInput" ref="freeAnswerInput" type="text" autocomplete="off" :inputmode="questionType === 'numeric' ? 'decimal' : 'text'" :placeholder="freePlaceholder" v-model="freeAnswerValue" @keydown.enter.prevent="submitFree" />
                 <button type="button" id="freeSubmitBtn" class="button free-submit" @click="submitFree">{{ t('submit_free', 'Enviar') }}</button>
             </div>
-            <div id="answerGrid">
-                <button id = "answer1" class = "button" :class="{ 'multi-selected': isMultiSelected(1) }" v-show="buttonVisible(0)" :aria-label="buttonAriaLabel(0)" v-html="buttonHtml(0)" @click="onAnswerClick(1)"></button>
-                <button id = "answer2" class = "button" :class="{ 'multi-selected': isMultiSelected(2) }" v-show="buttonVisible(1)" :aria-label="buttonAriaLabel(1)" v-html="buttonHtml(1)" @click="onAnswerClick(2)"></button>
-                <button id = "answer3" class = "button" :class="{ 'multi-selected': isMultiSelected(3) }" v-show="buttonVisible(2)" :aria-label="buttonAriaLabel(2)" v-html="buttonHtml(2)" @click="onAnswerClick(3)"></button>
-                <button id = "answer4" class = "button" :class="{ 'multi-selected': isMultiSelected(4) }" v-show="buttonVisible(3)" :aria-label="buttonAriaLabel(3)" v-html="buttonHtml(3)" @click="onAnswerClick(4)"></button>
+            <div id="answerGrid" class="answer-grid">
+                <button id = "answer1" class = "button answer-shape answer-shape--1" :class="{ 'multi-selected': isMultiSelected(1) }" v-show="buttonVisible(0)" :aria-label="buttonAriaLabel(0)" v-html="buttonHtml(0)" @click="onAnswerClick(1)"></button>
+                <button id = "answer2" class = "button answer-shape answer-shape--2" :class="{ 'multi-selected': isMultiSelected(2) }" v-show="buttonVisible(1)" :aria-label="buttonAriaLabel(1)" v-html="buttonHtml(1)" @click="onAnswerClick(2)"></button>
+                <button id = "answer3" class = "button answer-shape answer-shape--3" :class="{ 'multi-selected': isMultiSelected(3) }" v-show="buttonVisible(2)" :aria-label="buttonAriaLabel(2)" v-html="buttonHtml(2)" @click="onAnswerClick(3)"></button>
+                <button id = "answer4" class = "button answer-shape answer-shape--4" :class="{ 'multi-selected': isMultiSelected(4) }" v-show="buttonVisible(3)" :aria-label="buttonAriaLabel(3)" v-html="buttonHtml(3)" @click="onAnswerClick(4)"></button>
             </div>
             <div id="multiSubmitRow" :style="{ display: multiRowVisible ? 'flex' : 'none' }">
                 <button type="button" id="multiSubmitBtn" class="button multi-submit" @click="submitMultiAnswers">{{ t('submit_multiple', 'Submit answers') }}</button>

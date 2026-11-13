@@ -459,6 +459,15 @@ la app com a *mixin* de Vue: `soloCatalog` (`solo-library.js`) i
   pregunta i les respostes i no arranca el temporitzador fins que acaba.
   L'aspecte és el mateix que en `/player/game/`: els estils estan en
   `css/countdown.css`, compartit per les dos pantalles.
+- **Mateixa estructura que "Jugar a l'aula" durant la partida**: franja
+  amb el títol (retallat amb «…» si no hi cap), el progrés i els punts;
+  barra de temps; pregunta de 24 px (20 px en mòbil); i respostes amb
+  forma en una quadrícula de 2x2 (una columna en mòbil), de 64 px d'alt
+  (58 px en mòbil). La barra de temps i els botons de resposta són de
+  `css/answers.css`, compartit amb `/player/game/`; cada pantalla manté els
+  seus colors de fons. Es conserven «Volver» i «MODO INDIVIDUAL»; per això,
+  en mòbil la imatge de la pregunta és una mica més baixa que en l'aula
+  (19% de l'alçada en lloc del 24%), perquè les quatre respostes càpien.
 - **Proves**: `src/test/browser/solo.spec.js` (amb `page.clock` per al
   temporitzador), a més de `solo-library.spec.js` i `solo-poll.spec.js`.
 

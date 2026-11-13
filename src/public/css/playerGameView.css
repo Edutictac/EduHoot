@@ -148,30 +148,6 @@ body{
     gap: 10px;
     margin: 8px 0 12px;
 }
-#playerTimer{
-    position: relative;
-    flex: 1;
-    height: 16px;
-    background: rgba(255,255,255,0.1);
-    border: 1px solid var(--card-stroke);
-    border-radius: 999px;
-    overflow: hidden;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
-}
-#playerTimerFill{
-    position: absolute;
-    left: 0; top: 0; bottom: 0;
-    width: 100%;
-    background: linear-gradient(135deg, #22c55e, #16a34a);
-    transition: width 0.2s linear;
-}
-#playerTimerText{
-    position: absolute;
-    right: 10px;
-    top: -4px;
-    font-size: 14px;
-    font-weight: 700;
-}
 #playerAnswerStatus{
     padding: 6px 10px;
     border-radius: 12px;
@@ -199,15 +175,6 @@ body{
     flex-direction: column;
     align-items: center;
 }
-/* Respostes en una quadrícula de 2x2 centrada (una columna en mòbil). */
-#answerGrid{
-    width: 100%;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
-    margin-top: 7px;
-}
-#answerGrid .button{ width: auto; margin: 0; }
 
 .button{
     width: calc(50% - 14px);
@@ -224,39 +191,6 @@ body{
 }
 .button:hover{ transform: translateY(-2px); filter: brightness(1.05); }
 .button:active{ transform: translateY(0); filter: brightness(0.95); }
-
-#answer1{ background: linear-gradient(135deg, #22c55e, #16a34a); }
-#answer2{ background: linear-gradient(135deg, #f97316, #ea580c); }
-#answer3{ background: linear-gradient(135deg, #3b82f6, #2563eb); }
-#answer4{ background: linear-gradient(135deg, #f43f5e, #e11d48); }
-
-/* Icono de forma sobre el color: el mando del alumno solo mostraba un
-   bloque de color liso, difícil de emparejar con la respuesta del host
-   y poco accesible para daltonismo. Misma pareja forma+color que en la
-   pantalla del profesor. Formas dibujadas en CSS puro (clip-path) en vez
-   de caracteres Unicode: trazo nítido y consistente entre dispositivos,
-   en vez de depender de cómo cada sistema renderice ▲ ◆ ● ■. */
-#answer1, #answer2, #answer3, #answer4{
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 14px;
-    padding: 0 16px 0 20px;
-    text-align: left;
-}
-#answer1::before, #answer2::before, #answer3::before, #answer4::before{
-    content: "";
-    display: block;
-    flex-shrink: 0;
-    width: 34px;
-    height: 34px;
-    background: #fff;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.35);
-}
-#answer1::before{ clip-path: polygon(50% 0%, 0% 100%, 100% 100%); }
-#answer2::before{ clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); }
-#answer3::before{ border-radius: 50%; }
-#answer4::before{ border-radius: 6px; }
 
 #buttons{
     text-align: center;
@@ -406,10 +340,11 @@ body{
     /* Amb imatge, les respostes han de cabre en pantalla sense desplaçar. */
     #playerQuestionImage, #playerQuestionVideo{ max-width: 100%; max-height: 24vh; }
     #playerImageWrap{ margin: 6px 0 10px; }
-    #answerGrid{ grid-template-columns: 1fr; gap: 10px; }
     #playerQuestionIframe{ width: 100%; max-width: 100%; height: 220px; }
-    #playerStatusRow{ flex-direction: column; align-items: stretch; }
-    #playerTimerText{ right: 8px; font-size: 13px; }
+    /* La barra de temps i l'estat es queden en una fila: en columna, la
+       barra (flex: 1) es quedava sense alçada. */
+    #playerStatusRow{ margin: 4px 0 6px; }
+    #playerAnswerStatus{ font-size: 13px; padding: 5px 9px; }
     .button{ width: 100%; margin: 8px 0; min-height: 58px; }
     #buttons{ width: 100%; display: flex; flex-direction: column; align-items: stretch; }
     #lang-switcher{ top: 8px; right: 8px; }

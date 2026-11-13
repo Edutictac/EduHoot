@@ -574,3 +574,38 @@ test('compte arrere 3-2-1 abans de cada pregunta: amaga la pregunta i no gasta t
     await expect(page.locator('#timer-pill')).toHaveText('Tiempo: 18s');
 });
 
+
+// Maquetació igual que «Jugar a l'aula»: respostes amb forma, centrades, en
+// 2x2 en PC (una columna en mòbil) i barra de temps; amb imatge, tot cap.
+test('partida: misma estructura que en el aula y, con imagen, cabe en pantalla', async ({ page }, testInfo) => {
+    if (testInfo.project.name === 'mobile') await page.setViewportSize({ width: 360, height: 640 });
+    const IMG = '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800"><rect width="1200" height="800" fill="#4a8"/></svg>';
+    await page.route('**/big.svg', r => r.fulfill({ contentType: 'image/svg+xml', body: IMG }));
+    await mockBackend(page, { quizzes: { qi: { id: 'qi', name: 'Música: instruments bàsics i famílies', questions: [
+        { question: 'Quin instrument es toca pinçant les cordes amb els dits?', type: 'quiz', answers: ['Trompeta', 'Flauta', 'Guitarra', 'Tambor'], correctAnswers: [3], image: '/big.svg', time: 20 }
+    ] } } });
+    await openQuizDirect(page, 'qi');
+    await start(page);
+    await expect(page.locator('#question-image')).toBeVisible();
+    await expect(page.locator('.game-progress__title')).toHaveText('Música: instruments bàsics i famílies');
+    await expect(page.locator('#selected-title')).toBeHidden();
+    await expect(page.locator('#game-panel .eyebrow')).toBeVisible();
+    const viewport = page.viewportSize();
+    // Sense desplaçament horitzontal: el panel no es pot eixir per la dreta.
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
+    const boxes = [];
+    for (let i = 0; i < 4; i++) boxes.push(await answerButtons(page).nth(i).boundingBox());
+    const timer = await page.locator('.solo-timer').boundingBox();
+    expect(timer.height).toBeGreaterThan(15);
+    for (const box of boxes) {
+        expect(box.height).toBeGreaterThanOrEqual(testInfo.project.name === 'mobile' ? 57 : 63);
+        expect(box.y + box.height).toBeLessThanOrEqual(viewport.height + 1);
+    }
+    const left = Math.min(...boxes.map(b => b.x));
+    const right = Math.max(...boxes.map(b => b.x + b.width));
+    expect(Math.abs(left - (viewport.width - right))).toBeLessThan(4);
+    if (testInfo.project.name === 'desktop') {
+        expect(boxes[0].y).toBe(boxes[1].y);
+        expect(boxes[2].y).toBeGreaterThan(boxes[0].y);
+    }
+});
