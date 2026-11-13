@@ -490,8 +490,9 @@ realista, no només una llista d'idees.
   i la resta està en `data/`, `services/`, `routes/` i `sockets/`; en el
   frontend, `create.js` (3.860 → 560) i `solo.js` (2.341 → 346) s'han
   repartit en `create-*.js` i `solo-*.js` (vore `ARCHITECTURE.md`). Les
-  propostes noves es poden afegir en el fitxer del seu tema. Queden sense
-  repartir `multiplayer.js`, `quizCreator.js` i `hostGame.js`.
+  propostes noves es poden afegir en el fitxer del seu tema. `multiplayer.js`,
+  `quizCreator.js` i `hostGame.js` no es van repartir: es van passar
+  directament a Vue (Subfase B, acabada).
 - **Base ja sòlida per a mecàniques de joc en directe.** El pla
   d'estabilitat de sessió (`PLAN_ESTABILIDAD_SESION.md`) està complet en
   el codi (reconnexió, periode de gràcia, Wake Lock), encara que el propi
@@ -516,7 +517,7 @@ realista, no només una llista d'idees.
     reproductor de pista de fons amb selector/volum/rotació, més un
     efecte de gong al tancar cada pregunta (`effects/gong.mp3`,
     `initGong()`/`playGong()` en `hostGame.js`). Encara no distingix música per fases.
-  - **23 (compte arrere 3-2-1)** — ja implementada abans de cada
+  - ✅ **23 (compte arrere 3-2-1)** — ja implementada abans de cada
     pregunta en el mode "Jugar a l'aula" (commit `9b8c345`,
     `sockets/gameHelpers.js`, `scheduleQuestionCountdown()`,
     esdeveniment `questionCountdown`) i, des del 2026-11-13, també en
@@ -567,7 +568,7 @@ un suggeriment ajornable:
 ### Fase 1a — Millores cosmètiques/aïllades, sense tocar la lògica de joc
 
 12 (sobrenoms aleatoris), 13 (TTS), 15 (ampliar importació:
-GIFT/JSON/XML Moodle/AULES), 20 (flashcards), 23 (compte arrere 3-2-1).
+GIFT/JSON/XML Moodle/AULES), 20 (flashcards), ✅ 23 (compte arrere 3-2-1).
 
 No canvien ni la puntuació ni la seqüència de preguntes: són canvis
 d'interfície, d'àudio, o d'importació de contingut, autocontinguts en un

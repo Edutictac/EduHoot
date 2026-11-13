@@ -30,7 +30,8 @@ pagament.
 Ja implementat, no cal tornar a proposar-ho:
 
 - **Formes + color a les respostes** (triangle/romb/cercle/quadrat via
-  `clip-path`), a `playerGameView.css` i `hostGameView.css`. Mitigació
+  `clip-path`), a `css/answers.css` (alumnat en "Jugar a l'aula" i mode
+  individual) i `hostGameView.css` (amfitrió). Mitigació
   de daltonisme explícitament documentada en `README.md` i
   `CHANGELOG.md`.
 - **`aria-live`** al cronòmetre entre preguntes i als missatges d'error
