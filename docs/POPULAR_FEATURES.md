@@ -116,7 +116,7 @@ decisió de producte.
 | 20 | Mode d'estudi "Flashcards" | 🟩 | 🟡 | 📚 Alt | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1a |
 | 21 | Integració amb Google Classroom | 🟦 | 🔴 | ➖ Neutre | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 4 |
 | 22 | Insígnies i nivells persistents | 🟩 | 🔴 | 📚 Alt⁶ | 🙂 Segur | ➖ Neutra | ✅ Encaixa | ❌ Descartada |
-| 23 | Compte arrere "¡Prepara't!" 3-2-1 | 🟨 | 🟢 | ✖️ Cap | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1a⁷ |
+| 23 | ✅ Compte arrere "¡Prepara't!" 3-2-1 | 🟨 | 🟢 | ✖️ Cap | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1a⁷ |
 | 24 | Vídeos "aprén i després respon" | 🟦 | 🟡 | 📚 Alt | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1b |
 | 25 | Pràctica adaptativa (repetir fallades) | 🟦 | 🟡 | 📚 Alt | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1b |
 | 26 | Mode "fantasma"/millor marca personal | 🟨 | 🟡 | ➖ Neutre⁸ | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1b |
