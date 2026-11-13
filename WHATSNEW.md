@@ -43,6 +43,9 @@
 - **Respostes còmodes en qualsevol pantalla**: en l'ordinador, els botons
   queden centrats en una quadrícula de 2x2; en el mòbil, encara que la
   pregunta porte imatge, les quatre respostes es veuen sense desplaçar.
+- **Mode individual com a l'aula**: la partida de /solo/ té ara la mateixa
+  pantalla que «Jugar a l'aula», amb el títol, els punts i una barra de
+  temps que també es veu en el mòbil.
 
 ## Pròximament
 
@@ -58,9 +61,6 @@
   preguntes que ja tingues.
 - **Sobrenoms aleatoris**: si no vols que l'alumnat triï el seu nom, l'app
   en pot generar un divertit i apropiat per a cada jugador.
-- **El compte arrere 3-2-1 arriba al mode Solo**: la mateixa espera de
-  3, 2, 1 que ja veus en «Jugar a l'aula» també apareixerà abans de cada
-  pregunta en el mode individual.
 
 ### Noves maneres de jugar
 
@@ -123,6 +123,9 @@
 - **Respuestas cómodas en cualquier pantalla**: en el ordenador, los
   botones quedan centrados en una cuadrícula de 2x2; en el móvil, aunque
   la pregunta lleve imagen, las cuatro respuestas se ven sin desplazarse.
+- **Modo individual como en la clase**: la partida de /solo/ tiene ahora la
+  misma pantalla que «Jugar a la clase», con el título, los puntos y una
+  barra de tiempo que también se ve en el móvil.
 
 ## Próximamente
 
@@ -138,9 +141,6 @@
   reaprovechar bancos de preguntas que ya tengas.
 - **Apodos aleatorios**: si no quieres que el alumnado elija su nombre, la
   app puede generar uno divertido y apropiado para cada jugador.
-- **La cuenta atrás 3-2-1 llega al modo solo**: la misma espera de 3, 2, 1
-  que ya ves en «Jugar a la clase» también aparecerá antes de cada
-  pregunta en el modo individual.
 
 ### Nuevas maneras de jugar
 
@@ -201,6 +201,9 @@
 - **Comfortable answers on any screen**: on a computer, the buttons sit
   centred in a 2x2 grid; on a phone, even when the question has an image,
   all four answers fit without scrolling.
+- **Solo mode, like class mode**: the /solo/ game now has the same screen as
+  "Play in class", with the title, the points and a time bar that is also
+  visible on phones.
 
 ## Coming soon
 
@@ -216,9 +219,6 @@
   already have.
 - **Random nicknames**: if you'd rather not let students choose their own
   name, the app can generate a fun, appropriate one for each player.
-- **The 3-2-1 countdown reaches solo mode**: the same 3, 2, 1 wait you
-  already see in "Play in class" will also appear before each question in
-  the solo mode.
 
 ### New ways to play
 
