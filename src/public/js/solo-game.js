@@ -396,7 +396,9 @@ var soloPlay = {
         },
         // Lectura en veu alta (proposta 13). Només amb la pregunta visible.
         ttsAvailable: function(){
-            return !!(this.question && this.question.question) && EduhootTTS.canSpeak(document.documentElement.lang);
+            // Només mentre la pregunta està en pantalla: ni durant la cuenta
+            // atrás (locked i countdown) ni després de contestar (locked).
+            return !!(this.question && this.question.question) && !!this.s.ttsReady && !this.s.locked && !(this.s.countdown > 0);
         },
         // Barra de temps: mateix percentatge i colors que en «Jugar a l'aula».
         timerPct: function(){
@@ -440,8 +442,13 @@ var soloPlay = {
             this.s.ttsSpeaking = true;
             var started = EduhootTTS.speakParts(parts, document.documentElement.lang, function(){
                 state.ttsSpeaking = false;
+                unduckSoloMusic();
             });
-            if(!started) this.s.ttsSpeaking = false;
+            if(started){
+                duckSoloMusic();
+            } else {
+                this.s.ttsSpeaking = false;
+            }
         },
         answerClass: function(n){
             return {

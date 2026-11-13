@@ -52,6 +52,39 @@ function ensureSoloMusicPlaying(){
     audio.play().catch(function(){});
 }
 
+// Ducking: mentre la lectura en veu alta sona, la música baixa al 25 % del
+// volum de l'usuari; en acabar (o en cancel·lar) torna al volum anterior.
+// Si l'usuari mou el control de volum durant la lectura, el nou valor passa a
+// ser el bo i el ducking s'acaba.
+var SOLO_MUSIC_DUCK_FACTOR = 0.25;
+var soloMusicDuck = null;
+
+function duckSoloMusic(){
+    var audio = soloMusicPlayerInstance && soloMusicPlayerInstance.audio;
+    if(!audio || soloMusicDuck) return;
+    var base = audio.volume;
+    var level = base * SOLO_MUSIC_DUCK_FACTOR;
+    var duck = { audio: audio, base: base, level: level, onChange: null };
+    duck.onChange = function(){
+        if(soloMusicDuck !== duck) return;
+        if(Math.abs(audio.volume - duck.level) > 0.001){
+            soloMusicDuck = null;
+            audio.removeEventListener('volumechange', duck.onChange);
+        }
+    };
+    soloMusicDuck = duck;
+    audio.addEventListener('volumechange', duck.onChange);
+    audio.volume = level;
+}
+
+function unduckSoloMusic(){
+    var duck = soloMusicDuck;
+    if(!duck) return;
+    soloMusicDuck = null;
+    duck.audio.removeEventListener('volumechange', duck.onChange);
+    duck.audio.volume = duck.base;
+}
+
 function pauseSoloMusic(){
     if(!soloMusicPlayerInstance) return;
     if(typeof soloMusicPlayerInstance.pause === 'function'){

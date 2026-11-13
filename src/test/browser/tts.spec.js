@@ -20,12 +20,15 @@ const quiz = {
 const FAKE_SPEECH = `
     window.__spoken = [];
     window.__cancelCount = 0;
+    window.__voices = [{ lang: 'es-ES', name: 'Voz de prueba' }];
+    window.__voiceListeners = [];
     window.SpeechSynthesisUtterance = function(text){ this.text = text; };
     // speechSynthesis és de només lectura: cal redefinir-la.
     Object.defineProperty(window, 'speechSynthesis', { configurable: true, value: {
-        getVoices: function(){ return [{ lang: 'es-ES', name: 'Voz de prueba' }]; },
+        getVoices: function(){ return window.__voices; },
         speak: function(u){ window.__spoken.push(u.text); },
-        cancel: function(){ window.__cancelCount += 1; }
+        cancel: function(){ window.__cancelCount += 1; },
+        addEventListener: function(name, fn){ if (name === 'voiceschanged') window.__voiceListeners.push(fn); }
     } });
 `;
 
@@ -63,14 +66,22 @@ test('el botó llig la pregunta i les respostes, i para quan es torna a prémer'
     await expect(button).toBeVisible();
     await expect(button).toHaveAttribute('aria-pressed', 'false');
 
+    const musicVolume = () => page.evaluate(() => document.querySelector('#solo-music-player audio').volume);
+    const before = await musicVolume();
+    expect(before).toBeGreaterThan(0.3);
+
     await button.click();
     await expect(button).toHaveAttribute('aria-pressed', 'true');
     const spoken = await page.evaluate(() => window.__spoken);
     expect(spoken).toEqual(['Capital de França?', 'París', 'Berlín', 'Roma', 'Londres']);
+    // Ducking: la música baixa mentre es llig…
+    expect(await musicVolume()).toBeCloseTo(before * 0.25, 2);
 
     await button.click();
     await expect(button).toHaveAttribute('aria-pressed', 'false');
     expect(await page.evaluate(() => window.__cancelCount)).toBeGreaterThan(0);
+    // …i torna al volum de l'usuari en parar.
+    expect(await musicVolume()).toBeCloseTo(before, 2);
 });
 
 test('sense speechSynthesis no es mostra el botó', async ({ page }) => {
@@ -108,11 +119,12 @@ const FAKE_SOCKET_IO = `
 })();
 `;
 
-async function openPlayer(page) {
+async function openPlayer(page, voices) {
     await page.route(/^https:\/\//, route => route.abort());
     await page.route('**/socket.io/socket.io.js', route => route.fulfill({ contentType: 'application/javascript', body: FAKE_SOCKET_IO }));
     await page.route('**/api/**', route => route.fulfill({ json: {} }));
     await page.addInitScript(FAKE_SPEECH);
+    if (voices) await page.addInitScript(`window.__voices = ${JSON.stringify(voices)};`);
     await page.goto('/player/game/?pin=12345&name=Ana&icon=gat&lang=es');
     await page.waitForLoadState('load');
     await page.evaluate(() => window.__serverEmit('connect'));
@@ -139,5 +151,47 @@ test('jugador: en mode «a cegues» no hi ha botó ni es llig res', async ({ pag
     await openPlayer(page);
     await page.evaluate(() => window.__serverEmit('playerQuestion', [{ blind: true, type: 'quiz', answerCount: 2, time: 20 }]));
     await expect(page.locator('#questionText')).toBeVisible();
+    await expect(page.locator('#ttsButton')).toHaveCount(0);
+});
+
+test('jugador: sense veus de l’idioma no hi ha botó', async ({ page }) => {
+    await openPlayer(page, []);
+    await page.evaluate(() => window.__serverEmit('playerQuestion', [{ question: 'Hola?', answers: ['Sí', 'No'], type: 'quiz', time: 20 }]));
+    await expect(page.locator('#questionText')).toBeVisible();
+    await expect(page.locator('#ttsButton')).toHaveCount(0);
+});
+
+test('jugador: les veus que arriben més tard activen el botó', async ({ page }) => {
+    await openPlayer(page, []);
+    await page.evaluate(() => window.__serverEmit('playerQuestion', [{ question: 'Hola?', answers: ['Sí', 'No'], type: 'quiz', time: 20 }]));
+    await expect(page.locator('#ttsButton')).toHaveCount(0);
+    await page.evaluate(() => {
+        window.__voices = [{ lang: 'es-ES', name: 'Tardana' }];
+        window.__voiceListeners.forEach(fn => fn());
+    });
+    await expect(page.locator('#ttsButton')).toBeVisible();
+});
+
+test('solo: el botó no surt durant la cuenta atrás i desapareix en contestar', async ({ page }) => {
+    await mockBackend(page);
+    await page.addInitScript(FAKE_SPEECH);
+    await page.clock.install();
+    await page.goto('/solo/?id=q1&lang=es');
+    await expect(page.locator('#start-form')).toBeVisible();
+    await page.clock.pauseAt(await page.evaluate(() => Date.now() + 1000));
+    await page.locator('#start-btn').click();
+    await expect(page.locator('#solo-countdown span')).toHaveText('3');
+    await expect(page.locator('#tts-button')).toHaveCount(0);
+    await page.clock.runFor(3000);
+    await expect(page.locator('#tts-button')).toBeVisible();
+    await page.locator('#answers .answer').first().click();
+    await expect(page.locator('#tts-button')).toHaveCount(0);
+});
+
+test('jugador: el botó desapareix en contestar', async ({ page }) => {
+    await openPlayer(page);
+    await page.evaluate(() => window.__serverEmit('playerQuestion', [{ question: 'Hola?', answers: ['Sí', 'No'], type: 'quiz', time: 20 }]));
+    await expect(page.locator('#ttsButton')).toBeVisible();
+    await page.locator('#answerGrid .button').first().click();
     await expect(page.locator('#ttsButton')).toHaveCount(0);
 });

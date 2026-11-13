@@ -5,6 +5,7 @@ var state = Vue.reactive({
         quizzes: [],
         currentQuiz: null,
         ttsSpeaking: false,
+        ttsReady: false,
         quizData: null,
         questions: [],
     desiredQuestionCount: null,
@@ -169,6 +170,18 @@ function setLang(newLang){
     Vue.createApp({
         template: '#solo-tpl',
         mixins: [soloCatalog, soloPlay],
+        mounted: function(){
+            EduhootTTS.watchAvailability(document.documentElement.lang, function(ok){ state.ttsReady = ok; });
+        },
+        watch: {
+            // En desaparéixer el botó (cuenta atrás o resposta) es para la lectura.
+            ttsAvailable: function(ok){
+                if(!ok){
+                    EduhootTTS.cancel();
+                    state.ttsSpeaking = false;
+                }
+            }
+        },
         data: function(){
             return { s: state };
         },

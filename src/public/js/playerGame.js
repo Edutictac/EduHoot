@@ -52,10 +52,24 @@ function formatRichText(value){
 // reactiu, en una sola app de Vue (Subfase B).
 var app = Vue.createApp({
     template: '#player-game-tpl',
+    mounted: function(){
+        var self = this;
+        EduhootTTS.watchAvailability(document.documentElement.lang, function(ok){ self.ttsReady = ok; });
+    },
+    watch: {
+        // En desaparéixer el botó (cuenta atrás o resposta) es para la lectura.
+        ttsAvailable: function(ok){
+            if(!ok){
+                EduhootTTS.cancel();
+                this.ttsSpeaking = false;
+            }
+        }
+    },
     data: function(){
         return {
             questionText: '',
             ttsSpeaking: false,
+            ttsReady: false,
             answers: [],
             questionType: 'quiz',
             blind: false,
@@ -103,7 +117,8 @@ var app = Vue.createApp({
         // Lectura en veu alta (proposta 13). Mai amb el mode «a cegues»:
         // llavors el text no arriba a l'alumnat.
         ttsAvailable: function(){
-            return !this.blind && !!this.questionText && EduhootTTS.canSpeak(document.documentElement.lang);
+            // Només mentre la pregunta està en pantalla i encara no s'ha contestat.
+            return !this.blind && !!this.questionText && this.ttsReady && !this.countdownVisible && !this.playerAnswered;
         },
         freeAnswerType: function(){
             return this.questionType === 'short-answer' || this.questionType === 'numeric';

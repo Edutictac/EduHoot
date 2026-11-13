@@ -98,13 +98,35 @@
         return exact || loose;
     }
 
-    // Només mostrar el botó si el dispositiu pot llegir este idioma. Si les
-    // veus encara no s'han carregat (passa al principi en alguns navegadors),
-    // es mostra i es deixa que el navegador decidisca.
+    // Només és disponible si el navegador té alguna veu per a este idioma.
+    // Sense veus (passa en Brave i en Firefox sense motor de veu) el botó no
+    // es mostra: no tindria cap efecte.
     function canSpeak(lang){
         if(!supported()) return false;
-        if(!voicesList().length) return true;
+        if(!voicesList().length) return false;
         return !!voiceFor(lang);
+    }
+
+    // Crida callback(true/false) amb la disponibilitat actual i cada vegada
+    // que canvia la llista de veus: algunes veus arriben més tard (Chrome les
+    // carrega de manera asíncrona), i el botó ha de reaccionar.
+    function watchAvailability(lang, callback){
+        var last = null;
+        function report(){
+            var ok = canSpeak(lang);
+            if(ok !== last){
+                last = ok;
+                callback(ok);
+            }
+        }
+        if(!supported()){
+            callback(false);
+            return;
+        }
+        report();
+        try{
+            synth().addEventListener('voiceschanged', report);
+        }catch(e){}
     }
 
     // Cada crida invalida les anteriors: els esdeveniments de locucions
@@ -157,8 +179,10 @@
                 if(myGeneration !== generation) return;
                 if(last) finish();
             };
-            utterance.onerror = function(){
+            utterance.onerror = function(event){
                 if(myGeneration !== generation) return;
+                // Quan no sona, el motiu queda en consola (p. ex. synthesis-unavailable).
+                try{ console.warn('[tts] la lectura ha fallat:', event && event.error); }catch(e){}
                 finish();
             };
             // Referència viva: alguns navegadors aturen la locució si es
@@ -176,6 +200,7 @@
         bcp47: bcp47,
         supported: supported,
         canSpeak: canSpeak,
+        watchAvailability: watchAvailability,
         speakParts: speakParts,
         cancel: cancel
     };

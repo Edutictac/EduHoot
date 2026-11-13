@@ -915,6 +915,14 @@ dades a tercers i no cal ampliar la CSP.
   de `.solo-timer` i `#playerTimer` continuen colapsant-se.
 - No hi ha preferència guardada: no hi ha lectura automàtica, així que el
   botó és l'única opció.
+- Ducking a `/solo/`: mentre sona la veu, la música baixa al 25 % del volum
+  (`duckSoloMusic` / `unduckSoloMusic` a `solo-music.js`). Si l'usuari mou el
+  volum durant la lectura, el nou valor passa a ser el bo i el ducking s'acaba.
+- El botó només es veu mentre la pregunta és en pantalla i no s'ha contestat
+  (no durant la cuenta atrás ni després de respondre). En desaparéixer, la
+  lectura s'atura (`watch` sobre `ttsAvailable`).
+- Sense veus al navegador, el botó no apareix: `canSpeak` és `false` i
+  `watchAvailability` reavalua quan canvia la llista de veus.
 
 **Proves**
 
