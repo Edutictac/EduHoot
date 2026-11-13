@@ -18,6 +18,7 @@
       host_error_missing_id: 'Falta el quiz para generar la partida. Vuelve a elegirlo.',
       host_error_timeout: 'No pudimos obtener el PIN. Revisa la conexión y vuelve a elegir el quiz.',
       footerPrivacy: 'Privacidad',
+      footerCookies: 'Cookies',
       footerSource: 'Código fuente'
     },
     en: {
@@ -38,6 +39,7 @@
       host_error_missing_id: 'Missing quiz to create the game. Please pick it again.',
       host_error_timeout: 'Could not retrieve the PIN. Check your connection and pick the quiz again.',
       footerPrivacy: 'Privacy',
+      footerCookies: 'Cookies',
       footerSource: 'Source code'
     },
     ca: {
@@ -58,6 +60,7 @@
       host_error_missing_id: 'Falta el qüestionari per generar la partida. Torna a triar-lo.',
       host_error_timeout: 'No hem pogut obtenir el PIN. Comprova la connexió i torna a triar el qüestionari.',
       footerPrivacy: 'Privacitat',
+      footerCookies: 'Galetes',
       footerSource: 'Codi font'
     },
     va: {
