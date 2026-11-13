@@ -4,6 +4,7 @@
 var state = Vue.reactive({
         quizzes: [],
         currentQuiz: null,
+        ttsSpeaking: false,
         quizData: null,
         questions: [],
     desiredQuestionCount: null,

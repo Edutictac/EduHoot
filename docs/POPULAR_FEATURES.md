@@ -106,7 +106,7 @@ decisió de producte.
 | 10 | Modes de joc immersius tipus arcade | 🟦 | 🔴 | ➖ Neutre | ⚠️ Risc³ | 🚧 Baixa | ✅ Encaixa | Fase 4 |
 | 11 | Ratxa d'encerts consecutius | 🟨 | 🟢/🟡 | ➖ Neutre | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1b |
 | 12 | Generador de sobrenoms aleatoris | 🟨 | 🟢 | ✖️ Cap⁴ | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1a |
-| 13 | Lectura en veu alta (TTS) | 🟩 | 🟢 | ➖ Neutre | 🙂 Segur | 🤝 Alta | ✅ Encaixa | Fase 1a |
+| 13 | ✅ Lectura en veu alta (TTS) | 🟩 | 🟢 | ➖ Neutre | 🙂 Segur | 🤝 Alta | ✅ Encaixa | Fase 1a |
 | 14 | So de feedback individual | 🟨 | 🟢 | ✖️ Cap | 🙂 Segur | ➖ Neutra | ✅ Encaixa | 📦 Aparcada |
 | 15 | Ampliar la importació: GIFT, JSON, XML de Moodle i la resta de formats de Moodle/AULES⁵ | 🟦 | 🟡 | ➖ Neutre | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1a |
 | 16 | Reaccions en directe (emoji) | 🟨 | 🟡 | ✖️ Cap | ⚠️ Risc | ➖ Neutra | ✅ Encaixa | 📦 Aparcada |
@@ -268,6 +268,8 @@ el context, que ja estan en la taula).
     → **Criteri pedagògic:** ➖ Aprenentatge: Neutre · 🙂 Clima: Segur ·
     🤝 Inclusió: Alta (accessibilitat per a alumnat amb dificultats
     lectores) → **Prioritat alta.**
+    ✅ **Implementada** a «Jugar a l'aula» i a `/solo/`, a demanda i sense
+    lectura automàtica (vore [`ARCHITECTURE.md`](../ARCHITECTURE.md#lectura-en-veu-alta-tts)).
 
 14. 🟨 **Kahoot** — So de feedback individual al respondre (ding/buzz) —
     🟢 Baixa
@@ -567,7 +569,7 @@ un suggeriment ajornable:
 
 ### Fase 1a — Millores cosmètiques/aïllades, sense tocar la lògica de joc
 
-12 (sobrenoms aleatoris), 13 (TTS), 15 (ampliar importació:
+12 (sobrenoms aleatoris), ✅ 13 (TTS), 15 (ampliar importació:
 GIFT/JSON/XML Moodle/AULES), 20 (flashcards), ✅ 23 (compte arrere 3-2-1).
 
 No canvien ni la puntuació ni la seqüència de preguntes: són canvis

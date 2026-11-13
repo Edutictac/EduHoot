@@ -27,6 +27,9 @@ function startQuiz(){
     }
 
     function renderQuestion(){
+    // Lectura en veu alta: la pregunta anterior no es llig sobre la nova.
+    EduhootTTS.cancel();
+    state.ttsSpeaking = false;
         var questions = getQuestions();
         if(state.idx >= questions.length){
             finishQuiz();
@@ -391,6 +394,10 @@ var soloPlay = {
         hasMedia: function(){
             return !!(this.media.image || this.media.youtube || this.media.video);
         },
+        // Lectura en veu alta (proposta 13). Només amb la pregunta visible.
+        ttsAvailable: function(){
+            return !!(this.question && this.question.question) && EduhootTTS.canSpeak(document.documentElement.lang);
+        },
         // Barra de temps: mateix percentatge i colors que en «Jugar a l'aula».
         timerPct: function(){
             var total = this.s.timerTotal || 1;
@@ -422,6 +429,20 @@ var soloPlay = {
         }
     },
     methods: {
+        toggleSpeech: function(){
+            if(this.s.ttsSpeaking){
+                EduhootTTS.cancel();
+                this.s.ttsSpeaking = false;
+                return;
+            }
+            if(!this.question) return;
+            var parts = [this.question.question || ''].concat(this.answers || []);
+            this.s.ttsSpeaking = true;
+            var started = EduhootTTS.speakParts(parts, document.documentElement.lang, function(){
+                state.ttsSpeaking = false;
+            });
+            if(!started) this.s.ttsSpeaking = false;
+        },
         answerClass: function(n){
             return {
                 correct: this.s.marks.correct.indexOf(n) !== -1,

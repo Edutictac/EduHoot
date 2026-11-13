@@ -47,13 +47,16 @@
   pantalla que «Jugar a l'aula», amb el títol, els punts i una barra de
   temps que també es veu en el mòbil.
 
+- **Escolta la pregunta**: si no llegeixes bé o vols escoltar-la, toca el
+  botó 🔊 al costat de la barra de temps i el mòbil te la llegeix, amb les
+  respostes. Només ho fas tu, quan vols.
+- **Pantalla completa**: la partida ocupa tota la pantalla, tant en
+  l'ordinador com en el mòbil, sense quedar-se a dalt ni sortir-se'n.
+
 ## Pròximament
 
 ### Millores de contingut i accessibilitat
 
-- **Llegir les preguntes en veu alta**: l'app podrà llegir cada pregunta i
-  les seues respostes en veu alta, pensat sobretot per a l'alumnat amb
-  dificultats de lectura o amb la vista cansada.
 - **Mode flashcards**: un mode d'estudi on cada qüestionari es pot repassar
   com a fitxes, sense puntuació ni presses, per a memoritzar al teu ritme.
 - **Importar més formats**: a més del CSV, es podran importar qüestionaris
@@ -115,6 +118,11 @@
 - **Juega con tus compañeros o a tu ritmo**: hasta 4 jugadores
   compartiendo una sola pantalla, o modo individual para practicar cuando
   quieras.
+- **Escucha la pregunta**: si lees con dificultad o quieres escucharla,
+  toca el botón 🔊 junto a la barra de tiempo y el móvil te la lee, con las
+  respuestas. Solo lo activas tú, cuando quieres.
+- **Pantalla completa**: la partida ocupa toda la pantalla, tanto en el
+  ordenador como en el móvil, sin quedarse arriba ni salirse.
 - **Cuenta atrás también cuando practicas solo**: el modo individual
   muestra el mismo 3-2-1 antes de cada pregunta.
 - **Cada nombre, una sola vez**: dos alumnos no pueden entrar con el mismo
@@ -131,9 +139,6 @@
 
 ### Mejoras de contenido y accesibilidad
 
-- **Leer las preguntas en voz alta**: la app podrá leer cada pregunta y
-  sus respuestas en voz alta, pensado sobre todo para el alumnado con
-  dificultades de lectura o con la vista cansada.
 - **Modo flashcards**: un modo de estudio donde cada cuestionario se puede
   repasar como fichas, sin puntuación ni prisas, para memorizar a tu ritmo.
 - **Importar más formatos**: además del CSV, se podrán importar
@@ -194,6 +199,11 @@
   right, the more you earn.
 - **Play together or at your own pace**: up to 4 players sharing one
   screen, or a solo mode to practise whenever you want.
+- **Listen to the question**: if reading is hard, or you'd rather listen,
+  tap the 🔊 button next to the time bar and your phone reads the question
+  aloud, with the answers. You choose when to use it.
+- **Full screen**: the game fills the whole screen, on a computer or a
+  phone, without staying at the top or running off the edge.
 - **Countdown when practising alone too**: solo mode shows the same
   3-2-1 before each question.
 - **Every name, only once**: two students can't join a game with the same
@@ -209,9 +219,6 @@
 
 ### Content and accessibility improvements
 
-- **Read questions aloud**: the app will be able to read each question and
-  its answers aloud, designed especially for students with reading
-  difficulties or tired eyes.
 - **Flashcards mode**: a study mode where each quiz can be revised as
   cards, with no scoring and no rush: memorise at your own pace.
 - **Import more formats**: besides CSV, quizzes will be importable in

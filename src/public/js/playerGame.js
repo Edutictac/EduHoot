@@ -55,6 +55,7 @@ var app = Vue.createApp({
     data: function(){
         return {
             questionText: '',
+            ttsSpeaking: false,
             answers: [],
             questionType: 'quiz',
             blind: false,
@@ -98,6 +99,11 @@ var app = Vue.createApp({
         },
         questionHtml: function(){
             return formatRichText(this.questionText);
+        },
+        // Lectura en veu alta (proposta 13). Mai amb el mode «a cegues»:
+        // llavors el text no arriba a l'alumnat.
+        ttsAvailable: function(){
+            return !this.blind && !!this.questionText && EduhootTTS.canSpeak(document.documentElement.lang);
         },
         freeAnswerType: function(){
             return this.questionType === 'short-answer' || this.questionType === 'numeric';
@@ -208,6 +214,20 @@ var app = Vue.createApp({
         },
         hidePlayerRanking: function(){
             this.rankingVisible = false;
+        },
+        toggleSpeech: function(){
+            var self = this;
+            if(this.ttsSpeaking){
+                EduhootTTS.cancel();
+                this.ttsSpeaking = false;
+                return;
+            }
+            var parts = [this.questionText].concat(this.answers || []);
+            this.ttsSpeaking = true;
+            var started = EduhootTTS.speakParts(parts, document.documentElement.lang, function(){
+                self.ttsSpeaking = false;
+            });
+            if(!started) this.ttsSpeaking = false;
         }
     }
 }).mount('#player-game');
@@ -506,6 +526,7 @@ function updatePlayerRank(playerData){
 }
 
 socket.on('questionOver', function(playerData, payload){
+    EduhootTTS.cancel();
     questionActive = false;
     releaseWakeLock();
     setMedia(null, null);
@@ -649,6 +670,7 @@ function showQuestionCountdown(data){
 socket.on('questionCountdown', showQuestionCountdown);
 
 socket.on('playerQuestion', function(data){
+    EduhootTTS.cancel();
     clearQuestionCountdown();
     questionActive = true;
     requestWakeLock();

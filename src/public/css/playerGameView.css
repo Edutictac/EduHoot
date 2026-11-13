@@ -350,3 +350,29 @@ body{
     #lang-switcher{ top: 8px; right: 8px; }
     #lang-switcher button{ padding: 6px 8px; }
 }
+
+/* Pantalla completa: la partida ocupa tota l'alçada visible del navegador
+   (--app-vh, vore js/viewport-fit.js) amb un marge petit al voltant, i les
+   respostes es repartixen l'espai que sobra. */
+body{
+    box-sizing: border-box;
+    min-height: var(--app-vh);
+    padding: var(--fit-margin);
+}
+#player-game{
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+#answerGrid{
+    flex: 1 1 auto;
+    min-height: 0;
+    grid-auto-rows: 1fr;
+}
+#answerGrid > .button{
+    width: auto;
+    height: auto;
+    min-height: 0;
+    margin: 0;
+}

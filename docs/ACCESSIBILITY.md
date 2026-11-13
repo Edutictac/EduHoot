@@ -76,8 +76,10 @@ Ja implementat, no cal tornar a proposar-ho:
   reduïx el respecte a la mida de text preferida del navegador.
 - **`.sr-only` i patrons ARIA inconsistents** entre vistes: `host`,
   `create` i `join` no tenen el que `solo`/`multiplayer` sí tenen.
-- **Sense lectura en veu alta (TTS)**: ja identificat com a idea
-  pendent en `POPULAR_FEATURES.md` (vore més avall), no és un buit nou.
+- **Lectura en veu alta (TTS)**: implementada per a la pregunta i les
+  respostes, a «Jugar a l'aula» i a `/solo/` (vore
+  [`ARCHITECTURE.md`](../ARCHITECTURE.md#lectura-en-veu-alta-tts)). Queda
+  pendent la prova de la veu real en iPad i iPhone.
 
 ## Referència: Kahoot i Wayground
 
@@ -140,8 +142,8 @@ quan es decidisca incorporar-les al document principal:
 - Subtítols o transcripció per a vídeos de pregunta.
 
 **Relacionades amb idees ja existents:**
-- Lectura en veu alta (TTS): ja a la wishlist de `POPULAR_FEATURES.md`,
-  no duplicar.
+- Lectura en veu alta (TTS): implementada (proposta 13 de
+  `POPULAR_FEATURES.md`). Pendent: ampliar-la als ajustos per alumne (W5).
 - Tipografia per a dislèxia: nova idea, inspirada directament en
   l'enfocament de Wayground.
 - Ajustos per alumne/grup concret (temps, TTS, alt contrast...): amplia
@@ -149,9 +151,8 @@ quan es decidisca incorporar-les al document principal:
 
 ## Relació amb altres documents
 
-- `POPULAR_FEATURES.md` ja té la lectura en veu alta (TTS) com a idea
-  de backlog amb alta inclusió/prioritat. Este document no la duplica,
-  només l'ha confirmat com a no implementada.
+- `POPULAR_FEATURES.md` marca la lectura en veu alta (TTS, proposta 13)
+  com a implementada. Este document només en recull l'abast actual.
 - **W5** (personalització per jugador/grup, afegida hui a la wishlist)
   encaixa de ple amb el model d'"Accommodations" de Wayground; es
   podria ampliar el seu text per a cobrir explícitament ajustos

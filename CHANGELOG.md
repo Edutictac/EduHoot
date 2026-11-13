@@ -19,6 +19,16 @@ fitxers corresponents, i els originals es van eliminar.
 ## [Sense publicar]
 
 ### Afegit
+- Pantalla completa a `/solo/` i «Jugar a l'aula»: la partida ocupa tota la
+  finestra visible del navegador, en PC i en mòbil, amb un marge petit. La
+  mida la llig `js/viewport-fit.js` (`visualViewport`), així que també
+  s'adapta quan surt el teclat. Al mode individual s'oculta el peu de
+  pàgina durante la partida.
+- Lectura en veu alta de la pregunta i de les respostes (proposta 13), a
+  «Jugar a l'aula» i a `/solo/`: un botó 🔊 a l'alumnat, a demanda, amb la
+  síntesi de veu del propi navegador (sense serveis externs). No s'activa
+  sol ni es llig en mode «a cegues». Provat amb navegadors automàtics; falta
+  la prova en iPad i iPhone.
 - La partida del mode individual (`/solo/`) té la mateixa estructura i
   grandàries que "Jugar a l'aula": franja amb el títol, el progrés i els
   punts, barra de temps i respostes grans amb forma i color, en 2x2 en

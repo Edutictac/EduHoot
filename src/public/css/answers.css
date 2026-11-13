@@ -1,3 +1,10 @@
+/* Alçada de la pantalla de joc: --app-vh la fixa viewport-fit.js amb la
+   finestra visible del navegador; si el script no hi és, 100dvh. */
+:root{
+    --app-vh: 100dvh;
+    --fit-margin: 12px;
+}
+
 /* Peces comunes de la pantalla de joc de l'alumnat: «Jugar a l'aula»
    (/player/game/) i mode individual (/solo/). Cada pantalla manté els seus
    colors de fons; ací van la barra de temps i els botons de resposta, perquè
@@ -87,3 +94,38 @@
     .answer-grid{ grid-template-columns: 1fr; gap: 10px; }
     .answer-shape{ min-height: 58px; }
 }
+
+/* Botó de lectura en veu alta (proposta 13). Va a la dreta de la barra de
+   temps, dins de la mateixa fila: no canvia l'altura ni la pregunta. */
+/* Bloc normal (no flex) perquè els marges del temporitzador continuen
+   colapsant-se com abans; només el botó és absolut. */
+.tts-timer-wrap{
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.tts-timer-wrap.has-tts > .game-timer{ margin-right: 44px; }
+.tts-btn{
+    position: absolute;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    margin: 0;
+    padding: 0;
+    border: 1px solid currentColor;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.25);
+    color: inherit;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0.85;
+}
+.tts-btn:hover,
+.tts-btn:focus-visible{ opacity: 1; }
+.tts-btn[aria-pressed="true"]{ opacity: 1; box-shadow: 0 0 0 2px currentColor; }

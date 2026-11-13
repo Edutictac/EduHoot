@@ -966,3 +966,60 @@ body.playing #game-panel{
     .game-area .question-media video{ max-width: 100%; max-height: 19vh; }
     .game-area .question-media iframe{ width: 100%; height: 220px; }
 }
+
+/* Pantalla completa de la partida: ocupa tota l'alçada visible del navegador
+   (--app-vh, vore js/viewport-fit.js), sense el peu, i les respostes es
+   repartixen l'espai que sobra. Igual que a «Jugar a l'aula». */
+body.playing{
+    box-sizing: border-box;
+    min-height: var(--app-vh);
+    padding: var(--fit-margin);
+    display: flex;
+    flex-direction: column;
+}
+body.playing .ett-footer{ display: none; }
+body.playing main.grid{
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    margin: 0 auto;
+}
+body.playing .play-panel{
+    position: static;
+    height: auto;
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+body.playing #game-panel{
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+}
+body.playing #game-area{
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+body.playing .game-area .question-card{
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+body.playing #answers{
+    flex: 1 1 auto;
+    min-height: 0;
+    grid-auto-rows: 1fr;
+}
+/* Respostes escrites: la fila ocupa l'ample sencer i no s'estira. */
+body.playing #answers:has(> .free-answer-row){
+    grid-auto-rows: auto;
+    align-content: center;
+}
+body.playing #answers > .free-answer-row{ grid-column: 1 / -1; }

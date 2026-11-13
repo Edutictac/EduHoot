@@ -32,9 +32,12 @@
             </div>
             <div id="playerPointsBadge" class="player-points-badge points-badge-pop" :key="'badge-' + badgeKey" :style="{ display: badgeVisible ? 'inline-flex' : 'none' }">{{ badgeText }}</div>
             <div id="playerStatusRow">
-                <div id="playerTimer" class="game-timer">
-                    <div id="playerTimerFill" class="game-timer__fill" :style="{ width: timerPct + '%', background: timerColor }"></div>
-                    <span id="playerTimerText" class="game-timer__text">{{ timerText }}</span>
+                <div class="tts-timer-wrap" :class="{ 'has-tts': ttsAvailable }">
+                    <div id="playerTimer" class="game-timer">
+                        <div id="playerTimerFill" class="game-timer__fill" :style="{ width: timerPct + '%', background: timerColor }"></div>
+                        <span id="playerTimerText" class="game-timer__text">{{ timerText }}</span>
+                    </div>
+                    <button v-if="ttsAvailable" id="ttsButton" type="button" class="tts-btn" :aria-pressed="ttsSpeaking ? 'true' : 'false'" :aria-label="ttsSpeaking ? t('tts_stop', 'Parar') : t('tts_listen', 'Escoltar la pregunta')" :title="ttsSpeaking ? t('tts_stop', 'Parar') : t('tts_listen', 'Escoltar la pregunta')" @click="toggleSpeech"><span aria-hidden="true">{{ ttsSpeaking ? '⏹' : '🔊' }}</span></button>
                 </div>
                 <div id="playerAnswerStatus" :class="{ hidden: !answerStatusVisible }">{{ answerStatusText }}</div>
             </div>
@@ -72,6 +75,8 @@
         <script src="/js/languages.js"></script>
         <script src="/js/env-badge.js"></script>
         <script src = "../../js/i18n-player.js"></script>
+        <script src = "../../js/viewport-fit.js"></script>
+        <script src = "../../js/tts.js"></script>
         <script src = "../../socket.io/socket.io.js"></script>
         <script src = "../../js/libs/jqueryLibrary.js"></script>
         <script src = "../../js/libs/deparam.js"></script>

@@ -29,6 +29,8 @@ funcionament del projecte.
 - [Exportació a Moodle XML](#exportació-a-moodle-xml)
 - [Panell d'administració (estadístiques)](#panell-dadministració-estadístiques)
 - [Logs del servidor (/admin/logs)](#logs-del-servidor-adminlogs)
+- [Lectura en veu alta (TTS)](#lectura-en-veu-alta-tts)
+- [Pantalla completa de la partida](#pantalla-completa-de-la-partida)
 - [Modes de joc](#modes-de-joc)
 - [Avanç de pregunta: automàtic o manual?](#avanç-de-pregunta-automàtic-o-manual)
 - [Comparativa de tipus amb Kahoot, Wayground i AULES](#comparativa-de-tipus-amb-kahoot-wayground-i-aules)
@@ -862,6 +864,82 @@ poder importar un fitxer XML al banc de preguntes del seu propi curs.
   de reutilitzar una fila amb el mateix nom quan el token no resol —
   vore la issue de jugadors duplicats), i els errors no controlats de
   cada mòdul de sockets/rutes.
+
+## Lectura en veu alta (TTS)
+
+Proposta 13 de [`docs/POPULAR_FEATURES.md`](docs/POPULAR_FEATURES.md). L'alumnat
+escolta la pregunta i les respostes des del seu dispositiu, a demanda. Usa
+`speechSynthesis` del navegador: no hi ha servidor implicat, no s'envien
+dades a tercers i no cal ampliar la CSP.
+
+**Fitxer**: `src/public/js/tts.js`. És un script clàssic que exposa
+`window.EduhootTTS`; en Node exporta les mateixes funcions per als tests.
+
+**API**
+
+- `plainText(html)`: converteix el text de la pregunta (amb `<br>`, `<b>`,
+  `<i>`, `<u>` i entitats HTML) en text pla. `<br>` es converteix en un punt.
+- `splitForSpeech(text, max)`: reparteix el text en fragments de fins a 180
+  caràcters, tallats per frases i, si cal, per espais.
+- `canSpeak(lang)`: `false` si el navegador no té `speechSynthesis`. Si les
+  veus encara no s'han carregat, retorna `true`; si ja s'han carregat, exigeix
+  una veu de l'idioma.
+- `speakParts(parts, lang, onEnd)`: encola tots els fragments de cop i
+  retorna `false` si no es pot parlar. `onEnd` s'executa en acabar, en error
+  o en cancel·lar.
+- `cancel()`: para la lectura en curs i executa el `onEnd` pendent.
+
+**Ús a cada pantalla**
+
+- Jugador (`playerGame.js`): botó a la fila del temporitzador
+  (`.tts-timer-wrap`). Llig `questionText` i després `answers`. Mai en mode
+  «a cegues» (`blind`).
+- Solo (`solo-game.js`): el mateix botó; llig `question.question` i `answers`.
+- La lectura s'atura en començar o acabar cada pregunta (`playerQuestion`,
+  `questionOver` i `renderQuestion`).
+
+**Decisions tècniques**
+
+- Safari només deixa parlar si la primera crida a `speak` és dins del gest de
+  l'usuari. Per això `speakParts` encola tot de cop, sense `await` ni
+  `setTimeout` abans.
+- Chrome i Safari tallen les locucions llargues cap als 15 segons; per això el
+  text es reparteix en fragments.
+- Cada crida incrementa un comptador (`generation`). Els esdeveniments de
+  locucions anteriors s'ignoren, així que no toquen l'estat nou.
+- Es guarda una referència a cada `SpeechSynthesisUtterance` (`keepAlive`):
+  alguns navegadors aturen la lectura si la memòria es recull abans d'acabar.
+- El botó és una icona a la fila del temporitzador, no un text sota les
+  respostes: amb imatge, un text en eixa posició empenyia les respostes fora de
+  pantalla en 360×640. El contenidor és de bloc (no flex) perquè els marges
+  de `.solo-timer` i `#playerTimer` continuen colapsant-se.
+- No hi ha preferència guardada: no hi ha lectura automàtica, així que el
+  botó és l'única opció.
+
+**Proves**
+
+- `test/unit/tts.test.js`: text, trossejat, idioma i absència de
+  `speechSynthesis`.
+- `test/browser/tts.spec.js`: simula `speechSynthesis` i comprova què es llig a
+  Solo i al jugador, i que el botó no apareix sense la funció ni en mode «a
+  cegues». No prova la veu real: eixa prova és manual, en dispositius.
+
+**Pendent**: prova de la veu real en iPad i iPhone (Safari).
+
+## Pantalla completa de la partida
+
+`/solo/` i `/player/game/` ocupen la finestra visible del navegador amb un marge
+de 12 px (`--fit-margin`, a `css/answers.css`).
+
+- `js/viewport-fit.js` llig `visualViewport` (o `innerHeight`) i deixa la mida
+  en `--app-vh` i `--app-vw`. S'actualitza amb `resize`, `orientationchange` i
+  amb el `visualViewport` (per exemple, quan surt el teclat del mòbil).
+- Les regles estan al final de `css/playerGameView.css` i `css/solo.css` (blocs
+  «Pantalla completa»). Les respostes (`#answerGrid`, `#answers`) tenen
+  `grid-auto-rows: 1fr` i prenen l'espai sobrant.
+- A Solo, `body.playing` oculta el peu de pàgina i anul·la `.play-panel`
+  (`sticky` i `height: fit-content`), que feien que la partida es quedés a dalt.
+- Test: `test/browser/fullscreen.spec.js` (PC, mòbil i mòbil horitzontal).
 
 ## Modes de joc
 

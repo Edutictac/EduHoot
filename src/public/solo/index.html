@@ -149,9 +149,12 @@
                             <span id="score-pill" class="pill pill-muted">{{ t('score') + ': ' + s.score }}</span>
                         </span>
                     </div>
-                    <div class="game-timer solo-timer" role="timer">
-                        <div class="game-timer__fill" :style="{ width: timerPct + '%', background: timerColor }"></div>
-                        <span id="timer-pill" class="game-timer__text">{{ t('timer') + ': ' + Math.ceil(s.timerLeft) + 's' }}</span>
+                    <div class="tts-timer-wrap" :class="{ 'has-tts': ttsAvailable }">
+                        <div class="game-timer solo-timer" role="timer">
+                            <div class="game-timer__fill" :style="{ width: timerPct + '%', background: timerColor }"></div>
+                            <span id="timer-pill" class="game-timer__text">{{ t('timer') + ': ' + Math.ceil(s.timerLeft) + 's' }}</span>
+                        </div>
+                        <button v-if="ttsAvailable" id="tts-button" type="button" class="tts-btn" :aria-pressed="s.ttsSpeaking ? 'true' : 'false'" :aria-label="s.ttsSpeaking ? t('ttsStop') : t('ttsListen')" :title="s.ttsSpeaking ? t('ttsStop') : t('ttsListen')" @click="toggleSpeech"><span aria-hidden="true">{{ s.ttsSpeaking ? '⏹' : '🔊' }}</span></button>
                     </div>
                     <div class="question-card">
                         <!-- Compte arrere 3-2-1 abans de cada pregunta (proposta 23). -->
@@ -265,6 +268,8 @@
         <script src="../js/solo-questions.js"></script>
         <script src="../js/solo-library.js"></script>
         <script src="../js/solo-music.js"></script>
+        <script src="../js/viewport-fit.js"></script>
+        <script src="../js/tts.js"></script>
         <script src="../js/solo-game.js"></script>
         <script src="../js/solo-ranking.js"></script>
         <script src="../js/solo.js"></script>
