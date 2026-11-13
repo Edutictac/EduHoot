@@ -694,6 +694,15 @@ la numeració 1-32 de dalt.
   d'una altra (p. ex. paraula–definició, país–capital). Caldria
   definir-lo en el model de pregunta, l'editor, la importació/exportació
   (CSV, Moodle) i les pantalles de joc.
+- **W8 — Identificador de navegador per a les entrades del registre.**
+  El navegador de cada alumne genera un identificador aleatori, guardat en
+  `localStorage`, que s'envia amb `player-join` i es registra en el log
+  (`meta.deviceId`). Permet relacionar un nom de jugador amb un mateix
+  navegador encara que canvie el nom. No identifica el maquinari: si
+  s'esborren les dades del lloc, s'usa mode incògnit o un compte d'invitat,
+  l'identificador canvia. És un valor aleatori, no una empremta del
+  navegador (canvas, fonts, resolució), i no es confon amb el testimoni de
+  reconnexió (`playerTokens`), que és una credencial i no s'ha de registrar.
 
 ## Nota sobre drets d'autor
 
