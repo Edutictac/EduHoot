@@ -101,3 +101,43 @@ test('reiniciar el progrés esborra les marques', async ({ page }) => {
     await expect(page.locator('#cards-reset')).toBeDisabled();
     await expect(page.locator('#cards-start-unknown')).toBeDisabled();
 });
+
+test('girar la targeta muestra la cara de la resposta i oculta la de la pregunta', async ({ page }) => {
+    await mockBackend(page);
+    await page.goto('/solo/?lang=es');
+    await page.locator('.card-actions .btn', { hasText: 'Repasar' }).click();
+    await page.locator('#cards-start-all').click();
+
+    const front = page.locator('.flashcard__face--front');
+    const back = page.locator('.flashcard__face--back');
+    await expect(front).toHaveAttribute('aria-hidden', 'false');
+    await expect(back).toHaveAttribute('aria-hidden', 'true');
+
+    await page.locator('#cards-flip').click();
+    await expect(page.locator('.flashcard')).toHaveClass(/is-back/);
+    await expect(front).toHaveAttribute('aria-hidden', 'true');
+    await expect(front).toHaveJSProperty('inert', true);
+    await expect(back).toHaveAttribute('aria-hidden', 'false');
+    await expect(back).toHaveJSProperty('inert', false);
+
+    // En canviar de targeta, la nova és al davant i no fa un giro en sentit contrari.
+    await page.locator('#cards-next').click();
+    await expect(page.locator('.flashcard')).not.toHaveClass(/is-back/);
+    await expect(page.locator('.flashcard')).toHaveClass(/no-anim/);
+    await expect(page.locator('.flashcard')).not.toHaveClass(/no-anim/);
+});
+
+test('clicar la targeta la gira i tornar a clicar-la la retorna', async ({ page }) => {
+    await mockBackend(page);
+    await page.goto('/solo/?lang=es');
+    await page.locator('.card-actions .btn', { hasText: 'Repasar' }).click();
+    await page.locator('#cards-start-all').click();
+
+    await page.locator('#flashcard-question').click();
+    await expect(page.locator('.flashcard')).toHaveClass(/is-back/);
+    await expect(page.locator('#flashcard-answer li')).toHaveText(['París']);
+
+    await page.locator('.flashcard__answers').click();
+    await expect(page.locator('.flashcard')).not.toHaveClass(/is-back/);
+    await expect(page.locator('#cards-progress')).toHaveText('Pregunta 1 de 3');
+});

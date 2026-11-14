@@ -226,19 +226,26 @@
 
                     <div v-else class="flashcard-wrap">
                         <p id="cards-progress" class="cards-progress">{{ cardsProgressText }}</p>
-                        <div class="flashcard" :class="s.cards.flipped ? 'is-back' : 'is-front'">
-                            <p class="flashcard__label">{{ s.cards.flipped ? t('flashcardsBack') : t('flashcardsFront') }}</p>
-                            <template v-if="!s.cards.flipped">
-                                <p id="flashcard-question" class="question-text">{{ cardsFrontText }}</p>
-                                <div class="flashcard__media" v-if="cardsMedia.image || cardsMedia.video || cardsMedia.youtube">
-                                    <img v-if="cardsMedia.image" alt="" :src="cardsMedia.image">
-                                    <video v-if="cardsMedia.video" controls playsinline :src="cardsMedia.video"></video>
-                                    <iframe v-if="cardsMedia.youtube" title="video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen :src="cardsMedia.youtube"></iframe>
+                        <div class="flashcard-scene">
+                            <div class="flashcard" :class="{ 'is-back': s.cards.flipped, 'no-anim': s.cards.instant }" @click="cardsFlipFromCard">
+                                <!-- Les dues cares són sempre al DOM; la que no toca queda oculta i inerta (ni teclat ni lector de pantalla). -->
+                                <div class="flashcard__face flashcard__face--front" :aria-hidden="s.cards.flipped ? 'true' : 'false'" :inert="s.cards.flipped || null">
+                                    <p class="flashcard__label">{{ t('flashcardsFront') }}</p>
+                                    <p id="flashcard-question" class="question-text">{{ cardsFrontText }}</p>
+                                    <!-- El media es desmunta en girar perquè el vídeo o l'àudio no segueixin sonant de dors. -->
+                                    <div class="flashcard__media" v-if="!s.cards.flipped && (cardsMedia.image || cardsMedia.video || cardsMedia.youtube)">
+                                        <img v-if="cardsMedia.image" alt="" :src="cardsMedia.image">
+                                        <video v-if="cardsMedia.video" controls playsinline :src="cardsMedia.video"></video>
+                                        <iframe v-if="cardsMedia.youtube" title="video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen :src="cardsMedia.youtube"></iframe>
+                                    </div>
                                 </div>
-                            </template>
-                            <ul v-else id="flashcard-answer" class="flashcard__answers">
-                                <li v-for="(a, i) in cardsBackParts" :key="i">{{ a }}</li>
-                            </ul>
+                                <div class="flashcard__face flashcard__face--back" :aria-hidden="s.cards.flipped ? 'false' : 'true'" :inert="!s.cards.flipped || null">
+                                    <p class="flashcard__label">{{ t('flashcardsBack') }}</p>
+                                    <ul id="flashcard-answer" class="flashcard__answers">
+                                        <li v-for="(a, i) in cardsBackParts" :key="i">{{ a }}</li>
+                                    </ul>
+                                </div>
+                            </div>
                         </div>
                         <div class="cards-actions">
                             <button id="cards-prev" class="btn btn-ghost" :disabled="s.cards.pos === 0" @click="cardsPrev">{{ t('flashcardsPrev') }}</button>

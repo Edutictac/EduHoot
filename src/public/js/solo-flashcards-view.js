@@ -33,6 +33,16 @@ function cardAnswerTexts(q, t){
         .filter(function(a){ return a !== undefined && a !== null && String(a).trim() !== ''; });
 }
 
+// Torna la targeta al davant sense animació (en canviar de targeta, no ha de girar de nou).
+function snapCardFront(c){
+    if(!c.flipped) return;
+    c.flipped = false;
+    c.instant = true;
+    requestAnimationFrame(function(){
+        requestAnimationFrame(function(){ c.instant = false; });
+    });
+}
+
 function stopFlashcardsSpeech(){
     if(window.EduhootTTS) EduhootTTS.cancel();
     state.ttsSpeaking = false;
@@ -53,6 +63,7 @@ function openFlashcards(quiz){
         deck: [],
         pos: 0,
         flipped: false,
+        instant: false,
         phase: 'start',
         shuffle: false
     };
@@ -121,24 +132,32 @@ var soloFlashcards = {
             stopFlashcardsSpeech();
             c.deck = deck;
             c.pos = 0;
-            c.flipped = false;
+            snapCardFront(c);
             c.phase = deck.length ? 'card' : 'done';
         },
         cardsFlip: function(){
             stopFlashcardsSpeech();
             this.s.cards.flipped = !this.s.cards.flipped;
         },
+        // Clic a qualsevol punt de la targeta la gira. No ho fa en el media (vídeo, imatge, iframe),
+        // ni si l'usuari està seleccionant text.
+        cardsFlipFromCard: function(ev){
+            if(ev.target.closest && ev.target.closest('.flashcard__media')) return;
+            var sel = window.getSelection ? window.getSelection() : null;
+            if(sel && !sel.isCollapsed && String(sel).trim() !== '') return;
+            this.cardsFlip();
+        },
         cardsPrev: function(){
             var c = this.s.cards;
             if(c.pos === 0) return;
             stopFlashcardsSpeech();
             c.pos -= 1;
-            c.flipped = false;
+            snapCardFront(c);
         },
         cardsNext: function(){
             var c = this.s.cards;
             stopFlashcardsSpeech();
-            c.flipped = false;
+            snapCardFront(c);
             if(c.pos + 1 < c.deck.length){
                 c.pos += 1;
             }else{
@@ -167,7 +186,7 @@ var soloFlashcards = {
             stopFlashcardsSpeech();
             c.deck = EduhootFlashcards.shuffleCopy(c.deck);
             c.pos = 0;
-            c.flipped = false;
+            snapCardFront(c);
         },
         cardsSpeak: function(){
             if(this.s.ttsSpeaking){
