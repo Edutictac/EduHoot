@@ -113,12 +113,12 @@ decisió de producte.
 | 17 | Tipus de pregunta addicionals | 🟦 | 🔴 | 📚 Alt | 🙂 Segur | 🤝 Alta | ✅ Encaixa | Fase 2 |
 | 18 | Informe de progrés històric | 🟩 | 🔴 | 📚 Alt⁶ | 🙂 Segur | ➖ Neutra | ✅ Encaixa | ❌ Descartada |
 | 19 | Lliçons interactives | 🟦 | 🔴 | 📚 Alt | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 4 |
-| 20 | Mode d'estudi "Flashcards" | 🟩 | 🟡 | 📚 Alt | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1a |
+| 20 | ✅ Mode d'estudi "Flashcards" | 🟩 | 🟡 | 📚 Alt | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1a |
 | 21 | Integració amb Google Classroom | 🟦 | 🔴 | ➖ Neutre | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 4 |
 | 22 | Insígnies i nivells persistents | 🟩 | 🔴 | 📚 Alt⁶ | 🙂 Segur | ➖ Neutra | ✅ Encaixa | ❌ Descartada |
 | 23 | ✅ Compte arrere "¡Prepara't!" 3-2-1 | 🟨 | 🟢 | ✖️ Cap | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1a⁷ |
 | 24 | Vídeos "aprén i després respon" | 🟦 | 🟡 | 📚 Alt | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1b |
-| 25 | Pràctica adaptativa (repetir fallades) | 🟦 | 🟡 | 📚 Alt | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1b |
+| 25 | ✅ Pràctica adaptativa (repetir fallades) | 🟦 | 🟡 | 📚 Alt | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1b |
 | 26 | Mode "fantasma"/millor marca personal | 🟨 | 🟡 | ➖ Neutre⁸ | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1b |
 | 27 | Mode "presentació" híbrid | 🟦 | 🟡 | 📚 Alt | 🙂 Segur | 🤝 Alta | ✅ Encaixa | Fase 3 |
 | 28 | "Energizers"/pauses amb vídeo | 🟨 | 🟡 | ✖️ Cap | 🙂 Segur | ➖ Neutra | ✅ Encaixa | ❌ Descartada |
@@ -570,7 +570,7 @@ un suggeriment ajornable:
 ### Fase 1a — Millores cosmètiques/aïllades, sense tocar la lògica de joc
 
 12 (sobrenoms aleatoris), ✅ 13 (TTS), 15 (ampliar importació:
-GIFT/JSON/XML Moodle/AULES), 20 (flashcards), ✅ 23 (compte arrere 3-2-1).
+GIFT/JSON/XML Moodle/AULES), ✅ 20 (flashcards), ✅ 23 (compte arrere 3-2-1).
 
 No canvien ni la puntuació ni la seqüència de preguntes: són canvis
 d'interfície, d'àudio, o d'importació de contingut, autocontinguts en un

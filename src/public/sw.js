@@ -1,6 +1,6 @@
 // IMPORTANTE: cuando cambiemos JS/CSS y queramos evitar servir una versión antigua,
 // incrementa esta versión para invalidar el precache.
-const CACHE_NAME = 'eduh-pwa-v1.1.55';
+const CACHE_NAME = 'eduh-pwa-v1.1.56';
 
 // App shell: recursos críticos para que la app cargue incluso sin red.
 // El resto de recursos se cachean en runtime con stale-while-revalidate.
@@ -68,6 +68,8 @@ const ASSETS = [
   '/js/solo-music.js',
   '/js/solo-game.js',
   '/js/tts.js',
+  '/js/solo-flashcards.js',
+  '/js/solo-flashcards-view.js',
   '/js/viewport-fit.js',
   '/js/solo-ranking.js',
   '/js/i18n-create.js',

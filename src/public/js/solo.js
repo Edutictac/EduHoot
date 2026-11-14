@@ -44,6 +44,8 @@ var state = Vue.reactive({
         thumbs: {},
         // Panel de juego (bloque 2). view: 'none' | 'start' | 'game' | 'result'.
         view: 'none',
+        // Mode flashcards (proposta 20): progrés de la sessió de repàs.
+        cards: null,
         title: { key: 'soloTitle' },
         countInput: '',
         timeInput: '',
@@ -137,6 +139,8 @@ function setLang(newLang){
     }
 
     function resetSelection(){
+        stopFlashcardsSpeech();
+        state.cards = null;
         state.quizData = null;
         state.currentQuiz = null;
         state.desiredQuestionCount = null;
@@ -169,7 +173,7 @@ function setLang(newLang){
 
     Vue.createApp({
         template: '#solo-tpl',
-        mixins: [soloCatalog, soloPlay],
+        mixins: [soloCatalog, soloPlay, soloFlashcards],
         mounted: function(){
             EduhootTTS.watchAvailability(document.documentElement.lang, function(ok){ state.ttsReady = ok; });
         },

@@ -108,7 +108,10 @@
                         <div class="card-links">
                             <button type="button" class="card-link" @click.stop="showRanking(q.id)">{{ t('viewRanking') }}</button>
                         </div>
-                        <button class="btn btn-primary" @click="play(q.id)">{{ t('playCta') }}</button>
+                        <div class="card-actions">
+                            <button class="btn btn-primary" @click="play(q.id)">{{ t('playCta') }}</button>
+                            <button class="btn btn-ghost" @click="study(q.id)">{{ t('studyButton') }}</button>
+                        </div>
                     </div>
                 </div>
                 <p id="public-empty" class="muted">{{ emptyText }}</p>
@@ -201,6 +204,59 @@
                         <button id="pick-another" class="btn btn-ghost" @click="pickAnother">{{ t('pickAnother') }}</button>
                     </div>
                 </div>
+
+                <!-- Mode flashcards (proposta 20) amb la pràctica de les no sabudes (proposta 25). -->
+                <div id="cards-area" class="cards-area" v-if="s.cards" :class="{ hidden: s.view !== 'cards' }">
+                    <div v-if="s.cards.phase !== 'card'" class="cards-start">
+                        <h3 v-if="s.cards.phase === 'done'">{{ t('flashcardsDoneTitle') }}</h3>
+                        <p class="muted">{{ cardsTotal ? cardsCountsText : t('flashcardsEmpty') }}</p>
+                        <label v-if="cardsTotal" class="cards-shuffle">
+                            <input id="cards-shuffle" type="checkbox" :checked="s.cards.shuffle" @change="cardsToggleShuffle">
+                            {{ t('flashcardsShuffle') }}
+                        </label>
+                        <div class="cards-start__actions">
+                            <button id="cards-start-all" class="btn btn-primary" :disabled="!cardsTotal" @click="cardsStartAll">{{ format(t('flashcardsStartAll'), { count: cardsTotal }) }}</button>
+                            <button id="cards-start-unknown" class="btn btn-ghost" :disabled="!cardsCounts.unknown" @click="cardsStartUnknown">{{ format(t('flashcardsStartUnknown'), { count: cardsCounts.unknown }) }}</button>
+                        </div>
+                        <div class="cards-start__actions">
+                            <button id="cards-reset" class="card-link" :disabled="!cardsCounts.known && !cardsCounts.unknown" @click="cardsReset">{{ t('flashcardsReset') }}</button>
+                            <button class="card-link" @click="pickAnother">{{ t('pickAnother') }}</button>
+                        </div>
+                    </div>
+
+                    <div v-else class="flashcard-wrap">
+                        <p id="cards-progress" class="cards-progress">{{ cardsProgressText }}</p>
+                        <div class="flashcard" :class="s.cards.flipped ? 'is-back' : 'is-front'">
+                            <p class="flashcard__label">{{ s.cards.flipped ? t('flashcardsBack') : t('flashcardsFront') }}</p>
+                            <template v-if="!s.cards.flipped">
+                                <p id="flashcard-question" class="question-text">{{ cardsFrontText }}</p>
+                                <div class="flashcard__media" v-if="cardsMedia.image || cardsMedia.video || cardsMedia.youtube">
+                                    <img v-if="cardsMedia.image" alt="" :src="cardsMedia.image">
+                                    <video v-if="cardsMedia.video" controls playsinline :src="cardsMedia.video"></video>
+                                    <iframe v-if="cardsMedia.youtube" title="video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen :src="cardsMedia.youtube"></iframe>
+                                </div>
+                            </template>
+                            <ul v-else id="flashcard-answer" class="flashcard__answers">
+                                <li v-for="(a, i) in cardsBackParts" :key="i">{{ a }}</li>
+                            </ul>
+                        </div>
+                        <div class="cards-actions">
+                            <button id="cards-prev" class="btn btn-ghost" :disabled="s.cards.pos === 0" @click="cardsPrev">{{ t('flashcardsPrev') }}</button>
+                            <button id="cards-flip" class="btn btn-primary" @click="cardsFlip">{{ s.cards.flipped ? t('flashcardsHideAnswer') : t('flashcardsShowAnswer') }}</button>
+                            <button id="cards-next" class="btn btn-ghost" @click="cardsNext">{{ t('flashcardsNext') }}</button>
+                        </div>
+                        <div v-if="s.cards.flipped" class="cards-mark">
+                            <button id="cards-dont-know" class="btn btn-ghost" @click="cardsMarkUnknown">{{ t('flashcardsDontKnow') }}</button>
+                            <button id="cards-know" class="btn btn-primary" @click="cardsMarkKnown">{{ t('flashcardsKnow') }}</button>
+                        </div>
+                        <div class="cards-tools">
+                            <button v-if="cardsTtsAvailable" id="cards-tts" type="button" class="tts-btn" :aria-pressed="s.ttsSpeaking ? 'true' : 'false'" :aria-label="s.ttsSpeaking ? t('ttsStop') : t('ttsListen')" :title="s.ttsSpeaking ? t('ttsStop') : t('ttsListen')" @click="cardsSpeak"><span aria-hidden="true">{{ s.ttsSpeaking ? '⏹' : '🔊' }}</span></button>
+                            <button id="cards-shuffle-now" class="card-link" @click="cardsShuffleNow">{{ t('flashcardsShuffleNow') }}</button>
+                            <button id="cards-exit" class="card-link" @click="pickAnother">{{ t('flashcardsExit') }}</button>
+                            <span class="muted cards-counts">{{ cardsCountsText }}</span>
+                        </div>
+                    </div>
+                </div>
             </section>
         </main>
         <div id="public-pagination" class="pagination" :class="{ hidden: totalPages <= 1 }">
@@ -271,6 +327,8 @@
         <script src="../js/viewport-fit.js"></script>
         <script src="../js/tts.js"></script>
         <script src="../js/solo-game.js"></script>
+        <script src="../js/solo-flashcards.js"></script>
+        <script src="../js/solo-flashcards-view.js"></script>
         <script src="../js/solo-ranking.js"></script>
         <script src="../js/solo.js"></script>
         <script src="/js/app-version.js"></script>
