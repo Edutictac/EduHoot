@@ -46,6 +46,9 @@
 - **Mode individual com a l'aula**: la partida de /solo/ té ara la mateixa
   pantalla que «Jugar a l'aula», amb el títol, els punts i una barra de
   temps que també es veu en el mòbil.
+- **Mode flashcards**: repassa un qüestionari com a fitxes, sense puntuació
+  ni presses. Toca la fitxa per a girar-la i veure la resposta, marca si la
+  saps o no, i després repassa només les que no sabies.
 
 - **Escolta la pregunta**: si no llegeixes bé o vols escoltar-la, toca el
   botó 🔊 al costat de la barra de temps i el mòbil te la llegeix, amb les
@@ -57,8 +60,6 @@
 
 ### Millores de contingut i accessibilitat
 
-- **Mode flashcards**: un mode d'estudi on cada qüestionari es pot repassar
-  com a fitxes, sense puntuació ni presses, per a memoritzar al teu ritme.
 - **Importar més formats**: a més del CSV, es podran importar qüestionaris
   en GIFT, JSON i XML de Moodle/AULES, així que podràs reaprofitar bancs de
   preguntes que ja tingues.
@@ -134,13 +135,14 @@
 - **Modo individual como en la clase**: la partida de /solo/ tiene ahora la
   misma pantalla que «Jugar a la clase», con el título, los puntos y una
   barra de tiempo que también se ve en el móvil.
+- **Modo flashcards**: repasa un cuestionario como fichas, sin puntuación
+  ni prisas. Toca la ficha para girarla y ver la respuesta, marca si la
+  sabes o no, y después repasa solo las que no sabías.
 
 ## Próximamente
 
 ### Mejoras de contenido y accesibilidad
 
-- **Modo flashcards**: un modo de estudio donde cada cuestionario se puede
-  repasar como fichas, sin puntuación ni prisas, para memorizar a tu ritmo.
 - **Importar más formatos**: además del CSV, se podrán importar
   cuestionarios en GIFT, JSON y XML de Moodle/AULES, así que podrás
   reaprovechar bancos de preguntas que ya tengas.
@@ -214,13 +216,14 @@
 - **Solo mode, like class mode**: the /solo/ game now has the same screen as
   "Play in class", with the title, the points and a time bar that is also
   visible on phones.
+- **Flashcards mode**: review a quiz as cards, with no scoring and no rush.
+  Tap the card to flip it and see the answer, mark whether you knew it, and
+  then review only the ones you didn't know.
 
 ## Coming soon
 
 ### Content and accessibility improvements
 
-- **Flashcards mode**: a study mode where each quiz can be revised as
-  cards, with no scoring and no rush: memorise at your own pace.
 - **Import more formats**: besides CSV, quizzes will be importable in
   GIFT, JSON and Moodle/AULES XML, so you can reuse question banks you
   already have.
