@@ -517,6 +517,7 @@ var libraryApp = {
                 return;
             }
             if(mode === 'solo') startSolo(quiz.id);
+            else if(mode === 'cards') startSoloCards(quiz.id);
             else if(mode === 'multiplayer') startMultiplayer(quiz.id);
             else startGame(quiz.id);
         },

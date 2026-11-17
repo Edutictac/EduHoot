@@ -149,11 +149,11 @@ test('biblioteca sin sesión: tarjetas, recuento, metadatos y permisos', async (
     await expect(geo.locator('.tag-remove')).toHaveCount(0);
     await expect(geo.locator('button', { hasText: 'Guardar en mi cuenta' })).toHaveCount(0);
     await expect(geo.locator('.game-actions > button.btn-primary')).toHaveText('Jugar en el aula');
-    await expect(geo.locator('.game-actions > button')).toHaveText(['Jugar en el aula', 'Multijugador', 'Solo', '✏️', '⬇️', '', '📄', '🗑️']);
+    await expect(geo.locator('.game-actions > button')).toHaveText(['Jugar en el aula', '👥', '👤', '🔁', '✏️', '⬇️', '', '📄', '🗑️']);
 
     // Privado de otro: no se puede lanzar.
     const bio = card(page, 'Biologia');
-    for (const label of ['Jugar en el aula', 'Multijugador', 'Solo']) {
+    for (const label of ['Jugar en el aula', '👥', '👤', '🔁']) {
         await expect(bio.locator('.game-actions > button', { hasText: label })).toBeDisabled();
         await expect(bio.locator('.game-actions > button', { hasText: label })).toHaveAttribute('title', 'Solo el propietario puede usar un quiz privado.');
     }
@@ -395,7 +395,7 @@ test('rechazar el borrado no borra', async ({ page }) => {
 test('botones de jugar y editar llevan a su pantalla', async ({ page }) => {
     await mockBackend(page, { user: TEACHER });
     await openCreate(page);
-    for (const [label, re] of [['Jugar en el aula', /\/host\/\?id=q1$/], ['Multijugador', /\/multiplayer\/\?id=q1$/], ['Solo', /\/solo\/\?id=q1$/], ['✏️', /\/create\/quiz-creator\/\?id=q1$/]]) {
+    for (const [label, re] of [['Jugar en el aula', /\/host\/\?id=q1$/], ['👥', /\/multiplayer\/\?id=q1$/], ['👤', /\/solo\/\?id=q1$/], ['🔁', /\/solo\/\?id=q1&mode=cards$/], ['✏️', /\/create\/quiz-creator\/\?id=q1$/]]) {
         await card(page, 'Geografia').locator('.game-actions > button', { hasText: label }).click();
         await expect(page).toHaveURL(re);
         await openCreate(page);

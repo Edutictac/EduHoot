@@ -365,8 +365,9 @@
                                 <div class="game-actions">
                                     <button v-if="perms(quiz).canSaveToAccount" class="btn btn-primary" @click="saveToAccount(quiz)">{{ t('saveToAccount') }}</button>
                                     <button class="btn btn-primary" :title="perms(quiz).canStart ? null : t('cannotStartPrivate')" :disabled="!perms(quiz).canStart" @click="launch(quiz, 'host')">{{ t('play') }}</button>
-                                    <button class="btn btn-ghost" :title="perms(quiz).canStart ? null : t('cannotStartPrivate')" :disabled="!perms(quiz).canStart" @click="launch(quiz, 'multiplayer')">{{ t('playMultiplayer') }}</button>
-                                    <button class="btn btn-ghost" :title="perms(quiz).canStart ? null : t('cannotStartPrivate')" :disabled="!perms(quiz).canStart" @click="launch(quiz, 'solo')">{{ t('playSolo') }}</button>
+                                    <button class="btn btn-ghost icon-only" :title="perms(quiz).canStart ? t('playMultiplayer') : t('cannotStartPrivate')" :aria-label="t('playMultiplayer')" :disabled="!perms(quiz).canStart" @click="launch(quiz, 'multiplayer')">👥</button>
+                                    <button class="btn btn-ghost icon-only" :title="perms(quiz).canStart ? t('playSolo') : t('cannotStartPrivate')" :aria-label="t('playSolo')" :disabled="!perms(quiz).canStart" @click="launch(quiz, 'solo')">👤</button>
+                                    <button class="btn btn-ghost icon-only" :title="perms(quiz).canStart ? t('reviewCards') : t('cannotStartPrivate')" :aria-label="t('reviewCards')" :disabled="!perms(quiz).canStart" @click="launch(quiz, 'cards')">🔁</button>
                                     <button class="btn btn-ghost icon-only" :title="perms(quiz).canEdit ? t('edit') : t('cannotEditNotOwner')" :disabled="!perms(quiz).canEdit" @click="edit(quiz)">✏️</button>
                                     <button class="btn btn-ghost icon-only" :title="t('download')" @click="downloadCsv(quiz)">⬇️</button>
                                     <button class="btn btn-ghost icon-only" :title="t('exportMoodleXml')" @click="downloadMoodle(quiz)"><img src="/icons/moodle.png" alt="Moodle" class="moodle-icon-img"></button>

@@ -7,6 +7,10 @@ function startSolo(data){
     window.location.href = "/solo/" + "?id=" + encodeURIComponent(data);
 }
 
+function startSoloCards(data){
+    window.location.href = "/solo/" + "?id=" + encodeURIComponent(data) + "&mode=cards";
+}
+
 function startMultiplayer(data){
     window.location.href = "/multiplayer/" + "?id=" + encodeURIComponent(data);
 }
