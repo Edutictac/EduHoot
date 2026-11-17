@@ -218,6 +218,10 @@
                             <input id="cards-animate" type="checkbox" :checked="s.cards.animate" @change="cardsToggleAnimate">
                             {{ t('flashcardsAnimate') }}
                         </label>
+                        <label class="cards-shuffle">
+                            <input id="cards-contrast" type="checkbox" :checked="s.cards.highContrast" @change="cardsToggleContrast">
+                            {{ t('flashcardsContrast') }}
+                        </label>
                         <div class="cards-start__actions">
                             <button id="cards-start-all" class="btn btn-primary" :disabled="!cardsTotal" @click="cardsStartAll">{{ format(t('flashcardsStartAll'), { count: cardsTotal }) }}</button>
                             <button id="cards-start-unknown" class="btn btn-ghost" :disabled="!cardsCounts.unknown" @click="cardsStartUnknown">{{ format(t('flashcardsStartUnknown'), { count: cardsCounts.unknown }) }}</button>
@@ -231,11 +235,16 @@
                     <div v-else class="flashcard-wrap">
                         <p id="cards-progress" class="cards-progress">{{ cardsProgressText }}</p>
                         <div class="flashcard-scene">
-                            <div id="flashcard" class="flashcard" :class="{ 'is-back': s.cards.flipped }" @click="cardsFlipFromCard">
+                            <div id="flashcard" class="flashcard" :class="{ 'is-back': s.cards.flipped, 'is-contrast': s.cards.highContrast }" @click="cardsFlipFromCard">
                                 <!-- Les dues cares són sempre al DOM; la que no toca queda oculta i inerta (ni teclat ni lector de pantalla). -->
                                 <div class="flashcard__face flashcard__face--front" :aria-hidden="s.cards.flipped ? 'true' : 'false'" :inert="s.cards.flipped || null">
                                     <p class="flashcard__label">{{ t('flashcardsFront') }}</p>
                                     <p id="flashcard-question" class="question-text">{{ cardsFrontText }}</p>
+                                    <ul v-if="cardsOptions.length" class="flashcard__options" role="group" :aria-label="t('flashcardsOptions')">
+                                        <li v-for="o in cardsOptions" :key="o.n">
+                                            <button type="button" class="flashcard__option" :class="{ 'is-picked': isCardPicked(o.n) }" :aria-pressed="isCardPicked(o.n) ? 'true' : 'false'" @click.stop="cardsPick(o.n)">{{ o.text }}</button>
+                                        </li>
+                                    </ul>
                                     <!-- El media es desmunta en girar perquè el vídeo o l'àudio no segueixin sonant de dors. -->
                                     <div class="flashcard__media" v-if="!s.cards.flipped && (cardsMedia.image || cardsMedia.video || cardsMedia.youtube)">
                                         <img v-if="cardsMedia.image" alt="" :src="cardsMedia.image">

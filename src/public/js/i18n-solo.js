@@ -82,6 +82,8 @@
         flashcardsStartUnknown: 'Repetir las no sabidas ({count})',
         flashcardsShuffle: 'Barajar al empezar',
         flashcardsAnimate: 'Tarjetas con animación',
+        flashcardsContrast: 'Respuestas con contraste alto',
+        flashcardsOptions: 'Opciones de respuesta',
         flashcardsShuffleNow: 'Barajar',
         flashcardsFront: 'Pregunta',
         flashcardsBack: 'Respuesta',
@@ -202,6 +204,8 @@
             flashcardsStartUnknown: 'Repeat the ones I don\'t know ({count})',
             flashcardsShuffle: 'Shuffle before starting',
             flashcardsAnimate: 'Animated cards',
+            flashcardsContrast: 'High-contrast answers',
+            flashcardsOptions: 'Answer options',
             flashcardsShuffleNow: 'Shuffle',
             flashcardsFront: 'Question',
             flashcardsBack: 'Answer',
@@ -322,6 +326,8 @@
         flashcardsStartUnknown: 'Repetir les no sabudes ({count})',
         flashcardsShuffle: 'Barrejar en començar',
         flashcardsAnimate: 'Targetes amb animació',
+        flashcardsContrast: 'Respostes amb contrast alt',
+        flashcardsOptions: 'Opcions de resposta',
         flashcardsShuffleNow: 'Barrejar',
         flashcardsFront: 'Pregunta',
         flashcardsBack: 'Resposta',
@@ -363,7 +369,10 @@
             footerContactLabel: 'Incidències'
         },
         va: {
-            freeTextPlaceholder: 'Escriu la teua resposta'
+            freeTextPlaceholder: 'Escriu la teua resposta',
+            flashcardsAnimate: 'Targetes amb animació',
+            flashcardsContrast: 'Respostes amb contrast alt',
+            flashcardsOptions: 'Opcions de resposta'
         }
     };
 

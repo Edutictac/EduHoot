@@ -1062,10 +1062,18 @@ body.playing #answers > .free-answer-row{ grid-column: 1 / -1; }
 }
 /* Giro: la targeta s'estreny en horizontal fins a una línia, canvia de cara i es torna a obrir.
    Només transformacions 2D (les 3D es veien malament en alguns navegadors). Ho anima el JS. */
+/* Altura fixa segons la finestra: la targeta ocupa la mitat de l'alçada visible
+   (dvh descarta la barra del navegador en mòbil; sense dvh, es fa servir vh).
+   No canvia amb el contingut (text, imatge, vídeo). El que no cap es reparteix dins:
+   el text fa scroll i el media s'ajusta. Els espais i les lletres també escalen amb l'alçada. */
 .flashcard{
     display: grid;
     cursor: pointer;
+    height: clamp(260px, 50vh, 520px);
+    height: clamp(260px, 50dvh, 520px);
 }
+.flashcard .question-text{ font-size: clamp(1.05rem, 2.6vh, 1.6rem); }
+.flashcard__answers{ font-size: clamp(1rem, 2.4vh, 1.4rem); }
 .flashcard__face{
     grid-area: 1 / 1;
     padding: 18px 20px;
@@ -1075,16 +1083,28 @@ body.playing #answers > .free-answer-row{ grid-column: 1 / -1; }
     box-shadow: var(--shadow);
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: safe center;
     align-items: center;
     text-align: center;
-    gap: 12px;
-    min-height: 220px;
+    gap: clamp(6px, 1.4vh, 12px);
+    height: 100%;
+    box-sizing: border-box;
+    padding: clamp(12px, 2.4vh, 22px) 20px;
+    overflow-y: auto;
+    min-height: 0;
 }
+/* Respuesta sense contraste alto (casilla desmarcada): verde oscuro sólido (≈7,8:1 con el texto). */
 .flashcard__face--back{
-    background: rgba(34,197,94,0.08);
+    background: #14532d;
     visibility: hidden;
 }
+.flashcard__face--back .flashcard__label{ color: #bbf7d0; }
+/* Respuesta con contraste alto (casilla marcada, por defecto): fondo claro y texto oscuro (≈16:1). */
+.flashcard.is-contrast .flashcard__face--back{
+    background: #f1f5f9;
+    color: #0f172a;
+}
+.flashcard.is-contrast .flashcard__face--back .flashcard__label{ color: #475569; }
 .flashcard.is-back .flashcard__face--front{ visibility: hidden; }
 .flashcard.is-back .flashcard__face--back{ visibility: visible; }
 .flashcard__label{
@@ -1094,19 +1114,56 @@ body.playing #answers > .free-answer-row{ grid-column: 1 / -1; }
     letter-spacing: 0.06em;
     color: #9fb1d9;
 }
-.flashcard__media{ align-self: stretch; }
+/* El media ocupa l'espai que deixa el text. La imatge i el vídeo s'ajusten dins
+   (object-fit) i no alteren l'altura de la targeta. */
+.flashcard__media{
+    align-self: stretch;
+    position: relative;
+    flex: 1 1 0;
+    min-height: 0;
+    width: 100%;
+}
 .flashcard__media video,
 .flashcard__media iframe{ cursor: auto; }
 .flashcard__media img,
 .flashcard__media video,
 .flashcard__media iframe{
-    display: block;
-    max-width: 100%;
-    max-height: 260px;
-    margin: 0 auto;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: auto;
     border-radius: 10px;
+    border: 0;
 }
-.flashcard__media iframe{ width: 100%; height: 240px; border: 0; }
+.flashcard__media img,
+.flashcard__media video{ object-fit: contain; }
+.flashcard__options{
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    display: grid;
+    gap: 8px;
+}
+.flashcard__option{
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--card-stroke);
+    background: rgba(255,255,255,0.06);
+    color: var(--text);
+    font: inherit;
+    font-size: clamp(0.95rem, 2.2vh, 1.15rem);
+    text-align: left;
+    cursor: pointer;
+}
+.flashcard__option.is-picked{
+    border-color: #22c55e;
+    background: rgba(34,197,94,0.22);
+    font-weight: 700;
+}
 .flashcard__answers{
     margin: 0;
     padding: 0;

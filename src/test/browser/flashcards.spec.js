@@ -184,3 +184,30 @@ test('/solo/?id=…&mode=cards abre directamente las tarjetas del quiz', async (
     await page.goto('/solo/?id=q1&mode=cards&lang=es');
     await expect(page.locator('#cards-start-all')).toBeVisible();
 });
+
+test('en preguntas de respuesta múltiple el anverso muestra las opciones; marcar-les no gira la targeta', async ({ page }) => {
+    await mockBackend(page);
+    await page.route('**/api/quizzes/q1', route => route.fulfill({ json: { ...quiz, questions: [
+        { question: 'Quines són capitals?', type: 'multiple', answers: ['París', 'Madrid', 'Roma', 'Lisboa'], correctAnswers: [1, 3], time: 20 }
+    ] } }));
+    await page.goto('/solo/?lang=es');
+    await page.locator('.card-actions .btn', { hasText: 'Repasar' }).click();
+    await page.locator('#cards-start-all').click();
+    const options = page.locator('.flashcard__option');
+    await expect(options).toHaveCount(4);
+    await options.nth(0).click();
+    await expect(options.nth(0)).toHaveClass(/is-picked/);
+    await options.nth(2).click();
+    await expect(options.nth(0)).toHaveClass(/is-picked/);
+    await expect(options.nth(2)).toHaveClass(/is-picked/);
+    await expect(page.locator('.flashcard')).not.toHaveClass(/is-back/);
+});
+
+test('en preguntas de respuesta única no se muestran las opciones en el anverso', async ({ page }) => {
+    await mockBackend(page);
+    await page.goto('/solo/?lang=es');
+    await page.locator('.card-actions .btn', { hasText: 'Repasar' }).click();
+    await page.locator('#cards-start-all').click();
+    await expect(page.locator('#flashcard-question')).toBeVisible();
+    await expect(page.locator('.flashcard__option')).toHaveCount(0);
+});

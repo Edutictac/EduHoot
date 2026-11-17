@@ -171,6 +171,17 @@ function setLang(newLang){
         }
     }
 
+    // Enllaç directe al repàs (/solo/?id=…&mode=cards): amaga el catàleg des del primer
+    // render, perquè no es veja la llista mentre es carrega el quiz.
+    var deepLink = null;
+    try{
+        var deepParams = new URLSearchParams(window.location.search || '');
+        if(deepParams.get('id') && deepParams.get('mode') === 'cards'){
+            deepLink = deepParams.get('id');
+            document.body.classList.add('playing');
+        }
+    }catch(e){}
+
     var soloVm = Vue.createApp({
         template: '#solo-tpl',
         mixins: [soloCatalog, soloPlay, soloFlashcards],
@@ -210,14 +221,12 @@ function setLang(newLang){
     // Permite abrir directamente un quiz desde Create: /solo/?id=<quizId>
     (function(){
         var id = null;
-        var mode = null;
         try{
             var params = new URLSearchParams(window.location.search || '');
             id = params.get('id');
-            mode = params.get('mode');
         }catch(e){}
-        if(id && mode === 'cards'){
-            soloVm.study(id);
+        if(deepLink){
+            soloVm.study(deepLink);
         }else if(id){
             selectQuiz(id);
         }

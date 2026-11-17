@@ -51,6 +51,22 @@ function saveFlipAnimPref(on){
     try{ window.localStorage.setItem(FLIP_ANIM_KEY, on ? '1' : '0'); }catch(e){}
 }
 
+// Preferència «Respuestas con contraste alto» (per dispositiu). Per defecte, activada.
+var CONTRAST_KEY = 'eduh_cards_contrast';
+
+function readContrastPref(){
+    try{
+        var v = window.localStorage.getItem(CONTRAST_KEY);
+        return v === null ? true : v === '1';
+    }catch(e){
+        return true;
+    }
+}
+
+function saveContrastPref(on){
+    try{ window.localStorage.setItem(CONTRAST_KEY, on ? '1' : '0'); }catch(e){}
+}
+
 // Torna la targeta al davant sense animació (en canviar de targeta, no ha de girar de nou).
 // Cancel·la un giro en curs: el token invalida la part del giro que quedava per fer.
 function snapCardFront(c){
@@ -85,7 +101,9 @@ function openFlashcards(quiz){
         turnId: 0,
         phase: 'start',
         shuffle: false,
-        animate: readFlipAnimPref()
+        animate: readFlipAnimPref(),
+        highContrast: readContrastPref(),
+        picks: {}
     };
     state.view = 'cards';
 }
@@ -115,6 +133,17 @@ var soloFlashcards = {
             var cur = this.cardsCurrent;
             return mediaFor(cur ? cur.q : null);
         },
+        // Opcions que el alumnat veu en el anverso: només en preguntes de resposta múltiple
+        // (varies correctes). Les de resposta única no les mostren.
+        cardsOptions: function(){
+            var cur = this.cardsCurrent;
+            if(!cur) return [];
+            if(normalizeQuestionMeta(cur.q).type !== 'multiple') return [];
+            var answers = Array.isArray(cur.q.answers) ? cur.q.answers : [];
+            return answers
+                .map(function(a, i){ return { n: i + 1, text: a === null || a === undefined ? '' : String(a) }; })
+                .filter(function(o){ return o.text.trim() !== ''; });
+        },
         cardsBackParts: function(){
             var cur = this.cardsCurrent;
             return cur ? cardAnswerTexts(cur.q, this.t) : [];
@@ -135,12 +164,14 @@ var soloFlashcards = {
                 .then(function(res){ return res.json().then(function(body){ return { ok: res.ok, body: body }; }); })
                 .then(function(payload){
                     if(!payload.ok){
+                        document.body.classList.remove('playing');
                         state.title = { key: 'startError' };
                         return;
                     }
                     openFlashcards(payload.body);
                 })
                 .catch(function(){
+                    document.body.classList.remove('playing');
                     state.title = { key: 'startError' };
                 });
         },
@@ -173,6 +204,30 @@ var soloFlashcards = {
             var c = this.s.cards;
             c.animate = !c.animate;
             saveFlipAnimPref(c.animate);
+        },
+        isCardPicked: function(n){
+            var cur = this.cardsCurrent;
+            var c = this.s.cards;
+            var set = cur && c.picks ? c.picks[String(cur.idx)] : null;
+            return !!(set && set[n]);
+        },
+        cardsPick: function(n){
+            var cur = this.cardsCurrent;
+            var c = this.s.cards;
+            if(!cur) return;
+            var key = String(cur.idx);
+            var prev = (c.picks && c.picks[key]) || {};
+            var multiple = normalizeQuestionMeta(cur.q).type === 'multiple';
+            var next = multiple ? Object.assign({}, prev) : {};
+            next[n] = !prev[n];
+            var copy = Object.assign({}, c.picks);
+            copy[key] = next;
+            c.picks = copy;
+        },
+        cardsToggleContrast: function(){
+            var c = this.s.cards;
+            c.highContrast = !c.highContrast;
+            saveContrastPref(c.highContrast);
         },
         // Giro en dues meitats: la targeta s'estreny fins a una línia, canvia de cara i es torna a obrir.
         // Sense animació, canvia de cara de seguida.
