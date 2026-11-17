@@ -63,7 +63,7 @@ socket.on('connect', function() {
     
     //Tell server that it is player connection
     socket.emit('player-join', params);
-    setLobbyStatus('Esperando a que empiece la partida', 'Comprueba que tu nombre aparece en la pantalla');
+    setLobbyStatus(tLobby('lobby_wait'), tLobby('lobby_name_hint'));
     if(joinRetryTimer){
         clearTimeout(joinRetryTimer);
     }
@@ -79,7 +79,7 @@ socket.on('playerJoinAck', function(){
         clearTimeout(joinRetryTimer);
         joinRetryTimer = null;
     }
-    setLobbyStatus('Conectado a la partida', 'Si no apareces en pantalla del profesor, espera 1-2 segundos.');
+    setLobbyStatus(tLobby('lobby_connected'), tLobby('lobby_connected_hint'));
 });
 
 socket.on('playerJoinRejected', function(data){
@@ -98,8 +98,8 @@ socket.on('playerJoinRejected', function(data){
         }, 1200);
         return;
     }
-    var message = data && data.error ? data.error : 'No se pudo validar el acceso.';
-    setLobbyStatus(message, 'Vuelve a entrar con tu código y PIN.');
+    var message = data && data.error ? data.error : tLobby('lobby_access_error');
+    setLobbyStatus(message, tLobby('lobby_reenter_hint'));
     setTimeout(function(){
         window.location.href = '../';
     }, 1800);
@@ -115,11 +115,11 @@ socket.on('hostDisconnect', function(){
 });
 
 socket.on('hostReconnecting', function(){
-    setLobbyStatus('Reconectando con el profesor...', 'La partida sigue reservada. No cierres esta pantalla.');
+    setLobbyStatus(tLobby('lobby_reconnecting'), tLobby('lobby_reconnecting_hint'));
 });
 
 socket.on('hostReconnected', function(){
-    setLobbyStatus('Esperando a que empiece la partida', 'Comprueba que tu nombre aparece en la pantalla');
+    setLobbyStatus(tLobby('lobby_wait'), tLobby('lobby_name_hint'));
 });
 
 //When the host clicks start game, the player screen changes

@@ -57,7 +57,7 @@ test('al conectar se une con los datos de la URL y reintenta si no llega confirm
     await serverEmit(page, 'connect');
     const expected = { pin: '12345', icon: '🐼', name: 'Ana', studentJoinToken: '', token: 'tok1' };
     expect(await emitsNamed(page, 'player-join')).toEqual([expected]);
-    await expect(page.locator('#title1')).toHaveText('Esperando a que empiece la partida');
+    await expect(page.locator('#title1')).toHaveText('Esperando a que el anfitrión inicie la partida');
     await expect(page.locator('#title2')).toHaveText('Comprueba que tu nombre aparece en la pantalla');
     await page.clock.runFor(1300);
     expect(await emitsNamed(page, 'player-join')).toEqual([expected, expected]);
@@ -94,7 +94,7 @@ test('reconexión del profesor: avisa y vuelve al mensaje de espera', async ({ p
     await expect(page.locator('#title1')).toHaveText('Reconectando con el profesor...');
     await expect(page.locator('#title2')).toHaveText('La partida sigue reservada. No cierres esta pantalla.');
     await serverEmit(page, 'hostReconnected');
-    await expect(page.locator('#title1')).toHaveText('Esperando a que empiece la partida');
+    await expect(page.locator('#title1')).toHaveText('Esperando a que el anfitrión inicie la partida');
 });
 
 test('acceso rechazado: muestra el error y vuelve a la portada', async ({ page }) => {
@@ -132,4 +132,28 @@ test('nombre ya en uso: lo avisa y vuelve a la entrada con el PIN', async ({ pag
     await expect(page.locator('#title1')).toHaveText('Ese nombre ya está en uso en esta partida. Elige otro.');
     await page.waitForURL('**/join.html?*');
     expect(Object.fromEntries(new URL(page.url()).searchParams)).toEqual({ pin: '12345', nameTaken: '1' });
+});
+
+// Regresión: al cambiar de idioma en la sala de espera, los mensajes que
+// llegan del servidor (conexión, reconexión) no pueden volver al castellano.
+test('cambiar el idioma en la sala de espera traduce también los mensajes de conexión', async ({ page }) => {
+    await page.clock.install();
+    await openLobby(page);
+    await page.locator('#lang-switcher button[data-lang="en"]').click();
+    await page.waitForLoadState('load');
+
+    await expect(page.locator('#title1')).toHaveText('Waiting on host to start the game');
+    await expect(page.locator('#title2')).toHaveText('Do you see your name on the screen?');
+
+    await serverEmit(page, 'connect');
+    await expect(page.locator('#title1')).toHaveText('Waiting on host to start the game');
+    await expect(page.locator('#title2')).toHaveText('Check that your name appears on the screen');
+
+    await serverEmit(page, 'playerJoinAck');
+    await expect(page.locator('#title1')).toHaveText('Connected to the game');
+    await expect(page.locator('#title2')).toHaveText('If you do not appear on the teacher\'s screen, wait 1-2 seconds.');
+
+    await serverEmit(page, 'hostReconnecting');
+    await expect(page.locator('#title1')).toHaveText('Reconnecting to the teacher...');
+    await expect(page.locator('#title2')).toHaveText('The game is still reserved. Do not close this screen.');
 });

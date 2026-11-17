@@ -349,6 +349,7 @@ module.exports = function createGameHelpers({ io, games, players, cleanImportedT
     const current = questions[game.gameData.question - 1];
     const meta = getQuestionMeta(current);
     meta.groupResult = getGroupAnswerResult(playerData, meta);
+    meta.showScores = game.gameData.options ? game.gameData.options.showScoresBetween !== false : true;
     io.to(game.pin).emit('questionOver', playerData, meta);
   }
 

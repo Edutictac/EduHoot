@@ -188,6 +188,7 @@ module.exports = function createPlayerEvents({
           // Si la pregunta ya cerró, informar al jugador reconectado
           if (game.gameData.questionLive === false) {
             const meta = getQuestionMeta(current);
+            meta.showScores = game.gameData.options ? game.gameData.options.showScoresBetween !== false : true;
             const allPlayers = players.getPlayers(game.hostId);
             socket.emit('questionOver', allPlayers, meta);
           }

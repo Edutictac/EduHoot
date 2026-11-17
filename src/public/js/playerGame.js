@@ -591,14 +591,22 @@ socket.on('questionOver', function(playerData, payload){
         }
     }
     app.answerStatusState = '';
-    updatePlayerRank(playerData);
+    // Con la casilla de puntuaciones y ranking desmarcada, el alumno no ve posición ni Top 10.
+    var showScores = !payload || payload.showScores !== false;
+    if(showScores){
+        updatePlayerRank(playerData);
+    }else{
+        app.rankText = '';
+    }
     stopTimer();
     if(rankingTimeout){
         clearTimeout(rankingTimeout);
     }
-    rankingTimeout = setTimeout(function(){
-        showPlayerRanking(playerData);
-    }, 3000);
+    if(showScores){
+        rankingTimeout = setTimeout(function(){
+            showPlayerRanking(playerData);
+        }, 3000);
+    }
     socket.emit('getScore');
 });
 

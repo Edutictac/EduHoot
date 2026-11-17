@@ -64,7 +64,7 @@
         <div class="control-row">
             <button @click="skipQuestion" id="skipQButton" :style="{ display: skipVisible ? 'inline-block' : 'none' }" :disabled="skipDisabled">{{ t('skip') }}</button>
             <button type="button" @click="goNextQuestion" id="nextQButton">Next Question</button>
-            <button type="button" @click="showRankingToggle" id="showRanking">{{ t('showRanking') }}</button>
+            <button type="button" @click="showRankingToggle" id="showRanking" v-show="showRankingButton">{{ t('showRanking') }}</button>
             <button type="button" id="downloadReportBtn" @click="downloadReport" :style="{ display: downloadReportVisible ? 'inline-block' : 'none' }">{{ t('downloadReport') }}</button>
             <a id="backToLibraryBtn" href="/create/" target="_top" :style="{ display: backToLibraryVisible ? 'inline-block' : 'none' }" :title="t('backToLibraryTitle')">{{ t('backToLibrary') }}</a>
         </div>

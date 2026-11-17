@@ -227,6 +227,7 @@ var app = Vue.createApp({
             groupCelebrationEmoji: '🎉',
             groupCelebrationText: '',
             winnersVisible: false,
+            showRankingButton: true,
             winners: ['', '', '', '', ''],
             downloadReportVisible: false,
             backToLibraryVisible: false
@@ -908,6 +909,7 @@ socket.on('gameQuestions', function(data){
     hideAnswerSquares();
     defaultTime = data.time || defaultTime || 20;
     window.hostShowScores = data.showScores !== false;
+    app.showRankingButton = window.hostShowScores;
     setMedia(data.image, data.video);
     app.playersAnsweredText = t('playersAnswered')(0, data.playersInGame);
     app.playersAnsweredVisible = true;
@@ -1254,7 +1256,8 @@ socket.on('GameOver', function(data){
     app.playersAnsweredText = "";
     updateQuestionPointsBadge(1);
 
-    app.winnersVisible = true;
+    // Sin puntuaciones entre preguntas tampoco se muestra el podio final.
+    app.winnersVisible = data.showPodium !== false;
     app.winners = [
         "1. " + data.num1,
         "2. " + data.num2,

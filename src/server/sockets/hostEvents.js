@@ -279,7 +279,8 @@ module.exports = function createHostEvents({
             num2: second.name,
             num3: third.name,
             num4: fourth.name,
-            num5: fifth.name
+            num5: fifth.name,
+            showPodium: game.gameData.options ? game.gameData.options.showScoresBetween !== false : true
           });
           game.gameLive = false;
           game.gameOver = true;
