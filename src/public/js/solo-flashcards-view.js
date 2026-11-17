@@ -33,6 +33,24 @@ function cardAnswerTexts(q, t){
         .filter(function(a){ return a !== undefined && a !== null && String(a).trim() !== ''; });
 }
 
+// Preferència «Tarjetas con animación» (per dispositiu). Per defecte, activada.
+var FLIP_ANIM_KEY = 'eduh_cards_anim';
+// Retard entre el clic i el giro (ms), amb o sense animació.
+var FLIP_DELAY_MS = 500;
+
+function readFlipAnimPref(){
+    try{
+        var v = window.localStorage.getItem(FLIP_ANIM_KEY);
+        return v === null ? true : v === '1';
+    }catch(e){
+        return true;
+    }
+}
+
+function saveFlipAnimPref(on){
+    try{ window.localStorage.setItem(FLIP_ANIM_KEY, on ? '1' : '0'); }catch(e){}
+}
+
 // Torna la targeta al davant sense animació (en canviar de targeta, no ha de girar de nou).
 // Cancel·la un giro en curs: el token invalida la part del giro que quedava per fer.
 function snapCardFront(c){
@@ -66,7 +84,8 @@ function openFlashcards(quiz){
         turning: false,
         turnId: 0,
         phase: 'start',
-        shuffle: false
+        shuffle: false,
+        animate: readFlipAnimPref()
     };
     state.view = 'cards';
 }
@@ -136,20 +155,35 @@ var soloFlashcards = {
             snapCardFront(c);
             c.phase = deck.length ? 'card' : 'done';
         },
-        // Giro en dues meitats: la targeta s'estreny fins a una línia, canvia de cara i es torna a obrir.
+        // Clic de girar: espera FLIP_DELAY_MS i després gira. Si abans canvia la targeta, snapCardFront
+        // incrementa turnId i el retard es descarta.
         cardsFlip: function(){
             var c = this.s.cards;
             if(!c || c.turning) return;
             stopFlashcardsSpeech();
-            // El giro es sempre animat, també amb «reducir movimiento» activat al sistema (decisió de producte).
+            c.turning = true;
+            var self = this;
+            var token = (c.turnId = (c.turnId || 0) + 1);
+            setTimeout(function(){
+                if(c.turnId !== token) return;
+                self.cardsDoFlip(c, token);
+            }, FLIP_DELAY_MS);
+        },
+        cardsToggleAnimate: function(){
+            var c = this.s.cards;
+            c.animate = !c.animate;
+            saveFlipAnimPref(c.animate);
+        },
+        // Giro en dues meitats: la targeta s'estreny fins a una línia, canvia de cara i es torna a obrir.
+        // Sense animació, canvia de cara de seguida.
+        cardsDoFlip: function(c, token){
             var el = document.getElementById('flashcard');
-            if(!el || !el.animate){
+            if(!c.animate || !el || !el.animate){
                 c.flipped = !c.flipped;
+                c.turning = false;
                 return;
             }
             var self = this;
-            var token = (c.turnId = (c.turnId || 0) + 1);
-            c.turning = true;
             var half1 = el.animate(
                 [{ transform: 'scaleX(1)' }, { transform: 'scaleX(0)' }],
                 { duration: 200, easing: 'ease-in', fill: 'forwards' }

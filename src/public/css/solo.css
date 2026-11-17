@@ -529,6 +529,13 @@ body.playing #public-pagination{
     color: var(--text);
     border: 1px solid var(--card-stroke);
 }
+/* Rojo del logo de EduHoot (#da4453) oscurecido a #cc3f4f: con texto blanco da 4,78:1
+   (WCAG AA exigeix 4,5:1 en texto normal; el corporatiu daba 4,26:1). */
+.btn-brand{
+    background: #cc3f4f;
+    color: #fff;
+    box-shadow: var(--shadow);
+}
 .btn:disabled{
     opacity: 0.6;
     cursor: not-allowed;
@@ -1040,11 +1047,12 @@ body.playing #answers > .free-answer-row{ grid-column: 1 / -1; }
     align-items: center;
     margin-top: 12px;
 }
+/* Caselles de l'inici de flashcards: una sota l'altra, amb marge dalt i baix. */
 .cards-shuffle{
-    display: inline-flex;
+    display: flex;
     gap: 8px;
     align-items: center;
-    margin-top: 10px;
+    margin: 10px 0;
     font-size: 14px;
 }
 .cards-progress{

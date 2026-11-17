@@ -171,7 +171,7 @@ function setLang(newLang){
         }
     }
 
-    Vue.createApp({
+    var soloVm = Vue.createApp({
         template: '#solo-tpl',
         mixins: [soloCatalog, soloPlay, soloFlashcards],
         mounted: function(){
@@ -210,11 +210,15 @@ function setLang(newLang){
     // Permite abrir directamente un quiz desde Create: /solo/?id=<quizId>
     (function(){
         var id = null;
+        var mode = null;
         try{
             var params = new URLSearchParams(window.location.search || '');
             id = params.get('id');
+            mode = params.get('mode');
         }catch(e){}
-        if(id){
+        if(id && mode === 'cards'){
+            soloVm.study(id);
+        }else if(id){
             selectQuiz(id);
         }
     })();

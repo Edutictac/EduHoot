@@ -110,7 +110,7 @@
                         </div>
                         <div class="card-actions">
                             <button class="btn btn-primary" @click="play(q.id)">{{ t('playCta') }}</button>
-                            <button class="btn btn-ghost" @click="study(q.id)">{{ t('studyButton') }}</button>
+                            <button class="btn btn-brand" @click="study(q.id)">{{ t('studyButton') }}</button>
                         </div>
                     </div>
                 </div>
@@ -213,6 +213,10 @@
                         <label v-if="cardsTotal" class="cards-shuffle">
                             <input id="cards-shuffle" type="checkbox" :checked="s.cards.shuffle" @change="cardsToggleShuffle">
                             {{ t('flashcardsShuffle') }}
+                        </label>
+                        <label class="cards-shuffle">
+                            <input id="cards-animate" type="checkbox" :checked="s.cards.animate" @change="cardsToggleAnimate">
+                            {{ t('flashcardsAnimate') }}
                         </label>
                         <div class="cards-start__actions">
                             <button id="cards-start-all" class="btn btn-primary" :disabled="!cardsTotal" @click="cardsStartAll">{{ format(t('flashcardsStartAll'), { count: cardsTotal }) }}</button>

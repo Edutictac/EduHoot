@@ -165,3 +165,22 @@ test('si la pregunta té imatge, clicar-la gira la targeta', async ({ page }) =>
     await expect(page.locator('.flashcard')).toHaveClass(/is-back/);
     await expect(page.locator('#flashcard-answer li')).toHaveText(['B']);
 });
+
+test('la casella «Tarjetas con animación» desactiva el giro animat i es guarda en localStorage', async ({ page }) => {
+    await mockBackend(page);
+    await page.goto('/solo/?lang=es');
+    await page.locator('.card-actions .btn', { hasText: 'Repasar' }).click();
+    await expect(page.locator('#cards-animate')).toBeChecked();
+    await page.locator('#cards-animate').uncheck();
+    await page.locator('#cards-start-all').click();
+    await page.locator('#cards-flip').click();
+    await expect(page.locator('.flashcard')).toHaveClass(/is-back/);
+    expect(await page.evaluate(() => document.getElementById('flashcard').getAnimations().length)).toBe(0);
+    expect(await page.evaluate(() => localStorage.getItem('eduh_cards_anim'))).toBe('0');
+});
+
+test('/solo/?id=…&mode=cards abre directamente las tarjetas del quiz', async ({ page }) => {
+    await mockBackend(page);
+    await page.goto('/solo/?id=q1&mode=cards&lang=es');
+    await expect(page.locator('#cards-start-all')).toBeVisible();
+});
