@@ -81,8 +81,10 @@ var i18n = {
         resultsTitle: 'Resultados',
         resultsNextToRanking: 'Ver clasificación',
         resultsNextQuestion: 'Siguiente pregunta (Enter)',
-        timerPause: 'Pausar',
-        timerResume: 'Reanudar',
+        timerPause: 'Pausar partida',
+        timerResume: 'Reanudar partida',
+        cancelGame: 'Cancelar partida y volver',
+        cancelConfirm: 'Confirmar cancelación',
         timerAdd15: '+15 s',
         answerSent: 'Enviado',
         answerTrying: 'Intentando',
@@ -90,6 +92,9 @@ var i18n = {
         handRaised: 'Mano levantada',
         awayFromTab: 'Fuera de la pestaña',
         awayCount: '{n} fuera de la pestaña',
+        streakInRow: 'seguidos',
+        kickedTitle: 'Expulsados',
+        unkickBtn: 'Permitir entrar',
         kickBtn: 'Expulsar',
         kickConfirm: 'Confirmar',
         freeAnswersReceived: function(ans, total){ return 'Respuestas recibidas ' + ans + ' / ' + total; },
@@ -130,8 +135,10 @@ var i18n = {
         resultsTitle: 'Results',
         resultsNextToRanking: 'Show leaderboard',
         resultsNextQuestion: 'Next question (Enter)',
-        timerPause: 'Pause',
-        timerResume: 'Resume',
+        timerPause: 'Pause game',
+        timerResume: 'Resume game',
+        cancelGame: 'Cancel game and go back',
+        cancelConfirm: 'Confirm cancellation',
         timerAdd15: '+15 s',
         answerSent: 'Sent',
         answerTrying: 'Trying',
@@ -139,6 +146,9 @@ var i18n = {
         handRaised: 'Hand raised',
         awayFromTab: 'Away from tab',
         awayCount: '{n} away from tab',
+        streakInRow: 'in a row',
+        kickedTitle: 'Removed',
+        unkickBtn: 'Allow back',
         kickBtn: 'Remove',
         kickConfirm: 'Confirm',
         freeAnswersReceived: function(ans, total){ return 'Answers received ' + ans + ' / ' + total; },
@@ -179,8 +189,10 @@ var i18n = {
         resultsTitle: 'Resultats',
         resultsNextToRanking: 'Veure classificació',
         resultsNextQuestion: 'Següent pregunta (Enter)',
-        timerPause: 'Pausa',
-        timerResume: 'Reprèn',
+        timerPause: 'Pausar partida',
+        timerResume: 'Reprendre partida',
+        cancelGame: 'Cancel·lar partida i tornar',
+        cancelConfirm: 'Confirmar cancel·lació',
         timerAdd15: '+15 s',
         answerSent: 'Enviat',
         answerTrying: 'Intentant',
@@ -188,6 +200,9 @@ var i18n = {
         handRaised: 'Mà alçada',
         awayFromTab: 'Fora de la pestanya',
         awayCount: '{n} fora de la pestanya',
+        streakInRow: 'seguits',
+        kickedTitle: 'Expulsats',
+        unkickBtn: 'Permetre entrar',
         kickBtn: 'Expulsar',
         kickConfirm: 'Confirmar',
         freeAnswersReceived: function(ans, total){ return 'Respostes rebudes ' + ans + ' / ' + total; },
@@ -227,6 +242,7 @@ function t(key, langOverride){
 // estàtica dins de la mateixa arrel fins al bloc 2 (vore ARCHITECTURE.md).
 // Cancela la confirmación de expulsión si no se confirma a tiempo.
 var kickGameResetTimer = null;
+var cancelGameResetTimer = null;
 
 var app = Vue.createApp({
     template: '#host-game-tpl',
@@ -266,6 +282,8 @@ var app = Vue.createApp({
             showRankingButton: true,
             answerStatus: [],
             pendingKickId: '',
+            cancelGameConfirming: false,
+            kickedList: [],
             timerPaused: false,
             winners: ['', '', '', '', ''],
             downloadReportVisible: false,
@@ -323,6 +341,23 @@ var app = Vue.createApp({
             socket.emit('kick-player', { playerId: player.playerId });
         },
         toggleTimerPause: function(){ hostToggleTimerPause(); },
+        // Readmitir a un alumno expulsado de esta partida.
+        unkickGame: function(entry){
+            socket.emit('unkick-player', { id: entry.id });
+        },
+        // Cancelar y volver a crear: dos pasos (primero se pide confirmación).
+        askCancelGame: function(){
+            if(!this.cancelGameConfirming){
+                this.cancelGameConfirming = true;
+                clearTimeout(cancelGameResetTimer);
+                cancelGameResetTimer = setTimeout(function(){ app.cancelGameConfirming = false; }, 4000);
+                return;
+            }
+            clearTimeout(cancelGameResetTimer);
+            this.cancelGameConfirming = false;
+            stopHostMusicOnCancel();
+            socket.emit('cancelGame');
+        },
         addTimerSeconds: function(seconds){ hostAddTimerSeconds(seconds); },
         answerHasContent: function(i){
             if(this.questionType === 'short-answer' || this.questionType === 'numeric') return false;
@@ -985,7 +1020,25 @@ socket.on('gameQuestions', function(data){
     }
     app.answerStatus = [];
     socket.emit('getAnswerStatus');
+    socket.emit('getKickedList');
     updateTimer();
+});
+
+// Partida cancelada: el servidor confirma y volvemos a crear.
+socket.on('gameCancelled', function(){
+    stopHostMusicOnCancel();
+    window.location.href = '/create/';
+});
+
+// Cancelar la partida para la música: no vuelve a sonar sola al siguiente juego.
+function stopHostMusicOnCancel(){
+    hostAutoMusicShouldPlay = false;
+    hostResumeMusicAfterRanking = false;
+    pauseHostMusicForRanking();
+}
+
+socket.on('kickedList', function(list){
+    app.kickedList = Array.isArray(list) ? list : [];
 });
 
 socket.on('answerStatus', function(list){
@@ -1325,6 +1378,8 @@ function hostToggleTimerPause(){
         app.timerPaused = true;
         clearInterval(timer);
     }
+    // Partida pausada: no se puede saltar la pregunta hasta reanudarla.
+    app.skipDisabled = app.timerPaused;
     socket.emit('timerSync', { time: time, paused: app.timerPaused });
 }
 

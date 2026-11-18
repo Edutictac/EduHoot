@@ -104,12 +104,12 @@ test('anfitrión: pausar el temporizador lo para y avisa a los alumnos', async (
     await expect(page.locator('#timerControls')).toBeVisible();
 
     await page.locator('#timerPauseBtn').click();
-    await expect(page.locator('#timerPauseBtn')).toHaveText('Reanudar');
+    await expect(page.locator('#timerPauseBtn')).toHaveText('Reanudar partida');
     const sync = await emitsNamed(page, 'timerSync');
     expect(sync[sync.length - 1]).toEqual({ time: 15, paused: true });
 
     await page.locator('#timerPauseBtn').click();
-    await expect(page.locator('#timerPauseBtn')).toHaveText('Pausar');
+    await expect(page.locator('#timerPauseBtn')).toHaveText('Pausar partida');
 });
 
 test('anfitrión: +15 s suma tiempo a la pregunta y avisa a los alumnos', async ({ page }) => {

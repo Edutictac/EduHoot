@@ -32,23 +32,14 @@
                 </label>
             </div>
         <h4 id = "questionNum">{{ questionNumText }}</h4>
+        <div class="top-row">
+            <button @click="skipQuestion" id="skipQButton" :style="{ display: skipVisible ? 'inline-block' : 'none' }" :disabled="skipDisabled">{{ t('skip') }}</button>
+            <button type="button" id="cancelGameBtn" :class="{ 'is-confirming': cancelGameConfirming }" @click="askCancelGame">{{ cancelGameConfirming ? t('cancelConfirm') : t('cancelGame') }}</button>
+            <button type="button" @click="goNextQuestion" id="nextQButton">Next Question</button>
+            <button type="button" @click="showRankingToggle" id="showRanking" v-show="showRankingButton">{{ t('showRanking') }}</button>
+        </div>
         <div id="questionPointsBadge" class="question-points-badge points-badge-pop" :key="'badge-' + badgeKey" :style="{ display: badgeVisible ? 'inline-flex' : 'none' }">{{ pointsBadgeText }}</div>
         <h4 id = "playersAnswered" v-show="playersAnsweredVisible">{{ playersAnsweredText }}</h4>
-        <div id="answerStatus" class="answer-status" v-show="timerVisible && answerStatus.length">
-            <p class="answer-status-summary">{{ answerStatusSummary }}<span v-if="awayCount" class="answer-status-away"> · {{ awayText }}</span></p>
-            <ul class="answer-status-list">
-                <li v-for="p in answerStatus" :key="p.playerId" :class="p.answered ? 'is-sent' : 'is-trying'">
-                    <span class="answer-status-icon">{{ p.icon }}</span>
-                    <span class="answer-status-name">{{ p.name }}</span>
-                    <span v-if="p.streak >= 3" class="answer-status-fire" :title="p.streak + ' seguidas'">🔥{{ p.streak }}</span>
-                    <span v-if="p.hand" class="answer-status-hand" :title="t('handRaised')">✋</span>
-                    <span v-if="p.away" class="answer-status-away-dot" :title="t('awayFromTab')">⚠</span>
-                    <span class="answer-status-label">{{ p.answered ? t('answerSent') : t('answerTrying') }}</span>
-                    <button v-if="pendingKickId !== p.playerId" type="button" class="kick-btn" @click="askKick(p)">{{ t('kickBtn') }}</button>
-                    <button v-else type="button" class="kick-btn kick-btn--confirm" @click="confirmKick(p)">{{ t('kickConfirm') }}</button>
-                </li>
-            </ul>
-        </div>
         <h3 id = "timerText" v-show="timerVisible"><span data-i18n="timeLeft">{{ t('timeLeft') }} </span><span id = "num">{{ timerText }}</span></h3>
         <div id="timerControls" class="timer-controls" v-show="timerVisible">
             <button type="button" id="timerPauseBtn" @click="toggleTimerPause">{{ timerPaused ? t('timerResume') : t('timerPause') }}</button>
@@ -81,17 +72,37 @@
         <h3 id = "answer3" v-show="answerVisible(2)" :style="{ filter: answerFilter(2) }" v-html="answerHtml(2)"></h3>
         <br>
         <h3 id = "answer4" v-show="answerVisible(3)" :style="{ filter: answerFilter(3) }" v-html="answerHtml(3)"></h3>
+        <div id="answerStatus" class="answer-status" v-show="answerStatus.length">
+            <p class="answer-status-summary">{{ answerStatusSummary }}<span v-if="awayCount" class="answer-status-away"> · {{ awayText }}</span></p>
+            <ul class="answer-status-list">
+                <li v-for="p in answerStatus" :key="p.playerId" :class="p.answered ? 'is-sent' : 'is-trying'">
+                    <span class="answer-status-icon">{{ p.icon }}</span>
+                    <span class="answer-status-name">{{ p.name }}</span>
+                    <span v-if="p.streak >= 3" class="answer-status-fire" :title="p.streak + ' ' + t('streakInRow')">🔥 {{ p.streak }} {{ t('streakInRow') }}</span>
+                    <span v-if="p.hand" class="answer-status-hand" :title="t('handRaised')">✋</span>
+                    <span v-if="p.away" class="answer-status-away-dot" :title="t('awayFromTab')">⚠</span>
+                    <span v-if="timerVisible" class="answer-status-label">{{ p.answered ? t('answerSent') : t('answerTrying') }}</span>
+                    <button v-if="pendingKickId !== p.playerId" type="button" class="kick-btn" @click="askKick(p)">{{ t('kickBtn') }}</button>
+                    <button v-else type="button" class="kick-btn kick-btn--confirm" @click="confirmKick(p)">{{ t('kickConfirm') }}</button>
+                </li>
+            </ul>
+        </div>
+        <div v-if="kickedList.length" id="kicked-list" class="kicked-list">
+            <p class="kicked-title">{{ t('kickedTitle') }}</p>
+            <div class="kicked-item" v-for="k in kickedList" :key="k.id">
+                <span class="kicked-name">{{ k.name }}</span>
+                <button type="button" class="unkick-btn" @click="unkickGame(k)">{{ t('unkickBtn') }}</button>
+            </div>
+        </div>
 
         <div class="control-row">
-            <button @click="skipQuestion" id="skipQButton" :style="{ display: skipVisible ? 'inline-block' : 'none' }" :disabled="skipDisabled">{{ t('skip') }}</button>
-            <button type="button" @click="goNextQuestion" id="nextQButton">Next Question</button>
-            <button type="button" @click="showRankingToggle" id="showRanking" v-show="showRankingButton">{{ t('showRanking') }}</button>
             <button type="button" id="downloadReportBtn" @click="downloadReport" :style="{ display: downloadReportVisible ? 'inline-block' : 'none' }">{{ t('downloadReport') }}</button>
             <a id="backToLibraryBtn" href="/create/" target="_top" :style="{ display: backToLibraryVisible ? 'inline-block' : 'none' }" :title="t('backToLibraryTitle')">{{ t('backToLibrary') }}</a>
         </div>
 
         <div id="rankingModal" class="modal" :style="{ display: rankingVisible ? 'block' : 'none' }">
             <div class="modal-content">
+                <button id="rankingNextBtn" class="ranking-next" @click="rankingNext">{{ rankingNextLabel }}</button>
                 <span id="closeRanking" class="close" @click="closeRanking" :style="{ display: closeVisible ? 'block' : 'none' }">&times;</span>
                 <div id="resultsStepChart" class="results-step" v-show="modalStep === 'chart'">
                     <h3 id="resultsTitle">{{ t('resultsTitle') }}</h3>
@@ -121,7 +132,6 @@
                         </li>
                     </ol>
                 </div>
-                <button id="rankingNextBtn" class="ranking-next" @click="rankingNext">{{ rankingNextLabel }}</button>
             </div>
         </div>
         <h2 id = "winnerTitle" :style="{ display: winnersVisible ? 'block' : 'none' }">{{ t('topPlayers') }}</h2>

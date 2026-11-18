@@ -457,7 +457,7 @@ h3[id^="answer"]::before{
     justify-content: center;
     margin: 14px 0;
 }
-#nextQButton, #showRanking, #skipQButton, #downloadReportBtn, #backToLibraryBtn{
+#nextQButton, #showRanking, #skipQButton, #downloadReportBtn, #backToLibraryBtn, #cancelGameBtn{
     display: none;
     background: rgba(15,23,42,0.8);
     border: 1px solid var(--card-stroke);
@@ -472,7 +472,19 @@ h3[id^="answer"]::before{
 #showRanking{ display: inline-block; }
 #downloadReportBtn{ background: rgba(16,185,129,0.22); }
 #backToLibraryBtn{ font-size: 13.33px; text-decoration: none; }
-#nextQButton:hover, #showRanking:hover, #skipQButton:hover, #downloadReportBtn:hover, #backToLibraryBtn:hover{ transform: translateY(-2px); filter: brightness(1.05); }
+/* Cancelar partida y volver: se ve siempre; en la confirmación usa el rojo del logo de EduHoot (#da4453). */
+#cancelGameBtn{ display: inline-block; background: rgba(218,68,83,0.22); }
+/* Fila superior: siguiente pregunta (verde, como el informe) y ver ranking (amarillo). */
+.top-row{ display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 8px 0; }
+/* Siguiente pregunta y ver ranking se reparten el ancho, con los colores del logo de EduHoot. */
+#nextQButton, #showRanking{ flex: 1 1 0; min-width: 160px; font-size: 1.1em; }
+/* Verde translúcido, como el botón de informe y el de cancelar (mismo diseño que el resto). */
+#nextQButton{ background: rgba(16,185,129,0.22); color: var(--text-main); }
+#showRanking{ background: #fdbc4b; color: #4d4d4d; }
+#nextQButton:hover{ filter: brightness(1.08); }
+#showRanking:hover{ filter: brightness(1.05); }
+#cancelGameBtn.is-confirming{ background: #da4453; border-color: #da4453; color: #fff; }
+#nextQButton:hover, #showRanking:hover, #skipQButton:hover, #downloadReportBtn:hover, #backToLibraryBtn:hover, #cancelGameBtn:hover{ transform: translateY(-2px); filter: brightness(1.05); }
 
 #winnerTitle, #winner1, #winner2, #winner3, #winner4, #winner5{
     text-align: center;
@@ -508,12 +520,17 @@ h3[id^="answer"]::before{
     letter-spacing: -0.01em;
     padding: 4px 0;
 }
+/* Botón de siguiente (o ver clasificación) fijo arriba del modal: visible sin buscarlo ni desplazarse. */
 .ranking-next{
-    margin-top: 14px;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: block;
+    margin: 0 0 14px;
+    background: rgba(15,23,42,0.97);
     padding: 12px 18px;
     border-radius: 12px;
     border: 1px solid var(--card-stroke);
-    background: rgba(15,23,42,0.9);
     color: var(--text-main);
     font-weight: 700;
     cursor: pointer;
