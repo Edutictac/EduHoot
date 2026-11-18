@@ -108,7 +108,7 @@ decisió de producte.
 | 12 | Generador de sobrenoms aleatoris | 🟨 | 🟢 | ✖️ Cap⁴ | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1a |
 | 13 | ✅ Lectura en veu alta (TTS) | 🟩 | 🟢 | ➖ Neutre | 🙂 Segur | 🤝 Alta | ✅ Encaixa | Fase 1a |
 | 14 | So de feedback individual | 🟨 | 🟢 | ✖️ Cap | 🙂 Segur | ➖ Neutra | ✅ Encaixa | 📦 Aparcada |
-| 15 | Ampliar la importació: GIFT, JSON, XML de Moodle i la resta de formats de Moodle/AULES⁵ | 🟦 | 🟡 | ➖ Neutre | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1a |
+| 15 | Ampliar la importació: GIFT, XML de Moodle i la resta de formats de Moodle/AULES⁵ | 🟦 | 🟡 | ➖ Neutre | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1a |
 | 16 | Reaccions en directe (emoji) | 🟨 | 🟡 | ✖️ Cap | ⚠️ Risc | ➖ Neutra | ✅ Encaixa | 📦 Aparcada |
 | 17 | Tipus de pregunta addicionals | 🟦 | 🔴 | 📚 Alt | 🙂 Segur | 🤝 Alta | ✅ Encaixa | Fase 2 |
 | 18 | Informe de progrés històric | 🟩 | 🔴 | 📚 Alt⁶ | 🙂 Segur | ➖ Neutra | ✅ Encaixa | ❌ Descartada |
@@ -148,7 +148,7 @@ decisió de producte.
    pedagògica d'este llistat: el generador de preguntes amb IA que crida
    a un proveïdor extern se separa com a proposta 32; esta proposta 15
    passa a ser ampliar l'importador de preguntes existent (hui només
-   accepta CSV) a GIFT, JSON, XML de Moodle i la resta de formats que
+   accepta CSV) a GIFT, XML de Moodle i la resta de formats que
    accepta Moodle/AULES. No crida a cap proveïdor extern, així que no té
    el risc de dades de la proposta 32.
 6. **18 i 22** — tindrien Aprenentatge 📚 Alt, però la protecció de dades
@@ -276,7 +276,7 @@ el context, que ja estan en la taula).
     → **Criteri pedagògic:** ✖️ Aprenentatge: Cap · 🙂 Clima: Segur ·
     ➖ Inclusió: Neutra → **Aparcada.**
 
-15. 🟦 **Wayground** — Ampliar la importació de preguntes: GIFT, JSON,
+15. 🟦 **Wayground** — Ampliar la importació de preguntes: GIFT,
     XML de Moodle i la resta de formats que accepta Moodle/AULES — 🟡 Mitjana
     Redefinida després de la revisió pedagògica d'este llistat. Abans
     era "Generador de preguntes amb IA natiu"; eixa part amb risc de
@@ -285,13 +285,13 @@ el context, que ja estan en la taula).
     seua pròpia IA externa, i puja el **CSV** resultant — EduHoot mai
     crida a cap proveïdor en eixe flux. Esta proposta estén eixe mateix
     importador (`importCsv.js`) per a acceptar més formats d'entrada —
-    GIFT, JSON, XML de Moodle i la resta de formats que admet Moodle/AULES
+    GIFT, XML de Moodle i la resta de formats que admet Moodle/AULES
     — sense tocar cap proveïdor d'IA ni afegir risc de dades nou: és
     només un importador de fitxers més ampli, vinga el contingut d'una
     IA, de Moodle, o d'on siga.
     → **Criteri pedagògic:** ➖ Aprenentatge: Neutre · 🙂 Clima: Segur ·
     ➖ Inclusió: Neutra → sense risc, es manté en Fase 1a (començar per
-    GIFT, JSON i XML de Moodle, que són els formats de pregunta més
+    GIFT i XML de Moodle, que són els formats de pregunta més
     estàndards, i afegir la resta de formats de Moodle/AULES de forma
     incremental sobre la mateixa base).
 
@@ -533,7 +533,7 @@ realista, no només una llista d'idees.
     un "Generador IA" que construïx un prompt, el docent el pega en la
     seua pròpia IA externa, i puja el **CSV** resultant — és dir, EduHoot
     mai crida a un proveïdor d'IA en eixe flux. La proposta 15 estén eixe
-    mateix importador a GIFT, JSON i XML de Moodle; la crida nativa a un
+    mateix importador a GIFT i XML de Moodle; la crida nativa a un
     proveïdor d'IA es tracta a banda en la proposta 32 (aparcada).
   - Existix a més un mode **"multijugador local"** (`src/public/multiplayer/`,
     pantalla compartida 2-4 jugadors, sense PIN) no reflectit en cap lloc
@@ -570,7 +570,7 @@ un suggeriment ajornable:
 ### Fase 1a — Millores cosmètiques/aïllades, sense tocar la lògica de joc
 
 12 (sobrenoms aleatoris), ✅ 13 (TTS), 15 (ampliar importació:
-GIFT/JSON/XML Moodle/AULES), ✅ 20 (flashcards), ✅ 23 (compte arrere 3-2-1).
+GIFT/XML Moodle/AULES), ✅ 20 (flashcards), ✅ 23 (compte arrere 3-2-1).
 
 No canvien ni la puntuació ni la seqüència de preguntes: són canvis
 d'interfície, d'àudio, o d'importació de contingut, autocontinguts en un

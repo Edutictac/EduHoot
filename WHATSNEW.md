@@ -77,6 +77,9 @@
 - **Sobrenoms aleatoris**: pots triar que l'alumnat no escriga el seu nom.
   Rebrà un nom de la llista, relacionat amb l'escola, i el pot canviar amb
   un dau. No es repeteix dins de la mateixa partida.
+- **Importar des de Moodle**: pots pujar un cuestionari exportat de Moodle
+  en XML o en GIFT (opció múltiple, verdader/fals, resposta curta i numèrica).
+  Les preguntes que no es poden importar s'indiquen, amb el motiu.
 - **Expulsar un alumne**: si un nom no és adequat, pots expulsar-lo del
   lobby o de la partida. No pot tornar amb el mateix PIN fins que li
   permetes l'entrada des de la llista d'expulsats.

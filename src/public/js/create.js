@@ -297,7 +297,7 @@ var toolsApp = {
             var imp = this.imp;
             var fileInput = this.$refs.csvFile;
             if(!fileInput.files || fileInput.files.length === 0){
-                imp.csvStatus = { text: t('selectCsv'), playId: null };
+                imp.csvStatus = { text: t('selectImportFile'), playId: null };
                 return;
             }
             var formData = new FormData();
@@ -314,7 +314,12 @@ var toolsApp = {
                     imp.csvStatus = { text: result.error || t('uploadCsvError'), playId: null };
                     return;
                 }
-                imp.csvStatus = { text: t('importSuccess') + ': ' + result.name + ' (' + result.count + ') ', playId: result.id };
+                // Preguntas que el XML de Moodle trae y no se importan: el docente debe verlas.
+                var skippedList = Array.isArray(result.skipped) ? result.skipped : [];
+                var skippedText = skippedList.length
+                    ? ' · Omitidas (' + skippedList.length + '): ' + skippedList.map(function(s){ return '«' + s.name + '» (' + s.reason + ')'; }).join('; ')
+                    : '';
+                imp.csvStatus = { text: t('importSuccess') + ': ' + result.name + ' (' + result.count + ')' + skippedText + ' ', playId: result.id };
                 this.$refs.csvForm.reset();
                 imp.csvName = '';
                 rememberClaimableQuizId(result.id);

@@ -217,7 +217,7 @@ test('con sesión: marca «Sólo mis cuestionarios», pide mine=1 y reclama el q
 test('sin cuestionarios: estado vacío y sin paginación', async ({ page }) => {
     await mockBackend(page, { quizzes: [] });
     await page.goto('/create/?lang=es');
-    await expect(page.locator('#game-list .empty-state p')).toHaveText(['No hay cuestionarios importados aún.', 'Sube un CSV o crea uno nuevo para verlo aquí.']);
+    await expect(page.locator('#game-list .empty-state p')).toHaveText(['No hay cuestionarios importados aún.', 'Sube un archivo o crea uno nuevo para verlo aquí.']);
     await expect(page.locator('#game-count')).toHaveText('0 cuestionarios');
     await expect(page.locator('#library-pagination')).toBeHidden();
 });
@@ -462,7 +462,7 @@ test('subir CSV: sin archivo avisa; con archivo envía nombre y token y ofrece j
     await page.locator('#csv-import summary').click();
     // El input es «required»: se envía el formulario a mano para ver el aviso.
     await page.evaluate(() => document.getElementById('csv-form').requestSubmit ? document.getElementById('csv-form').dispatchEvent(new Event('submit', { cancelable: true })) : null);
-    await expect(page.locator('#csv-status')).toHaveText('Selecciona un archivo CSV.');
+    await expect(page.locator('#csv-status')).toHaveText('Selecciona un archivo.');
 
     await page.locator('#csv-file').setInputFiles({ name: 'q.csv', mimeType: 'text/csv', buffer: Buffer.from('tipo;pregunta\n') });
     await page.locator('#csv-name').fill('  Nou  ');

@@ -2,6 +2,9 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const { parseCsv, toQuestion } = require('../importCsv');
+const { parseMoodleXml } = require('../services/moodleXmlImport');
+const { parseGift } = require('../services/giftImport');
+const { detectImportFormat } = require('../services/importFormat');
 const {
   getGamesCollection,
   getUsersCollection,
@@ -414,7 +417,7 @@ module.exports = function createQuizzesRouter({
 
   router.post('/api/upload-csv', uploadRateLimiter, upload.single('file'), async (req, res) => {
     if (!req.file) {
-      return res.status(400).json({ error: 'Selecciona un archivo CSV para importar.' });
+      return res.status(400).json({ error: 'Selecciona un archivo para importar.' });
     }
 
     const quizName =
@@ -429,13 +432,37 @@ module.exports = function createQuizzesRouter({
       });
 
       const content = req.file.buffer.toString('utf8');
-      const rows = parseCsv(content);
-      if (rows.length === 0) {
-        logEvent('upload-csv:empty', { filename: req.file.originalname });
-        return res.status(400).json({ error: 'No se encontraron preguntas en el CSV.' });
+      // El mismo endpoint acepta CSV de EduHoot y XML de Moodle (feature 15).
+      const format = detectImportFormat(req.file.originalname, content);
+      const isMoodleXml = format === 'xml';
+      let questions;
+      // Preguntas omitidas al importar (solo XML de Moodle), con el motivo, para mostrárselas al docente.
+      let skipped = [];
+      const isGift = format === 'gift';
+      if (isGift) {
+        const parsed = parseGift(content);
+        questions = parsed.questions;
+        skipped = parsed.skipped.map(({ name, reason }) => ({ name, reason }));
+      } else if (isMoodleXml) {
+        let parsed;
+        try {
+          parsed = parseMoodleXml(content);
+        } catch (err) {
+          logEvent('upload-xml:invalid', { filename: req.file.originalname });
+          return res.status(400).json({ error: 'El archivo no es un cuestionario XML de Moodle.' });
+        }
+        questions = parsed.questions;
+        skipped = parsed.skipped.map(({ name, reason }) => ({ name, reason }));
+        if (parsed.skipped.length) {
+          logEvent('upload-xml:skipped', { filename: req.file.originalname, skipped: parsed.skipped.length, reasons: parsed.skipped.map((s) => s.reason) });
+        }
+      } else {
+        questions = parseCsv(content).map(toQuestion);
       }
-
-      const questions = rows.map(toQuestion);
+      if (questions.length === 0) {
+        logEvent('upload-csv:empty', { filename: req.file.originalname });
+        return res.status(400).json({ error: 'No se encontraron preguntas en el archivo.' });
+      }
       const tags = normalizeTags(req.body.tags ? [].concat(req.body.tags) : []);
       const ownerToken = (req.body.ownerToken || req.headers['x-owner-token'] || '').toString().trim();
       const language = cleanMetaText(req.body.language, 40);
@@ -469,11 +496,11 @@ module.exports = function createQuizzesRouter({
           };
           await collection.insertOne(quiz);
           logEvent('upload-csv:public-anon', { filename: req.file.originalname, newId, count: questions.length });
-          return res.json({ id: newId, name: quizName, count: questions.length, local: false });
+          return res.json({ id: newId, name: quizName, count: questions.length, local: false, skipped });
         } else {
           const saved = await saveEphemeralQuiz({ name: quizName, tags, questions, visibility: 'private', allowClone, ownerToken });
           logEvent('upload-csv:local', { filename: req.file.originalname, id: saved.id, count: questions.length });
-          return res.json({ id: saved.id, name: quizName, count: questions.length, local: true });
+          return res.json({ id: saved.id, name: quizName, count: questions.length, local: true, skipped });
         }
       }
 
@@ -500,10 +527,10 @@ module.exports = function createQuizzesRouter({
 
       await collection.insertOne(quiz);
       logEvent('upload-csv:success', { filename: req.file.originalname, newId, count: questions.length });
-      return res.json({ id: newId, name: quizName, count: questions.length, local: false });
+      return res.json({ id: newId, name: quizName, count: questions.length, local: false, skipped });
     } catch (err) {
       console.error('upload-csv error', err);
-      return res.status(500).json({ error: 'No se pudo importar el CSV.' });
+      return res.status(500).json({ error: 'No se pudo importar el archivo.' });
     }
   });
 

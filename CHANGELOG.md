@@ -82,9 +82,20 @@ fitxers corresponents, i els originals es van eliminar.
 - El panell de logs busca també per `hostId` i `playerId`.
 - El distintiu d'entorn es veu al 50 % en les pantalles de partida de
   l'alumnat i de l'anfitrió.
+- Importació de qüestionaris en XML de Moodle, des de la mateixa pantalla
+  que el CSV: opció múltiple, verdader/fals, resposta curta i numèrica. Les
+  preguntes d'altres tipus (p. ex. redacció) s'ometen, i el docent veu quines
+  s'han omès i el motiu.
+- Importació de qüestionaris en GIFT de Moodle (fitxers `.gift`), amb els
+  mateixos tipus que el XML: opció múltiple, verdader/fals, resposta curta i
+  numèrica (també rangs). Les preguntes no admeses s'indiquen amb el motiu.
+- Els fitxers `.txt` es detecten pel contingut: CSV de EduHoot, GIFT o XML de
+  Moodle, sense que el docent haja d'indicar el format.
 
 ### Canviat
 
+- Els textos d'importació de cuestionaris ja no parlen només de CSV: diuen
+  «fitxer» i accepten CSV o XML de Moodle.
 - La casella «Puntuacions entre preguntes i ranking» també controla el Top 10
   de l'alumnat i el podi final: desmarcada, no es mostra la posició ni el
   ranking.

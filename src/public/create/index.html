@@ -27,7 +27,7 @@
                     <button id="open-account" type="button" class="btn btn-ghost btn-small hidden" data-i18n="btnAccount">Preferencias</button>
                 </div>
             </div>
-            <h4 id = "subtitle" data-i18n="subtitle">Genera con IA, importa (CSV o Kahoot) o <a id = "link" href = "quiz-creator/">crea un cuestionario desde cero</a>.</h4>
+            <h4 id = "subtitle" data-i18n="subtitle">Genera con IA, importa (archivo o Kahoot) o <a id = "link" href = "quiz-creator/">crea un cuestionario desde cero</a>.</h4>
 
             <aside id="stage-notice" class="stage-notice hidden" aria-labelledby="stage-notice-title">
                 <h2 id="stage-notice-title" data-i18n="stageNoticeTitle">Prova les novetats d'EduHoot</h2>
@@ -255,7 +255,7 @@
                     </div>
                 </summary>
             <form id="csv-form" ref="csvForm" @submit.prevent="uploadCsv">
-                <input id="csv-file" ref="csvFile" type="file" accept=".csv,text/csv" required>
+                <input id="csv-file" ref="csvFile" type="file" accept=".csv,text/csv,.xml,application/xml,text/xml,.gift,.txt,text/plain" required>
                 <input id="csv-name" type="text" :placeholder="t('namePlaceholder')" v-model="imp.csvName">
                 <button type="submit">{{ t('btnUploadCsv') }}</button>
             </form>
