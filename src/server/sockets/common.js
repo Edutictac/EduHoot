@@ -110,6 +110,15 @@ module.exports = function createCommonEvents({ io, games, players, helpers, sele
     });
 
     // Solo el anfitrión: lista de expulsados (sin tokens) y desbloqueo de uno de ellos.
+    // Solo el anfitrión: nombres aleatorios para el alumnado (feature 12). Se puede cambiar en el lobby
+    // mientras no haya ningún alumno unido.
+    socket.on('setRandomNames', (data) => {
+      const game = games.getGame(socket.id);
+      if (!game) return;
+      if (players.getPlayers(socket.id).length > 0) return;
+      game.randomNames = !!(data && data.enabled);
+    });
+
     socket.on('getKickedList', () => {
       const game = games.getGame(socket.id);
       if (!game) return;

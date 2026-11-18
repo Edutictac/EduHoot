@@ -1,6 +1,7 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const { RANDOM_NAMES } = require('../services/randomNames');
 
 module.exports = function createGamesRouter({ games, players, finishedSessionReports, liveSessionToCsv, FINISHED_SESSION_REPORT_DIR, buildReportFileName }) {
   const router = express.Router();
@@ -11,7 +12,16 @@ module.exports = function createGamesRouter({ games, players, finishedSessionRep
       return res.json({ valid: false });
     }
     const game = games.getGameByPin(rawPin);
-    res.json({ valid: !!game });
+    if (!game) {
+      return res.json({ valid: false });
+    }
+    // randomNames: el anfitrión ha elegido nombres aleatorios (sin escribirlos).
+    res.json({ valid: true, randomNames: !!game.randomNames });
+  });
+
+  // Lista de nombres aleatorios (server/data/random-names.txt), para la página de entrada.
+  router.get('/api/random-names', (req, res) => {
+    res.json(RANDOM_NAMES);
   });
 
   // /join.html pregunta abans d'entrar si el nom ja està en ús en la

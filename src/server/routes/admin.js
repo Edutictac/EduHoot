@@ -391,7 +391,9 @@ module.exports = function createAdminRouter({
       // searchText ja inclou message+tag+meta (p. ex. el nom de l'alumnat);
       // es manté message/tag com a alternativa per a entrades anteriors a
       // l'existència d'eixe camp.
-      query.$or = [{ searchText: re }, { message: re }, { tag: re }];
+      // hostId i playerId també es comproven com a camps propis: així també
+      // troben entrades anteriors a l'existència de searchText amb eixos valors.
+      query.$or = [{ searchText: re }, { message: re }, { tag: re }, { hostId: re }, { playerId: re }];
     }
     return query;
   }

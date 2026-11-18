@@ -50,6 +50,11 @@
                 <label><input type="checkbox" id="opt-rand-a" v-model="options.randomAnswers"> <span>{{ t('opt_rand_a') }}</span></label>
                 <label><input type="checkbox" id="opt-send-students" v-model="options.sendToStudents"> <span>{{ t('opt_send_students') }}</span><br><small class="opt-hint">{{ t('opt_send_students_hint') }}</small></label>
                 <label><input type="checkbox" id="opt-show-scores" v-model="options.showScoresBetween"> <span>{{ t('opt_show_scores') }}</span></label>
+                <fieldset id="opt-name-mode" class="name-mode">
+                    <legend>{{ t('opt_name_mode') }}</legend>
+                    <label><input type="radio" name="name-mode" value="typed" v-model="options.nameMode" :disabled="nameModeLocked" @change="emitNameMode"> <span>{{ t('opt_name_typed') }}</span></label>
+                    <label><input type="radio" name="name-mode" value="random" v-model="options.nameMode" :disabled="nameModeLocked" @change="emitNameMode"> <span>{{ t('opt_name_random') }}</span></label>
+                </fieldset>
                 <label class="opt-inline">
                     <span>{{ t('opt_time') }}</span>
                     <input type="number" id="opt-time" min="5" max="120" placeholder="Auto" v-model="options.time">

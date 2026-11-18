@@ -4,6 +4,7 @@ const { logger } = require('../logger');
 // player-join, player-join-game, playerAnswer.
 const { buildAnswerStatus } = require('./answerStatus');
 const { isKicked } = require('./kick');
+const { isRandomName } = require('../services/randomNames');
 
 module.exports = function createPlayerEvents({
   io,
@@ -109,6 +110,11 @@ module.exports = function createPlayerEvents({
       const safeName = studentIdentity ? normalizePlayerName(studentIdentity.public_code) : normalizeSoloName(params.name);
       if (isKicked(game, { name: safeName })) {
         socket.emit('playerJoinRejected', { code: 'kicked' });
+        return;
+      }
+      // Con nombres aleatorios no se admite un nombre escrito a mano (feature 12).
+      if (game.randomNames && !studentIdentity && !isRandomName(safeName)) {
+        socket.emit('playerJoinRejected', { code: 'randomNameRequired' });
         return;
       }
 

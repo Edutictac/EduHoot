@@ -73,6 +73,15 @@ fitxers corresponents, i els originals es van eliminar.
 - Partida: l'anfitrió pot pausar el temporitzador i ampliar-lo 15 s; veu
   per alumne si ha enviat la resposta, si ha alçat la mà i si és fora de la
   pestanya. L'alumnat pot alçar la mà.
+- L'anfitrió pot expulsar un alumne (lobby i partida), amb confirmació en
+  dos passos. L'alumne expulsat no pot tornar amb el mateix PIN fins que
+  l'anfitrió li permeta l'entrada des de la llista d'expulsats del lobby.
+- Nombres aleatoris per a l'alumnat: l'anfitrió pot triar que no escriguen
+  el seu nom; reben un nom de la llista (en anglés, una paraula, no es
+  repeteix a la partida) i poden canviar-lo amb un dau.
+- El panell de logs busca també per `hostId` i `playerId`.
+- El distintiu d'entorn es veu al 50 % en les pantalles de partida de
+  l'alumnat i de l'anfitrió.
 
 ### Canviat
 

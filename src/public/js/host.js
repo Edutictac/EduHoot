@@ -247,6 +247,8 @@ var lobby = Vue.createApp({
                 randomAnswers: true,
                 sendToStudents: true,
                 showScoresBetween: true,
+                // typed: el alumnado escribe su nombre; random: nombre aleatorio de la lista (feature 12).
+                nameMode: 'typed',
                 time: ''
             }
         };
@@ -277,6 +279,10 @@ var lobby = Vue.createApp({
         // con el resto; los errores que envía el servidor llegan ya escritos.
         errorMessage: function(){
             return this.errorKey ? this.t(this.errorKey) : this.errorText;
+        },
+        // Con alumnado unido no se puede cambiar cómo se llaman (nombres escritos o aleatorios).
+        nameModeLocked: function(){
+            return this.players.length > 0;
         }
     },
     methods: {
@@ -287,6 +293,9 @@ var lobby = Vue.createApp({
             kickResetTimer = setTimeout(function(){
                 lobby.pendingKickId = '';
             }, 4000);
+        },
+        emitNameMode: function(){
+            socket.emit('setRandomNames', { enabled: this.options.nameMode === 'random' });
         },
         unkick: function(entry){
             socket.emit('unkick-player', { id: entry.id });
@@ -378,6 +387,11 @@ socket.on('showGamePin', function(data){
 socket.on('updatePlayerLobby', function(data){
     lobby.players = Array.isArray(data) ? data : [];
     socket.emit('getKickedList');
+});
+
+// Al crearse la partida, el servidor conoce ya la opción de nombres: se sincroniza la elegida.
+socket.on('gamePin', function(){
+    if(lobby && lobby.emitNameMode) lobby.emitNameMode();
 });
 
 socket.on('kickedList', function(list){

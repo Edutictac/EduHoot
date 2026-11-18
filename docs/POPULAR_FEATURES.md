@@ -696,7 +696,9 @@ la numeració 1-32 de dalt.
   d'una altra (p. ex. paraula–definició, país–capital). Caldria
   definir-lo en el model de pregunta, l'editor, la importació/exportació
   (CSV, Moodle) i les pantalles de joc.
-- **W8 — Identificador de navegador per a les entrades del registre.**
+- **❌ W8 — Identificador de navegador per a les entrades del registre
+  (descartada: poca utilitat i falta de base legal per a registrar dades
+  de l'alumnat).**
   El navegador de cada alumne genera un identificador aleatori, guardat en
   `localStorage`, que s'envia amb `player-join` i es registra en el log
   (`meta.deviceId`). Permet relacionar un nom de jugador amb un mateix
@@ -705,7 +707,7 @@ la numeració 1-32 de dalt.
   l'identificador canvia. És un valor aleatori, no una empremta del
   navegador (canvas, fonts, resolució), i no es confon amb el testimoni de
   reconnexió (`playerTokens`), que és una credencial i no s'ha de registrar.
-- **W9 — Partida sense rànquing (només puntuació personal). Feta.** La
+- **✅ W9 — Partida sense rànquing (només puntuació personal).** La
   casella «Puntuacions entre preguntes i ranking» de l'amfitrió controla
   també el Top 10 de l'alumnat després de cada pregunta i el podi
   final: desmarcada, cada alumne només veu la seua puntuació.

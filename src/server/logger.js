@@ -34,7 +34,9 @@ class MongoCappedTransport extends Transport {
     // Camp pla per a la busca de text lliure del visor (incloent-hi el
     // contingut de `meta`, p. ex. el nom de l'alumnat): un regex sobre un
     // objecte Mongo no funciona, així que es guarda ja concatenat.
-    const searchText = [message, tag, hasMeta ? JSON.stringify(meta) : ''].filter(Boolean).join(' ');
+    // hostId i playerId també es busquen en text lliure, perquè es puguen filtrar
+    // escrivint-los al cercador del visor.
+    const searchText = [message, tag, hostId, playerId, hasMeta ? JSON.stringify(meta) : ''].filter(Boolean).join(' ');
     getLogsCollection()
       .then((collection) => collection.insertOne({
         level,

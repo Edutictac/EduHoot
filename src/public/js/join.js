@@ -11,6 +11,33 @@
         return fallback || key;
     }
 
+    // Nombres aleatorios (feature 12): lista del servidor, cacheada en la página.
+    var randomNameList = null;
+    function loadRandomNameList(){
+        if(randomNameList) return Promise.resolve(randomNameList);
+        return fetch('/api/random-names', { headers: { 'Accept': 'application/json' } })
+            .then(function(res){ return res.json(); })
+            .then(function(list){
+                randomNameList = Array.isArray(list) ? list : [];
+                return randomNameList;
+            });
+    }
+
+    // Elige un nombre de la lista que no esté ya en uso en la partida (se reintenta hasta 15 veces).
+    function pickFreeRandomName(pin, list, tries){
+        if(!list.length) return Promise.resolve('');
+        var candidate = list[Math.floor(Math.random() * list.length)];
+        return checkNameAvailable(pin, candidate).then(function(available){
+            if(available) return candidate;
+            if(tries <= 1) return '';
+            return pickFreeRandomName(pin, list, tries - 1);
+        }).catch(function(){ return candidate; });
+    }
+
+    function delay(ms){
+        return new Promise(function(resolve){ setTimeout(resolve, ms); });
+    }
+
     function loadTokens(){
         try{
             return JSON.parse(localStorage.getItem('playerTokens') || '{}');
@@ -73,6 +100,9 @@
                 validating: false,
                 pinValidated: false,
                 pin: '',
+                // Con nombres aleatorios el alumnado no escribe el suyo: se le asigna uno de la lista.
+                randomNames: false,
+                rolling: false,
                 name: '',
                 studentAuthEnabled: false,
                 studentAuthRequired: false,
@@ -166,11 +196,33 @@
                         return body.join_token;
                     });
             },
-            applyValidPin: function(pin){
+            applyValidPin: function(pin, randomNames){
                 this.pinValidated = true;
                 this.pin = pin;
+                this.randomNames = !!randomNames;
                 this.modalOpen = false;
+                if(this.randomNames){
+                    this.rerollName(false);
+                    return;
+                }
                 this.focusRef(this.studentAuthRequired ? 'studentCodeInput' : 'nameInput');
+            },
+            // Asigna otro nombre aleatorio libre. Con animate (botón de dado) el dado gira
+            // y el nombre nuevo aparece tras 3 s; sin animate, al momento (al validar el PIN).
+            rerollName: function(animate){
+                var self = this;
+                if(this.rolling) return Promise.resolve();
+                var wait = animate ? delay(3000) : Promise.resolve();
+                this.rolling = !!animate;
+                var pick = loadRandomNameList()
+                    .then(function(list){ return pickFreeRandomName(self.pin, list, 15); });
+                return Promise.all([pick, wait])
+                    .then(function(results){
+                        if(results[0]) self.name = results[0];
+                        self.nameError = '';
+                    })
+                    .catch(function(){})
+                    .then(function(){ self.rolling = false; });
             },
             validatePin: function(pin){
                 var self = this;
@@ -186,7 +238,7 @@
                     .then(function(res){ return res.json(); })
                     .then(function(data){
                         if(data && data.valid){
-                            self.applyValidPin(pin);
+                            self.applyValidPin(pin, !!data.randomNames);
                         }else{
                             self.pinError = t('join_pin_error', 'PIN incorrecto. Intenta de nuevo.');
                             self.focusRef('pinModalInput');
@@ -232,6 +284,10 @@
                         // Issue #28: el nom no es pot repetir en la partida. Si la
                         // consulta falla, s'entra igual: el servidor també ho comprova.
                         return checkNameAvailable(pinVal, name).then(function(available){
+                            if(!available && self.randomNames){
+                                // Nombre aleatorio ya usado en esta partida: se asigna otro sin pedir nada al alumnado.
+                                return self.rerollName(false);
+                            }
                             if(!available){
                                 self.nameError = t('join_name_taken');
                                 self.focusRef(self.studentAuthRequired ? 'studentCodeInput' : 'nameInput');

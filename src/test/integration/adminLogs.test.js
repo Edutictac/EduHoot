@@ -169,3 +169,20 @@ test('GET /api/admin/logs: «Carregar més» amb before/beforeId, sense repetir 
   assert.equal(new Set(seen).size, 7);
   assert.deepEqual(seen, [6, 5, 4, 3, 2, 1, 0].map((i) => 'Paginació ' + i));
 });
+
+test('GET /api/admin/logs?q= encuentra por hostId y playerId', async () => {
+  const cookie = await loginAsAdmin();
+  const headers = { Cookie: cookie };
+
+  logger.info('Expulsió de prova', { tag: 'player-kick', pin: 'DDDDDD', hostId: 'host-Zq81', playerId: 'player-Xw42' });
+  logger.info('Altra entrada sense relació', { tag: 'game-start', pin: 'EEEEEE', hostId: 'host-Other' });
+  await new Promise((resolve) => setTimeout(resolve, 200));
+
+  const byHost = await (await request('/api/admin/logs?q=host-Zq81', { headers })).json();
+  assert.ok(byHost.data.some((row) => row.pin === 'DDDDDD'));
+  assert.ok(byHost.data.every((row) => row.pin !== 'EEEEEE'));
+
+  const byPlayer = await (await request('/api/admin/logs?q=player-Xw42', { headers })).json();
+  assert.ok(byPlayer.data.some((row) => row.pin === 'DDDDDD'));
+  assert.ok(byPlayer.data.every((row) => row.pin !== 'EEEEEE'));
+});

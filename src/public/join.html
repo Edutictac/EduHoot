@@ -7,6 +7,7 @@
         <link href="/css/fonts.css" rel="stylesheet">
         <link rel="stylesheet" href="/css/edutictac-footer.css">
         <link rel="stylesheet" href="/css/edutictac-shared.css">
+        <link rel="stylesheet" href="/css/joinRandomName.css">
         <script src="/js/edutictac-chip.js"></script>
         <script src="https://commons.edutictac.es/assets/account-widget.js" defer></script>
         <link rel="manifest" href="manifest.webmanifest">
@@ -55,7 +56,13 @@
                 </div>
                 <div class="form-field" :class="{ hidden: studentAuthRequired }">
                     <label id = "label">{{ t('join_name') }}</label>
-                    <input id = "name" ref="nameInput" class="name-field" type = "text" name="name" autocomplete="name" maxlength="20" :value="name" @input="onNameInput" />
+                    <input v-if="!randomNames" id = "name" ref="nameInput" class="name-field" type = "text" name="name" autocomplete="name" maxlength="20" :value="name" @input="onNameInput" />
+                    <div v-else class="random-name-box">
+                        <span id="randomName" class="random-name">{{ name }}</span>
+                        <!-- El formulario envía el nombre asignado: sin este campo llegaría vacío. -->
+                        <input type="hidden" name="name" :value="name" />
+                        <button type="button" id="rerollNameBtn" class="reroll-btn" :class="{ 'is-rolling': rolling }" :disabled="rolling" :title="t('join_random_reroll')" :aria-label="t('join_random_reroll')" @click="rerollName(true)">🎲</button>
+                    </div>
                     <p class="join-name-hint">{{ t('join_name_hint') }}</p>
                 </div>
                 <div id="student-auth-fields" class="student-auth" :class="{ hidden: !studentAuthEnabled }">

@@ -74,8 +74,12 @@
 - **Importar més formats**: a més del CSV, es podran importar qüestionaris
   en GIFT, JSON i XML de Moodle/AULES, així que podràs reaprofitar bancs de
   preguntes que ja tingues.
-- **Sobrenoms aleatoris**: si no vols que l'alumnat triï el seu nom, l'app
-  en pot generar un divertit i apropiat per a cada jugador.
+- **Sobrenoms aleatoris**: pots triar que l'alumnat no escriga el seu nom.
+  Rebrà un nom de la llista, relacionat amb l'escola, i el pot canviar amb
+  un dau. No es repeteix dins de la mateixa partida.
+- **Expulsar un alumne**: si un nom no és adequat, pots expulsar-lo del
+  lobby o de la partida. No pot tornar amb el mateix PIN fins que li
+  permetes l'entrada des de la llista d'expulsats.
 
 ### Noves maneres de jugar
 
