@@ -82,6 +82,23 @@ fitxers corresponents, i els originals es van eliminar.
 - El panell de logs busca també per `hostId` i `playerId`.
 - El distintiu d'entorn es veu al 50 % en les pantalles de partida de
   l'alumnat i de l'anfitrió.
+- Alumnat: pot sortir de la partida amb un botó vermell flotant (baix a
+  l'esquerra), amb confirmació. A l'anfitrió, qui ha sortit apareix a la llista
+  «Abandonament», separada dels expulsats. Pot tornar a entrar amb el mateix nom.
+- Pantalla de l'anfitrió: «Saltar» i «Cancel·lar» a dalt de la pregunta; la
+  llista d'alumnat i la d'expulsats, sota de les respostes; «Següent pregunta» i
+  «Veure rànquing» com a botons de la fila superior; el botó de següent de la
+  finestra de resultats queda fix a dalt.
+- En prémer «Iniciar partida», el botó es bloqueja i apareix un avís mentre la
+  partida arrenca. Si el servidor rebutja l'inici, el botó torna a estar disponible.
+- Nombres aleatoris: el dau permet canviar el nom com a màxim 2 vegades per
+  alumne i partida (el comptador és al navegador; el servidor no el comprova).
+- Nom de l'alumnat al lobby: en groc i un 40 % més gran que el títol d'estat.
+- Avanç automàtic entre preguntas: desplegable al lobby i durant la partida
+  («Manual» per defecte, o de 3 a 20 s; el mínim era de 5 s). Després de cada pas de resultats
+  (gràfica, classificació) compta enrere i avança sol. Es pot pausar en
+  qualsevol moment, també durant els resultats, i la compte enrere es veu a
+  l'anfitrió i a l'alumnat.
 - Durant la partida, l'anfitrió pot pausar-la (es congela el temps, no hi ha
   respostes ni avanç fins a reprendre-la) i cancel·lar-la, amb confirmació.
   Cancel·lar tanca la sala per a l'alumnat i torna a `/create/`.

@@ -85,6 +85,12 @@
 - **Racha de aciertos**: pots activar o desactivar la bonificació per encadenar
   respostes correctes des del lobby (activada per defecte). Qui encadena
   tres o més aciertos apareix amb 🔥 a la pantalla de la partida.
+- **Qui surt de la partida**: l'alumnat pot sortir amb un botó (amb
+  confirmació). Tu veus qui ha abandonat, en una llista apart dels expulsats.
+- **Botons més clars**: «Saltar» i «Cancel·lar» a dalt de la pregunta, i la
+  llista d'alumnat sota les respostes.
+- **Avanç automàtic**: tria «Manual» o de 3 a 20 segons entre preguntas. Els
+  resultats avancen sols i pots pausar-ho quan vulguis.
 - **Pausar o cancel·lar la partida**: pots aturar la partida i reprendre-la quan
   vulgues. Cancel·lar-la tanca la sala per a tothom, amb confirmació.
 - **Opcions avançades**: si la connexió de l'aula falla, pots ampliar els

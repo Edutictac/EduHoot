@@ -237,6 +237,14 @@ Esdeveniments principals que rep el servidor (registrats en
 | `getAnswerStatus` | Amfitrió | Demanar l'estat de resposta (enviat, mà, pestanya, racha) de la pregunta actual. |
 | `timerSync` | Amfitrió | Pausar, reprendre o ampliar el temporitzador i avisar els alumnes. Una partida pausada no admet respostes ni avanç (`nextQuestion`, `skipQuestion`). |
 | `cancelGame` | Amfitrió | Cancel·lar la partida (després de confirmar): tanca la sala per a tothom i torna a `/create/`. |
+| `setAutoAdvance` | Amfitrió | Canvia l'avanç automàtic (0 = manual, 3–20 s). S'aplica des de la següent pregunta. |
+| `autoAdvancePause` | Amfitrió | Pausa o reprèn la compte enrere dels resultats (també bloqueja el avanç manual). |
+| `autoAdvanceStepDone` | Amfitrió | Resposta a `autoAdvanceStep`: `ranking` (rearma), `next` (ho para `nextQuestion`), `none`. |
+| `autoAdvanceStep` (servidor → amfitrió) | — | Acabada la compte enrere: l'amfitrió avança un pas de resultats, igual que el botó. |
+| `autoAdvanceState` (servidor → sala) | — | Estat de l'avanç automàtic (actiu, pausat, temps restant): ho veuen l'amfitrió i l'alumnat. |
+| `playerLeave` | Alumnat | L'alumne surt de la partida (després de confirmar). Es treu de la llista i es guarda com a «abandonament» (sense tokens). |
+| `playerLeft` (servidor → alumne) | — | Confirma la sortida; l'alumne torna a la portada. |
+| `leftList` (servidor → amfitrió) | — | Llista d'abandonaments d'esta partida, separada de `kickedList`. Qui torna a entrar amb el mateix nom surt de la llista. |
 | `disconnect` | Socket.IO (automàtic) | Neteja quan cau la connexió d'un jugador/amfitrió. |
 
 ## Cicle de vida d'una partida: PIN, lobby i temps d'espera
