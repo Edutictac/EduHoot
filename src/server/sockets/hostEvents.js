@@ -390,6 +390,7 @@ module.exports = function createHostEvents({
         randomAnswers: true,
         sendToStudents: true,
         showScoresBetween: true,
+        showCorrectAnswers: true,
         streak: true,
         autoAdvanceSec: 0
       }, opts || {});

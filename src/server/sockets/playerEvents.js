@@ -1,3 +1,4 @@
+const { studentMetaOf } = require('../services/showAnswers');
 const { getQuestionMeta, normalizeCorrectAnswers } = require('../questionUtils');
 const { logger } = require('../logger');
 
@@ -231,7 +232,7 @@ module.exports = function createPlayerEvents({
             const meta = getQuestionMeta(current);
             meta.showScores = game.gameData.options ? game.gameData.options.showScoresBetween !== false : true;
             const allPlayers = players.getPlayers(game.hostId);
-            socket.emit('questionOver', allPlayers, meta);
+            socket.emit('questionOver', allPlayers, studentMetaOf(game, meta));
           }
         }
       } else {

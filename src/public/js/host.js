@@ -251,6 +251,8 @@ var lobby = Vue.createApp({
                 randomAnswers: true,
                 sendToStudents: true,
                 showScoresBetween: true,
+                // Mostrar respuestas: por defecto activado; si se desactiva, el alumnado no ve la correcta.
+                showCorrectAnswers: true,
                 // typed: el alumnado escribe su nombre; random: nombre aleatorio de la lista (feature 12).
                 nameMode: 'typed',
                 // Racha de aciertos (feature 11): bonificación para quien encadena aciertos.
@@ -456,6 +458,7 @@ function startGame(){
         randomAnswers: !!options.randomAnswers,
         sendToStudents: !!options.sendToStudents,
         showScoresBetween: !!options.showScoresBetween,
+        showCorrectAnswers: !!options.showCorrectAnswers,
         streak: !!options.streak,
         autoAdvanceSec: parseInt(options.autoAdvanceSec, 10) || 0,
         pin: (function(){

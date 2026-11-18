@@ -19,7 +19,10 @@ function makeHelpers(options, emitted) {
   const helpers = createGameHelpers({
     io: {
       to: (pin) => ({
-        emit: (name, playerData, meta) => emitted.push({ pin, name, playerData, meta })
+        emit: (name, playerData, meta) => emitted.push({ pin, name, playerData, meta }),
+        except: () => ({
+          emit: (name, playerData, meta) => emitted.push({ pin, name, playerData, meta })
+        })
       })
     },
     games: { games: [game] },
@@ -34,9 +37,10 @@ test('questionOver: showScores es false cuando la casilla está desmarcada', () 
   const { helpers, game } = makeHelpers({ showScoresBetween: false }, emitted);
   helpers.emitQuestionOverPayload(game);
 
-  assert.equal(emitted.length, 1);
-  assert.equal(emitted[0].name, 'questionOver');
-  assert.equal(emitted[0].meta.showScores, false);
+  // Dos envíos: al anfitrión (completo) y al alumnado (sin respuesta correcta si aplica).
+  assert.equal(emitted.length, 2);
+  assert.ok(emitted.every((e) => e.name === 'questionOver'));
+  assert.ok(emitted.every((e) => e.meta.showScores === false));
 });
 
 test('questionOver: showScores es true cuando la casilla está marcada', () => {
@@ -44,7 +48,7 @@ test('questionOver: showScores es true cuando la casilla está marcada', () => {
   const { helpers, game } = makeHelpers({ showScoresBetween: true }, emitted);
   helpers.emitQuestionOverPayload(game);
 
-  assert.equal(emitted[0].meta.showScores, true);
+  assert.ok(emitted.every((e) => e.meta.showScores === true));
 });
 
 test('questionOver: sin opciones guardadas se comporta como casilla marcada', () => {
@@ -52,5 +56,5 @@ test('questionOver: sin opciones guardadas se comporta como casilla marcada', ()
   const { helpers, game } = makeHelpers(undefined, emitted);
   helpers.emitQuestionOverPayload(game);
 
-  assert.equal(emitted[0].meta.showScores, true);
+  assert.ok(emitted.every((e) => e.meta.showScores === true));
 });

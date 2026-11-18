@@ -113,6 +113,7 @@ test('iniciar emite una sola vez las opciones marcadas y el tiempo limitado', as
         showScoresBetween: true,
         streak: true,
         autoAdvanceSec: 0,
+        showCorrectAnswers: true,
         pin: '12345',
         timePerQuestion: 120
     });
@@ -131,6 +132,7 @@ test('sin tiempo no envía timePerQuestion y por debajo de 5 s lo sube a 5', asy
         showScoresBetween: true,
         streak: true,
         autoAdvanceSec: 0,
+        showCorrectAnswers: true,
         pin: '12345'
     });
 

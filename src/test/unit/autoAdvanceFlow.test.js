@@ -6,7 +6,10 @@ const createGameHelpers = require('../../server/sockets/gameHelpers');
 function setup(seconds) {
   const emitted = [];
   const io = {
-    to: (room) => ({ emit: (name, ...args) => emitted.push({ room, name, args }) })
+    to: (room) => ({
+      emit: (name, ...args) => emitted.push({ room, name, args }),
+      except: () => ({ emit: (name, ...args) => emitted.push({ room, name, args }) })
+    })
   };
   const game = {
     pin: '12345',

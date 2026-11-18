@@ -51,6 +51,7 @@
                 <label><input type="checkbox" id="opt-rand-a" v-model="options.randomAnswers"> <span>{{ t('opt_rand_a') }}</span></label>
                 <label><input type="checkbox" id="opt-send-students" v-model="options.sendToStudents"> <span>{{ t('opt_send_students') }}</span><br><small class="opt-hint">{{ t('opt_send_students_hint') }}</small></label>
                 <label><input type="checkbox" id="opt-show-scores" v-model="options.showScoresBetween"> <span>{{ t('opt_show_scores') }}</span></label>
+                <label><input type="checkbox" id="opt-show-answers" v-model="options.showCorrectAnswers"> <span>{{ t('opt_show_answers') }}</span></label>
                 <label><input type="checkbox" id="opt-streak" v-model="options.streak"> <span>{{ t('opt_streak') }}</span></label>
                 <label class="opt-auto"><span>{{ t('opt_auto') }}</span>
                     <select id="opt-auto" v-model.number="options.autoAdvanceSec">
