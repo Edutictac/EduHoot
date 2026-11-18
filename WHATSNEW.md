@@ -86,7 +86,8 @@
   respostes correctes des del lobby (activada per defecte). Qui encadena
   tres o més aciertos apareix amb 🔥 a la pantalla de la partida.
 - **Qui surt de la partida**: l'alumnat pot sortir amb un botó (amb
-  confirmació). Tu veus qui ha abandonat, en una llista apart dels expulsats.
+  confirmació). Tu veus qui ha abandonat a la mateixa llista de respostes, marcat
+  com a «Abandonament». Si torna, recupera el seu nom anterior.
 - **Botons més clars**: «Saltar» i «Cancel·lar» a dalt de la pregunta, i la
   llista d'alumnat sota les respostes.
 - **Avanç automàtic**: tria «Manual» o de 3 a 20 segons entre preguntas. Els

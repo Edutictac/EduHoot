@@ -83,8 +83,11 @@ fitxers corresponents, i els originals es van eliminar.
 - El distintiu d'entorn es veu al 50 % en les pantalles de partida de
   l'alumnat i de l'anfitrió.
 - Alumnat: pot sortir de la partida amb un botó vermell flotant (baix a
-  l'esquerra), amb confirmació. A l'anfitrió, qui ha sortit apareix a la llista
-  «Abandonament», separada dels expulsats. Pot tornar a entrar amb el mateix nom.
+  l'esquerra), amb confirmació. A l'anfitrió, qui ha sortit apareix a la
+  mateixa llista d'estat que les respostes, amb el botó d'expulsar
+  deshabilitat («Abandonó»), i no compta en el resum. Si torna, recupera el seu
+  nom anterior sense poder triar-lo ni escriure'l; només pot triar de nou si és
+  expulsat.
 - Pantalla de l'anfitrió: «Saltar» i «Cancel·lar» a dalt de la pregunta; la
   llista d'alumnat i la d'expulsats, sota de les respostes; «Següent pregunta» i
   «Veure rànquing» com a botons de la fila superior; el botó de següent de la

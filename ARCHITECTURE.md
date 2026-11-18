@@ -242,9 +242,9 @@ Esdeveniments principals que rep el servidor (registrats en
 | `autoAdvanceStepDone` | Amfitrió | Resposta a `autoAdvanceStep`: `ranking` (rearma), `next` (ho para `nextQuestion`), `none`. |
 | `autoAdvanceStep` (servidor → amfitrió) | — | Acabada la compte enrere: l'amfitrió avança un pas de resultats, igual que el botó. |
 | `autoAdvanceState` (servidor → sala) | — | Estat de l'avanç automàtic (actiu, pausat, temps restant): ho veuen l'amfitrió i l'alumnat. |
-| `playerLeave` | Alumnat | L'alumne surt de la partida (després de confirmar). Es treu de la llista i es guarda com a «abandonament» (sense tokens). |
+| `playerLeave` | Alumnat | L'alumne surt de la partida (després de confirmar). Es treu de la llista i es guarda com a «abandonament» amb el seu token. |
 | `playerLeft` (servidor → alumne) | — | Confirma la sortida; l'alumne torna a la portada. |
-| `leftList` (servidor → amfitrió) | — | Llista d'abandonaments d'esta partida, separada de `kickedList`. Qui torna a entrar amb el mateix nom surt de la llista. |
+| `answerStatus` (inclou abandonaments) | — | Les files de qui ha abandonat van en la mateixa llista (`left: true`), sense comptar en el resum. Qui torna i recupera el nom surt de la llista d'abandonaments. |
 | `disconnect` | Socket.IO (automàtic) | Neteja quan cau la connexió d'un jugador/amfitrió. |
 
 ## Cicle de vida d'una partida: PIN, lobby i temps d'espera
