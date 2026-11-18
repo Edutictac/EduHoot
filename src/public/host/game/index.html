@@ -33,19 +33,24 @@
                 </label>
             </div>
         <h4 id = "questionNum">{{ questionNumText }}</h4>
-        <div class="auto-advance-row">
+        <div class="auto-advance-row" v-if="!gameOverMode">
             <label>{{ t('autoLabel') }}
                 <select id="autoAdvanceSelect" v-model.number="autoAdvanceSec" @change="emitAutoAdvanceSec">
                     <option :value="0">{{ t('autoManual') }}</option>
                     <option v-for="n in autoAdvanceChoices" :key="n" :value="n">{{ n }} s</option>
                 </select>
             </label>
+            <label class="scores-toggle">
+                <span>{{ t('scoresToggle') }}</span>
+                <input type="checkbox" id="scoresToggle" v-model="showScoresToggle" @change="emitShowScores">
+            </label>
         </div>
         <div class="top-row">
             <button @click="skipQuestion" id="skipQButton" :style="{ display: skipVisible ? 'inline-block' : 'none' }" :disabled="skipDisabled">{{ t('skip') }}</button>
-            <button type="button" id="cancelGameBtn" :class="{ 'is-confirming': cancelGameConfirming }" @click="askCancelGame">{{ cancelGameConfirming ? t('cancelConfirm') : t('cancelGame') }}</button>
+            <button type="button" id="cancelGameBtn" :class="{ 'is-confirming': cancelGameConfirming }" @click="gameOverMode ? goBackToLibrary() : askCancelGame()">{{ gameOverMode ? t('backToLibrary') : (cancelGameConfirming ? t('cancelConfirm') : t('cancelGame')) }}</button>
             <button type="button" @click="goNextQuestion" id="nextQButton">Next Question</button>
             <button type="button" @click="showRankingToggle" id="showRanking" v-show="showRankingButton">{{ t('showRanking') }}</button>
+            <button type="button" id="downloadReportBtn" @click="downloadReport" :style="{ display: downloadReportVisible ? 'inline-block' : 'none' }">{{ t('downloadReport') }}</button>
         </div>
         <div id="questionPointsBadge" class="question-points-badge points-badge-pop" :key="'badge-' + badgeKey" :style="{ display: badgeVisible ? 'inline-flex' : 'none' }">{{ pointsBadgeText }}</div>
         <h4 id = "playersAnswered" v-show="playersAnsweredVisible">{{ playersAnsweredText }}</h4>
@@ -74,13 +79,12 @@
             <video id="questionVideo" controls></video>
             <iframe id="questionIframe" allowfullscreen loading="lazy"></iframe>
         </div>
-        <h3 id = "answer1" v-show="answerVisible(0)" :style="{ filter: answerFilter(0) }" v-html="answerHtml(0)"></h3>
-        <br>
-        <h3 id = "answer2" v-show="answerVisible(1)" :style="{ filter: answerFilter(1) }" v-html="answerHtml(1)"></h3>
-        <br>
-        <h3 id = "answer3" v-show="answerVisible(2)" :style="{ filter: answerFilter(2) }" v-html="answerHtml(2)"></h3>
-        <br>
-        <h3 id = "answer4" v-show="answerVisible(3)" :style="{ filter: answerFilter(3) }" v-html="answerHtml(3)"></h3>
+        <div id="hostAnswers" class="host-answers">
+            <h3 id = "answer1" v-show="answerVisible(0)" :style="{ filter: answerFilter(0) }" v-html="answerHtml(0)"></h3>
+            <h3 id = "answer2" v-show="answerVisible(1)" :style="{ filter: answerFilter(1) }" v-html="answerHtml(1)"></h3>
+            <h3 id = "answer3" v-show="answerVisible(2)" :style="{ filter: answerFilter(2) }" v-html="answerHtml(2)"></h3>
+            <h3 id = "answer4" v-show="answerVisible(3)" :style="{ filter: answerFilter(3) }" v-html="answerHtml(3)"></h3>
+        </div>
         <div id="answerStatus" class="answer-status" v-show="answerStatus.length">
             <p class="answer-status-summary">{{ answerStatusSummary }}<span v-if="awayCount" class="answer-status-away"> · {{ awayText }}</span></p>
             <ul class="answer-status-list">
@@ -93,8 +97,10 @@
                     <span v-if="p.left" class="answer-status-label answer-status-label--left">{{ t('leftTag') }}</span>
                     <span v-else-if="timerVisible" class="answer-status-label">{{ p.answered ? t('answerSent') : t('answerTrying') }}</span>
                     <button v-if="p.left" type="button" class="kick-btn" disabled>{{ t('leftBtn') }}</button>
-                    <button v-else-if="pendingKickId !== p.playerId" type="button" class="kick-btn" @click="askKick(p)">{{ t('kickBtn') }}</button>
-                    <button v-else type="button" class="kick-btn kick-btn--confirm" @click="confirmKick(p)">{{ t('kickConfirm') }}</button>
+                    <template v-else-if="!gameOverMode">
+                        <button v-if="pendingKickId !== p.playerId" type="button" class="kick-btn" @click="askKick(p)">{{ t('kickBtn') }}</button>
+                        <button v-else type="button" class="kick-btn kick-btn--confirm" @click="confirmKick(p)">{{ t('kickConfirm') }}</button>
+                    </template>
                 </li>
             </ul>
         </div>
@@ -106,10 +112,6 @@
             </div>
         </div>
 
-        <div class="control-row">
-            <button type="button" id="downloadReportBtn" @click="downloadReport" :style="{ display: downloadReportVisible ? 'inline-block' : 'none' }">{{ t('downloadReport') }}</button>
-            <a id="backToLibraryBtn" href="/create/" target="_top" :style="{ display: backToLibraryVisible ? 'inline-block' : 'none' }" :title="t('backToLibraryTitle')">{{ t('backToLibrary') }}</a>
-        </div>
 
         <div id="rankingModal" class="modal" :style="{ display: rankingVisible ? 'block' : 'none' }">
             <div class="modal-content">

@@ -289,7 +289,8 @@ test('GameOver: muestra el top 5, el botón de descargar informe y el enlace de 
     await expect(page.locator('#answer1')).toBeHidden();
     await expect(page.locator('#square1')).toBeHidden();
     await expect(page.locator('#downloadReportBtn')).toBeVisible();
-    await expect(page.locator('#backToLibraryBtn')).toBeVisible();
+    // «Cancelar partida» pasa a «Volver» al terminar y vuelve a la biblioteca.
+    await expect(page.locator('#cancelGameBtn')).toHaveText('Volver');
 });
 
 test('al desconectar, muestra el aviso de reconexión', async ({ page }) => {

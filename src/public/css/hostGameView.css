@@ -457,7 +457,7 @@ h3[id^="answer"]::before{
     justify-content: center;
     margin: 14px 0;
 }
-#nextQButton, #showRanking, #skipQButton, #downloadReportBtn, #backToLibraryBtn, #cancelGameBtn{
+#nextQButton, #showRanking, #skipQButton, #downloadReportBtn, #cancelGameBtn{
     display: none;
     background: rgba(15,23,42,0.8);
     border: 1px solid var(--card-stroke);
@@ -471,7 +471,6 @@ h3[id^="answer"]::before{
 }
 #showRanking{ display: inline-block; }
 #downloadReportBtn{ background: rgba(16,185,129,0.22); }
-#backToLibraryBtn{ font-size: 13.33px; text-decoration: none; }
 /* Cancelar partida y volver: se ve siempre; en la confirmación usa el rojo del logo de EduHoot (#da4453). */
 #cancelGameBtn{ display: inline-block; background: rgba(218,68,83,0.22); }
 /* Fila superior: siguiente pregunta (verde, como el informe) y ver ranking (amarillo). */
@@ -484,7 +483,7 @@ h3[id^="answer"]::before{
 #nextQButton:hover{ filter: brightness(1.08); }
 #showRanking:hover{ filter: brightness(1.05); }
 #cancelGameBtn.is-confirming{ background: #da4453; border-color: #da4453; color: #fff; }
-#nextQButton:hover, #showRanking:hover, #skipQButton:hover, #downloadReportBtn:hover, #backToLibraryBtn:hover, #cancelGameBtn:hover{ transform: translateY(-2px); filter: brightness(1.05); }
+#nextQButton:hover, #showRanking:hover, #skipQButton:hover, #downloadReportBtn:hover, #cancelGameBtn:hover{ transform: translateY(-2px); filter: brightness(1.05); }
 
 #winnerTitle, #winner1, #winner2, #winner3, #winner4, #winner5{
     text-align: center;
@@ -771,7 +770,22 @@ h3[id^="answer"]::before{
 }
 
 /* Avance automático durante la partida: desplegable encima de la fila de botones. */
-.auto-advance-row{ display: flex; justify-content: center; margin: 6px 0; }
+/* Fila de avance automático (izquierda) y casilla de puntuaciones (derecha), con los bordes de la fila de botones. */
+.auto-advance-row{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 6px 0;
+}
+.scores-toggle{
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+}
 .auto-advance-row select{ min-width: 120px; padding: 6px 10px; border-radius: 10px; }
 /* Cuenta atrás de los resultados, con pausa. */
 .auto-advance-bar{
@@ -785,3 +799,28 @@ h3[id^="answer"]::before{
     background: rgba(253,188,75,0.22); color: var(--text-main); font-weight: 700; cursor: pointer;
 }
 #rankingNextBtn:disabled{ opacity: 0.6; cursor: not-allowed; }
+
+/* Saltar pregunta, Cancelar partida y Top 10: mismo tamaño en la fila superior de partida. */
+#skipQButton, #cancelGameBtn, #showRanking, #downloadReportBtn{
+    flex: 1 1 0;
+    min-width: 160px;
+    height: 48px;
+    padding: 0 22px;
+    box-sizing: border-box;
+    font-size: 1.1em;
+    line-height: 1;
+}
+
+/* Opciones de respuesta del anfitrión: 2 columnas (2×2) en pantalla ancha; una columna en pantallas estrechas o móviles. */
+.host-answers{
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    width: 100%;
+    max-width: 920px;
+    margin: 0 auto;
+}
+.host-answers h3{ max-width: none; margin: 0; }
+@media (max-width: 800px){
+    .host-answers{ grid-template-columns: minmax(0, 1fr); }
+}

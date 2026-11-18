@@ -32,22 +32,19 @@ test.beforeEach(async ({ page }) => {
     await page.route('**/api/**', route => route.fulfill({ json: {} }));
 });
 
-// Issue #17: al acabar la partida no había forma de volver a la biblioteca.
-test('al acabar la partida aparece el enlace a la biblioteca, traducido', async ({ page }) => {
+// Issue #17: al acabar la partida hay forma de volver a la biblioteca.
+// «Cancelar partida» pasa a «Volver» (valenciano: «Tornar») y lleva a /create/.
+test('al acabar la partida, «Cancelar partida» pasa a «Volver», traducido', async ({ page }) => {
     await page.goto('/host/game/?id=test&pin=12345&lang=es');
-    const link = page.locator('#backToLibraryBtn');
-    await expect(link).toBeHidden();
+    const btn = page.locator('#cancelGameBtn');
+    await expect(btn).toHaveText('Cancelar partida');
+    await expect(page.locator('#backToLibraryBtn')).toHaveCount(0);
 
     await page.evaluate(data => window.__serverEmit('GameOver', data), GAME_OVER);
-    await expect(link).toBeVisible();
-    await expect(link).toHaveText('Volver');
-    await expect(link).toHaveAttribute('title', 'Volver a la biblioteca');
-    await expect(link).toHaveAttribute('href', '/create/');
-    await expect(link).toHaveAttribute('target', '_top');
+    await expect(btn).toHaveText('Volver');
 
     await page.locator('#lang-select').selectOption('en');
-    await expect(link).toHaveText('Back');
-    await expect(link).toHaveAttribute('title', 'Back to the library');
+    await expect(btn).toHaveText('Back');
 });
 
 test('dentro del iframe del lobby, el enlace saca de la partida a /create/', async ({ page }) => {
@@ -66,7 +63,38 @@ test('dentro del iframe del lobby, el enlace saca de la partida a /create/', asy
     await expect(frame.locator('#lang-select')).toBeAttached();
     await (await frameEl.elementHandle()).contentFrame().then(f => f.evaluate(data => window.__serverEmit('GameOver', data), GAME_OVER));
 
-    await frame.locator('#backToLibraryBtn').click();
+    await frame.locator('#cancelGameBtn').click();
     await expect(page).toHaveURL(/\/create\/$/);
     await expect(page.locator('#host-game-frame')).toHaveCount(0);
+});
+
+test('al acabar la partida no se muestra el botón de expulsar', async ({ page }) => {
+    await page.goto('/host/game/?id=test&pin=12345&lang=es');
+    await page.evaluate(() => window.__serverEmit('answerStatus', [[
+        { playerId: 'p1', name: 'Ana', icon: '🐱', answered: true, hand: false, away: false, streak: 0 }
+    ]]));
+    await expect(page.locator('#answerStatus .kick-btn')).toHaveCount(1);
+
+    await page.evaluate(data => window.__serverEmit('GameOver', data), GAME_OVER);
+    await expect(page.locator('#answerStatus .kick-btn')).toHaveCount(0);
+});
+
+test('al acabar la partida se ocultan el avance automático y la casilla de puntuaciones', async ({ page }) => {
+    await page.goto('/host/game/?id=test&pin=12345&lang=es');
+    await expect(page.locator('#autoAdvanceSelect')).toBeVisible();
+    await expect(page.locator('#scoresToggle')).toBeVisible();
+
+    await page.evaluate(data => window.__serverEmit('GameOver', data), GAME_OVER);
+    await expect(page.locator('#autoAdvanceSelect')).toBeHidden();
+    await expect(page.locator('#scoresToggle')).toBeHidden();
+});
+
+test('al acabar, el informe CSV va en la misma fila que los botones de la partida', async ({ page }) => {
+    await page.goto('/host/game/?id=test&pin=12345&lang=es');
+    await page.evaluate(data => window.__serverEmit('GameOver', data), GAME_OVER);
+    // En móvil los botones se apilan a propósito.
+    test.skip(page.viewportSize().width < 600, 'en móvil los botones se apilan');
+    const report = await page.locator('#downloadReportBtn').boundingBox();
+    const cancel = await page.locator('#cancelGameBtn').boundingBox();
+    expect(Math.abs(report.y - cancel.y)).toBeLessThanOrEqual(2);
 });

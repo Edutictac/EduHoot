@@ -64,7 +64,7 @@ var i18n = {
         timeLeft: 'Tiempo restante:',
         skip: 'Saltar pregunta',
         next: 'Siguiente pregunta',
-        showRanking: 'Mostrar Top 10',
+        showRanking: 'Top 10',
         rankingTitle: 'Top 10',
         topPlayers: 'Top 5 jugadores',
         gameOver: 'FIN DE LA PARTIDA',
@@ -89,9 +89,10 @@ var i18n = {
         autoPaused: 'Avance pausado',
         autoPause: 'Pausar avance',
         autoResume: 'Reanudar avance',
+        scoresToggle: 'Puntuaciones y ranking',
         timerPause: 'Pausar partida',
         timerResume: 'Reanudar partida',
-        cancelGame: 'Cancelar partida y volver',
+        cancelGame: 'Cancelar partida',
         cancelConfirm: 'Confirmar cancelación',
         timerAdd15: '+15 s',
         answerSent: 'Enviado',
@@ -114,7 +115,6 @@ var i18n = {
         downloadReport: 'Descargar informe (CSV)',
         downloadReportError: 'No se pudo descargar el informe de la sesión.',
         backToLibrary: 'Volver',
-        backToLibraryTitle: 'Volver a la biblioteca',
         fullscreenEnter: 'Pantalla completa',
         fullscreenExit: 'Salir de pantalla completa',
         groupAllCorrect: '¡Pleno de aciertos!',
@@ -126,7 +126,7 @@ var i18n = {
         timeLeft: 'Time Left:',
         skip: 'Skip question',
         next: 'Next question',
-        showRanking: 'Show Top 10',
+        showRanking: 'Top 10',
         rankingTitle: 'Top 10',
         topPlayers: 'Top 5 Players',
         gameOver: 'GAME OVER',
@@ -141,11 +141,12 @@ var i18n = {
         musicActivationBody: '',
         musicActivationEnable: "Let's go!",
         resultsTitle: 'Results',
-        resultsNextToRanking: 'Show leaderboard',
+        resultsNextToRanking: 'View ranking',
         resultsNextQuestion: 'Next question (Enter)',
         leftTag: 'Left',
         leftBtn: 'Left',
         autoLabel: 'Automatic advance',
+        scoresToggle: 'Scores and ranking',
         autoManual: 'Manual',
         autoIn: 'Next in {s} s',
         autoPaused: 'Advance paused',
@@ -153,7 +154,7 @@ var i18n = {
         autoResume: 'Resume advance',
         timerPause: 'Pause game',
         timerResume: 'Resume game',
-        cancelGame: 'Cancel game and go back',
+        cancelGame: 'Cancel game',
         cancelConfirm: 'Confirm cancellation',
         timerAdd15: '+15 s',
         answerSent: 'Sent',
@@ -176,7 +177,6 @@ var i18n = {
         downloadReport: 'Download report (CSV)',
         downloadReportError: 'Could not download the session report.',
         backToLibrary: 'Back',
-        backToLibraryTitle: 'Back to the library',
         fullscreenEnter: 'Fullscreen',
         fullscreenExit: 'Exit fullscreen',
         groupAllCorrect: 'Everyone got it right!',
@@ -188,7 +188,7 @@ var i18n = {
         timeLeft: 'Temps restant:',
         skip: 'Saltar pregunta',
         next: 'Següent pregunta',
-        showRanking: 'Mostrar Top 10',
+        showRanking: 'Top 10',
         rankingTitle: 'Top 10',
         topPlayers: 'Top 5 jugadors',
         gameOver: 'FI DE LA PARTIDA',
@@ -208,6 +208,7 @@ var i18n = {
         leftTag: 'Abandonament',
         leftBtn: 'Va abandonar',
         autoLabel: 'Avanç automàtic',
+        scoresToggle: 'Puntuacions i rànquing',
         autoManual: 'Manual',
         autoIn: 'Següent en {s} s',
         autoPaused: 'Avanç pausat',
@@ -215,7 +216,7 @@ var i18n = {
         autoResume: 'Reprendre avanç',
         timerPause: 'Pausar partida',
         timerResume: 'Reprendre partida',
-        cancelGame: 'Cancel·lar partida i tornar',
+        cancelGame: 'Cancel·lar partida',
         cancelConfirm: 'Confirmar cancel·lació',
         timerAdd15: '+15 s',
         answerSent: 'Enviat',
@@ -238,7 +239,6 @@ var i18n = {
         downloadReport: 'Descarregar informe (CSV)',
         downloadReportError: 'No s\'ha pogut descarregar l\'informe de la sessió.',
         backToLibrary: 'Tornar',
-        backToLibraryTitle: 'Tornar a la biblioteca',
         fullscreenEnter: 'Pantalla completa',
         fullscreenExit: 'Eixir de pantalla completa',
         groupAllCorrect: 'Ple d\'encerts!',
@@ -309,6 +309,8 @@ var app = Vue.createApp({
             cancelGameConfirming: false,
             // Avance automático entre preguntas (servidor): 0 = manual.
             autoAdvanceSec: 0,
+            // Puntuaciones y ranking: se puede cambiar en cualquier momento de la partida.
+            showScoresToggle: true,
             autoActive: false,
             autoPaused: false,
             autoLeft: 0,
@@ -317,7 +319,8 @@ var app = Vue.createApp({
             timerPaused: false,
             winners: ['', '', '', '', ''],
             downloadReportVisible: false,
-            backToLibraryVisible: false
+            // Partida terminada: «Cancelar partida» pasa a «Volver» (vuelve a la biblioteca).
+            gameOverMode: false
         };
     },
     computed: {
@@ -387,6 +390,9 @@ var app = Vue.createApp({
             socket.emit('unkick-player', { id: entry.id });
         },
         // Cancelar y volver a crear: dos pasos (primero se pide confirmación).
+        goBackToLibrary: function(){
+            (window.top || window).location.href = '/create/';
+        },
         askCancelGame: function(){
             if(!this.cancelGameConfirming){
                 this.cancelGameConfirming = true;
@@ -425,6 +431,11 @@ var app = Vue.createApp({
         },
         emitAutoAdvanceSec: function(){
             socket.emit('setAutoAdvance', { seconds: this.autoAdvanceSec });
+        },
+        emitShowScores: function(){
+            socket.emit('setShowScores', { enabled: !!this.showScoresToggle });
+            window.hostShowScores = !!this.showScoresToggle;
+            this.showRankingButton = !!this.showScoresToggle;
         },
         toggleAutoPause: function(){
             socket.emit('autoAdvancePause', { paused: !this.autoPaused });
@@ -1056,6 +1067,7 @@ socket.on('gameQuestions', function(data){
     defaultTime = data.time || defaultTime || 20;
     window.hostShowScores = data.showScores !== false;
     app.showRankingButton = window.hostShowScores;
+    app.showScoresToggle = window.hostShowScores;
     setMedia(data.image, data.video);
     app.playersAnsweredText = t('playersAnswered')(0, data.playersInGame);
     app.playersAnsweredVisible = true;
@@ -1495,7 +1507,7 @@ socket.on('GameOver', function(data){
         "5. " + data.num5
     ];
     app.downloadReportVisible = true;
-    app.backToLibraryVisible = true;
+    app.gameOverMode = true;
     try{
         localStorage.removeItem(lastHostKey);
         localStorage.removeItem(lastPinKey);

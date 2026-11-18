@@ -154,3 +154,49 @@ test('anfitrión (partida): quien abandona sale en la lista de estado como Aband
     await expect(page.locator('#answerStatus .answer-status-summary')).toContainText('1 de 1');
     await expect(page.locator('#kicked-list')).toHaveCount(0);
 });
+
+test('anfitrión (partida): saltar, cancelar y Top 10 tienen el mismo tamaño', async ({ page }) => {
+    await openGame(page);
+    const skip = await page.locator('#skipQButton').boundingBox();
+    const cancel = await page.locator('#cancelGameBtn').boundingBox();
+    const top = await page.locator('#showRanking').boundingBox();
+    for (const b of [skip, cancel, top]) expect(b).not.toBeNull();
+    // En móvil los botones se apilan a propósito: el tamaño igual se comprueba en pantalla ancha.
+    test.skip(page.viewportSize().width < 600, 'en móvil los botones se apilan');
+    expect(Math.abs(skip.width - cancel.width)).toBeLessThanOrEqual(1);
+    expect(Math.abs(cancel.width - top.width)).toBeLessThanOrEqual(1);
+    expect(Math.abs(skip.height - cancel.height)).toBeLessThanOrEqual(1);
+    expect(Math.abs(cancel.height - top.height)).toBeLessThanOrEqual(1);
+    await expect(page.locator('#showRanking')).toHaveText('Top 10');
+    await expect(page.locator('#cancelGameBtn')).toHaveText('Cancelar partida');
+});
+
+test('anfitrión (partida): avance automático a la izquierda; puntuaciones a la derecha, con la casilla al final', async ({ page }) => {
+    await openGame(page);
+    const row = await page.locator('.top-row').boundingBox();
+    const auto = await page.locator('.auto-advance-row label').first().boundingBox();
+    const scores = await page.locator('.scores-toggle').boundingBox();
+    const text = await page.locator('.scores-toggle span').boundingBox();
+    const box = await page.locator('#scoresToggle').boundingBox();
+    expect(Math.abs(auto.x - row.x)).toBeLessThanOrEqual(2);
+    expect(Math.abs((scores.x + scores.width) - (row.x + row.width))).toBeLessThanOrEqual(2);
+    expect(box.x).toBeGreaterThan(text.x + text.width - 1);
+});
+
+test('anfitrión (partida): las respuestas van en 2 columnas en pantalla ancha y en 1 en móvil', async ({ page }) => {
+    await openGame(page);
+    await page.setViewportSize({ width: 1280, height: 800 });
+    const a1 = await page.locator('#answer1').boundingBox();
+    const a2 = await page.locator('#answer2').boundingBox();
+    const a3 = await page.locator('#answer3').boundingBox();
+    expect(Math.abs(a1.y - a2.y)).toBeLessThanOrEqual(2);
+    expect(a2.x).toBeGreaterThan(a1.x + a1.width - 1);
+    expect(Math.abs(a1.x - a3.x)).toBeLessThanOrEqual(2);
+    expect(a3.y).toBeGreaterThan(a1.y + a1.height - 1);
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    const m1 = await page.locator('#answer1').boundingBox();
+    const m2 = await page.locator('#answer2').boundingBox();
+    expect(Math.abs(m1.x - m2.x)).toBeLessThanOrEqual(2);
+    expect(m2.y).toBeGreaterThan(m1.y + m1.height - 1);
+});

@@ -99,3 +99,21 @@ test('alumnado: muestra la cuenta atrás hasta la siguiente pregunta', async ({ 
     await page.evaluate(() => window.__serverEmit('nextQuestionPlayer', []));
     await expect(page.locator('#autoAdvanceNotice')).toHaveCount(0);
 });
+
+test('anfitrión (partida): se puede desactivar puntuaciones y ranking en cualquier momento', async ({ page }) => {
+    await mockBackend(page);
+    await page.goto('/host/game/?id=g1&pin=12345&lang=es');
+    await page.waitForLoadState('load');
+    await page.evaluate(() => window.__serverEmit('connect'));
+    await page.evaluate(() => window.__serverEmit('gameQuestions', [{
+        q1: 'Capital de Francia?', a1: 'Paris', a2: 'Londres', a3: 'Roma', a4: 'Berlin',
+        type: 'quiz', time: 15, playersInGame: 2, questionNumber: 1, totalQuestions: 3, showScores: true
+    }]));
+    const toggle = page.locator('#scoresToggle');
+    await expect(toggle).toBeChecked();
+    await expect(page.locator('#showRanking')).toBeVisible();
+    await toggle.uncheck();
+    const sent = await emitsNamed(page, 'setShowScores');
+    expect(sent[sent.length - 1]).toEqual({ enabled: false });
+    await expect(page.locator('#showRanking')).toBeHidden();
+});

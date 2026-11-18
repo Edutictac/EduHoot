@@ -207,6 +207,14 @@ module.exports = function createHostEvents({
       setAutoAdvancePaused(game, !!(data && data.paused));
     });
 
+    // Puntuaciones y ranking durante la partida: cambia la opción de la partida (podio y resultados siguientes).
+    socket.on('setShowScores', (data) => {
+      const game = games.getGame(socket.id);
+      if (!game || !game.gameData) return;
+      game.gameData.options = game.gameData.options || {};
+      game.gameData.options.showScoresBetween = !!(data && data.enabled);
+    });
+
     // Cambiar el avance automático durante la partida: se aplica desde la siguiente pregunta.
     socket.on('setAutoAdvance', (data) => {
       const game = games.getGame(socket.id);
