@@ -4,6 +4,7 @@ const { logger } = require('../logger');
 // player-join, player-join-game, playerAnswer.
 const { buildAnswerStatus } = require('./answerStatus');
 const { isKicked } = require('./kick');
+const { streakBonus, nextStreak, isStreakEnabled } = require('../services/scoring');
 const { isRandomName } = require('../services/randomNames');
 
 module.exports = function createPlayerEvents({
@@ -158,6 +159,8 @@ module.exports = function createPlayerEvents({
         answer: 0,
         correctCount: 0,
         wrongCount: 0,
+        streak: 0,
+        bestStreak: 0,
         answerHistory: [],
         identity: studentIdentity || null
       }, studentIdentity && studentIdentity.avatar_icon ? studentIdentity.avatar_icon : (params.icon || ''), token);
@@ -319,16 +322,29 @@ module.exports = function createPlayerEvents({
             if (scoreRatio > 0) {
               player.gameData.score += Math.round(calculateQuestionScore(game) * scoreRatio);
             }
+            // Racha de aciertos (feature 11): solo cuenta si la partida la tiene activada.
+            const streakOn = isStreakEnabled(game);
+            let bonus = 0;
+            if (streakOn && !isPoll) {
+              player.gameData.streak = nextStreak(player.gameData.streak, isCorrect);
+              player.gameData.bestStreak = Math.max(Number(player.gameData.bestStreak) || 0, player.gameData.streak);
+              if (isCorrect) {
+                bonus = streakBonus(player.gameData.streak);
+                player.gameData.score += bonus;
+              }
+              emitAnswerStatus(hostId, game);
+            }
+            const streakNow = streakOn ? (Number(player.gameData.streak) || 0) : 0;
             if (isCorrect) {
               player.gameData.correctCount = (Number(player.gameData.correctCount) || 0) + 1;
-              socket.emit('answerResult', { outcome: 'correct' });
+              socket.emit('answerResult', { outcome: 'correct', streak: streakNow, bonus });
             } else if (scoreRatio > 0) {
-              socket.emit('answerResult', { outcome: 'partial', ratio: scoreRatio });
+              socket.emit('answerResult', { outcome: 'partial', ratio: scoreRatio, streak: streakNow });
             } else if (isPoll) {
               socket.emit('answerResult', { outcome: 'poll' });
             } else {
               player.gameData.wrongCount = (Number(player.gameData.wrongCount) || 0) + 1;
-              socket.emit('answerResult', { outcome: 'incorrect' });
+              socket.emit('answerResult', { outcome: 'incorrect', streak: streakNow });
             }
             recordPlayerAnswerHistory(player, game, gameQuestion, normalizedSubmission, isCorrect, scoreRatio);
 

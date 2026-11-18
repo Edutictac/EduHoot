@@ -92,6 +92,9 @@ var app = Vue.createApp({
             // Código de la partida tal como viene en la URL (params aún no existe al montar la app).
             gamePin: new URLSearchParams(window.location.search).get('pin') || '',
             rankText: '',
+            // Racha de aciertos (feature 11): racha actual y bonificación de la última respuesta.
+            streak: 0,
+            streakBonus: 0,
             message: '',
             messageDetailHtml: '',
             messageVisible: true,
@@ -115,6 +118,11 @@ var app = Vue.createApp({
         pinDisplay: function(){
             var pin = String(this.gamePin || '');
             return /^\d{6}$/.test(pin) ? pin.slice(0, 3) + ' ' + pin.slice(3) : pin;
+        },
+        streakText: function(){
+            var txt = '🔥 ' + this.streak;
+            if(this.streakBonus > 0) txt += ' · +' + this.streakBonus;
+            return txt;
         },
         scoreDisplay: function(){
             return this.playerScore !== null ? (this.scoreLabel + ' ' + this.playerScore) : this.scoreLabel;
@@ -534,6 +542,10 @@ socket.on('answerResult', function(data){
         correct = true;
     }else if(data && data.outcome){
         correct = data.outcome;
+    }
+    if(data && typeof data.streak === 'number'){
+        app.streak = data.streak;
+        app.streakBonus = Number(data.bonus) || 0;
     }
 });
 

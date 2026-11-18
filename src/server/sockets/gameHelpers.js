@@ -6,6 +6,8 @@ const {
   isSubmissionCorrect
 } = require('../questionUtils');
 const { logger } = require('../logger');
+const { isStreakEnabled } = require('../services/scoring');
+const { buildAnswerStatus } = require('./answerStatus');
 
 const GAME_CLEANUP_DELAY = 100 * 1000; // 90 segundos tras GameOver
 const GAME_INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutos de inactividad
@@ -345,6 +347,20 @@ module.exports = function createGameHelpers({ io, games, players, cleanImportedT
   function emitQuestionOverPayload(game) {
     if (!game) return;
     const playerData = players.getPlayers(game.hostId);
+    // Racha de aciertos (feature 11): quien no ha respondido esta pregunta la reinicia.
+    // Es idempotente: al reiniciarse no vuelve a cambiar en un segundo aviso.
+    if (isStreakEnabled(game)) {
+      let changed = false;
+      playerData.forEach((p) => {
+        if (p.gameData && p.gameData.answeredQuestion !== game.gameData.question && (Number(p.gameData.streak) || 0) !== 0) {
+          p.gameData.streak = 0;
+          changed = true;
+        }
+      });
+      if (changed) {
+        io.to(game.hostId).emit('answerStatus', buildAnswerStatus(playerData, game.gameData.question));
+      }
+    }
     const questions = game.gameData.questions || [];
     const current = questions[game.gameData.question - 1];
     const meta = getQuestionMeta(current);

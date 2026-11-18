@@ -18,6 +18,7 @@
             <div id = "stats">
                 <h4 id = "nameText">{{ nameDisplay }}</h4>
                 <h4 id = "scoreText">{{ scoreDisplay }}</h4>
+                <h4 id = "streakText" class="streak-text" v-show="streak > 0">{{ streakText }}</h4>
                 <div id="gamePin" class="game-pin" v-if="pinDisplay">
                     <span class="game-pin__label">{{ t('lobby_pin', 'Código de partida:') }}</span>
                     <span class="game-pin__code">{{ pinDisplay }}</span>

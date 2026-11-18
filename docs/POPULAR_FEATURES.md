@@ -104,8 +104,8 @@ decisió de producte.
 | 8 | Memes i GIF com a feedback | 🟦 | 🟡 | ✖️ Cap | 🙂 Segur | ➖ Neutra | ✅ Encaixa | 📦 Aparcada |
 | 9 | Música/so de tensió per fases | 🟨 | 🟡 | ✖️ Cap | 🙂 Segur | ➖ Neutra | ✅ Encaixa | 📦 Aparcada |
 | 10 | Modes de joc immersius tipus arcade | 🟦 | 🔴 | ➖ Neutre | ⚠️ Risc³ | 🚧 Baixa | ✅ Encaixa | Fase 4 |
-| 11 | Ratxa d'encerts consecutius | 🟨 | 🟢/🟡 | ➖ Neutre | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1b |
-| 12 | Generador de sobrenoms aleatoris | 🟨 | 🟢 | ✖️ Cap⁴ | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1a |
+| 11 | ✅ Ratxa d'encerts consecutius | 🟨 | 🟢/🟡 | ➖ Neutre | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1b |
+| 12 | ✅ Generador de sobrenoms aleatoris | 🟨 | 🟢 | ✖️ Cap⁴ | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1a |
 | 13 | ✅ Lectura en veu alta (TTS) | 🟩 | 🟢 | ➖ Neutre | 🙂 Segur | 🤝 Alta | ✅ Encaixa | Fase 1a |
 | 14 | So de feedback individual | 🟨 | 🟢 | ✖️ Cap | 🙂 Segur | ➖ Neutra | ✅ Encaixa | 📦 Aparcada |
 | 15 | Ampliar la importació: GIFT, XML de Moodle i la resta de formats de Moodle/AULES⁵ | 🟦 | 🟡 | ➖ Neutre | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1a |
@@ -250,18 +250,23 @@ el context, que ja estan en la taula).
     amb nota de risc de clima a resoldre en el disseny si es retoma
     algun dia.
 
-11. 🟨 **Kahoot** — Bonificació per ratxa d'encerts consecutius —
+11. ✅ 🟨 **Kahoot** — Bonificació per ratxa d'encerts consecutius —
     🟢/🟡 Baixa-Mitjana
     → **Criteri pedagògic:** ➖ Aprenentatge: Neutre · 🙂 Clima: Segur
     (és individual, no compara contra altres alumnes) · ➖ Inclusió:
     Neutra → sense canvis.
+    ✅ **Implementada**: +50 per resposta a partir de la tercera seguida (tope
+    +250), reinici amb fallada, acert parcial o sense resposta; opció del
+    lobby activada per defecte; també al mode individual.
 
-12. 🟨 **Kahoot** — Generador de sobrenoms aleatoris en unir-se — 🟢 Baixa
+12. ✅ 🟨 **Kahoot** — Generador de sobrenoms aleatoris en unir-se — 🟢 Baixa
     → **Criteri pedagògic:** ✖️ Aprenentatge: Cap · 🙂 Clima: Segur ·
     ➖ Inclusió: Neutra → es manté en Fase 1a **pese al "Cap" en
     aprenentatge**, perquè el seu valor real no és pedagògic sinó de
     seguretat/gestió d'aula (evita noms inapropiats); l'eix d'aprenentatge
     no ho captura bé.
+    ✅ **Implementada**: lista valenciana fixa de 250 paraules, opció de
+    l'anfitrió (escriure o aleatori) i bloqueig amb alumnat unit.
 
 13. 🟩 **Ambdues** — Lectura en veu alta de la pregunta (TTS / Read Aloud) —
     🟢 Baixa

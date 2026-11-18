@@ -9,6 +9,8 @@ function startQuiz(){
         state.idx = 0;
         state.score = 0;
         state.correct = 0;
+        state.streak = 0;
+        state.streakBonus = 0;
         state.locked = false;
         var desiredCount = getDesiredQuestionCount();
         state.desiredQuestionCount = desiredCount;
@@ -302,6 +304,16 @@ function startQuiz(){
             state.correct += 1;
             var bonus = Math.round(1000 * Math.max(0, Math.min(1, state.timerLeft / state.timerTotal)));
             state.score += Math.round(bonus * scoreRatio);
+        }
+        // Racha de aciertos (feature 11). Misma regla que el servidor (server/services/scoring.js):
+        // acierto completo suma 1 a la racha; cualquier otro resultado la reinicia; una encuesta no la cambia.
+        state.streakBonus = 0;
+        if(meta.type !== 'poll'){
+            state.streak = isCorrect ? (state.streak || 0) + 1 : 0;
+            if(isCorrect && state.streak >= 3){
+                state.streakBonus = Math.min(250, (state.streak - 2) * 50);
+                state.score += state.streakBonus;
+            }
         }
         if(timedOut){
             state.feedback = { text: t('timeup'), kind: 'muted' };

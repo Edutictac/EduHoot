@@ -44,3 +44,6 @@
     background: #fbbf24;
     color: #111827;
 }
+
+/* Racha de aciertos (feature 11): insignia junto a la puntuación. */
+.streak-text{ font-weight: 700; color: #fdba74; }

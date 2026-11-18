@@ -29,7 +29,7 @@ test('indica si el alumno está fuera de la pestaña y no expone el resto de dat
   ], 1);
 
   assert.equal(entry.away, true);
-  assert.deepEqual(Object.keys(entry).sort(), ['answered', 'away', 'hand', 'icon', 'name', 'playerId']);
+  assert.deepEqual(Object.keys(entry).sort(), ['answered', 'away', 'hand', 'icon', 'name', 'playerId', 'streak']);
 });
 
 test('sin jugadores devuelve lista vacía', () => {

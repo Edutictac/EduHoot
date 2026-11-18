@@ -10,7 +10,8 @@ function buildAnswerStatus(playersList, questionNumber) {
       icon: player.icon || '',
       answered: data.answeredQuestion === questionNumber,
       hand: data.handRaisedQuestion === questionNumber,
-      away: !!data.tabAway
+      away: !!data.tabAway,
+      streak: Number(data.streak) || 0
     };
   });
 }

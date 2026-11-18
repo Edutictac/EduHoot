@@ -56,3 +56,6 @@
 .is-sent .answer-status-label{ color: #86efac; }
 .is-trying .answer-status-label{ color: #e5e7eb; }
 .answer-status-away-dot{ color: #fdba74; }
+
+/* Racha de aciertos (feature 11): fuego junto al alumno con tres o más aciertos seguidos. */
+.answer-status-fire{ font-weight: 700; color: #fb923c; }

@@ -19,7 +19,7 @@ module.exports = function createGamesRouter({ games, players, finishedSessionRep
     res.json({ valid: true, randomNames: !!game.randomNames });
   });
 
-  // Lista de nombres aleatorios (server/data/random-names.txt), para la página de entrada.
+  // Lista fija de nombres aleatorios (valenciana), independiente del idioma.
   router.get('/api/random-names', (req, res) => {
     res.json(RANDOM_NAMES);
   });

@@ -150,6 +150,7 @@
                         <span class="game-progress__stats">
                             <span id="question-progress" class="pill" :aria-label="(s.idx + 1) + ' / ' + s.questions.length">{{ progressText }}</span>
                             <span id="score-pill" class="pill pill-muted">{{ t('score') + ': ' + s.score }}</span>
+                            <span v-if="s.streak > 0" id="streak-pill" class="pill pill-muted">🔥 {{ s.streak }}{{ s.streakBonus > 0 ? ' · +' + s.streakBonus : '' }}</span>
                         </span>
                     </div>
                     <div class="tts-timer-wrap" :class="{ 'has-tts': ttsAvailable }">

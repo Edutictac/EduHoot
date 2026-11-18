@@ -249,6 +249,8 @@ var lobby = Vue.createApp({
                 showScoresBetween: true,
                 // typed: el alumnado escribe su nombre; random: nombre aleatorio de la lista (feature 12).
                 nameMode: 'typed',
+                // Racha de aciertos (feature 11): bonificación para quien encadena aciertos.
+                streak: true,
                 time: ''
             }
         };
@@ -424,6 +426,7 @@ function startGame(){
         randomAnswers: !!options.randomAnswers,
         sendToStudents: !!options.sendToStudents,
         showScoresBetween: !!options.showScoresBetween,
+        streak: !!options.streak,
         pin: (function(){
             try{
                 return (params && params.pin) || localStorage.getItem(lastPinKey) || '';

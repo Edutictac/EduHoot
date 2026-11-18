@@ -111,6 +111,7 @@ test('iniciar emite una sola vez las opciones marcadas y el tiempo limitado', as
         randomAnswers: true,
         sendToStudents: false,
         showScoresBetween: true,
+        streak: true,
         pin: '12345',
         timePerQuestion: 120
     });
@@ -127,6 +128,7 @@ test('sin tiempo no envía timePerQuestion y por debajo de 5 s lo sube a 5', asy
         randomAnswers: true,
         sendToStudents: true,
         showScoresBetween: true,
+        streak: true,
         pin: '12345'
     });
 

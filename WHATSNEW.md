@@ -37,6 +37,8 @@
   lloc ni la teua puntuació.
 - **El mòbil no s'apaga a mitja pregunta**: la pantalla es manté encesa
   mentre la pregunta està activa.
+- **Racha d'encerts**: encadena respostes correctes i guanya punts extra; el
+  sigues en la pantalla del mòbil i en el mode individual.
 - **Respondre més de pressa, guanyar més punts**: com al Kahoot clàssic,
   la velocitat compta: cada pregunta val fins a 1000 punts i, com més
   prompte encertes, més punts afigs.
@@ -80,6 +82,9 @@
 - **Importar des de Moodle**: pots pujar un cuestionari exportat de Moodle
   en XML o en GIFT (opció múltiple, verdader/fals, resposta curta i numèrica).
   Les preguntes que no es poden importar s'indiquen, amb el motiu.
+- **Racha de aciertos**: pots activar o desactivar la bonificació per encadenar
+  respostes correctes des del lobby (activada per defecte). Qui encadena
+  tres o més aciertos apareix amb 🔥 a la pantalla de la partida.
 - **Expulsar un alumne**: si un nom no és adequat, pots expulsar-lo del
   lobby o de la partida. No pot tornar amb el mateix PIN fins que li
   permetes l'entrada des de la llista d'expulsats.

@@ -350,7 +350,8 @@ module.exports = function createHostEvents({
         randomQuestions: false,
         randomAnswers: true,
         sendToStudents: true,
-        showScoresBetween: true
+        showScoresBetween: true,
+        streak: true
       }, opts || {});
       if (options.timePerQuestion !== undefined && options.timePerQuestion !== null && String(options.timePerQuestion).trim() !== '') {
         const parsedTime = parseInt(options.timePerQuestion, 10);

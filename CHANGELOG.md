@@ -77,11 +77,15 @@ fitxers corresponents, i els originals es van eliminar.
   dos passos. L'alumne expulsat no pot tornar amb el mateix PIN fins que
   l'anfitrió li permeta l'entrada des de la llista d'expulsats del lobby.
 - Nombres aleatoris per a l'alumnat: l'anfitrió pot triar que no escriguen
-  el seu nom; reben un nom de la llista (en anglés, una paraula, no es
+  el seu nom; reben un nom de la llista valenciana (una paraula, no es
   repeteix a la partida) i poden canviar-lo amb un dau.
 - El panell de logs busca també per `hostId` i `playerId`.
 - El distintiu d'entorn es veu al 50 % en les pantalles de partida de
   l'alumnat i de l'anfitrió.
+- Racha de aciertos (ratxa d'encerts): a partir de la tercera resposta
+  correcta seguida, +50 punts per resposta (tope +250). L'alumnat veu la seua
+  racha; l'anfitrió la veu amb un 🔥 al costat del nom. Opció del lobby,
+  activada per defecte; també al mode individual.
 - Importació de qüestionaris en XML de Moodle, des de la mateixa pantalla
   que el CSV: opció múltiple, verdader/fals, resposta curta i numèrica. Les
   preguntes d'altres tipus (p. ex. redacció) s'ometen, i el docent veu quines
