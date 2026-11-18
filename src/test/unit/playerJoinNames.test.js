@@ -46,9 +46,9 @@ test('un segon alumne amb el mateix nom és rebutjat amb el codi nameTaken', () 
 
 test('no distingix majúscules ni espais de més', () => {
   const { players, join } = setup();
-  join('s1', { name: 'Ana Maria', token: 't1' });
-  assert.equal(join('s2', { name: '  ana  maria ', token: 't2' }).find((e) => e.name === 'playerJoinRejected').data.code, 'nameTaken');
-  assert.ok(names(join('s3', { name: 'Ana Mari', token: 't3' })).includes('playerJoinAck'));
+  join('s1', { name: 'AnaMaria', token: 't1' });
+  assert.equal(join('s2', { name: '  anamaria ', token: 't2' }).find((e) => e.name === 'playerJoinRejected').data.code, 'nameTaken');
+  assert.ok(names(join('s3', { name: 'AnaMari', token: 't3' })).includes('playerJoinAck'));
   assert.equal(players.getPlayers('host-1').length, 2);
 });
 

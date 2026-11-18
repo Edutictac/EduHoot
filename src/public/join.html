@@ -14,15 +14,18 @@
         <link rel="icon" href="/icons/logo.svg" type="image/svg+xml">
         <meta name="theme-color" content="#6c2bd9">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <link rel="stylesheet" href="/css/page-fit.css">
     </head>
     <body>
-        <a class="back-link" href="/" data-i18n="back">← Volver</a>
         <edutictac-account class="site-account site-account--fixed site-account--start" data-home-only data-base="https://commons.edutictac.es"></edutictac-account>
         <div id="lang-switcher" data-lang-buttons>
         </div>
         <!-- Subfase B, Vue (join.js): modal del PIN i formulari d'entrada. -->
         <div id="join-app"></div>
         <template id="join-tpl">
+        <!-- Arriba a la izquierda: «Volver» hasta validar el PIN; después «Salir» (vuelve a pedir el PIN). -->
+        <a v-if="!pinValidated" class="back-link" href="/">{{ t('back', '← Volver') }}</a>
+        <button v-else type="button" class="back-link back-link--leave" @click="leavePin">{{ t('lobby_leave', 'Salir') }}</button>
         <div id="pinModal" class="pin-modal" :class="{ hidden: !modalOpen }" role="dialog" aria-modal="true">
             <div class="pin-modal__card">
                 <h2>{{ t('join_pin_prompt') }}</h2>
@@ -55,7 +58,7 @@
                     <div id="icon-preview">{{ icon }}</div>
                 </div>
                 <div class="form-field" :class="{ hidden: studentAuthRequired }">
-                    <label id = "label">{{ t('join_name') }}</label>
+                    <label id = "label" class="label-center">{{ t('join_name') }}</label>
                     <input v-if="!randomNames" id = "name" ref="nameInput" class="name-field" type = "text" name="name" autocomplete="name" maxlength="20" :value="name" @input="onNameInput" />
                     <div v-else class="random-name-box">
                         <span id="randomName" class="random-name">{{ name }}</span>

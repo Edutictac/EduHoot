@@ -110,34 +110,49 @@ test('elegir un icono cambia la selección y la vista previa', async ({ page }) 
     await expect(page.locator('#icon-picker button.selected')).toHaveCount(1);
 });
 
-test('el nombre junta espacios repetidos mientras se escribe y deja escribir varias palabras', async ({ page }) => {
+test('el nombre solo admite letras y números: quita espacios y símbolos mientras se escribe', async ({ page }) => {
     await openJoin(page, '?pin=12345');
-    await page.locator('#name').pressSequentially('Ana  Maria ');
-    await expect(page.locator('#name')).toHaveValue('Ana Maria ');
+    await page.locator('#name').pressSequentially('Ana Mar!a 9');
+    await expect(page.locator('#name')).toHaveValue('AnaMara9');
 });
 
-test('sin nombre no envía y deja el foco en el nombre', async ({ page }) => {
+test('el nombre no puede empezar por número', async ({ page }) => {
     await openJoin(page, '?pin=12345');
-    await page.locator('#name').fill('   ');
+    await page.locator('#name').pressSequentially('1ana');
+    await expect(page.locator('#name')).toHaveValue('ana');
+});
+
+test('sin nombre no envía, deja el foco en el nombre y avisa de la regla', async ({ page }) => {
+    await openJoin(page, '?pin=12345');
+    await page.locator('#name').fill('');
     await page.locator('#joinButton').click();
     await expect(page.locator('#name')).toBeFocused();
+    await expect(page.locator('#join-name-error')).toHaveText('Usa de 3 a 20 letras o números, sin empezar por número.');
+    expect(page.url()).toContain('/join.html');
+});
+
+test('un nombre de menos de 3 caracteres no envía', async ({ page }) => {
+    await openJoin(page, '?pin=12345');
+    await page.locator('#name').fill('Al');
+    await page.locator('#joinButton').click();
+    await expect(page.locator('#join-name-error')).toHaveText('Usa de 3 a 20 letras o números, sin empezar por número.');
     expect(page.url()).toContain('/join.html');
 });
 
 test('al entrar va a /player/ con PIN, icono, nombre limpio y un token que se reutiliza', async ({ page }) => {
     await openJoin(page, '?pin=12345');
     await page.locator('#icon-picker button[data-icon="🐸"]').first().click();
-    await page.locator('#name').fill('  Ana   Maria  ');
+    await page.locator('#name').fill('AnaMaria');
     await page.locator('#joinButton').click();
     await page.waitForURL('**/player/?*');
     const first = submittedParams(page);
-    expect(first).toEqual(expect.objectContaining({ pin: '12345', icon: '🐸', name: 'Ana Maria', studentJoinToken: '' }));
+    expect(first).toEqual(expect.objectContaining({ pin: '12345', icon: '🐸', name: 'AnaMaria', studentJoinToken: '' }));
     expect(first.token).toMatch(/^[0-9a-f]{32}$/);
     const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('playerTokens')));
-    expect(stored['12345:Ana Maria']).toBe(first.token);
+    expect(stored['12345:AnaMaria']).toBe(first.token);
 
     await page.goto('/join.html?pin=12345');
-    await page.locator('#name').fill('Ana Maria');
+    await page.locator('#name').fill('AnaMaria');
     await page.locator('#joinButton').click();
     await page.waitForURL('**/player/?*');
     expect(submittedParams(page).token).toBe(first.token);

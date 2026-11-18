@@ -6,6 +6,7 @@ const { buildAnswerStatus, leftListOf } = require('./answerStatus');
 const { isKicked } = require('./kick');
 const { streakBonus, nextStreak, isStreakEnabled } = require('../services/scoring');
 const { isRandomName } = require('../services/randomNames');
+const { isValidTypedName } = require('../services/nameRules');
 
 module.exports = function createPlayerEvents({
   io,
@@ -114,6 +115,11 @@ module.exports = function createPlayerEvents({
       const safeName = lockedByLeave
         ? leftEntry.name
         : (studentIdentity ? normalizePlayerName(studentIdentity.public_code) : normalizeSoloName(params.name));
+      // Nombre escrito a mano: letras y números, sin empezar por número, de 3 a 20 caracteres.
+      if (!studentIdentity && !lockedByLeave && !game.randomNames && !isValidTypedName(String(params.name || '').trim())) {
+        socket.emit('playerJoinRejected', { code: 'invalidName' });
+        return;
+      }
       if (lockedByLeave) {
         game.leftPlayers = game.leftPlayers.filter((l) => l !== leftEntry);
       }

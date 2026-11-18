@@ -219,6 +219,15 @@ socket.on('playerJoinRejected', function(data){
         }, 1200);
         return;
     }
+    // Nombre escrito que no cumple la regla: vuelve a la entrada para corregirlo.
+    if(data && data.code === 'invalidName'){
+        var invalidParams = jQuery.deparam(window.location.search);
+        setLobbyStatus(tLobby('join_name_invalid'), '');
+        setTimeout(function(){
+            window.location.href = '/join.html?pin=' + encodeURIComponent(invalidParams.pin || '') + '&nameInvalid=1';
+        }, 1200);
+        return;
+    }
     var message = data && data.error ? data.error : tLobby('lobby_access_error');
     setLobbyStatus(message, tLobby('lobby_reenter_hint'));
     setTimeout(function(){

@@ -20,11 +20,24 @@ a{
     font-weight: 700;
 }
 
+/* «Salir» (tras validar el PIN) ocupa el mismo sitio que «Volver». */
+button.back-link{ font: inherit; color: inherit; cursor: pointer; }
+
+/* Selector de idioma de la entrada: misma altura (44 px) que «Volver», para quedar alineados. */
+#lang-switcher{ top: 16px; min-height: 44px; align-items: center; }
+#lang-switcher button[data-lang]{ min-height: 44px; }
+/* Entrada del alumnado: «Volver» fijo arriba a la izquierda, a la misma altura que el selector de idioma (arriba a la derecha). */
 .back-link{
-    display: inline-block;
-    align-self: flex-start;
-    margin-bottom: 10px;
-    padding: 6px 10px;
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    z-index: 1100;
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0 14px;
     border-radius: 10px;
     background: rgba(0,0,0,0.18);
     border: 1px solid rgba(255,255,255,0.14);
@@ -106,6 +119,9 @@ form{
 #name:focus, #pin:focus, #student-code:focus, #student-pin:focus{
     border-color: rgba(255,255,255,0.45);
 }
+/* El nombre escrito por el alumnado va centrado. */
+/* El campo del nombre va centrado en horizontal (el ancho máximo no lo deja pegado a la izquierda). */
+#name{ text-align: center; display: block; margin-left: auto; margin-right: auto; }
 .name-three{
     max-width: 200px;
     text-align: center;
@@ -144,6 +160,7 @@ form{
     margin: 6px 0 0;
     font-size: 13px;
     color: var(--muted);
+    text-align: center;
 }
 
 .student-auth{
@@ -175,7 +192,8 @@ form{
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(54px, 1fr));
     gap: 8px;
-    max-width: 420px;
+    width: 100%;
+    max-width: none;
 }
 #icon-picker button{
     font-size: 26px;
@@ -192,12 +210,15 @@ form{
     border-color: #22c55e;
     background: rgba(34,197,94,0.12);
 }
+/* Icono elegido: grande y centrado, debajo de la lista (no la tapa) y encima del nombre. */
 #icon-preview{
-    font-size: 30px;
-    text-align: right;
+    font-size: 72px;
+    line-height: 1;
+    text-align: center;
     color: var(--text-main);
-    margin-top: 6px;
+    margin: 12px 0 14px;
 }
+#label.label-center{ text-align: center; }
 
 #host{
     color: var(--text-main);
@@ -210,8 +231,8 @@ form{
 
 #lang-switcher{
     position: fixed;
-    top: 12px;
-    right: 12px;
+    top: 16px;
+    right: 16px;
     display: flex;
     gap: 6px;
 }
@@ -351,6 +372,7 @@ body.modal-open{
     #icon-picker{ grid-template-columns: repeat(auto-fit, minmax(44px, 1fr)); }
     #icon-picker button{ font-size: 22px; padding: 9px; }
     #lang-switcher{ top: 8px; right: 8px; }
+    .back-link{ top: 8px; left: 8px; }
     #lang-switcher button{ padding: 6px 8px; }
 }
 

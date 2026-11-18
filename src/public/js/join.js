@@ -2,7 +2,8 @@
 // d'alumne. Subfase B: tot és estat reactiu d'una app de Vue (#join-app).
 (function(){
     var ICONS = ['🦊', '🐱', '🐶', '🐼', '🐧', '🐸', '🦉', '🦄', '🐰', '🐢', '🐙', '🦁', '🐨', '🐝', '🐯',
-        '🐸', '🐻', '🦕', '🦖', '🐉', '🚀', '🌈', '⚽️', '🏀', '🏆', '🎮', '🎧', '📚', '🎨'];
+        '🐻', '🦕', '🦖', '🐉', '🚀', '🌈', '⚽️', '🏀', '🏆', '🎮', '🎧', '📚', '🎨', '🐵', '🐮',
+        '🐷', '🐔', '🦋', '🐬', '🐳', '🦈', '🐘', '🦒', '🦩', '🐥'];
 
     // Máximo de cambios voluntarios de nombre (botón del dado) por alumno y partida.
     var RANDOM_NAME_MAX_REROLLS = 2;
@@ -89,8 +90,13 @@
     // Versión "en vivo" para mientras se escribe: no recorta los espacios del
     // final (si no, sería imposible teclear un nombre con varias palabras,
     // p.ej. "Ana Maria", porque cada espacio se borraría solo).
+    // Nombre escrito: letras y números, sin empezar por número, de 3 a 20 caracteres.
+    // Sin espacios, símbolos ni signos de puntuación (igual que el servidor).
     function normalizeGuestNameLive(value){
-        return (value || '').toString().replace(/\s{2,}/g, ' ').slice(0, 20);
+        return (value || '').toString().replace(/[^\p{L}0-9]/gu, '').replace(/^[0-9]+/, '').slice(0, 20);
+    }
+    function isValidTypedName(name){
+        return typeof name === 'string' && name.length >= 3 && name.length <= 20 && /^\p{L}[\p{L}0-9]*$/u.test(name);
     }
 
     // Aplica el filtre a l'input i torna el valor net. Cal tocar el DOM perquè,
@@ -149,6 +155,19 @@
                     var el = self.$refs[name];
                     if(el) el.focus();
                 });
+            },
+            // Salir (tras validar el PIN): se olvida el PIN y se vuelve a pedirlo.
+            leavePin: function(){
+                this.pinValidated = false;
+                this.pin = '';
+                this.pinModalValue = '';
+                this.pinError = '';
+                this.randomNames = false;
+                this.nameLocked = false;
+                this.name = '';
+                this.nameError = '';
+                this.rerollsUsed = 0;
+                this.showModal();
             },
             showModal: function(){
                 this.modalOpen = true;
@@ -311,6 +330,13 @@
                     normalizeStudentPin(this.studentPin)
                 );
                 if(!name && !this.studentAuthRequired && !hasStudentCredentials){
+                    this.nameError = t('join_name_invalid');
+                    this.focusRef('nameInput');
+                    return;
+                }
+                // Nombre escrito a mano (no aleatorio ni recuperado): debe cumplir la regla.
+                if(!this.randomNames && !this.studentAuthRequired && !hasStudentCredentials && !isValidTypedName(name)){
+                    this.nameError = t('join_name_invalid');
                     this.focusRef('nameInput');
                     return;
                 }
@@ -362,6 +388,7 @@
             var presetPin = query.get('pin');
             // Tornada des de la sala d'espera: el nom ja estava en ús (issue #28).
             if(query.get('nameTaken')) this.nameError = t('join_name_taken');
+            if(query.get('nameInvalid')) this.nameError = t('join_name_invalid');
             if(presetPin){
                 this.pinModalValue = presetPin;
                 this.validatePin(presetPin.trim());
