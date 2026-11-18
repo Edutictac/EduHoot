@@ -215,3 +215,57 @@ test('alumnado (entrada): hay 40 iconos para elegir, sin repetidos', async ({ pa
     expect(icons.length).toBe(40);
     expect(new Set(icons).size).toBe(40);
 });
+
+test('anfitrión: en 1280×800 las opciones van en 2 columnas y «Iniciar» queda dentro de la pantalla', async ({ page }) => {
+    await page.route(/^https:\/\//, route => route.abort());
+    await page.route('**/api/**', route => route.fulfill({ json: {} }));
+    await page.route('**/socket.io/socket.io.js', route => route.fulfill({ contentType: 'application/javascript', body: 'window.io = function(){ var s = { id: "h", connected: false, on: function(){ return s; }, emit: function(){ return s; }, connect: function(){ return s; }, disconnect: function(){ return s; } }; return s; };' }));
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto('/host/?lang=es');
+    await page.waitForLoadState('load');
+    const xs = await page.locator('#host-options > label').evaluateAll(els => [...new Set(els.map(e => Math.round(e.getBoundingClientRect().x)))]);
+    expect(xs.length).toBe(2);
+    const start = await page.locator('#start').boundingBox();
+    expect(start.y + start.height).toBeLessThanOrEqual(800);
+});
+
+test('portada: el contenido ocupa el ancho disponible con el mismo margen', async ({ page }) => {
+    await page.route(/^https:\/\//, route => route.abort());
+    await page.route('**/api/**', route => route.fulfill({ json: {} }));
+    for (const [size, gutter] of [[{ width: 1280, height: 800 }, 128], [{ width: 390, height: 844 }, 12]]) {
+        await page.setViewportSize(size);
+        await page.goto('/');
+        await page.waitForLoadState('load');
+        const box = await page.locator('.landing-shell').boundingBox();
+        expect(Math.abs(box.width - (size.width - 2 * gutter))).toBeLessThanOrEqual(2);
+    }
+});
+
+test('alumnado: al validar el PIN, el icono se asigna al azar y queda marcado en la lista', async ({ page }) => {
+    await page.addInitScript(() => { Math.random = () => 0; });
+    await page.route(/^https:\/\//, route => route.abort());
+    await page.route('**/api/**', route => route.fulfill({ json: { valid: true, randomNames: false } }));
+    await page.route('**/socket.io/socket.io.js', route => route.fulfill({ contentType: 'application/javascript', body: 'window.io = function(){ var s = { id: "x", connected: false, on: function(){ return s; }, emit: function(){ return s; }, connect: function(){ return s; }, disconnect: function(){ return s; } }; return s; };' }));
+    await page.goto('/join.html?pin=12345&lang=es');
+    await page.waitForLoadState('load');
+    const selected = page.locator('#icon-picker button.selected');
+    await expect(selected).toHaveCount(1);
+    // Con Math.random = 0 cae en el primer icono de la lista.
+    await expect(selected).toHaveText('🦊');
+});
+
+test('portada: el recuadro baja para no solaparse con el chip; botones y texto centrados al 70 %', async ({ page }) => {
+    await page.route(/^https:\/\//, route => route.abort());
+    await page.route('**/api/**', route => route.fulfill({ json: {} }));
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto('/');
+    await page.waitForLoadState('load');
+    const shell = await page.locator('.landing-shell').boundingBox();
+    const actions = await page.locator('.landing-actions').boundingBox();
+    const tagline = await page.locator('.tagline').boundingBox();
+    expect(shell.y).toBeGreaterThanOrEqual(90);
+    const pad = await page.locator('.landing-shell').evaluate(el => parseFloat(getComputedStyle(el).paddingLeft) + parseFloat(getComputedStyle(el).paddingRight));
+    expect(Math.abs(actions.width - 0.7 * (shell.width - pad))).toBeLessThanOrEqual(3);
+    expect(Math.abs((actions.x + actions.width / 2) - (shell.x + shell.width / 2))).toBeLessThanOrEqual(3);
+    expect(Math.abs((tagline.x + tagline.width / 2) - (shell.x + shell.width / 2))).toBeLessThanOrEqual(3);
+});

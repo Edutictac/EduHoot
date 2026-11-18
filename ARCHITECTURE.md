@@ -346,7 +346,10 @@ fora (es oculta just en connectar).
   mode Multijugador, aplicat per error també ací).
 - **Proves**: `src/test/browser/player-game.spec.js`, amb un Socket.IO
   fals que admet diversos arguments per esdeveniment (p. ex.
-  `questionOver(playerData, payload)`).
+  `questionOver(playerData, payload)`). Des de l'opció «Mostrar respuestas»
+  (`showCorrectAnswers`), l'alumnat rep `questionOver` sense `correctAnswers`,
+  `acceptedAnswers`, `numericAnswer` ni `tolerance` (`services/showAnswers.js`);
+  l'anfitrió rep el resultat complet per `io.to(hostId)`.
 
 ### Pantalla de joc de l'amfitrió amb Vue
 

@@ -47,7 +47,7 @@ body{
 }
 /* Logo a la izquierda del título; centrado en vertical con el bloque de unión. */
 .host-logo{
-    width: 84px;
+    width: 64px;
     height: auto;
     align-self: center;
     flex-shrink: 0;
@@ -89,7 +89,7 @@ body{
     flex-direction: column;
     justify-content: center;
     min-width: 180px;
-    padding: 10px 14px;
+    padding: 8px 12px;
     border-radius: 16px;
     background: rgba(15, 23, 42, 0.46);
     border: 1px solid var(--card-stroke);
@@ -102,8 +102,8 @@ body{
     margin: 0 0 6px;
 }
 .qr-img{
-    width: 150px;
-    height: 150px;
+    width: 118px;
+    height: 118px;
     margin: 0 auto 6px;
     padding: 6px;
     background: rgba(255,255,255,0.08);
@@ -139,11 +139,12 @@ body{
 }
 
 #host-options{
-    margin: 14px auto;
+    margin: 10px auto;
     max-width: 800px;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 10px;
+    /* Opciones en 2 columnas (2 por fila) para que quepa todo el lobby en la pantalla. */
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px 14px;
     color: var(--text-main);
     background: var(--card);
     border: 1px solid var(--card-stroke);
@@ -283,7 +284,7 @@ body{
     .join-cta{ gap: 12px; }
     .qr-card{ width: 100%; min-width: 0; }
     .qr-img{ width: 132px; height: 132px; }
-    #host-options{ padding: 10px; }
+    #host-options{ padding: 10px; grid-template-columns: 1fr; }
     .opt-inline{ justify-content: flex-start; }
     #start, #cancel{
         width: 100%;

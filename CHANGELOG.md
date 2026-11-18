@@ -97,6 +97,14 @@ fitxers corresponents, i els originals es van eliminar.
 - Nombres aleatoris: el dau permet canviar el nom com a màxim 2 vegades per
   alumne i partida (el comptador és al navegador; el servidor no el comprova).
 - Nom de l'alumnat al lobby: en groc i un 40 % més gran que el títol d'estat.
+- Opció «Mostrar respuestas» al lobby (activada per defecte): si es desactiva,
+  l'alumnat no rep la resposta correcta. El filtre és al servidor
+  (`services/showAnswers.js`); l'anfitrió rep sempre el resultat complet.
+- Resultat a l'alumnat: «Correcte» en groc sobre verd i «Incorrecte» en blanc
+  sobre vermell, un 40 % més grans. La barra de temps s'amaga mentre es veu.
+- Icona de l'alumnat assignada a l'atzar en validar el PIN (queda marcada).
+- Portada i lobby de l'anfitrió: ample ajustat, text i botons centrats al 70 %
+  a la portada, i opcions en 2 columnes al lobby.
 - Ample del contingut a les pantalles d'entrada, anfitrió i alumnat: amb espai,
   un 10 % de marge a cada costat; en mòbil, un marge mínim de 12 px (`css/page-fit.css`).
 - Avanç automàtic entre preguntas: desplegable al lobby i durant la partida

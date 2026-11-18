@@ -90,6 +90,8 @@
   com a «Abandonament». Si torna, recupera el seu nom anterior.
 - **Botons més clars**: «Saltar» i «Cancel·lar» a dalt de la pregunta, i la
   llista d'alumnat sota les respostes.
+- **Mostrar respostes**: pots desactivar-ho al lobby perquè l'alumnat no vegi
+  la resposta correcta (activat per defecte).
 - **Avanç automàtic**: tria «Manual» o de 3 a 20 segons entre preguntas. Els
   resultats avancen sols i pots pausar-ho quan vulguis.
 - **Pausar o cancel·lar la partida**: pots aturar la partida i reprendre-la quan
