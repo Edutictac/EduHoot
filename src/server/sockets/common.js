@@ -1,6 +1,7 @@
 const { getGamesCollection } = require('../data/repositories');
 const { logger } = require('../logger');
 const { buildAnswerStatus } = require('./answerStatus');
+const { recordKick, listKicked, unkick } = require('./kick');
 
 // disconnect, getScore, time, timeUp, requestDbNames — esdeveniments de
 // socket que no són específics ni d'amfitrió ni d'alumnat.
@@ -84,6 +85,44 @@ module.exports = function createCommonEvents({ io, games, players, helpers, sele
       if (!game || !game.gameData) return;
       const time = Math.max(0, Math.min(600, Math.round(Number(data && data.time) || 0)));
       io.to(game.pin).emit('timerSync', { time, paused: !!(data && data.paused) });
+    });
+
+    // Solo el anfitrión de la partida puede expulsar a un alumno (issue #29).
+    // Se bloquea su token y su nombre, y se le avisa solo a él.
+    socket.on('kick-player', (data) => {
+      const game = games.getGame(socket.id);
+      const target = players.getPlayer(data && data.playerId);
+      if (!game || !target || target.hostId !== socket.id) return;
+      recordKick(game, target);
+      players.removePlayer(target.playerId);
+      const targetSocket = io.sockets.sockets.get(target.playerId);
+      if (targetSocket) targetSocket.leave(game.pin);
+      io.to(target.playerId).emit('kicked');
+      const playersInGame = players.getPlayers(socket.id);
+      io.to(game.pin).emit('updatePlayerLobby', playersInGame);
+      io.to(socket.id).emit('updatePlayerLobby', playersInGame);
+      io.to(game.pin).emit('playersUpdated', playersInGame.length);
+      if (game.gameData) {
+        io.to(socket.id).emit('answerStatus', buildAnswerStatus(playersInGame, game.gameData.question));
+      }
+      io.to(socket.id).emit('kickedList', listKicked(game));
+      logger.info('Jugador expulsat per l\'amfitrió', { tag: 'player-kick', pin: game.pin, hostId: socket.id, playerId: target.playerId });
+    });
+
+    // Solo el anfitrión: lista de expulsados (sin tokens) y desbloqueo de uno de ellos.
+    socket.on('getKickedList', () => {
+      const game = games.getGame(socket.id);
+      if (!game) return;
+      socket.emit('kickedList', listKicked(game));
+    });
+
+    socket.on('unkick-player', (data) => {
+      const game = games.getGame(socket.id);
+      if (!game) return;
+      if (unkick(game, data && data.id)) {
+        logger.info('Expulsió retirada per l\'amfitrió', { tag: 'player-unkick', pin: game.pin, hostId: socket.id });
+      }
+      socket.emit('kickedList', listKicked(game));
     });
 
     socket.on('timeUp', async () => {

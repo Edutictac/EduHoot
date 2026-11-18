@@ -3,6 +3,7 @@ const { logger } = require('../logger');
 
 // player-join, player-join-game, playerAnswer.
 const { buildAnswerStatus } = require('./answerStatus');
+const { isKicked } = require('./kick');
 
 module.exports = function createPlayerEvents({
   io,
@@ -53,6 +54,12 @@ module.exports = function createPlayerEvents({
 
       const hostId = game.hostId;
 
+      // Alumnado expulsado por el anfitrión: no puede volver a entrar con el mismo navegador.
+      if (isKicked(game, { token })) {
+        socket.emit('playerJoinRejected', { code: 'kicked' });
+        return;
+      }
+
       const emitJoinUpdate = (ackExtra) => {
         socket.join(game.pin);
         const playersInGame = players.getPlayers(hostId);
@@ -100,6 +107,10 @@ module.exports = function createPlayerEvents({
       }
 
       const safeName = studentIdentity ? normalizePlayerName(studentIdentity.public_code) : normalizeSoloName(params.name);
+      if (isKicked(game, { name: safeName })) {
+        socket.emit('playerJoinRejected', { code: 'kicked' });
+        return;
+      }
 
       // El token no llegó o no resolvió (p. ej. tras un corte de wifi que
       // provocó una reconexión sin el token persistido). Si ya había una fila

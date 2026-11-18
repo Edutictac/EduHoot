@@ -225,6 +225,9 @@ function syncLangStorage(val){
 
 // Lobby (Vue): PIN, QR, error, opciones y jugadores salen de estos datos y
 // Vue repinta solo cuando cambian. Los textos se traducen con t(), que lee
+// Temporizador que cancela la confirmación de expulsión si no se confirma a tiempo.
+var kickResetTimer = null;
+
 // `lang` para que Vue sepa que debe repintar al cambiar de idioma.
 var lobby = Vue.createApp({
     template: '#host-lobby-tpl',
@@ -233,6 +236,10 @@ var lobby = Vue.createApp({
             lang: getHostLobbyLang(),
             pin: '',
             players: [],
+            // Alumno pendiente de confirmar la expulsión (dos pasos, issue #29).
+            pendingKickId: '',
+            // Alumnado expulsado en esta partida (sin tokens), para poder desbloquearlo.
+            kickedList: [],
             errorKey: '',
             errorText: '',
             options: {
@@ -273,6 +280,22 @@ var lobby = Vue.createApp({
         }
     },
     methods: {
+        // Expulsión en dos pasos: el primer toque pide confirmación durante unos segundos.
+        askKick: function(player){
+            this.pendingKickId = player.playerId;
+            clearTimeout(kickResetTimer);
+            kickResetTimer = setTimeout(function(){
+                lobby.pendingKickId = '';
+            }, 4000);
+        },
+        unkick: function(entry){
+            socket.emit('unkick-player', { id: entry.id });
+        },
+        confirmKick: function(player){
+            clearTimeout(kickResetTimer);
+            this.pendingKickId = '';
+            socket.emit('kick-player', { playerId: player.playerId });
+        },
         t: function(key){
             void this.lang;
             return window.getHostTranslation ? window.getHostTranslation(key) : key;
@@ -354,6 +377,11 @@ socket.on('showGamePin', function(data){
 //Adds player's name to screen and updates player count
 socket.on('updatePlayerLobby', function(data){
     lobby.players = Array.isArray(data) ? data : [];
+    socket.emit('getKickedList');
+});
+
+socket.on('kickedList', function(list){
+    lobby.kickedList = Array.isArray(list) ? list : [];
 });
 
 //Tell server to start game if button is clicked

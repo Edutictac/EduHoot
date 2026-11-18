@@ -156,7 +156,28 @@ socket.on('disconnect', function(){
     setLobbyStatus(undefined, tLobby('lobby_offline'));
 });
 
+// Expulsado por el anfitrión (issue #29): no reintenta y vuelve a la portada.
+function showKicked(){
+    joinAck = false;
+    clearSlowTimer();
+    if(joinRetryTimer){
+        clearTimeout(joinRetryTimer);
+        joinRetryTimer = null;
+    }
+    socket.disconnect();
+    setLobbyStatus(tLobby('reconnecting_kicked'), '');
+    setTimeout(function(){
+        window.location.href = '../';
+    }, 2500);
+}
+
+socket.on('kicked', showKicked);
+
 socket.on('playerJoinRejected', function(data){
+    if(data && data.code === 'kicked'){
+        showKicked();
+        return;
+    }
     joinAck = false;
     if(joinRetryTimer){
         clearTimeout(joinRetryTimer);

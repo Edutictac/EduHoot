@@ -90,6 +90,8 @@ var i18n = {
         handRaised: 'Mano levantada',
         awayFromTab: 'Fuera de la pestaña',
         awayCount: '{n} fuera de la pestaña',
+        kickBtn: 'Expulsar',
+        kickConfirm: 'Confirmar',
         freeAnswersReceived: function(ans, total){ return 'Respuestas recibidas ' + ans + ' / ' + total; },
         correctAnswerLabel: 'Respuesta correcta:',
         correctOptionBadge: 'Correcta',
@@ -137,6 +139,8 @@ var i18n = {
         handRaised: 'Hand raised',
         awayFromTab: 'Away from tab',
         awayCount: '{n} away from tab',
+        kickBtn: 'Remove',
+        kickConfirm: 'Confirm',
         freeAnswersReceived: function(ans, total){ return 'Answers received ' + ans + ' / ' + total; },
         correctAnswerLabel: 'Correct answer:',
         correctOptionBadge: 'Correct',
@@ -184,6 +188,8 @@ var i18n = {
         handRaised: 'Mà alçada',
         awayFromTab: 'Fora de la pestanya',
         awayCount: '{n} fora de la pestanya',
+        kickBtn: 'Expulsar',
+        kickConfirm: 'Confirmar',
         freeAnswersReceived: function(ans, total){ return 'Respostes rebudes ' + ans + ' / ' + total; },
         correctAnswerLabel: 'Resposta correcta:',
         correctOptionBadge: 'Correcta',
@@ -219,6 +225,9 @@ function t(key, langOverride){
 // reescriu un node sense directives, així que la resta de la pantalla
 // (modal de resultats, rànquing, celebració de grup, GameOver) es queda
 // estàtica dins de la mateixa arrel fins al bloc 2 (vore ARCHITECTURE.md).
+// Cancela la confirmación de expulsión si no se confirma a tiempo.
+var kickGameResetTimer = null;
+
 var app = Vue.createApp({
     template: '#host-game-tpl',
     data: function(){
@@ -256,6 +265,7 @@ var app = Vue.createApp({
             winnersVisible: false,
             showRankingButton: true,
             answerStatus: [],
+            pendingKickId: '',
             timerPaused: false,
             winners: ['', '', '', '', ''],
             downloadReportVisible: false,
@@ -299,6 +309,19 @@ var app = Vue.createApp({
         toggleFullscreen: function(){ toggleHostFullscreen(); },
         goNextQuestion: function(){ nextQuestion(); },
         showRankingToggle: function(){ toggleRanking(); },
+        // Expulsión en dos pasos desde la lista de respuestas (issue #29).
+        askKick: function(player){
+            this.pendingKickId = player.playerId;
+            clearTimeout(kickGameResetTimer);
+            kickGameResetTimer = setTimeout(function(){
+                app.pendingKickId = '';
+            }, 4000);
+        },
+        confirmKick: function(player){
+            clearTimeout(kickGameResetTimer);
+            this.pendingKickId = '';
+            socket.emit('kick-player', { playerId: player.playerId });
+        },
         toggleTimerPause: function(){ hostToggleTimerPause(); },
         addTimerSeconds: function(seconds){ hostAddTimerSeconds(seconds); },
         answerHasContent: function(i){

@@ -6,6 +6,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel = "stylesheet" href = "../../css/hostGameView.css">
         <link rel = "stylesheet" href = "../../css/hostLiveStatus.css">
+        <link rel = "stylesheet" href = "../../css/hostKick.css">
         <link rel="stylesheet" href="/css/dropdowns.css">
         <link rel = "stylesheet" href = "../../css/music-player.css">
         <link href="/css/fonts.css" rel="stylesheet">
@@ -42,6 +43,8 @@
                     <span v-if="p.hand" class="answer-status-hand" :title="t('handRaised')">✋</span>
                     <span v-if="p.away" class="answer-status-away-dot" :title="t('awayFromTab')">⚠</span>
                     <span class="answer-status-label">{{ p.answered ? t('answerSent') : t('answerTrying') }}</span>
+                    <button v-if="pendingKickId !== p.playerId" type="button" class="kick-btn" @click="askKick(p)">{{ t('kickBtn') }}</button>
+                    <button v-else type="button" class="kick-btn kick-btn--confirm" @click="confirmKick(p)">{{ t('kickConfirm') }}</button>
                 </li>
             </ul>
         </div>

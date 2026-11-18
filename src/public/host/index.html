@@ -5,6 +5,7 @@
         <title>Host | EduHoot</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel = "stylesheet" href = "../css/host.css">
+        <link rel = "stylesheet" href = "../css/hostKick.css">
         <link rel="stylesheet" href="/css/dropdowns.css">
         <link rel = "stylesheet" href = "../css/music-player.css">
         <link href="/css/fonts.css" rel="stylesheet">
@@ -59,6 +60,15 @@
                 <div class="player-item" v-for="(player, index) in players" :key="index">
                     <span class="player-icon">{{ player.icon || '' }}</span>
                     <span class="player-name">{{ player.name || '' }}</span>
+                    <button v-if="pendingKickId !== player.playerId" type="button" class="kick-btn" @click="askKick(player)">{{ t('kick_btn') }}</button>
+                    <button v-else type="button" class="kick-btn kick-btn--confirm" @click="confirmKick(player)">{{ t('kick_confirm') }}</button>
+                </div>
+            </div>
+            <div v-if="kickedList.length" id="kicked-list" class="kicked-list">
+                <p class="kicked-title">{{ t('kicked_title') }}</p>
+                <div class="kicked-item" v-for="k in kickedList" :key="k.id">
+                    <span class="kicked-name">{{ k.name }}</span>
+                    <button type="button" class="unkick-btn" @click="unkick(k)">{{ t('unkick_btn') }}</button>
                 </div>
             </div>
             <br>

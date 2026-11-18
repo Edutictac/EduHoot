@@ -1,0 +1,52 @@
+/* Botón de expulsar alumnado (lobby y partida del anfitrión). Dos pasos: el segundo toque confirma. */
+
+.kick-btn{
+    min-height: 32px;
+    margin-left: 8px;
+    padding: 4px 10px;
+    border: 0;
+    border-radius: 8px;
+    background: rgba(239,68,68,0.18);
+    color: inherit;
+    font: 600 13px/1 'Inter', 'Poppins', sans-serif;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.kick-btn:hover{ background: rgba(239,68,68,0.32); }
+.kick-btn--confirm{
+    background: #ef4444;
+    color: #fff;
+}
+
+/* Expulsados de esta partida, con botón para permitir la entrada de nuevo. */
+.kicked-list{
+    margin: 12px auto 0;
+    max-width: 420px;
+}
+.kicked-title{
+    margin: 0 0 6px;
+    font-size: 14px;
+    font-weight: 700;
+    opacity: 0.85;
+}
+.kicked-item{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 4px 8px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.08);
+}
+.kicked-name{ overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.unkick-btn{
+    min-height: 32px;
+    padding: 4px 10px;
+    border: 0;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.2);
+    color: inherit;
+    font: 600 13px/1 'Inter', 'Poppins', sans-serif;
+    cursor: pointer;
+    white-space: nowrap;
+}

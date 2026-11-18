@@ -653,6 +653,17 @@ socket.on('hostDisconnect', function(){
     window.location.href = "../../";
 });
 
+// Expulsado por el anfitrión (issue #29): deja de reconectar y vuelve a la portada.
+socket.on('kicked', function(){
+    clearReconnectGrace();
+    clearPersistedJoinState();
+    socket.disconnect();
+    setReconnectMessage(tPlayer('reconnecting_kicked', 'Has salido de la partida'));
+    setTimeout(function(){
+        window.location.href = "../../";
+    }, 2500);
+});
+
 socket.on('playerGameData', function(data){
    for(var i = 0; i < data.length; i++){
        if(data[i].playerId == socket.id){
