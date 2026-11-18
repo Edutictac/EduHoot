@@ -28,6 +28,7 @@
       start_btn: 'Iniciar partida',
       starting: 'Iniciando partida… espera',
       cancel_btn: 'Cancelar partida',
+      cancel_confirm: 'Confirmar cancelación',
       lang_label: 'Idioma',
       scan_qr: 'Escanea el código QR para entrar',
       pin_label: 'PIN',
@@ -66,6 +67,7 @@
       start_btn: 'Start game',
       starting: 'Starting game… please wait',
       cancel_btn: 'Cancel game',
+      cancel_confirm: 'Confirm cancellation',
       lang_label: 'Language',
       scan_qr: 'Scan the QR code to join',
       pin_label: 'PIN',
@@ -104,6 +106,7 @@
       start_btn: 'Inicia partida',
       starting: 'Iniciant la partida… espera',
       cancel_btn: 'Cancel·la la partida',
+      cancel_confirm: 'Confirmar cancel·lació',
       lang_label: 'Idioma',
       scan_qr: 'Escaneja el codi QR per entrar',
       pin_label: 'PIN',
@@ -141,10 +144,6 @@
       var txt = t(key);
       if(txt) el.textContent = txt;
     });
-    var cancelBtn = document.getElementById('cancel');
-    if(cancelBtn){
-      cancelBtn.textContent = t('cancel_btn');
-    }
     var langLabel = document.querySelector('.host-lang span');
     if(langLabel){
       langLabel.textContent = t('lang_label');

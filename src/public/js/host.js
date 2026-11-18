@@ -239,6 +239,7 @@ var lobby = Vue.createApp({
             players: [],
             // Alumno pendiente de confirmar la expulsión (dos pasos, issue #29).
             pendingKickId: '',
+            cancelConfirming: false,
             // Al pulsar «Iniciar partida», mientras suena el gong y llega la confirmación.
             starting: false,
             // Alumnado expulsado en esta partida (sin tokens), para poder desbloquearlo.
@@ -343,6 +344,9 @@ var lobby = Vue.createApp({
         },
         startGame: function(){
             startGame();
+        },
+        askCancelLobby: function(){
+            askCancelLobbyStep();
         }
     }
 }).mount('#host-lobby');
@@ -474,12 +478,22 @@ function startGame(){
     }
     emitStartGameWhenGongEnds(opts);
 }
-function endGame(){
-    window.location.href = "/";
+// Cancelar desde el lobby: pide confirmación (dos pasos) y el servidor cierra la partida.
+var lobbyCancelResetTimer = null;
+function askCancelLobbyStep(){
+    if(!lobby.cancelConfirming){
+        lobby.cancelConfirming = true;
+        clearTimeout(lobbyCancelResetTimer);
+        lobbyCancelResetTimer = setTimeout(function(){ lobby.cancelConfirming = false; }, 4000);
+        return;
+    }
+    clearTimeout(lobbyCancelResetTimer);
+    lobby.cancelConfirming = false;
+    socket.emit('cancelGame');
 }
-// Abans era onclick="endGame()" en el HTML, que la CSP no permet.
-var cancelButton = document.getElementById('cancel');
-if(cancelButton) cancelButton.addEventListener('click', endGame);
+socket.on('gameCancelled', function(){
+    window.location.href = "/";
+});
 
 //When server starts the game
 socket.on('gameStarted', function(id){

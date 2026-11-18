@@ -33,7 +33,7 @@ body{
 
 .join-cta{
     display: flex;
-    align-items: center;
+    align-items: stretch;
     justify-content: center;
     gap: 18px;
     flex-wrap: wrap;
@@ -41,8 +41,19 @@ body{
 }
 .join-text{
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+/* Logo a la izquierda del título; centrado en vertical con el bloque de unión. */
+.host-logo{
+    width: 84px;
+    height: auto;
+    align-self: center;
+    flex-shrink: 0;
 }
 .pin-badge{
+    align-self: center;
     display: inline-flex;
     align-items: center;
     gap: 10px;
@@ -73,6 +84,10 @@ body{
     margin: 0 0 10px;
 }
 .qr-card{
+    /* Misma altura que el bloque de unión: el QR queda alineado con sus bordes. */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
     min-width: 180px;
     padding: 10px 14px;
     border-radius: 16px;
@@ -222,12 +237,14 @@ body{
     border: none;
 }
 
+/* Fila superior: idioma a la izquierda y chip de cuenta a la derecha, dentro del flujo (el QR queda debajo, sin solaparse). */
 .host-top-row{
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 10px;
     flex-wrap: wrap;
+    margin-bottom: 14px;
 }
 .host-top-row #cancel{
     margin: 0;
@@ -294,4 +311,41 @@ body.host-game-embedded > *:not(#host-game-frame){
     border: 0;
     z-index: 2147483647;
     background: #fff;
+}
+
+/* Lobby: «Cancelar partida» y «Iniciar partida» juntos, en la misma fila. Iniciar en verde. */
+.start-row{
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    align-items: stretch;
+    flex-wrap: wrap;
+}
+.start-row #start,
+.start-row #cancel{
+    flex: 1 1 220px;
+    max-width: 520px;
+    padding: 14px 24px;
+}
+#start{
+    background: #16a34a;
+    border-color: #15803d;
+    color: #fff;
+}
+#start:hover{ filter: brightness(1.08); }
+#cancel{
+    background: rgba(218,68,83,0.22);
+    border-color: rgba(218,68,83,0.55);
+    color: var(--text-main);
+}
+#cancel.is-confirming{
+    background: #da4453;
+    border-color: #da4453;
+    color: #fff;
+}
+
+/* Chip de cuenta: ocupa solo su ancho y va pegado a la derecha de la fila, aunque el componente sea más ancho. */
+.host-top-row edutictac-account.site-account{
+    width: max-content !important;
+    margin-left: auto !important;
 }

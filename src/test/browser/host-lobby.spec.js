@@ -183,7 +183,10 @@ test('al cambiar de idioma, el error visible se traduce y no pasa a ser el gené
 test('«Cancelar partida» vuelve a la portada', async ({ page }) => {
     await page.route(url => url.pathname === '/', route => route.fulfill({ contentType: 'text/html', body: '<p>portada</p>' }));
     await openLobby(page, '?id=q1&lang=es');
-    await expect(page.locator('#cancel')).not.toHaveAttribute('onclick');
+    // Pide confirmación; al confirmar, el servidor cierra la partida y volvemos a la portada.
     await page.locator('#cancel').click();
+    await expect(page.locator('#cancel')).toHaveText('Confirmar cancelación');
+    await page.locator('#cancel').click();
+    await page.evaluate(() => window.__serverEmit('gameCancelled', []));
     await page.waitForURL(url => url.pathname === '/');
 });

@@ -337,6 +337,8 @@
         });
         function updateLabels(newLabels){
             if(!newLabels) return;
+            // Se guardan para que el cambio entre reproducir y pausar use también el idioma nuevo.
+            labels = Object.assign({}, labels, newLabels);
             if(newLabels.title){
                 title.textContent = newLabels.title;
             }

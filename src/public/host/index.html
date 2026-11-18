@@ -15,20 +15,21 @@
         <script src="/js/edutictac-chip.js"></script>
         <script src="https://commons.edutictac.es/assets/account-widget.js" defer></script>
         <link rel="icon" href="/icons/logo.svg" type="image/svg+xml">
+            <link rel="stylesheet" href="/css/page-fit.css">
     </head>
     <body>
         <div class="host-top-row">
-            <button id = "cancel">Cancelar partida</button>
-            <edutictac-account class="site-account" data-base="https://commons.edutictac.es"></edutictac-account>
             <label class="lang-switch host-lang">
                 <span>Idioma</span>
                 <select id="host-lang-select" data-lang-options="name"></select>
             </label>
+            <edutictac-account class="site-account" data-base="https://commons.edutictac.es"></edutictac-account>
         </div>
         <!-- Lobby: app de Vue (host.js) que es munta ací amb la plantilla de baix. -->
         <div id="host-lobby"></div>
         <template id="host-lobby-tpl">
             <div class="join-cta">
+                <img class="host-logo" src="/icons/logo.svg" alt="EduHoot">
                 <div class="join-text">
                     <h2 id="title">{{ t('join_title') }}</h2>
                     <div class="pin-badge">
@@ -98,7 +99,10 @@
                 </div>
             </div>
             <br>
-            <button id="start" @click="startGame" :disabled="starting">{{ starting ? t('starting') : t('start_btn') }}</button>
+            <div class="start-row">
+                <button id="cancel" type="button" :class="{ 'is-confirming': cancelConfirming }" @click="askCancelLobby">{{ cancelConfirming ? t('cancel_confirm') : t('cancel_btn') }}</button>
+                <button id="start" @click="startGame" :disabled="starting">{{ starting ? t('starting') : t('start_btn') }}</button>
+            </div>
             <p v-if="starting" class="starting-msg" role="status">{{ t('starting') }}</p>
             <br>
             <br>

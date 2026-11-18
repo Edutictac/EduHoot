@@ -23,6 +23,7 @@
     function applyBadge(cfg, tag){
         // En dev el distintiu porta a /dev/login (accés amb usuaris de prova).
         var badge = document.createElement(cfg.href ? 'a' : 'div');
+        badge.className = 'env-badge';
         var labelEl = document.createElement('span');
         labelEl.textContent = cfg.label;
         badge.appendChild(labelEl);
@@ -66,6 +67,7 @@
         }
 
         var tint = document.createElement('div');
+        tint.className = 'env-badge-tint';
         var tintStyle = tint.style;
         tintStyle.position = 'fixed';
         tintStyle.inset = '0';
