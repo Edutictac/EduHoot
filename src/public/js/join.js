@@ -235,6 +235,8 @@
                 this.pinValidated = true;
                 this.pin = pin;
                 this.modalOpen = false;
+                // Icono asignado al azar al validar el PIN; queda marcado en la lista (el alumnado puede cambiarlo).
+                this.iconIndex = Math.floor(Math.random() * this.icons.length);
                 if(lockedName){
                     this.name = lockedName;
                     this.nameLocked = true;

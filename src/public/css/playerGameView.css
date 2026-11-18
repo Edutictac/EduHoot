@@ -376,3 +376,27 @@ body{
     min-height: 0;
     margin: 0;
 }
+
+/* Resultado de la pregunta: «Correcto» y «Incorrecto» un 40 % más grandes que antes (28 → 39,2 px; 22 → 30,8 px en móvil). */
+#message.message--correct,
+#message.message--incorrect{
+    display: inline-block;
+    padding: 8px 20px;
+    border-radius: 14px;
+    font-size: 39.2px;
+    line-height: 1.2;
+}
+/* Correcto: texto amarillo del logo (#fdbc4b) sobre recuadro verde. */
+#message.message--correct{
+    color: #fdbc4b;
+    background: #15803d;
+}
+/* Incorrecto: texto blanco sobre recuadro rojo vivo. */
+#message.message--incorrect{
+    color: #fff;
+    background: #ff1744;
+}
+@media (max-width: 600px){
+    #message.message--correct,
+    #message.message--incorrect{ font-size: 30.8px; }
+}

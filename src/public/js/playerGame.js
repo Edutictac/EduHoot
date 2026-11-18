@@ -104,6 +104,9 @@ var app = Vue.createApp({
             message: '',
             messageDetailHtml: '',
             messageVisible: true,
+            // Resultado de la pregunta: «correct» o «incorrect» (para su estilo). La barra de tiempo se oculta mientras se ve.
+            messageKind: '',
+            resultShown: false,
             rankingVisible: false,
             rankingList: []
         };
@@ -296,6 +299,7 @@ var app = Vue.createApp({
 // qualsevol detall afegit amb appendChild).
 function showMessage(text){
     app.message = text;
+    app.messageKind = '';
     app.messageVisible = true;
     app.messageDetailHtml = '';
 }
@@ -589,6 +593,8 @@ function updatePlayerRank(playerData){
 }
 
 socket.on('questionOver', function(playerData, payload){
+    // Se muestra el resultado: la barra de tiempo se oculta hasta la siguiente cuenta atrás.
+    app.resultShown = true;
     EduhootTTS.cancel();
     questionActive = false;
     releaseWakeLock();
@@ -603,6 +609,7 @@ socket.on('questionOver', function(playerData, payload){
     }else if(correct == true){
         document.body.style.backgroundColor = "#4CAF50";
         showMessage(window.i18nPlayer ? window.i18nPlayer.t('correct') : "Correct!");
+        app.messageKind = 'correct';
     }else{
         document.body.style.backgroundColor = "#f94a1e";
         var incorrectMsg = window.i18nPlayer ? window.i18nPlayer.t('incorrect') : "Incorrect!";
@@ -634,6 +641,7 @@ socket.on('questionOver', function(playerData, payload){
             answerTxt = answerList.join(', ');
         }
         showMessage(incorrectMsg);
+        app.messageKind = 'incorrect';
         if(answerTxt){
             app.messageDetailHtml = escapeHtml(correctLabel + ' ') + formatRichText(answerTxt);
         }
@@ -688,6 +696,7 @@ setInterval(function(){
 
 socket.on('nextQuestionPlayer', function(){
     app.autoActive = false;
+    app.resultShown = false;
     correct = false;
     app.playerAnswered = false;
     if(rankingTimeout){
@@ -778,6 +787,7 @@ function showQuestionCountdown(data){
 socket.on('questionCountdown', showQuestionCountdown);
 
 socket.on('playerQuestion', function(data){
+    app.resultShown = false;
     EduhootTTS.cancel();
     clearQuestionCountdown();
     questionActive = true;
