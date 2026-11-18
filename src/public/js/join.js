@@ -4,6 +4,19 @@
     var ICONS = ['🦊', '🐱', '🐶', '🐼', '🐧', '🐸', '🦉', '🦄', '🐰', '🐢', '🐙', '🦁', '🐨', '🐝', '🐯',
         '🐸', '🐻', '🦕', '🦖', '🐉', '🚀', '🌈', '⚽️', '🏀', '🏆', '🎮', '🎧', '📚', '🎨'];
 
+    // Máximo de cambios voluntarios de nombre (botón del dado) por alumno y partida.
+    var RANDOM_NAME_MAX_REROLLS = 2;
+    function rerollsKey(pin){ return 'eduhoot-rerolls-' + pin; }
+    function readRerolls(pin){
+        try{
+            var n = parseInt(sessionStorage.getItem(rerollsKey(pin)), 10);
+            return isFinite(n) && n > 0 ? Math.min(n, RANDOM_NAME_MAX_REROLLS) : 0;
+        }catch(e){ return 0; }
+    }
+    function saveRerolls(pin, used){
+        try{ sessionStorage.setItem(rerollsKey(pin), String(used)); }catch(e){}
+    }
+
     function t(key, fallback){
         if(window.i18nPlayer && typeof window.i18nPlayer.t === 'function'){
             return window.i18nPlayer.t(key);
@@ -103,6 +116,7 @@
                 // Con nombres aleatorios el alumnado no escribe el suyo: se le asigna uno de la lista.
                 randomNames: false,
                 rolling: false,
+                rerollsUsed: 0,
                 name: '',
                 studentAuthEnabled: false,
                 studentAuthRequired: false,
@@ -202,6 +216,7 @@
                 this.randomNames = !!randomNames;
                 this.modalOpen = false;
                 if(this.randomNames){
+                    this.rerollsUsed = readRerolls(pin);
                     this.rerollName(false);
                     return;
                 }
@@ -223,6 +238,16 @@
                     })
                     .catch(function(){})
                     .then(function(){ self.rolling = false; });
+            },
+            rerollsLeft: function(){
+                return Math.max(0, RANDOM_NAME_MAX_REROLLS - this.rerollsUsed);
+            },
+            // Botón del dado: cuenta como cambio voluntario y se limita a 2 por alumno.
+            rerollByStudent: function(){
+                if(this.rolling || this.rerollsLeft() <= 0) return Promise.resolve();
+                this.rerollsUsed += 1;
+                saveRerolls(this.pin, this.rerollsUsed);
+                return this.rerollName(true);
             },
             validatePin: function(pin){
                 var self = this;

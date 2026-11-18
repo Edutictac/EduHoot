@@ -122,3 +122,20 @@ test('anfitrión: con alumnado unido no se puede cambiar la opción de nombres',
     await expect(page.locator('#opt-name-mode input[value="typed"]')).toBeDisabled();
     await expect(page.locator('#opt-name-mode input[value="random"]')).toBeDisabled();
 });
+
+test('alumnado: el dado permite cambiar de nombre como mucho 2 veces', async ({ page }) => {
+    test.setTimeout(60000);
+    await mockBackend(page, { randomNames: true });
+    await page.goto('/join.html?pin=12345&lang=es');
+    await page.waitForLoadState('load');
+
+    const dice = page.locator('#rerollNameBtn');
+    await expect(dice).toBeEnabled();
+    for (let i = 0; i < 2; i++) {
+        await dice.click();
+        // Espera a que termine el giro (el botón puede quedar bloqueado tras el último).
+        await expect(dice).not.toHaveClass(/is-rolling/, { timeout: 5000 });
+    }
+    await expect(dice).toBeDisabled();
+    await expect(dice).toHaveAttribute('title', 'Ya has cambiado de nombre 2 veces');
+});
