@@ -2,6 +2,8 @@ const { getQuestionMeta, normalizeCorrectAnswers } = require('../questionUtils')
 const { logger } = require('../logger');
 
 // player-join, player-join-game, playerAnswer.
+const { buildAnswerStatus } = require('./answerStatus');
+
 module.exports = function createPlayerEvents({
   io,
   games,
@@ -22,6 +24,11 @@ module.exports = function createPlayerEvents({
     recordPlayerAnswerHistory,
     logGames
   } = helpers;
+
+  // Solo al anfitrión: estado de respuesta, mano levantada y pestaña de cada alumno.
+  function emitAnswerStatus(hostId, game) {
+    io.to(hostId).emit('answerStatus', buildAnswerStatus(players.getPlayers(hostId), game.gameData.question));
+  }
 
   return function registerPlayerEvents(socket) {
     socket.on('player-join', (params) => {
@@ -198,6 +205,22 @@ module.exports = function createPlayerEvents({
       }
     });
 
+    socket.on('raiseHand', (data) => {
+      const player = players.getPlayer(socket.id);
+      const game = player ? games.getGame(player.hostId) : null;
+      if (!game || !game.gameData) return;
+      player.gameData.handRaisedQuestion = data && data.raised ? game.gameData.question : null;
+      emitAnswerStatus(player.hostId, game);
+    });
+
+    socket.on('tabState', (data) => {
+      const player = players.getPlayer(socket.id);
+      const game = player ? games.getGame(player.hostId) : null;
+      if (!game || !game.gameData) return;
+      player.gameData.tabAway = !!(data && data.away);
+      emitAnswerStatus(player.hostId, game);
+    });
+
     socket.on('playerAnswer', async (num) => {
       const player = players.getPlayer(socket.id);
       if (!player) {
@@ -270,6 +293,8 @@ module.exports = function createPlayerEvents({
               normalizedSubmission = Number(num);
             }
             player.gameData.answer = normalizedSubmission;
+            player.gameData.answeredQuestion = game.gameData.question;
+            emitAnswerStatus(hostId, game);
 
             const isPoll = meta.type === 'poll';
             const scoreRatio = getSubmissionScoreRatio(meta, normalizedSubmission);

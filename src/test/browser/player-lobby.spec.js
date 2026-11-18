@@ -157,3 +157,48 @@ test('cambiar el idioma en la sala de espera traduce también los mensajes de co
     await expect(page.locator('#title1')).toHaveText('Reconnecting to the teacher...');
     await expect(page.locator('#title2')).toHaveText('The game is still reserved. Do not close this screen.');
 });
+
+test('muestra el nombre y el icono del alumno, como los ve el profesor', async ({ page }) => {
+    await openLobby(page);
+    await expect(page.locator('.lobby-name')).toHaveText('Ana');
+    await expect(page.locator('.lobby-avatar')).toHaveText('🐼');
+});
+
+test('cuenta a los compañeros en la sala sin mostrar sus nombres', async ({ page }) => {
+    await openLobby(page);
+    await expect(page.locator('#lobby-count')).toBeHidden();
+    await serverEmit(page, 'updatePlayerLobby', [
+        { playerId: 'p1', name: 'Ana', gameData: { score: 0 } },
+        { playerId: 'p2', name: 'Pau', gameData: { score: 0 } },
+        { playerId: 'p3', name: 'Joan', gameData: { score: 0 } }
+    ]);
+    await expect(page.locator('#lobby-count')).toHaveText('3 en la sala');
+    await expect(page.locator('#lobby-app')).not.toContainText('Pau');
+    await expect(page.locator('#lobby-app')).not.toContainText('Joan');
+});
+
+test('si no llega confirmación en 10 s avisa sin abandonar la sala', async ({ page }) => {
+    await page.clock.install();
+    await openLobby(page);
+    await serverEmit(page, 'connect');
+    await page.clock.runFor(10000);
+    await expect(page.locator('#title2')).toHaveText('Todavía sin confirmación. Seguimos intentándolo…');
+    await expect(page.locator('.lobby-hero')).toHaveAttribute('data-state', 'slow');
+});
+
+test('sin conexión lo indica y al volver a conectar se une otra vez', async ({ page }) => {
+    await page.clock.install();
+    await openLobby(page);
+    await serverEmit(page, 'connect');
+    await serverEmit(page, 'playerJoinAck');
+    await serverEmit(page, 'disconnect');
+    await expect(page.locator('#title2')).toHaveText('Sin conexión. Reintentando…');
+    await expect(page.locator('.lobby-hero')).toHaveAttribute('data-state', 'offline');
+    await serverEmit(page, 'connect');
+    await expect(page.locator('.lobby-hero')).toHaveAttribute('data-state', 'connecting');
+});
+
+test('muestra el código de la partida mientras espera', async ({ page }) => {
+    await openLobby(page);
+    await expect(page.locator('#lobby-pin')).toHaveText('Código de partida: 12345');
+});

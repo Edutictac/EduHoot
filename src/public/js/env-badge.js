@@ -60,6 +60,10 @@
         // del text el manté llegible sobre qualsevol fons.
         badgeStyle.boxShadow = '0 2px 8px rgba(0,0,0,0.12)';
         badgeStyle.textShadow = '0 1px 3px rgba(0,0,0,0.7)';
+        // En las pantallas de partida (alumnado y anfitrión, dev y stage) el distintivo va al 50 % para no tapar el juego.
+        if(window.location.pathname.indexOf('/player/') === 0 || window.location.pathname.indexOf('/host/') === 0){
+            badgeStyle.opacity = '0.5';
+        }
 
         var tint = document.createElement('div');
         var tintStyle = tint.style;

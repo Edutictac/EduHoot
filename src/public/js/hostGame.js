@@ -81,6 +81,15 @@ var i18n = {
         resultsTitle: 'Resultados',
         resultsNextToRanking: 'Ver clasificación',
         resultsNextQuestion: 'Siguiente pregunta (Enter)',
+        timerPause: 'Pausar',
+        timerResume: 'Reanudar',
+        timerAdd15: '+15 s',
+        answerSent: 'Enviado',
+        answerTrying: 'Intentando',
+        answerStatusCount: '{sent} de {total} han enviado',
+        handRaised: 'Mano levantada',
+        awayFromTab: 'Fuera de la pestaña',
+        awayCount: '{n} fuera de la pestaña',
         freeAnswersReceived: function(ans, total){ return 'Respuestas recibidas ' + ans + ' / ' + total; },
         correctAnswerLabel: 'Respuesta correcta:',
         correctOptionBadge: 'Correcta',
@@ -119,6 +128,15 @@ var i18n = {
         resultsTitle: 'Results',
         resultsNextToRanking: 'Show leaderboard',
         resultsNextQuestion: 'Next question (Enter)',
+        timerPause: 'Pause',
+        timerResume: 'Resume',
+        timerAdd15: '+15 s',
+        answerSent: 'Sent',
+        answerTrying: 'Trying',
+        answerStatusCount: '{sent} of {total} sent',
+        handRaised: 'Hand raised',
+        awayFromTab: 'Away from tab',
+        awayCount: '{n} away from tab',
         freeAnswersReceived: function(ans, total){ return 'Answers received ' + ans + ' / ' + total; },
         correctAnswerLabel: 'Correct answer:',
         correctOptionBadge: 'Correct',
@@ -157,6 +175,15 @@ var i18n = {
         resultsTitle: 'Resultats',
         resultsNextToRanking: 'Veure classificació',
         resultsNextQuestion: 'Següent pregunta (Enter)',
+        timerPause: 'Pausa',
+        timerResume: 'Reprèn',
+        timerAdd15: '+15 s',
+        answerSent: 'Enviat',
+        answerTrying: 'Intentant',
+        answerStatusCount: '{sent} de {total} han enviat',
+        handRaised: 'Mà alçada',
+        awayFromTab: 'Fora de la pestanya',
+        awayCount: '{n} fora de la pestanya',
         freeAnswersReceived: function(ans, total){ return 'Respostes rebudes ' + ans + ' / ' + total; },
         correctAnswerLabel: 'Resposta correcta:',
         correctOptionBadge: 'Correcta',
@@ -228,6 +255,8 @@ var app = Vue.createApp({
             groupCelebrationText: '',
             winnersVisible: false,
             showRankingButton: true,
+            answerStatus: [],
+            timerPaused: false,
             winners: ['', '', '', '', ''],
             downloadReportVisible: false,
             backToLibraryVisible: false
@@ -243,6 +272,16 @@ var app = Vue.createApp({
         },
         questionHtml: function(){
             return formatRichText(this.questionText);
+        },
+        answerStatusSummary: function(){
+            var sent = this.answerStatus.filter(function(p){ return p.answered; }).length;
+            return this.t('answerStatusCount').replace('{sent}', String(sent)).replace('{total}', String(this.answerStatus.length));
+        },
+        awayCount: function(){
+            return this.answerStatus.filter(function(p){ return p.away; }).length;
+        },
+        awayText: function(){
+            return this.t('awayCount').replace('{n}', String(this.awayCount));
         },
         rankingNextLabel: function(){
             if(this.modalStep === 'chart'){
@@ -260,6 +299,8 @@ var app = Vue.createApp({
         toggleFullscreen: function(){ toggleHostFullscreen(); },
         goNextQuestion: function(){ nextQuestion(); },
         showRankingToggle: function(){ toggleRanking(); },
+        toggleTimerPause: function(){ hostToggleTimerPause(); },
+        addTimerSeconds: function(seconds){ hostAddTimerSeconds(seconds); },
         answerHasContent: function(i){
             if(this.questionType === 'short-answer' || this.questionType === 'numeric') return false;
             if(this.questionType === 'true-false' && i >= 2) return false;
@@ -919,7 +960,13 @@ socket.on('gameQuestions', function(data){
     if (data.questionNumber && data.totalQuestions) {
         app.questionNumText = t('questionXofY')(data.questionNumber, data.totalQuestions);
     }
+    app.answerStatus = [];
+    socket.emit('getAnswerStatus');
     updateTimer();
+});
+
+socket.on('answerStatus', function(list){
+    app.answerStatus = Array.isArray(list) ? list : [];
 });
 
 socket.on('updatePlayersAnswered', function(data){
@@ -1230,6 +1277,12 @@ function updateTimer(){
     // Pintar ya el tiempo inicial: si no, hasta el primer segundo se veía el
     // de la pregunta anterior (o el 20 del HTML) (issue #21).
     app.timerText = " " + time;
+    app.timerPaused = false;
+    startTimerInterval();
+}
+
+function startTimerInterval(){
+    clearInterval(timer);
     timer = setInterval(function(){
         time -= 1;
         app.timerText = " " + time;
@@ -1237,6 +1290,27 @@ function updateTimer(){
             socket.emit('timeUp');
         }
     }, 1000);
+}
+
+// Pausa o reanuda el temporizador y avisa a los alumnos del tiempo que queda.
+function hostToggleTimerPause(){
+    if(!app.timerVisible) return;
+    if(app.timerPaused){
+        app.timerPaused = false;
+        startTimerInterval();
+    }else{
+        app.timerPaused = true;
+        clearInterval(timer);
+    }
+    socket.emit('timerSync', { time: time, paused: app.timerPaused });
+}
+
+// Añade segundos a la pregunta en curso (p. ej. +15 s) y avisa a los alumnos.
+function hostAddTimerSeconds(seconds){
+    if(!app.timerVisible) return;
+    time += seconds;
+    app.timerText = " " + time;
+    socket.emit('timerSync', { time: time, paused: app.timerPaused });
 }
 socket.on('GameOver', function(data){
     document.getElementById('nextQButton').style.display = "none";

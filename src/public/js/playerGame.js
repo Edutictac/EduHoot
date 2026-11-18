@@ -88,6 +88,9 @@ var app = Vue.createApp({
             playerName: '',
             playerIcon: '',
             playerScore: null,
+            handRaised: false,
+            // Código de la partida tal como viene en la URL (params aún no existe al montar la app).
+            gamePin: new URLSearchParams(window.location.search).get('pin') || '',
             rankText: '',
             message: '',
             messageDetailHtml: '',
@@ -107,6 +110,11 @@ var app = Vue.createApp({
             if(!this.playerName) return this.nameLabel;
             var icon = this.playerIcon ? this.playerIcon + ' ' : '';
             return this.nameLabel + ' ' + icon + this.playerName;
+        },
+        // Código de la partida, con los dígitos agrupados (p. ej. 273 658).
+        pinDisplay: function(){
+            var pin = String(this.gamePin || '');
+            return /^\d{6}$/.test(pin) ? pin.slice(0, 3) + ' ' + pin.slice(3) : pin;
         },
         scoreDisplay: function(){
             return this.playerScore !== null ? (this.scoreLabel + ' ' + this.playerScore) : this.scoreLabel;
@@ -229,6 +237,12 @@ var app = Vue.createApp({
         },
         hidePlayerRanking: function(){
             this.rankingVisible = false;
+        },
+        // Mano levantada: el anfitrión la ve junto al nombre del alumno durante la pregunta.
+        toggleHand: function(){
+            var next = !this.handRaised;
+            this.handRaised = next;
+            socket.emit('raiseHand', { raised: next });
         },
         toggleSpeech: function(){
             var self = this;
@@ -629,6 +643,7 @@ socket.on('nextQuestionPlayer', function(){
     document.body.style.backgroundColor = "white";
     app.rankText = '';
     app.hidePlayerRanking();
+    app.handRaised = false;
     stopTimer();
     resetTimer();
     app.answerStatusState = 'pending';
@@ -865,6 +880,10 @@ socket.on('time', function(data){
 
 function resetTimer(){
     app.timerLeft = app.timerTotal;
+    startTimerCountdown();
+}
+
+function startTimerCountdown(){
     if(timerInterval) clearInterval(timerInterval);
     timerInterval = setInterval(function(){
         if(app.timerLeft > 0){
@@ -872,6 +891,21 @@ function resetTimer(){
         }
     }, 1000);
 }
+
+// El anfitrión pausa, reanuda o amplía el temporizador: se sigue su tiempo y, si está
+// pausado, la cuenta atrás del alumno también se para.
+socket.on('timerSync', function(data){
+    if(!questionActive || !data || typeof data.time !== 'number') return;
+    stopTimer();
+    app.timerTotal = Math.max(app.timerTotal, data.time);
+    app.timerLeft = Math.max(0, Math.min(app.timerTotal, data.time));
+    if(!data.paused) startTimerCountdown();
+});
+
+// Si el alumno sale de la pestaña, el anfitrión lo ve en su lista de respuestas.
+document.addEventListener('visibilitychange', function(){
+    socket.emit('tabState', { away: document.hidden });
+});
 
 function stopTimer(){
     if(timerInterval){

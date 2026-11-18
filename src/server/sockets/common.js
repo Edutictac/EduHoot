@@ -1,5 +1,6 @@
 const { getGamesCollection } = require('../data/repositories');
 const { logger } = require('../logger');
+const { buildAnswerStatus } = require('./answerStatus');
 
 // disconnect, getScore, time, timeUp, requestDbNames — esdeveniments de
 // socket que no són específics ni d'amfitrió ni d'alumnat.
@@ -68,6 +69,21 @@ module.exports = function createCommonEvents({ io, games, players, helpers, sele
 
     socket.on('time', () => {
       // Scoring is computed on playerAnswer using server time.
+    });
+
+    // Solo el anfitrión (su socket es el id de la partida): pide el estado de respuesta de la pregunta actual.
+    socket.on('getAnswerStatus', () => {
+      const game = games.getGame(socket.id);
+      if (!game || !game.gameData) return;
+      socket.emit('answerStatus', buildAnswerStatus(players.getPlayers(socket.id), game.gameData.question));
+    });
+
+    // Solo el anfitrión: pausa o tiempo restante del temporizador, para que los alumnos lo sigan.
+    socket.on('timerSync', (data) => {
+      const game = games.getGame(socket.id);
+      if (!game || !game.gameData) return;
+      const time = Math.max(0, Math.min(600, Math.round(Number(data && data.time) || 0)));
+      io.to(game.pin).emit('timerSync', { time, paused: !!(data && data.paused) });
     });
 
     socket.on('timeUp', async () => {

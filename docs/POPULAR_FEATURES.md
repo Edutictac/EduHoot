@@ -705,13 +705,10 @@ la numeració 1-32 de dalt.
   l'identificador canvia. És un valor aleatori, no una empremta del
   navegador (canvas, fonts, resolució), i no es confon amb el testimoni de
   reconnexió (`playerTokens`), que és una credencial i no s'ha de registrar.
-- **W9 — Partida sense rànquing (només puntuació personal).** Opció per
-  a «Jugar a l'aula» en què cada alumne veu únicament la seua pròpia
-  puntuació: sense Top 10 entre preguntes, sense posició, i sense podi
-  final amb noms. Ara mateix la casella «Mostrar puntuacions entre
-  preguntes» només oculta el rànquing de l'amfitrió; l'alumnat encara
-  veu el Top 10 després de cada pregunta. Caldria que el servidor envie
-  el flag també a l'alumnat i que el client el respecte.
+- **W9 — Partida sense rànquing (només puntuació personal). Feta.** La
+  casella «Puntuacions entre preguntes i ranking» de l'amfitrió controla
+  també el Top 10 de l'alumnat després de cada pregunta i el podi
+  final: desmarcada, cada alumne només veu la seua puntuació.
 
 ## Nota sobre drets d'autor
 

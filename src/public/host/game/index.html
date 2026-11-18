@@ -5,6 +5,7 @@
         <title>Game | EduHoot</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel = "stylesheet" href = "../../css/hostGameView.css">
+        <link rel = "stylesheet" href = "../../css/hostLiveStatus.css">
         <link rel="stylesheet" href="/css/dropdowns.css">
         <link rel = "stylesheet" href = "../../css/music-player.css">
         <link href="/css/fonts.css" rel="stylesheet">
@@ -32,7 +33,23 @@
         <h4 id = "questionNum">{{ questionNumText }}</h4>
         <div id="questionPointsBadge" class="question-points-badge points-badge-pop" :key="'badge-' + badgeKey" :style="{ display: badgeVisible ? 'inline-flex' : 'none' }">{{ pointsBadgeText }}</div>
         <h4 id = "playersAnswered" v-show="playersAnsweredVisible">{{ playersAnsweredText }}</h4>
+        <div id="answerStatus" class="answer-status" v-show="timerVisible && answerStatus.length">
+            <p class="answer-status-summary">{{ answerStatusSummary }}<span v-if="awayCount" class="answer-status-away"> · {{ awayText }}</span></p>
+            <ul class="answer-status-list">
+                <li v-for="p in answerStatus" :key="p.playerId" :class="p.answered ? 'is-sent' : 'is-trying'">
+                    <span class="answer-status-icon">{{ p.icon }}</span>
+                    <span class="answer-status-name">{{ p.name }}</span>
+                    <span v-if="p.hand" class="answer-status-hand" :title="t('handRaised')">✋</span>
+                    <span v-if="p.away" class="answer-status-away-dot" :title="t('awayFromTab')">⚠</span>
+                    <span class="answer-status-label">{{ p.answered ? t('answerSent') : t('answerTrying') }}</span>
+                </li>
+            </ul>
+        </div>
         <h3 id = "timerText" v-show="timerVisible"><span data-i18n="timeLeft">{{ t('timeLeft') }} </span><span id = "num">{{ timerText }}</span></h3>
+        <div id="timerControls" class="timer-controls" v-show="timerVisible">
+            <button type="button" id="timerPauseBtn" @click="toggleTimerPause">{{ timerPaused ? t('timerResume') : t('timerPause') }}</button>
+            <button type="button" id="timerAddBtn" @click="addTimerSeconds(15)">{{ t('timerAdd15') }}</button>
+        </div>
         <div id="questionCountdown" class="question-countdown" :class="{ 'is-visible': countdownVisible, 'is-ticking': countdownVisible }" aria-live="polite" :aria-hidden="!countdownVisible">
             <div class="question-countdown__label" id="questionCountdownLabel">{{ t('questionCountdown') }}</div>
             <div class="question-countdown__dial" :key="'dial-' + countdownSeconds">

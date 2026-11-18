@@ -17,9 +17,20 @@
         <!-- Subfase B, Vue (lobby.js): missatges d'espera de la sala. -->
         <div id="lobby-app"></div>
         <template id="lobby-tpl">
-        <h1 id = "title1">{{ title }}</h1>
-        <h3 id = "title2">{{ detail }}</h3>
-        <div class="loader"></div>
+        <div class="lobby-card">
+            <p v-if="pin" id="lobby-pin" class="lobby-pin">{{ pinText }}</p>
+            <div v-if="playerName" class="lobby-hero" :data-state="connState">
+                <div class="lobby-avatar-box">
+                    <span class="lobby-avatar" aria-hidden="true">{{ playerIcon }}</span>
+                    <span class="lobby-state" aria-hidden="true"></span>
+                </div>
+                <p class="lobby-name">{{ playerName }}</p>
+            </div>
+            <h1 id = "title1">{{ title }}</h1>
+            <h3 id = "title2">{{ detail }}</h3>
+            <p v-if="countText" id="lobby-count" class="lobby-count" aria-live="polite">{{ countText }}</p>
+            <div class="loader"></div>
+        </div>
         </template>
         <br/>
         <div id="lang-switcher" data-lang-buttons>

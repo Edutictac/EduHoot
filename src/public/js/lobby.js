@@ -37,10 +37,33 @@ function tLobby(key){
 }
 
 // Subfase B: els dos missatges de la sala són estat d'una app de Vue.
+var initialParams = jQuery.deparam(window.location.search) || {};
+
 var lobby = Vue.createApp({
     template: '#lobby-tpl',
     data: function(){
-        return { title: tLobby('lobby_wait'), detail: tLobby('lobby_check') };
+        return {
+            title: tLobby('lobby_wait'),
+            detail: tLobby('lobby_check'),
+            // Nombre e icono tal como los ve el profesor en la pantalla compartida.
+            playerName: initialParams.name ? String(initialParams.name) : '',
+            playerIcon: initialParams.icon ? String(initialParams.icon) : '',
+            // connecting | joined | slow | reconnecting | offline
+            connState: 'connecting',
+            // Número de alumnos en la sala. Solo se guarda el total, nunca los nombres.
+            count: null,
+            // Código de la partida, para comprobar que se está en la correcta.
+            pin: initialParams.pin ? String(initialParams.pin) : ''
+        };
+    },
+    computed: {
+        countText: function(){
+            if(this.count === null) return '';
+            return tLobby('lobby_count').replace('{n}', String(this.count));
+        },
+        pinText: function(){
+            return tLobby('lobby_pin') + ' ' + this.pin;
+        }
     }
 }).mount('#lobby-app');
 
@@ -50,6 +73,40 @@ function setLobbyStatus(waiting, detail){
         lobby.detail = detail;
     }
 }
+
+// Si en 10 s no llega la confirmación, se avisa sin abandonar la sala: sigue reintentando.
+var slowTimer = null;
+function clearSlowTimer(){
+    if(slowTimer){
+        clearTimeout(slowTimer);
+        slowTimer = null;
+    }
+}
+function startSlowTimer(){
+    clearSlowTimer();
+    slowTimer = setTimeout(function(){
+        slowTimer = null;
+        if(joinAck) return;
+        lobby.connState = 'slow';
+        setLobbyStatus(undefined, tLobby('lobby_slow'));
+    }, 10000);
+}
+
+// Igual que en la partida: que el móvil no se bloquee mientras espera (si se bloquea, se pierde la conexión).
+var wakeLockSentinel = null;
+function requestLobbyWakeLock(){
+    if(!('wakeLock' in navigator)) return;
+    if(wakeLockSentinel && !wakeLockSentinel.released) return;
+    navigator.wakeLock.request('screen').then(function(sentinel){
+        wakeLockSentinel = sentinel;
+        sentinel.addEventListener('release', function(){
+            wakeLockSentinel = null;
+        });
+    }).catch(function(){});
+}
+document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState === 'visible') requestLobbyWakeLock();
+});
 
 //When player connects to server
 socket.on('connect', function() {
@@ -63,7 +120,10 @@ socket.on('connect', function() {
     
     //Tell server that it is player connection
     socket.emit('player-join', params);
+    lobby.connState = 'connecting';
     setLobbyStatus(tLobby('lobby_wait'), tLobby('lobby_name_hint'));
+    startSlowTimer();
+    requestLobbyWakeLock();
     if(joinRetryTimer){
         clearTimeout(joinRetryTimer);
     }
@@ -79,7 +139,21 @@ socket.on('playerJoinAck', function(){
         clearTimeout(joinRetryTimer);
         joinRetryTimer = null;
     }
+    clearSlowTimer();
+    lobby.connState = 'joined';
     setLobbyStatus(tLobby('lobby_connected'), tLobby('lobby_connected_hint'));
+});
+
+// Contador de la sala: el servidor envía la lista completa en cada entrada o salida;
+// aquí solo se usa el número.
+socket.on('updatePlayerLobby', function(playersInGame){
+    lobby.count = Array.isArray(playersInGame) ? playersInGame.length : null;
+});
+
+socket.on('disconnect', function(){
+    clearSlowTimer();
+    lobby.connState = 'offline';
+    setLobbyStatus(undefined, tLobby('lobby_offline'));
 });
 
 socket.on('playerJoinRejected', function(data){
@@ -88,6 +162,7 @@ socket.on('playerJoinRejected', function(data){
         clearTimeout(joinRetryTimer);
         joinRetryTimer = null;
     }
+    clearSlowTimer();
     // Issue #28: el nom ja està en ús (dos alumnes entrant alhora amb el
     // mateix nom). Torna a l'entrada amb el PIN per a triar-ne un altre.
     if(data && data.code === 'nameTaken'){
@@ -115,10 +190,12 @@ socket.on('hostDisconnect', function(){
 });
 
 socket.on('hostReconnecting', function(){
+    lobby.connState = 'reconnecting';
     setLobbyStatus(tLobby('lobby_reconnecting'), tLobby('lobby_reconnecting_hint'));
 });
 
 socket.on('hostReconnected', function(){
+    lobby.connState = 'joined';
     setLobbyStatus(tLobby('lobby_wait'), tLobby('lobby_name_hint'));
 });
 

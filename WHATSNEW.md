@@ -22,6 +22,13 @@
   què ha passat i resoldre-ho més de pressa.
 - **Exportacions que no es confonen**: el CSV de preguntes d'un
   qüestionari es descarrega amb la data i l'hora en el nom.
+- **Pausa i +15 s**: pots aturar el temps d'una pregunta o afegir-li 15
+  segons, i l'alumnat ho segueix.
+- **Qui ha respost i qui alça la mà**: en la pantalla de la partida veus
+  per alumne si ha enviat la resposta («Enviat» o «Intentant»), si ha
+  alçat la mà i si és fora de la pestanya.
+- **Partida sense rànquing**: la casella «Puntuacions entre preguntes i
+  ranking» també amaga el Top 10 de l'alumnat i el podi final.
 
 ## Per a l'alumnat
 
@@ -50,6 +57,10 @@
   ni presses. Toca la fitxa per a girar-la i veure la resposta, marca si la
   saps o no, i després repassa només les que no sabies.
 
+- **Alça la mà**: si tens un dubte durant la pregunta, pots alçar la mà i el
+  professorat ho veu sense interrompre la classe.
+- **Sala d'espera més clara**: veus el teu nom i la teua icona en gran, el
+  codi de la partida i quants sou a la sala.
 - **Escolta la pregunta**: si no llegeixes bé o vols escoltar-la, toca el
   botó 🔊 al costat de la barra de temps i el mòbil te la llegeix, amb les
   respostes. Només ho fas tu, quan vols.

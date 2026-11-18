@@ -67,9 +67,18 @@ fitxers corresponents, i els originals es van eliminar.
 - La pantalla d'entrada de l'alumnat (`/join.html`) té un enllaç
   «Tornar» a la portada, com `/solo/` i `/multiplayer/`, i el modal del
   PIN té un botó «Cancel·la» que hi torna (el modal tapava l'enllaç).
+- Sala d'espera de l'alumnat: avatar i nom en gran, codi de la partida i
+  nombre de jugadors en la sala, estat de la connexió i avís si no hi ha
+  confirmació als 10 s. La pantalla no es bloqueja mentre s'espera.
+- Partida: l'anfitrió pot pausar el temporitzador i ampliar-lo 15 s; veu
+  per alumne si ha enviat la resposta, si ha alçat la mà i si és fora de la
+  pestanya. L'alumnat pot alçar la mà.
 
 ### Canviat
 
+- La casella «Puntuacions entre preguntes i ranking» també controla el Top 10
+  de l'alumnat i el podi final: desmarcada, no es mostra la posició ni el
+  ranking.
 - El lobby de l'amfitrió (`/host/`) és ara una app de Vue 3, sense build
   step: és la prova pilot de la Subfase B de
   [`docs/MIGRATING.md`](docs/MIGRATING.md). Funciona igual que abans; Vue
@@ -101,6 +110,8 @@ fitxers corresponents, i els originals es van eliminar.
   (`/admin-*`) també són ara apps de Vue 3. Funciona igual que abans.
 
 ### Corregit
+- La sala d'espera de l'alumnat tradueix els missatges de connexió i de
+  reconnexió, que quedaven en castellà en canviar d'idioma.
 - En "Jugar a l'aula", en el mòbil la barra de temps de l'alumnat es
   quedava sense alçada i quasi no es veia.
 - En "Jugar a l'aula", dos alumnes podien unir-se a la mateixa partida

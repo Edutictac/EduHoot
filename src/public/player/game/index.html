@@ -6,6 +6,7 @@
         <link rel="stylesheet" href="/css/countdown.css">
         <link rel="stylesheet" href="/css/answers.css">
         <link rel = "stylesheet" href = "../../css/playerGameView.css">
+        <link rel = "stylesheet" href = "../../css/playerLiveStatus.css">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link href="/css/fonts.css" rel="stylesheet">
     </head>
@@ -17,6 +18,10 @@
             <div id = "stats">
                 <h4 id = "nameText">{{ nameDisplay }}</h4>
                 <h4 id = "scoreText">{{ scoreDisplay }}</h4>
+                <div id="gamePin" class="game-pin" v-if="pinDisplay">
+                    <span class="game-pin__label">{{ t('lobby_pin', 'Código de partida:') }}</span>
+                    <span class="game-pin__code">{{ pinDisplay }}</span>
+                </div>
                 <h4 id = "rankText" v-show="rankText">{{ rankText }}</h4>
             </div>
             <h3 id="questionText" v-html="questionHtml"></h3>
@@ -59,6 +64,9 @@
             </div>
             <div id="multiSubmitRow" :style="{ display: multiRowVisible ? 'flex' : 'none' }">
                 <button type="button" id="multiSubmitBtn" class="button multi-submit" @click="submitMultiAnswers">{{ t('submit_multiple', 'Submit answers') }}</button>
+            </div>
+            <div id="raiseHandRow" v-show="answersVisible">
+                <button type="button" id="raiseHandBtn" class="raise-hand-btn" :aria-pressed="handRaised ? 'true' : 'false'" @click="toggleHand">✋ {{ handRaised ? t('handLower', 'Bajar la mano') : t('handRaise', 'Levantar la mano') }}</button>
             </div>
             <div id="playerRankingModal" class="player-modal" :class="{ show: rankingVisible }">
                 <div class="player-modal__content">
