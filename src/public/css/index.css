@@ -75,17 +75,28 @@ form{
     backdrop-filter: blur(12px);
 }
 
+/* Logo y «EduHoot» en la misma línea, centrados en vertical (ocupan menos altura). */
+.join-brand{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin: 0 0 14px;
+}
+/* En dev/stage, el distintivo de entorno ocupa arriba: la fila baja su mismo alto (45 px) para no solaparse. */
+html.env-development .join-brand,
+html.env-staging .join-brand{ margin-top: 45px; }
 #join-logo{
     display: block;
-    margin: 0 auto 14px;
-    width: 96px;
-    height: 96px;
+    margin: 0;
+    width: 64px;
+    height: 64px;
 }
 
 #title{
     text-align: center;
     font-size: 42px;
-    margin: 0 0 18px;
+    margin: 0;
     letter-spacing: -0.01em;
 }
 

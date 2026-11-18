@@ -237,6 +237,7 @@ Esdeveniments principals que rep el servidor (registrats en
 | `getAnswerStatus` | Amfitrió | Demanar l'estat de resposta (enviat, mà, pestanya, racha) de la pregunta actual. |
 | `timerSync` | Amfitrió | Pausar, reprendre o ampliar el temporitzador i avisar els alumnes. Una partida pausada no admet respostes ni avanç (`nextQuestion`, `skipQuestion`). |
 | `cancelGame` | Amfitrió | Cancel·lar la partida (després de confirmar): tanca la sala per a tothom i torna a `/create/`. |
+| `setShowScores` | Amfitrió | Activa o desactiva «Puntuacions i rànquing» durant la partida (`options.showScoresBetween`); s'aplica als resultats següents i al podi. |
 | `setAutoAdvance` | Amfitrió | Canvia l'avanç automàtic (0 = manual, 3–20 s). S'aplica des de la següent pregunta. |
 | `autoAdvancePause` | Amfitrió | Pausa o reprèn la compte enrere dels resultats (també bloqueja el avanç manual). |
 | `autoAdvanceStepDone` | Amfitrió | Resposta a `autoAdvanceStep`: `ranking` (rearma), `next` (ho para `nextQuestion`), `none`. |

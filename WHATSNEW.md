@@ -90,6 +90,10 @@
   com a «Abandonament». Si torna, recupera el seu nom anterior.
 - **Botons més clars**: «Saltar» i «Cancel·lar» a dalt de la pregunta, i la
   llista d'alumnat sota les respostes.
+- **Puntuacions durant la partida**: pots amagar les puntuacions i el rànquing en
+  qualsevol moment de la partida, des de la mateixa pantalla.
+- **Final de partida més clar**: «Cancel·lar» es converteix en «Tornar» i les
+  opcions que no fan falta en acabar desapareixen.
 - **Mostrar respostes**: pots desactivar-ho al lobby perquè l'alumnat no vegi
   la resposta correcta (activat per defecte).
 - **Avanç automàtic**: tria «Manual» o de 3 a 20 segons entre preguntas. Els

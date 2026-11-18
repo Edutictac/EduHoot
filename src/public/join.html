@@ -41,8 +41,10 @@
                 </form>
             </div>
         </div>
-        <img id="join-logo" src="/icons/logo.svg" alt="EduHoot logo">
-        <h1 id="title">EduHoot</h1>
+        <div class="join-brand">
+            <img id="join-logo" src="/icons/logo.svg" alt="EduHoot logo">
+            <h1 id="title">EduHoot</h1>
+        </div>
         <div id="pin-display" class="pin-display" :class="{ hidden: !pinValidated }">
             <span class="pin-display__label">PIN</span>
             <span id="pin-display-value" class="pin-display__value">{{ pin }}</span>

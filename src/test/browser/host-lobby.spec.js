@@ -164,7 +164,7 @@ test('cambiar de idioma traduce el lobby y el enlace de unión', async ({ page }
 
     await page.locator('#host-lang-select').selectOption('en');
     await expect(page.locator('#start')).toHaveText('Start game');
-    await expect(page.locator('#title')).toHaveText('Join this game with the PIN:');
+    await expect(page.locator('#title')).toHaveText('Join the game');
     await expect(page.locator('#join-url')).toHaveAttribute('href', /pin=12345&lang=en$/);
 });
 

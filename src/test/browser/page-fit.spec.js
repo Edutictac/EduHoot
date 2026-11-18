@@ -269,3 +269,46 @@ test('portada: el recuadro baja para no solaparse con el chip; botones y texto c
     expect(Math.abs((actions.x + actions.width / 2) - (shell.x + shell.width / 2))).toBeLessThanOrEqual(3);
     expect(Math.abs((tagline.x + tagline.width / 2) - (shell.x + shell.width / 2))).toBeLessThanOrEqual(3);
 });
+
+test('anfitrión: el icono queda alineado a la izquierda y el QR a la derecha con el recuadro de opciones', async ({ page }) => {
+    await page.route(/^https:\/\//, route => route.abort());
+    await page.route('**/api/**', route => route.fulfill({ json: {} }));
+    await page.route('**/socket.io/socket.io.js', route => route.fulfill({ contentType: 'application/javascript', body: 'window.io = function(){ var s = { id: "h", connected: false, on: function(){ return s; }, emit: function(){ return s; }, connect: function(){ return s; }, disconnect: function(){ return s; } }; return s; };' }));
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto('/host/?lang=va');
+    await page.waitForLoadState('load');
+    const opts = await page.locator('#host-options').boundingBox();
+    const logo = await page.locator('.host-logo').boundingBox();
+    const qr = await page.locator('.qr-card').boundingBox();
+    const text = await page.locator('#title').boundingBox();
+    expect(Math.abs(logo.x - opts.x)).toBeLessThanOrEqual(2);
+    expect(Math.abs((qr.x + qr.width) - (opts.x + opts.width))).toBeLessThanOrEqual(2);
+    expect(text.x - (logo.x + logo.width)).toBeGreaterThanOrEqual(24);
+    expect((qr.x) - (text.x + text.width)).toBeGreaterThanOrEqual(24);
+});
+
+test('alumnado (unión): logo y «EduHoot» en la misma línea, centrados en vertical', async ({ page }) => {
+    await page.route(/^https:\/\//, route => route.abort());
+    await page.route('**/api/**', route => route.fulfill({ json: { valid: true, randomNames: false } }));
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto('/join.html?pin=12345&lang=es');
+    await page.waitForLoadState('load');
+    const logo = await page.locator('#join-logo').boundingBox();
+    const title = await page.locator('#title').boundingBox();
+    expect(Math.abs((logo.y + logo.height / 2) - (title.y + title.height / 2))).toBeLessThanOrEqual(2);
+    expect(title.x).toBeGreaterThan(logo.x + logo.width - 1);
+});
+
+test('alumnado (unión): en dev, la fila del logo baja al alto del distintivo y no se solapa', async ({ page }) => {
+    await page.route(/^https:\/\//, route => route.abort());
+    await page.route('**/api/**', route => route.fulfill({ json: { valid: true, randomNames: false } }));
+    await page.route('**/api/env', route => route.fulfill({ json: { env: 'development' } }));
+    await page.route('**/api/auth/me', route => route.fulfill({ status: 401, json: {} }));
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto('/join.html?pin=12345&lang=es');
+    await page.waitForLoadState('load');
+    await expect(page.locator('.env-badge')).toBeVisible();
+    const badge = await page.locator('.env-badge').boundingBox();
+    const brand = await page.locator('.join-brand').boundingBox();
+    expect(brand.y).toBeGreaterThanOrEqual(badge.y + badge.height);
+});

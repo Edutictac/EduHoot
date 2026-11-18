@@ -255,7 +255,7 @@ el context, que ja estan en la taula).
     → **Criteri pedagògic:** ➖ Aprenentatge: Neutre · 🙂 Clima: Segur
     (és individual, no compara contra altres alumnes) · ➖ Inclusió:
     Neutra → sense canvis.
-    ✅ **Implementada**: +50 per resposta a partir de la tercera seguida (tope
+    **Implementada**: +50 per resposta a partir de la tercera seguida (tope
     +250), reinici amb fallada, acert parcial o sense resposta; opció del
     lobby activada per defecte; també al mode individual.
 
@@ -265,15 +265,15 @@ el context, que ja estan en la taula).
     aprenentatge**, perquè el seu valor real no és pedagògic sinó de
     seguretat/gestió d'aula (evita noms inapropiats); l'eix d'aprenentatge
     no ho captura bé.
-    ✅ **Implementada**: lista valenciana fixa de 250 paraules, opció de
+    **Implementada**: lista valenciana fixa de 250 paraules, opció de
     l'anfitrió (escriure o aleatori) i bloqueig amb alumnat unit.
 
-13. 🟩 **Ambdues** — Lectura en veu alta de la pregunta (TTS / Read Aloud) —
+13. ✅ 🟩 **Ambdues** — Lectura en veu alta de la pregunta (TTS / Read Aloud) —
     🟢 Baixa
     → **Criteri pedagògic:** ➖ Aprenentatge: Neutre · 🙂 Clima: Segur ·
     🤝 Inclusió: Alta (accessibilitat per a alumnat amb dificultats
     lectores) → **Prioritat alta.**
-    ✅ **Implementada** a «Jugar a l'aula» i a `/solo/`, a demanda i sense
+    **Implementada** a «Jugar a l'aula» i a `/solo/`, a demanda i sense
     lectura automàtica (vore [`ARCHITECTURE.md`](../ARCHITECTURE.md#lectura-en-veu-alta-tts)).
 
 14. 🟨 **Kahoot** — So de feedback individual al respondre (ding/buzz) —
@@ -349,8 +349,8 @@ el context, que ja estan en la taula).
     no es portarà eixe històric, per respecte a la normativa de
     protecció de dades.
 
-23. 🟨 **Kahoot** — Pantalla "¡Prepara't!" amb compte arrere 3-2-1 — 🟢 Baixa
-    ✅ Implementada en el mode "Jugar a l'aula" (`sockets/gameHelpers.js`,
+23. ✅ 🟨 **Kahoot** — Pantalla "¡Prepara't!" amb compte arrere 3-2-1 — 🟢 Baixa
+     Implementada en el mode "Jugar a l'aula" (`sockets/gameHelpers.js`,
     esdeveniment `questionCountdown`) i en Solo (`runCountdown` en
     `solo-game.js`), amb el mateix aspecte (`css/countdown.css`).
     → **Criteri pedagògic:** ✖️ Aprenentatge: Cap · 🙂 Clima: Segur ·

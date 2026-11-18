@@ -105,6 +105,16 @@ fitxers corresponents, i els originals es van eliminar.
 - Icona de l'alumnat assignada a l'atzar en validar el PIN (queda marcada).
 - Portada i lobby de l'anfitrió: ample ajustat, text i botons centrats al 70 %
   a la portada, i opcions en 2 columnes al lobby.
+- Pantalla de partida de l'anfitrió: «Puntuacions i rànquing» es pot canviar
+  en qualsevol moment (el botó Top 10 s'amaga a l'instant). Saltar, Cancel·lar,
+  Top 10 i Descarregar informe van a la mateixa fila, de la mateixa mida.
+  En acabar: Cancel·lar passa a Tornar i torna a la biblioteca; s'amaguen
+  l'avanç automàtic, la casella de puntuacions i els botons d'expulsar (es
+  manté «Abandonament»). Les opcions de resposta van en 2 columnes en pantalla
+  ampla i en 1 en mòbil.
+- Lobby de l'anfitrió i unió de l'alumnat: el logo queda a l'esquerra i el QR a
+  la dreta, alineats amb el recuadre d'opcions; el logo i «EduHoot» van en una
+  línia a la unió, i en dev/stage la fila baixa el mateix alt que el distintiu.
 - Ample del contingut a les pantalles d'entrada, anfitrió i alumnat: amb espai,
   un 10 % de marge a cada costat; en mòbil, un marge mínim de 12 px (`css/page-fit.css`).
 - Avanç automàtic entre preguntas: desplegable al lobby i durant la partida

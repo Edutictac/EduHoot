@@ -1,7 +1,7 @@
 (function(){
   var translations = {
     es: {
-      join_title: 'Únete a esta partida con el PIN:',
+      join_title: 'Únete a la partida',
       opt_rand_q: 'Preguntas aleatorias',
       opt_rand_a: 'Respuestas aleatorias',
       opt_send_students: 'Mostrar preguntas',
@@ -41,7 +41,7 @@
       footerSource: 'Código fuente'
     },
     en: {
-      join_title: 'Join this game with the PIN:',
+      join_title: 'Join the game',
       opt_rand_q: 'Shuffle questions',
       opt_rand_a: 'Shuffle answers',
       opt_send_students: 'Show questions',
@@ -81,7 +81,7 @@
       footerSource: 'Source code'
     },
     ca: {
-      join_title: 'Uneix-te a la partida amb el PIN:',
+      join_title: 'Uneix-te a la partida',
       opt_rand_q: 'Preguntes aleatòries',
       opt_rand_a: 'Respostes aleatòries',
       opt_send_students: 'Mostra les preguntes',
