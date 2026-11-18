@@ -67,6 +67,12 @@ var app = Vue.createApp({
     },
     data: function(){
         return {
+            // Avance automático: cuenta atrás hasta la siguiente pregunta (la marca el servidor).
+            autoActive: false,
+            autoPaused: false,
+            autoLeft: 0,
+            autoEndAt: 0,
+            leaveConfirming: false,
             questionText: '',
             ttsSpeaking: false,
             ttsReady: false,
@@ -118,6 +124,10 @@ var app = Vue.createApp({
         pinDisplay: function(){
             var pin = String(this.gamePin || '');
             return /^\d{6}$/.test(pin) ? pin.slice(0, 3) + ' ' + pin.slice(3) : pin;
+        },
+        autoNextText: function(){
+            if(this.autoPaused) return this.t('auto_paused', 'Avance pausado');
+            return this.t('auto_next_in', 'Siguiente pregunta en {s} s').replace('{s}', this.autoLeft);
         },
         streakText: function(){
             var txt = '🔥 ' + this.streak;
@@ -179,6 +189,18 @@ var app = Vue.createApp({
         }
     },
     methods: {
+        askLeave: function(){
+            var self = this;
+            if(!this.leaveConfirming){
+                this.leaveConfirming = true;
+                clearTimeout(leaveResetTimer);
+                leaveResetTimer = setTimeout(function(){ self.leaveConfirming = false; }, 4000);
+                return;
+            }
+            clearTimeout(leaveResetTimer);
+            this.leaveConfirming = false;
+            socket.emit('playerLeave');
+        },
         t: function(key, fallback){
             return tPlayer(key, fallback);
         },
@@ -640,7 +662,31 @@ socket.on('newScore', function(data){
     app.playerScore = data;
 });
 
+// Salir de la partida (confirmado por el alumnado): el servidor confirma y volvemos a la portada.
+var leaveResetTimer = null;
+socket.on('playerLeft', function(){
+    clearPersistedJoinState();
+    socket.disconnect();
+    window.location.href = '../../';
+});
+
+// Avance automático: el servidor manda el estado; la cuenta atrás se calcula aquí.
+socket.on('autoAdvanceState', function(s){
+    s = s || {};
+    app.autoActive = !!s.active;
+    app.autoPaused = !!s.paused;
+    var ms = Math.max(0, Number(s.remainingMs) || 0);
+    app.autoLeft = Math.ceil(ms / 1000);
+    app.autoEndAt = Date.now() + ms;
+});
+setInterval(function(){
+    if(app.autoActive && !app.autoPaused){
+        app.autoLeft = Math.max(0, Math.ceil((app.autoEndAt - Date.now()) / 1000));
+    }
+}, 250);
+
 socket.on('nextQuestionPlayer', function(){
+    app.autoActive = false;
     correct = false;
     app.playerAnswered = false;
     if(rankingTimeout){

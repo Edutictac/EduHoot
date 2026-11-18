@@ -81,6 +81,14 @@ var i18n = {
         resultsTitle: 'Resultados',
         resultsNextToRanking: 'Ver clasificación',
         resultsNextQuestion: 'Siguiente pregunta (Enter)',
+        leftTitle: 'Han abandonado',
+        leftTag: 'Abandono',
+        autoLabel: 'Avance automático',
+        autoManual: 'Manual',
+        autoIn: 'Siguiente en {s} s',
+        autoPaused: 'Avance pausado',
+        autoPause: 'Pausar avance',
+        autoResume: 'Reanudar avance',
         timerPause: 'Pausar partida',
         timerResume: 'Reanudar partida',
         cancelGame: 'Cancelar partida y volver',
@@ -135,6 +143,14 @@ var i18n = {
         resultsTitle: 'Results',
         resultsNextToRanking: 'Show leaderboard',
         resultsNextQuestion: 'Next question (Enter)',
+        leftTitle: 'Left the game',
+        leftTag: 'Left',
+        autoLabel: 'Automatic advance',
+        autoManual: 'Manual',
+        autoIn: 'Next in {s} s',
+        autoPaused: 'Advance paused',
+        autoPause: 'Pause advance',
+        autoResume: 'Resume advance',
         timerPause: 'Pause game',
         timerResume: 'Resume game',
         cancelGame: 'Cancel game and go back',
@@ -189,6 +205,14 @@ var i18n = {
         resultsTitle: 'Resultats',
         resultsNextToRanking: 'Veure classificació',
         resultsNextQuestion: 'Següent pregunta (Enter)',
+        leftTitle: 'Han abandonat',
+        leftTag: 'Abandonament',
+        autoLabel: 'Avanç automàtic',
+        autoManual: 'Manual',
+        autoIn: 'Següent en {s} s',
+        autoPaused: 'Avanç pausat',
+        autoPause: 'Pausar avanç',
+        autoResume: 'Reprendre avanç',
         timerPause: 'Pausar partida',
         timerResume: 'Reprendre partida',
         cancelGame: 'Cancel·lar partida i tornar',
@@ -283,7 +307,14 @@ var app = Vue.createApp({
             answerStatus: [],
             pendingKickId: '',
             cancelGameConfirming: false,
+            // Avance automático entre preguntas (servidor): 0 = manual.
+            autoAdvanceSec: 0,
+            autoActive: false,
+            autoPaused: false,
+            autoLeft: 0,
+            autoEndAt: 0,
             kickedList: [],
+            leftList: [],
             timerPaused: false,
             winners: ['', '', '', '', ''],
             downloadReportVisible: false,
@@ -291,6 +322,15 @@ var app = Vue.createApp({
         };
     },
     computed: {
+        autoAdvanceChoices: function(){
+            var list = [];
+            for(var n = 3; n <= 20; n++) list.push(n);
+            return list;
+        },
+        autoAdvanceText: function(){
+            if(this.autoPaused) return this.t('autoPaused');
+            return this.t('autoIn').replace('{s}', this.autoLeft);
+        },
         pinText: function(){
             return this.pin ? ('PIN ' + this.pin) : '';
         },
@@ -381,6 +421,12 @@ var app = Vue.createApp({
         },
         closeRanking: function(){
             closeRankingModal();
+        },
+        emitAutoAdvanceSec: function(){
+            socket.emit('setAutoAdvance', { seconds: this.autoAdvanceSec });
+        },
+        toggleAutoPause: function(){
+            socket.emit('autoAdvancePause', { paused: !this.autoPaused });
         },
         rankingNext: function(){
             if(this.modalStep === 'chart'){
@@ -1037,6 +1083,41 @@ function stopHostMusicOnCancel(){
     pauseHostMusicForRanking();
 }
 
+// Avance automático: el servidor pide un paso de resultados; el anfitrión lo da igual que el botón
+// y responde con la etapa en la que queda (clasificación, siguiente pregunta o nada).
+function hostAutoAdvanceStep(){
+    if(!hostQuestionEnded){
+        socket.emit('autoAdvanceStepDone', { stage: 'none' });
+        return;
+    }
+    app.rankingVisible = true;
+    app.rankingNext();
+    socket.emit('autoAdvanceStepDone', { stage: app.rankingVisible ? 'ranking' : 'next' });
+}
+socket.on('autoAdvanceStep', hostAutoAdvanceStep);
+
+// Estado del avance automático (lo recibe también el alumnado).
+socket.on('autoAdvanceState', function(s){
+    s = s || {};
+    app.autoActive = !!s.active;
+    app.autoPaused = !!s.paused;
+    app.autoAdvanceSec = Number(s.seconds) || 0;
+    var ms = Math.max(0, Number(s.remainingMs) || 0);
+    app.autoLeft = Math.ceil(ms / 1000);
+    app.autoEndAt = Date.now() + ms;
+});
+// La cuenta atrás se actualiza en el propio anfitrión; en pausa se queda fija.
+setInterval(function(){
+    if(app.autoActive && !app.autoPaused){
+        app.autoLeft = Math.max(0, Math.ceil((app.autoEndAt - Date.now()) / 1000));
+    }
+}, 250);
+
+// Quien ha abandonado la partida: lista aparte de los expulsados.
+socket.on('leftList', function(list){
+    app.leftList = Array.isArray(list) ? list : [];
+});
+
 socket.on('kickedList', function(list){
     app.kickedList = Array.isArray(list) ? list : [];
 });
@@ -1070,7 +1151,7 @@ socket.on('hostSession', function(data){
 
 // Control: botón y tecla Enter para pasar a la siguiente pregunta desde el modal
 document.addEventListener('keydown', function(ev){
-    if(ev.key === 'Enter' && app.rankingVisible){
+    if(ev.key === 'Enter' && app.rankingVisible && !app.autoPaused){
         ev.preventDefault();
         app.rankingNext();
     }

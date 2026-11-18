@@ -78,3 +78,22 @@
 /* Al iniciar la partida: el botón se bloquea y aparece un aviso mientras llega la confirmación. */
 #start:disabled{ opacity: 0.6; cursor: wait; }
 .starting-msg{ margin: 8px 0 0; font-weight: 700; color: #fde68a; }
+
+/* Avance automático: desplegable en el lobby (Manual, o de 5 a 20 s). */
+.opt-auto{ display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.opt-auto select{ min-width: 110px; }
+
+/* Tiempo por pregunta: el aviso va justo debajo del campo, en el mismo bloque de la cuadrícula. */
+.opt-time{ display: block; }
+.opt-time .opt-hint{ display: block; margin: 8px 0 0; opacity: 0.75; }
+
+/* Abandonos: lista aparte de los expulsados (gris, sin botones). */
+.left-list{ margin: 12px auto 0; max-width: 420px; }
+.left-title{ margin: 0 0 6px; font-size: 14px; font-weight: 700; opacity: 0.85; }
+.left-item{
+    display: flex; align-items: center; gap: 8px;
+    padding: 4px 8px; border-radius: 8px;
+    background: rgba(148,163,184,0.16);
+}
+.left-name{ flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; }
+.left-tag{ font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: rgba(148,163,184,0.35); }

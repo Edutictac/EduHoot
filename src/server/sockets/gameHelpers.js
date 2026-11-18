@@ -10,6 +10,7 @@ const { isStreakEnabled } = require('../services/scoring');
 const { buildAnswerStatus } = require('./answerStatus');
 
 const { getTimings } = require('../services/gameTimings');
+const { normalizeAutoAdvance, AutoAdvanceTimer } = require('../services/autoAdvance');
 const QUESTION_COUNTDOWN_SECONDS = 3;
 
 const answerRate = new Map(); // clave: hostId:ip -> { count, windowStart }
@@ -311,6 +312,7 @@ module.exports = function createGameHelpers({ io, games, players, cleanImportedT
     game.gameData.questionLive = true;
     game.gameData.questionStartedAt = Date.now();
     io.to(game.hostId).emit('gameQuestions', payload.hostPayload);
+    emitAutoAdvanceState(game);
     io.to(game.pin).emit('questionMedia', { image: payload.image, video: payload.video });
     io.to(game.pin).emit('playerQuestion', buildStudentPlayerPayload(payload.playerPayload, game.gameData.options));
   }
@@ -349,6 +351,71 @@ module.exports = function createGameHelpers({ io, games, players, cleanImportedT
     return null;
   }
 
+  // Avance automático: tras los resultados, el servidor pide al anfitrión que avance
+  // (clasificación o siguiente pregunta). El anfitrión responde con el paso que ha dado.
+  function autoAdvanceSecondsOf(game) {
+    return normalizeAutoAdvance(game && game.gameData && game.gameData.options && game.gameData.options.autoAdvanceSec);
+  }
+
+  function emitAutoAdvanceState(game, extra) {
+    if (!game || !game.gameData) return;
+    const t = game.gameData.autoAdvance;
+    const state = {
+      seconds: autoAdvanceSecondsOf(game),
+      active: !!(t && !t.cancelled),
+      paused: !!(t && t.paused),
+      remainingMs: t && !t.cancelled ? t.snapshot().remainingMs : 0,
+      ...(extra || {})
+    };
+    io.to(game.pin).emit('autoAdvanceState', state);
+  }
+
+  function stopAutoAdvance(game) {
+    if (!game || !game.gameData || !game.gameData.autoAdvance) return;
+    game.gameData.autoAdvance.cancel();
+    game.gameData.autoAdvance = null;
+    emitAutoAdvanceState(game);
+  }
+
+  function armAutoAdvance(game) {
+    const seconds = autoAdvanceSecondsOf(game);
+    if (!seconds || !game.gameData) return;
+    const question = game.gameData.question;
+    const current = game.gameData.autoAdvance;
+    // Idempotente: una misma pregunta no vuelve a armarse si ya está en marcha.
+    if (current && current.question === question && !current.cancelled) return;
+    if (current) current.cancel();
+    const timer = new AutoAdvanceTimer(seconds * 1000, () => {
+      io.to(game.hostId).emit('autoAdvanceStep');
+    });
+    timer.question = question;
+    game.gameData.autoAdvance = timer;
+    timer.start();
+    emitAutoAdvanceState(game);
+  }
+
+  // El anfitrión avanzó un paso de resultados: si sigue en resultados (clasificación), rearma.
+  function onAutoAdvanceStepDone(game, stage) {
+    const t = game && game.gameData && game.gameData.autoAdvance;
+    if (!t || t.cancelled) return;
+    if (stage === 'ranking') {
+      t.rearm();
+      emitAutoAdvanceState(game);
+    } else if (stage !== 'next') {
+      stopAutoAdvance(game);
+    }
+  }
+
+  function setAutoAdvancePaused(game, paused) {
+    if (!game || !game.gameData) return;
+    game.paused = !!paused;
+    const t = game.gameData.autoAdvance;
+    if (t && !t.cancelled) {
+      if (paused) t.pause(); else t.resume();
+    }
+    emitAutoAdvanceState(game);
+  }
+
   function emitQuestionOverPayload(game) {
     if (!game) return;
     const playerData = players.getPlayers(game.hostId);
@@ -372,6 +439,7 @@ module.exports = function createGameHelpers({ io, games, players, cleanImportedT
     meta.groupResult = getGroupAnswerResult(playerData, meta);
     meta.showScores = game.gameData.options ? game.gameData.options.showScoresBetween !== false : true;
     io.to(game.pin).emit('questionOver', playerData, meta);
+    armAutoAdvance(game);
   }
 
   function emitQuestionOverPayloadDeferred(game, delayMs = 250) {
@@ -387,6 +455,11 @@ module.exports = function createGameHelpers({ io, games, players, cleanImportedT
 
   return {
     timingsFor,
+    stopAutoAdvance,
+    emitAutoAdvanceState,
+    onAutoAdvanceStepDone,
+    setAutoAdvancePaused,
+    autoAdvanceSecondsOf,
     scheduleGameCleanup,
     markHostConnected,
     scheduleHostReconnectCleanup,

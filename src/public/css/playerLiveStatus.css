@@ -47,3 +47,26 @@
 
 /* Racha de aciertos (feature 11): insignia junto a la puntuación. */
 .streak-text{ font-size: 1.25em; font-weight: 800; color: #fdba74; }
+
+/* Aviso de avance automático: cuenta atrás hasta la siguiente pregunta. */
+.auto-advance-notice{ font-size: 1.1em; font-weight: 700; margin: 4px 0; }
+
+
+/* Salir de la partida: flotante abajo a la izquierda, rojo del logo (#da4453); pide confirmación. */
+.leave-game-btn{
+    position: fixed;
+    left: 12px;
+    bottom: 12px;
+    z-index: 50;
+    margin: 0;
+    min-height: 44px;
+    padding: 8px 16px;
+    border: 0;
+    border-radius: 12px;
+    background: #da4453;
+    color: #fff;
+    font: 700 16px/1 'Inter', 'Poppins', sans-serif;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+}
+.leave-game-btn.is-confirming{ box-shadow: 0 0 0 3px #fff, 0 4px 14px rgba(0,0,0,0.35); }

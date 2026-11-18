@@ -7,7 +7,15 @@ const { normalizeTimings } = require('../services/gameTimings');
 // disconnect, getScore, time, timeUp, requestDbNames — esdeveniments de
 // socket que no són específics ni d'amfitrió ni d'alumnat.
 module.exports = function createCommonEvents({ io, games, players, helpers, selectQuizzesForUser }) {
-  const { scheduleHostReconnectCleanup, timingsFor, scheduleGameCleanup, emitQuestionOverPayloadDeferred, logGames } = helpers;
+  // Quien ha abandonado y aún no ha vuelto a entrar (mismo nombre).
+    function leftListOf(game) {
+      const current = players.getPlayers(game.hostId).map((p) => p.name);
+      return (game.leftPlayers || [])
+        .filter((l) => !current.includes(l.name))
+        .map((l) => ({ id: l.id, name: l.name, icon: l.icon }));
+    }
+
+  const { scheduleHostReconnectCleanup, timingsFor, scheduleGameCleanup, emitQuestionOverPayloadDeferred, logGames, stopAutoAdvance } = helpers;
 
   return function registerCommonEvents(socket) {
     socket.on('disconnect', () => {
@@ -118,6 +126,7 @@ module.exports = function createCommonEvents({ io, games, players, helpers, sele
       const game = games.getGame(socket.id);
       if (!game) return;
       const pin = game.pin;
+      stopAutoAdvance(game);
       if (game.cleanupTimer) clearTimeout(game.cleanupTimer);
       games.removeGame(socket.id);
       players.getPlayers(socket.id).forEach((p) => players.removePlayer(p.playerId));
@@ -147,6 +156,31 @@ module.exports = function createCommonEvents({ io, games, players, helpers, sele
       const game = games.getGame(socket.id);
       if (!game) return;
       socket.emit('kickedList', listKicked(game));
+      socket.emit('leftList', leftListOf(game));
+    });
+
+    // El alumnado sale de la partida (con confirmación en su pantalla): se le quita de la lista del anfitrión.
+    socket.on('playerLeave', () => {
+      const player = players.getPlayer(socket.id);
+      if (!player) return;
+      const hostId = player.hostId;
+      const hostGame = games.getGame(hostId);
+      if (hostGame) {
+        // Lista de abandonos del anfitrión (aparte de los expulsados). Sin tokens.
+        hostGame.leftPlayers = (hostGame.leftPlayers || []).filter((l) => l.id !== socket.id);
+        hostGame.leftPlayers.push({ id: socket.id, name: player.name, icon: player.icon || '' });
+      }
+      if (player.token) players.tokens.delete(player.token);
+      players.removePlayer(socket.id);
+      socket.leave(hostGame ? hostGame.pin : '');
+      if (hostGame) {
+        const playersInGame = players.getPlayers(hostId);
+        io.to(hostGame.pin).emit('updatePlayerLobby', playersInGame);
+        io.to(hostId).emit('updatePlayerLobby', playersInGame);
+        io.to(hostId).emit('leftList', leftListOf(hostGame));
+        logger.info('Alumne ha sortit de la partida', { tag: 'player-leave', pin: hostGame.pin, hostId, playerId: socket.id });
+      }
+      socket.emit('playerLeft');
     });
 
     socket.on('unkick-player', (data) => {

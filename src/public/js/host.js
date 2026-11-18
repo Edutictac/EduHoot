@@ -254,6 +254,8 @@ var lobby = Vue.createApp({
                 nameMode: 'typed',
                 // Racha de aciertos (feature 11): bonificación para quien encadena aciertos.
                 streak: true,
+                // Avance automático entre preguntas: 0 = manual; 3–20 s.
+                autoAdvanceSec: 0,
                 // Tiempos ampliados de esta partida (issue #13). Vacío = mínimo.
                 timings: { hostReconnectSec: '', playerReconnectSec: '', cleanupSec: '', inactivityMin: '' },
                 time: ''
@@ -261,6 +263,11 @@ var lobby = Vue.createApp({
         };
     },
     computed: {
+        autoAdvanceChoices: function(){
+            var list = [];
+            for(var n = 3; n <= 20; n++) list.push(n);
+            return list;
+        },
         joinUrl: function(){
             var qs = [];
             if(this.pin){
@@ -446,6 +453,7 @@ function startGame(){
         sendToStudents: !!options.sendToStudents,
         showScoresBetween: !!options.showScoresBetween,
         streak: !!options.streak,
+        autoAdvanceSec: parseInt(options.autoAdvanceSec, 10) || 0,
         pin: (function(){
             try{
                 return (params && params.pin) || localStorage.getItem(lastPinKey) || '';

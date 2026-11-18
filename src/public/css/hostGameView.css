@@ -769,3 +769,19 @@ h3[id^="answer"]::before{
     .modal-content{ margin: 10vh auto; padding: 18px 14px; max-height: 80vh; }
     .results-bar-track{ height: 170px; }
 }
+
+/* Avance automático durante la partida: desplegable encima de la fila de botones. */
+.auto-advance-row{ display: flex; justify-content: center; margin: 6px 0; }
+.auto-advance-row select{ min-width: 120px; padding: 6px 10px; border-radius: 10px; }
+/* Cuenta atrás de los resultados, con pausa. */
+.auto-advance-bar{
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    margin: 0 0 12px; padding: 8px 12px; border-radius: 12px;
+    background: rgba(15,23,42,0.6); border: 1px solid var(--card-stroke);
+    font-weight: 700;
+}
+#autoPauseBtn{
+    padding: 8px 14px; border-radius: 10px; border: 1px solid var(--card-stroke);
+    background: rgba(253,188,75,0.22); color: var(--text-main); font-weight: 700; cursor: pointer;
+}
+#rankingNextBtn:disabled{ opacity: 0.6; cursor: not-allowed; }

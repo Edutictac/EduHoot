@@ -50,6 +50,7 @@ var lobby = Vue.createApp({
             playerIcon: initialParams.icon ? String(initialParams.icon) : '',
             // connecting | joined | slow | reconnecting | offline
             connState: 'connecting',
+            leaveConfirming: false,
             // Número de alumnos en la sala. Solo se guarda el total, nunca los nombres.
             count: null,
             // Código de la partida, para comprobar que se está en la correcta.
@@ -63,9 +64,33 @@ var lobby = Vue.createApp({
         },
         pinText: function(){
             return tLobby('lobby_pin') + ' ' + this.pin;
+        },
+        leaveLabel: function(){
+            return this.leaveConfirming ? tLobby('lobby_leave_confirm') : tLobby('lobby_leave');
+        }
+    },
+    methods: {
+        askLeave: function(){
+            if(!this.leaveConfirming){
+                this.leaveConfirming = true;
+                clearTimeout(leaveResetTimer);
+                leaveResetTimer = setTimeout(function(){ lobby.leaveConfirming = false; }, 4000);
+                return;
+            }
+            clearTimeout(leaveResetTimer);
+            this.leaveConfirming = false;
+            socket.emit('playerLeave');
         }
     }
 }).mount('#lobby-app');
+
+// Salir de la sala (confirmado por el alumnado): el servidor confirma y volvemos a la portada.
+var leaveResetTimer = null;
+socket.on('playerLeft', function(){
+    try{ localStorage.removeItem('playerLastJoin'); }catch(e){}
+    socket.disconnect();
+    window.location.href = '../';
+});
 
 function setLobbyStatus(waiting, detail){
     lobby.title = waiting || lobby.title;

@@ -8,6 +8,8 @@
       opt_send_students_hint: 'Si se desactiva, el alumnado solo verá formas y colores para responder; deberá mirar la pantalla compartida para leer la pregunta.',
       opt_show_scores: 'Puntuaciones entre preguntas y ranking',
       opt_streak: 'Racha de aciertos',
+      opt_auto: 'Avance automático',
+      opt_auto_manual: 'Manual',
       opt_advanced: 'Opciones avanzadas',
       opt_t_host: 'Reconexión del anfitrión (s)',
       opt_t_player: 'Reconexión del alumnado (s)',
@@ -22,7 +24,7 @@
       kicked_title: 'Expulsados',
       unkick_btn: 'Permitir entrar',
       opt_time: 'Tiempo por pregunta (s)',
-      opt_time_help: 'Déjalo vacío para usar el tiempo definido en cada pregunta del quiz.',
+      opt_time_help: 'Vacío = tiempo de cada pregunta.',
       start_btn: 'Iniciar partida',
       starting: 'Iniciando partida… espera',
       cancel_btn: 'Cancelar partida',
@@ -44,6 +46,8 @@
       opt_send_students_hint: 'If disabled, students only see colored shapes to answer; they must look at the shared screen to read the question.',
       opt_show_scores: 'Scores between questions and ranking',
       opt_streak: 'Answer streak',
+      opt_auto: 'Automatic advance',
+      opt_auto_manual: 'Manual',
       opt_advanced: 'Advanced options',
       opt_t_host: 'Host reconnection (s)',
       opt_t_player: 'Student reconnection (s)',
@@ -58,7 +62,7 @@
       kicked_title: 'Removed',
       unkick_btn: 'Allow back',
       opt_time: 'Time per question (s)',
-      opt_time_help: 'Leave empty to use each quiz question time.',
+      opt_time_help: 'Empty = each question time.',
       start_btn: 'Start game',
       starting: 'Starting game… please wait',
       cancel_btn: 'Cancel game',
@@ -80,6 +84,8 @@
       opt_send_students_hint: 'Si es desactiva, l\'alumnat només veu formes i colors per a respondre; haurà de mirar la pantalla compartida per a llegir la pregunta.',
       opt_show_scores: 'Puntuacions entre preguntes i ranking',
       opt_streak: 'Ratxa d\'encerts',
+      opt_auto: 'Avanç automàtic',
+      opt_auto_manual: 'Manual',
       opt_advanced: 'Opcions avançades',
       opt_t_host: 'Reconnexió de l\'amfitrió (s)',
       opt_t_player: 'Reconnexió de l\'alumnat (s)',
@@ -94,7 +100,7 @@
       kicked_title: 'Expulsats',
       unkick_btn: 'Permetre entrar',
       opt_time: 'Temps per pregunta (s)',
-      opt_time_help: 'Deixa-ho buit per usar el temps definit a cada pregunta del qüestionari.',
+      opt_time_help: 'Buit = temps de cada pregunta.',
       start_btn: 'Inicia partida',
       starting: 'Iniciant la partida… espera',
       cancel_btn: 'Cancel·la la partida',
@@ -109,7 +115,7 @@
       footerSource: 'Codi font'
     },
     va: {
-      opt_time_help: 'Deixa-ho buit per usar el temps definit en cada pregunta del qüestionari.'
+      opt_time_help: 'Buit = temps de cada pregunta.'
     }
   };
 

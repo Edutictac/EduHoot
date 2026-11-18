@@ -138,3 +138,12 @@ test('anfitrión (resultados): el botón de siguiente va arriba del modal y se q
     expect(first).toBe('rankingNextBtn');
     await expect(page.locator('#rankingNextBtn')).toHaveCSS('position', 'sticky');
 });
+
+test('anfitrión (partida): quien abandona aparece como Abandono, separado de los expulsados', async ({ page }) => {
+    await openGame(page);
+    await page.evaluate(() => window.__serverEmit('leftList', [[{ id: 'p9', name: 'Lucía', icon: '🐰' }]]));
+    await expect(page.locator('#left-list .left-name')).toHaveText('Lucía');
+    await expect(page.locator('#left-list .left-tag')).toHaveText('Abandono');
+    await expect(page.locator('#kicked-list')).toHaveCount(0);
+    await expect(page.locator('#left-list .kick-btn, #left-list .unkick-btn')).toHaveCount(0);
+});

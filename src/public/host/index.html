@@ -51,16 +51,24 @@
                 <label><input type="checkbox" id="opt-send-students" v-model="options.sendToStudents"> <span>{{ t('opt_send_students') }}</span><br><small class="opt-hint">{{ t('opt_send_students_hint') }}</small></label>
                 <label><input type="checkbox" id="opt-show-scores" v-model="options.showScoresBetween"> <span>{{ t('opt_show_scores') }}</span></label>
                 <label><input type="checkbox" id="opt-streak" v-model="options.streak"> <span>{{ t('opt_streak') }}</span></label>
+                <label class="opt-auto"><span>{{ t('opt_auto') }}</span>
+                    <select id="opt-auto" v-model.number="options.autoAdvanceSec">
+                        <option :value="0">{{ t('opt_auto_manual') }}</option>
+                        <option v-for="n in autoAdvanceChoices" :key="n" :value="n">{{ n }} s</option>
+                    </select>
+                </label>
                 <fieldset id="opt-name-mode" class="name-mode">
                     <legend>{{ t('opt_name_mode') }}</legend>
                     <label><input type="radio" name="name-mode" value="typed" v-model="options.nameMode" :disabled="nameModeLocked" @change="emitNameMode"> <span>{{ t('opt_name_typed') }}</span></label>
                     <label><input type="radio" name="name-mode" value="random" v-model="options.nameMode" :disabled="nameModeLocked" @change="emitNameMode"> <span>{{ t('opt_name_random') }}</span></label>
                 </fieldset>
-                <label class="opt-inline">
-                    <span>{{ t('opt_time') }}</span>
-                    <input type="number" id="opt-time" min="5" max="120" placeholder="Auto" v-model="options.time">
-                </label>
-                <small>{{ t('opt_time_help') }}</small>
+                <div class="opt-time">
+                    <label class="opt-inline">
+                        <span>{{ t('opt_time') }}</span>
+                        <input type="number" id="opt-time" min="5" max="120" placeholder="Auto" v-model="options.time">
+                    </label>
+                    <small class="opt-hint">{{ t('opt_time_help') }}</small>
+                </div>
                 <details id="opt-advanced" class="advanced-options">
                     <summary>{{ t('opt_advanced') }}</summary>
                     <label class="opt-inline"><span>{{ t('opt_t_host') }}</span>

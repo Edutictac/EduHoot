@@ -1,5 +1,6 @@
 const { getGamesCollection } = require('../data/repositories');
 const { logger } = require('../logger');
+const { normalizeAutoAdvance } = require('../services/autoAdvance');
 
 // host-join, host-join-game, startGame, nextQuestion, skipQuestion, newQuiz.
 module.exports = function createHostEvents({
@@ -23,6 +24,10 @@ module.exports = function createHostEvents({
 }) {
   const {
     timingsFor,
+    stopAutoAdvance,
+    emitAutoAdvanceState,
+    onAutoAdvanceStepDone,
+    setAutoAdvancePaused,
     markHostConnected,
     scheduleGameCleanup,
     getCurrentQuestionPayload,
@@ -188,12 +193,37 @@ module.exports = function createHostEvents({
       }
     });
 
+    // Avance automático: el servidor pide un paso de resultados y el anfitrión responde.
+    socket.on('autoAdvanceStepDone', (data) => {
+      const game = games.getGame(socket.id);
+      if (!game) return;
+      onAutoAdvanceStepDone(game, data && data.stage);
+    });
+
+    // Pausar o reanudar también durante los resultados (cuenta del avance automático).
+    socket.on('autoAdvancePause', (data) => {
+      const game = games.getGame(socket.id);
+      if (!game || !game.gameData) return;
+      setAutoAdvancePaused(game, !!(data && data.paused));
+    });
+
+    // Cambiar el avance automático durante la partida: se aplica desde la siguiente pregunta.
+    socket.on('setAutoAdvance', (data) => {
+      const game = games.getGame(socket.id);
+      if (!game || !game.gameData) return;
+      game.gameData.options = game.gameData.options || {};
+      game.gameData.options.autoAdvanceSec = normalizeAutoAdvance(data && data.seconds);
+      emitAutoAdvanceState(game);
+    });
+
     socket.on('nextQuestion', async () => {
       const pausedGame = games.getGame(socket.id);
       if (pausedGame && pausedGame.paused) {
         socket.emit('gamePaused');
         return;
       }
+      // Avance manual o automático: se para la cuenta de resultados en curso.
+      if (pausedGame) stopAutoAdvance(pausedGame);
       for (let i = 0; i < Object.keys(players.players).length; i++) {
         if (players.players[i].hostId === socket.id) {
           players.players[i].gameData.answer = 0;
@@ -360,8 +390,11 @@ module.exports = function createHostEvents({
         randomAnswers: true,
         sendToStudents: true,
         showScoresBetween: true,
-        streak: true
+        streak: true,
+        autoAdvanceSec: 0
       }, opts || {});
+      // Avance automático entre preguntas: 0 = manual; si no, entero de 5 a 20 s.
+      options.autoAdvanceSec = normalizeAutoAdvance(options.autoAdvanceSec);
       if (options.timePerQuestion !== undefined && options.timePerQuestion !== null && String(options.timePerQuestion).trim() !== '') {
         const parsedTime = parseInt(options.timePerQuestion, 10);
         if (Number.isNaN(parsedTime)) {

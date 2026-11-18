@@ -79,7 +79,9 @@ body{
 .lobby-name{
     margin: 0;
     max-width: 100%;
-    font-size: 32px;
+    /* Un 40 % más que el título de estado (#title1: 34 px; 26 px en móvil) y en amarillo del logo. */
+    color: #fdbc4b;
+    font-size: 47.6px;
     font-weight: 800;
     line-height: 1.15;
     overflow-wrap: anywhere;
@@ -166,7 +168,7 @@ body{
     .loader{ width: 54px; height: 54px; border-width: 7px; border-top-width: 7px; }
     .lobby-avatar-box{ width: 136px; height: 136px; border-radius: 26px; }
     .lobby-avatar{ font-size: 84px; }
-    .lobby-name{ font-size: 28px; }
+    .lobby-name{ font-size: 36.4px; }
     #lang-switcher{ top: 12px; right: 12px; }
 }
 
@@ -185,3 +187,22 @@ body{
     font-weight: 600;
     letter-spacing: 0.02em;
 }
+
+/* Salir de la partida: flotante abajo a la izquierda, rojo del logo (#da4453); pide confirmación. */
+.leave-game-btn{
+    position: fixed;
+    left: 12px;
+    bottom: 12px;
+    z-index: 50;
+    margin: 0;
+    min-height: 44px;
+    padding: 8px 16px;
+    border: 0;
+    border-radius: 12px;
+    background: #da4453;
+    color: #fff;
+    font: 700 16px/1 'Inter', 'Poppins', sans-serif;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+}
+.leave-game-btn.is-confirming{ box-shadow: 0 0 0 3px #fff, 0 4px 14px rgba(0,0,0,0.35); }

@@ -28,6 +28,7 @@
             </div>
             <h1 id = "title1">{{ title }}</h1>
             <h3 id = "title2">{{ detail }}</h3>
+            <button type="button" id="leaveGameBtn" class="leave-game-btn" :class="{ 'is-confirming': leaveConfirming }" @click="askLeave">{{ leaveLabel }}</button>
             <p v-if="countText" id="lobby-count" class="lobby-count" aria-live="polite">{{ countText }}</p>
             <div class="loader"></div>
         </div>

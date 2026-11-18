@@ -32,6 +32,14 @@
                 </label>
             </div>
         <h4 id = "questionNum">{{ questionNumText }}</h4>
+        <div class="auto-advance-row">
+            <label>{{ t('autoLabel') }}
+                <select id="autoAdvanceSelect" v-model.number="autoAdvanceSec" @change="emitAutoAdvanceSec">
+                    <option :value="0">{{ t('autoManual') }}</option>
+                    <option v-for="n in autoAdvanceChoices" :key="n" :value="n">{{ n }} s</option>
+                </select>
+            </label>
+        </div>
         <div class="top-row">
             <button @click="skipQuestion" id="skipQButton" :style="{ display: skipVisible ? 'inline-block' : 'none' }" :disabled="skipDisabled">{{ t('skip') }}</button>
             <button type="button" id="cancelGameBtn" :class="{ 'is-confirming': cancelGameConfirming }" @click="askCancelGame">{{ cancelGameConfirming ? t('cancelConfirm') : t('cancelGame') }}</button>
@@ -87,6 +95,14 @@
                 </li>
             </ul>
         </div>
+        <div v-if="leftList.length" id="left-list" class="left-list">
+            <p class="left-title">{{ t('leftTitle') }}</p>
+            <div class="left-item" v-for="l in leftList" :key="l.id">
+                <span class="left-icon">{{ l.icon }}</span>
+                <span class="left-name">{{ l.name }}</span>
+                <span class="left-tag">{{ t('leftTag') }}</span>
+            </div>
+        </div>
         <div v-if="kickedList.length" id="kicked-list" class="kicked-list">
             <p class="kicked-title">{{ t('kickedTitle') }}</p>
             <div class="kicked-item" v-for="k in kickedList" :key="k.id">
@@ -102,7 +118,11 @@
 
         <div id="rankingModal" class="modal" :style="{ display: rankingVisible ? 'block' : 'none' }">
             <div class="modal-content">
-                <button id="rankingNextBtn" class="ranking-next" @click="rankingNext">{{ rankingNextLabel }}</button>
+                <button id="rankingNextBtn" class="ranking-next" @click="rankingNext" :disabled="autoPaused">{{ rankingNextLabel }}</button>
+                <div v-if="autoActive" id="autoAdvanceBar" class="auto-advance-bar">
+                    <span id="autoAdvanceText">{{ autoAdvanceText }}</span>
+                    <button type="button" id="autoPauseBtn" @click="toggleAutoPause">{{ autoPaused ? t('autoResume') : t('autoPause') }}</button>
+                </div>
                 <span id="closeRanking" class="close" @click="closeRanking" :style="{ display: closeVisible ? 'block' : 'none' }">&times;</span>
                 <div id="resultsStepChart" class="results-step" v-show="modalStep === 'chart'">
                     <h3 id="resultsTitle">{{ t('resultsTitle') }}</h3>
