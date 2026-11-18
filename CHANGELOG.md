@@ -97,6 +97,8 @@ fitxers corresponents, i els originals es van eliminar.
 - Nombres aleatoris: el dau permet canviar el nom com a màxim 2 vegades per
   alumne i partida (el comptador és al navegador; el servidor no el comprova).
 - Nom de l'alumnat al lobby: en groc i un 40 % més gran que el títol d'estat.
+- Ample del contingut a les pantalles d'entrada, anfitrió i alumnat: amb espai,
+  un 10 % de marge a cada costat; en mòbil, un marge mínim de 12 px (`css/page-fit.css`).
 - Avanç automàtic entre preguntas: desplegable al lobby i durant la partida
   («Manual» per defecte, o de 3 a 20 s; el mínim era de 5 s). Després de cada pas de resultats
   (gràfica, classificació) compta enrere i avança sol. Es pot pausar en
