@@ -82,6 +82,13 @@ fitxers corresponents, i els originals es van eliminar.
 - El panell de logs busca també per `hostId` i `playerId`.
 - El distintiu d'entorn es veu al 50 % en les pantalles de partida de
   l'alumnat i de l'anfitrió.
+- Durant la partida, l'anfitrió pot pausar-la (es congela el temps, no hi ha
+  respostes ni avanç fins a reprendre-la) i cancel·lar-la, amb confirmació.
+  Cancel·lar tanca la sala per a l'alumnat i torna a `/create/`.
+- Opcions avançades al lobby: l'anfitrió pot ampliar, només per a la seua
+  partida, el marge de reconnexió de l'anfitrió i de l'alumnat, el temps de
+  neteja després de acabar i el d'inactivitat (fins a 60 min). Els valors
+  normals no canvien.
 - Racha de aciertos (ratxa d'encerts): a partir de la tercera resposta
   correcta seguida, +50 punts per resposta (tope +250). L'alumnat veu la seua
   racha; l'anfitrió la veu amb un 🔥 al costat del nom. Opció del lobby,

@@ -61,6 +61,18 @@
                     <input type="number" id="opt-time" min="5" max="120" placeholder="Auto" v-model="options.time">
                 </label>
                 <small>{{ t('opt_time_help') }}</small>
+                <details id="opt-advanced" class="advanced-options">
+                    <summary>{{ t('opt_advanced') }}</summary>
+                    <label class="opt-inline"><span>{{ t('opt_t_host') }}</span>
+                        <input type="number" id="opt-t-host" :min="30" :max="120" placeholder="30" v-model="options.timings.hostReconnectSec" @change="emitGameTimings"></label>
+                    <label class="opt-inline"><span>{{ t('opt_t_player') }}</span>
+                        <input type="number" id="opt-t-player" :min="40" :max="120" placeholder="40" v-model="options.timings.playerReconnectSec" @change="emitGameTimings"></label>
+                    <label class="opt-inline"><span>{{ t('opt_t_cleanup') }}</span>
+                        <input type="number" id="opt-t-cleanup" :min="100" :max="600" placeholder="100" v-model="options.timings.cleanupSec" @change="emitGameTimings"></label>
+                    <label class="opt-inline"><span>{{ t('opt_t_inactivity') }}</span>
+                        <input type="number" id="opt-t-inactivity" :min="30" :max="60" placeholder="30" v-model="options.timings.inactivityMin" @change="emitGameTimings"></label>
+                    <small>{{ t('opt_t_help') }}</small>
+                </details>
             </div>
             <div id="players" class="players-list">
                 <div class="player-item" v-for="(player, index) in players" :key="index">
@@ -78,7 +90,8 @@
                 </div>
             </div>
             <br>
-            <button id="start" @click="startGame">{{ t('start_btn') }}</button>
+            <button id="start" @click="startGame" :disabled="starting">{{ starting ? t('starting') : t('start_btn') }}</button>
+            <p v-if="starting" class="starting-msg" role="status">{{ t('starting') }}</p>
             <br>
             <br>
         </template>

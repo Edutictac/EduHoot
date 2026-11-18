@@ -2,11 +2,12 @@ const { getGamesCollection } = require('../data/repositories');
 const { logger } = require('../logger');
 const { buildAnswerStatus } = require('./answerStatus');
 const { recordKick, listKicked, unkick } = require('./kick');
+const { normalizeTimings } = require('../services/gameTimings');
 
 // disconnect, getScore, time, timeUp, requestDbNames — esdeveniments de
 // socket que no són específics ni d'amfitrió ni d'alumnat.
 module.exports = function createCommonEvents({ io, games, players, helpers, selectQuizzesForUser }) {
-  const { scheduleHostReconnectCleanup, HOST_RECONNECT_GRACE_MS, PLAYER_RECONNECT_GRACE_MS, scheduleGameCleanup, GAME_INACTIVITY_TIMEOUT, emitQuestionOverPayloadDeferred, logGames } = helpers;
+  const { scheduleHostReconnectCleanup, timingsFor, scheduleGameCleanup, emitQuestionOverPayloadDeferred, logGames } = helpers;
 
   return function registerCommonEvents(socket) {
     socket.on('disconnect', () => {
@@ -15,12 +16,12 @@ module.exports = function createCommonEvents({ io, games, players, helpers, sele
         if (game.gameLive === false) {
           scheduleHostReconnectCleanup(game, socket.id);
           io.to(game.pin).emit('hostReconnecting', {
-            reconnectGraceMs: HOST_RECONNECT_GRACE_MS
+            reconnectGraceMs: timingsFor(socket.id).hostReconnectMs
           });
         } else {
           scheduleHostReconnectCleanup(game, socket.id);
           io.to(game.pin).emit('hostReconnecting', {
-            reconnectGraceMs: HOST_RECONNECT_GRACE_MS
+            reconnectGraceMs: timingsFor(socket.id).hostReconnectMs
           });
         }
       } else {
@@ -51,7 +52,7 @@ module.exports = function createCommonEvents({ io, games, players, helpers, sele
                   }
                 }
               }
-            }, PLAYER_RECONNECT_GRACE_MS);
+            }, timingsFor(hostId).playerReconnectMs);
             socket.leave(pin);
           }
         }
@@ -83,6 +84,8 @@ module.exports = function createCommonEvents({ io, games, players, helpers, sele
     socket.on('timerSync', (data) => {
       const game = games.getGame(socket.id);
       if (!game || !game.gameData) return;
+      // Partida pausada: no se aceptan respuestas ni avance mientras dure la pausa.
+      game.paused = !!(data && data.paused);
       const time = Math.max(0, Math.min(600, Math.round(Number(data && data.time) || 0)));
       io.to(game.pin).emit('timerSync', { time, paused: !!(data && data.paused) });
     });
@@ -110,6 +113,27 @@ module.exports = function createCommonEvents({ io, games, players, helpers, sele
     });
 
     // Solo el anfitrión: lista de expulsados (sin tokens) y desbloqueo de uno de ellos.
+    // Solo el anfitrión: cancela la partida (tras confirmar en la pantalla). Se cierra para todos.
+    socket.on('cancelGame', () => {
+      const game = games.getGame(socket.id);
+      if (!game) return;
+      const pin = game.pin;
+      if (game.cleanupTimer) clearTimeout(game.cleanupTimer);
+      games.removeGame(socket.id);
+      players.getPlayers(socket.id).forEach((p) => players.removePlayer(p.playerId));
+      io.to(pin).emit('hostDisconnect');
+      socket.emit('gameCancelled');
+      logger.info('Partida cancel·lada per l\'amfitrió', { tag: 'game-cancel', pin, hostId: socket.id });
+    });
+
+    // Solo el anfitrión: ampliación de tiempos de esta partida (issue #13). Vacío = mínimos.
+    // Solo afecta a temporizadores que se programen después.
+    socket.on('setGameTimings', (data) => {
+      const game = games.getGame(socket.id);
+      if (!game) return;
+      game.timingOverrides = normalizeTimings(data);
+    });
+
     // Solo el anfitrión: nombres aleatorios para el alumnado (feature 12). Se puede cambiar en el lobby
     // mientras no haya ningún alumno unido.
     socket.on('setRandomNames', (data) => {
@@ -151,7 +175,7 @@ module.exports = function createCommonEvents({ io, games, players, helpers, sele
           return;
         }
         emitQuestionOverPayloadDeferred(game);
-        scheduleGameCleanup(socket.id, GAME_INACTIVITY_TIMEOUT);
+        scheduleGameCleanup(socket.id, timingsFor(socket.id).inactivityMs);
       } catch (err) {
         logger.error('timeUp error', { tag: 'timeUp', error: err && err.message ? err.message : String(err) });
         socket.emit('noGameFound');

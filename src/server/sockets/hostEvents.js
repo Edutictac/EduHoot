@@ -22,7 +22,7 @@ module.exports = function createHostEvents({
   GLOBAL_OWNER_EMAIL
 }) {
   const {
-    GAME_INACTIVITY_TIMEOUT,
+    timingsFor,
     markHostConnected,
     scheduleGameCleanup,
     getCurrentQuestionPayload,
@@ -42,7 +42,7 @@ module.exports = function createHostEvents({
           markHostConnected(existingByPin);
           existingByPin.hostId = socket.id;
           existingByPin.gameOver = false;
-          scheduleGameCleanup(socket.id, GAME_INACTIVITY_TIMEOUT);
+          scheduleGameCleanup(socket.id, timingsFor(socket.id).inactivityMs);
           socket.join(existingByPin.pin);
 
           for (let i = 0; i < Object.keys(players.players).length; i++) {
@@ -97,7 +97,7 @@ module.exports = function createHostEvents({
 
           const game = games.getGame(socket.id);
           game.gameOver = false;
-          scheduleGameCleanup(socket.id, GAME_INACTIVITY_TIMEOUT);
+          scheduleGameCleanup(socket.id, timingsFor(socket.id).inactivityMs);
 
           socket.join(game.pin);
 
@@ -125,7 +125,7 @@ module.exports = function createHostEvents({
         markHostConnected(game);
         game.hostId = socket.id;
         game.gameOver = false;
-        scheduleGameCleanup(socket.id, GAME_INACTIVITY_TIMEOUT);
+        scheduleGameCleanup(socket.id, timingsFor(socket.id).inactivityMs);
         socket.join(game.pin);
         const playerData = players.getPlayers(previousHostId);
         for (let i = 0; i < Object.keys(players.players).length; i++) {
@@ -189,6 +189,11 @@ module.exports = function createHostEvents({
     });
 
     socket.on('nextQuestion', async () => {
+      const pausedGame = games.getGame(socket.id);
+      if (pausedGame && pausedGame.paused) {
+        socket.emit('gamePaused');
+        return;
+      }
       for (let i = 0; i < Object.keys(players.players).length; i++) {
         if (players.players[i].hostId === socket.id) {
           players.players[i].gameData.answer = 0;
@@ -207,7 +212,7 @@ module.exports = function createHostEvents({
         if (questions.length >= game.gameData.question) {
           io.to(game.pin).emit('nextQuestionPlayer');
           scheduleQuestionCountdown(game);
-          scheduleGameCleanup(socket.id, GAME_INACTIVITY_TIMEOUT);
+          scheduleGameCleanup(socket.id, timingsFor(socket.id).inactivityMs);
           return;
         } else {
           const playersInGame = players.getPlayers(game.hostId);
@@ -303,6 +308,10 @@ module.exports = function createHostEvents({
 
     socket.on('skipQuestion', async () => {
       const game = games.getGame(socket.id);
+      if (game && game.paused) {
+        socket.emit('gamePaused');
+        return;
+      }
       if (!game) {
         socket.emit('noGameFound');
         return;
@@ -318,7 +327,7 @@ module.exports = function createHostEvents({
         }
         io.to(game.pin).emit('hostSkipped');
         helpers.emitQuestionOverPayloadDeferred(game);
-        scheduleGameCleanup(socket.id, GAME_INACTIVITY_TIMEOUT);
+        scheduleGameCleanup(socket.id, timingsFor(socket.id).inactivityMs);
       } catch (err) {
         logger.error('skipQuestion error', { tag: 'skipQuestion', error: err && err.message ? err.message : String(err) });
         socket.emit('noGameFound');
@@ -390,7 +399,7 @@ module.exports = function createHostEvents({
       game.gameLive = true;
       game.gameOver = false;
       logger.info('Partida iniciada', { tag: 'game-start', pin: game.pin, hostId: game.hostId, playersCount: gamePlayers.length, questionsCount: game.gameData.questions.length });
-      scheduleGameCleanup(socket.id, GAME_INACTIVITY_TIMEOUT);
+      scheduleGameCleanup(socket.id, timingsFor(socket.id).inactivityMs);
       io.to(game.pin).emit('gameStartedPlayer');
       socket.emit('gameStarted', game.hostId);
       scheduleQuestionCountdown(game);

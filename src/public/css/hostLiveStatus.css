@@ -58,4 +58,16 @@
 .answer-status-away-dot{ color: #fdba74; }
 
 /* Racha de aciertos (feature 11): fuego junto al alumno con tres o más aciertos seguidos. */
-.answer-status-fire{ font-weight: 700; color: #fb923c; }
+.answer-status-fire{
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    border-radius: 999px;
+    background: #ea580c;
+    color: #fff;
+    font-size: 1.25em;
+    font-weight: 800;
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.35), 0 4px 12px rgba(234,88,12,0.45);
+}
+

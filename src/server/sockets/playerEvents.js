@@ -19,8 +19,7 @@ module.exports = function createPlayerEvents({
   calculateQuestionScore
 }) {
   const {
-    GAME_INACTIVITY_TIMEOUT,
-    PLAYER_RECONNECT_GRACE_MS,
+    timingsFor,
     allowAnswer,
     scheduleGameCleanup,
     emitQuestionOverPayloadDeferred,
@@ -181,7 +180,7 @@ module.exports = function createPlayerEvents({
         }
         socket.join(game.pin);
         players.updatePlayerId(player, socket.id);
-        socket.emit('playerGracePeriod', { ms: PLAYER_RECONNECT_GRACE_MS });
+        socket.emit('playerGracePeriod', { ms: timingsFor(game.hostId).playerReconnectMs });
 
         const playerData = players.getPlayers(game.hostId);
         socket.emit('playerGameData', playerData);
@@ -256,6 +255,12 @@ module.exports = function createPlayerEvents({
       const game = games.getGame(hostId);
       if (!game || !game.gameData) {
         socket.emit('noGameFound');
+        return;
+      }
+
+      // Partida pausada por el anfitrión: no se admiten respuestas.
+      if (game.paused) {
+        socket.emit('answerRejected', { reason: 'paused' });
         return;
       }
 
@@ -360,7 +365,7 @@ module.exports = function createPlayerEvents({
               playersAnswered: game.gameData.playersAnswered
             });
           }
-          scheduleGameCleanup(hostId, GAME_INACTIVITY_TIMEOUT);
+          scheduleGameCleanup(hostId, timingsFor(hostId).inactivityMs);
         } catch (err) {
           logger.error('playerAnswer error', { tag: 'playerAnswer', error: err && err.message ? err.message : String(err) });
           socket.emit('noGameFound');

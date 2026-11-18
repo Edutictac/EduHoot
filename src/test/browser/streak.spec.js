@@ -88,6 +88,6 @@ test('anfitrión (partida): quien lleva tres o más aciertos seguidos aparece co
         { playerId: 'p2', name: 'Pau', icon: '🐶', answered: false, hand: false, away: false, streak: 1 }
     ]);
     const ana = page.locator('#answerStatus li', { hasText: 'Ana' });
-    await expect(ana.locator('.answer-status-fire')).toHaveText('🔥4');
+    await expect(ana.locator('.answer-status-fire')).toHaveText('🔥 4 seguidos');
     await expect(page.locator('#answerStatus li', { hasText: 'Pau' }).locator('.answer-status-fire')).toHaveCount(0);
 });

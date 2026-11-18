@@ -98,6 +98,7 @@ function emitStartGameWhenGongEnds(opts){
         hostStartWatchdog = setTimeout(function(){
             hostStartGameEmitted = false;
             hostStartWatchdog = null;
+            lobby.starting = false;
             lobby.showErrorKey('host_error');
         }, HOST_START_ACK_TIMEOUT_MS);
         socket.emit('startGame', opts);
@@ -238,6 +239,8 @@ var lobby = Vue.createApp({
             players: [],
             // Alumno pendiente de confirmar la expulsión (dos pasos, issue #29).
             pendingKickId: '',
+            // Al pulsar «Iniciar partida», mientras suena el gong y llega la confirmación.
+            starting: false,
             // Alumnado expulsado en esta partida (sin tokens), para poder desbloquearlo.
             kickedList: [],
             errorKey: '',
@@ -251,6 +254,8 @@ var lobby = Vue.createApp({
                 nameMode: 'typed',
                 // Racha de aciertos (feature 11): bonificación para quien encadena aciertos.
                 streak: true,
+                // Tiempos ampliados de esta partida (issue #13). Vacío = mínimo.
+                timings: { hostReconnectSec: '', playerReconnectSec: '', cleanupSec: '', inactivityMin: '' },
                 time: ''
             }
         };
@@ -296,6 +301,14 @@ var lobby = Vue.createApp({
                 lobby.pendingKickId = '';
             }, 4000);
         },
+        emitGameTimings: function(){
+            var payload = {};
+            var t = this.options.timings;
+            Object.keys(t).forEach(function(key){
+                if(t[key] !== '' && t[key] !== null && t[key] !== undefined) payload[key] = Number(t[key]);
+            });
+            socket.emit('setGameTimings', payload);
+        },
         emitNameMode: function(){
             socket.emit('setRandomNames', { enabled: this.options.nameMode === 'random' });
         },
@@ -314,6 +327,8 @@ var lobby = Vue.createApp({
         showErrorKey: function(key){
             this.errorText = '';
             this.errorKey = key;
+            // Si el error llega al intentar iniciar, la partida no arranca: se reactiva el botón.
+            this.starting = false;
         },
         showErrorText: function(text){
             this.errorKey = '';
@@ -356,6 +371,7 @@ initHostLobbyMusicPlayer();
 //When host connects to server
 socket.on('connect', function() {
     hostStartGameEmitted = false;
+    lobby.starting = false;
     if(hostStartWatchdog){
         clearTimeout(hostStartWatchdog);
         hostStartWatchdog = null;
@@ -394,6 +410,7 @@ socket.on('updatePlayerLobby', function(data){
 // Al crearse la partida, el servidor conoce ya la opción de nombres: se sincroniza la elegida.
 socket.on('gamePin', function(){
     if(lobby && lobby.emitNameMode) lobby.emitNameMode();
+    if(lobby && lobby.emitGameTimings) lobby.emitGameTimings();
 });
 
 socket.on('kickedList', function(list){
@@ -406,6 +423,8 @@ function startGame(){
         return;
     }
     hostStartClicked = true;
+    // Respuesta inmediata: el botón se bloquea y se avisa de que la partida está arrancando.
+    lobby.starting = true;
     try{
         sessionStorage.setItem(HOST_AUTOPLAY_MUSIC_KEY, '1');
         // Requisitos:
@@ -520,6 +539,7 @@ socket.on('noGameFound', function(){
 
 socket.on('hostError', function(payload){
     hostStartGameEmitted = false;
+    lobby.starting = false;
     if(hostStartWatchdog){
         clearTimeout(hostStartWatchdog);
         hostStartWatchdog = null;

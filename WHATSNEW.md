@@ -85,6 +85,10 @@
 - **Racha de aciertos**: pots activar o desactivar la bonificació per encadenar
   respostes correctes des del lobby (activada per defecte). Qui encadena
   tres o més aciertos apareix amb 🔥 a la pantalla de la partida.
+- **Pausar o cancel·lar la partida**: pots aturar la partida i reprendre-la quan
+  vulgues. Cancel·lar-la tanca la sala per a tothom, amb confirmació.
+- **Opcions avançades**: si la connexió de l'aula falla, pots ampliar els
+  temps de reconnexió i d'inactivitat només per a eixa partida.
 - **Expulsar un alumne**: si un nom no és adequat, pots expulsar-lo del
   lobby o de la partida. No pot tornar amb el mateix PIN fins que li
   permetes l'entrada des de la llista d'expulsats.

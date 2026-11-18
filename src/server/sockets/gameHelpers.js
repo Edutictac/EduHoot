@@ -9,10 +9,7 @@ const { logger } = require('../logger');
 const { isStreakEnabled } = require('../services/scoring');
 const { buildAnswerStatus } = require('./answerStatus');
 
-const GAME_CLEANUP_DELAY = 100 * 1000; // 90 segundos tras GameOver
-const GAME_INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutos de inactividad
-const HOST_RECONNECT_GRACE_MS = 30 * 1000; // 30 segundos para reanudar partida en aula
-const PLAYER_RECONNECT_GRACE_MS = 40 * 1000; // 40 segundos para reconexion de alumno
+const { getTimings } = require('../services/gameTimings');
 const QUESTION_COUNTDOWN_SECONDS = 3;
 
 const answerRate = new Map(); // clave: hostId:ip -> { count, windowStart }
@@ -102,12 +99,19 @@ function logGames(games, tag) {
 // amb la resta de server.js i amb les rutes ja mogudes en el Pas 4 — s'injecten
 // en compte de moure's, igual que 'players' en services/sessionReport.js.
 module.exports = function createGameHelpers({ io, games, players, cleanImportedText }) {
-  function scheduleGameCleanup(hostId, delayMs = GAME_CLEANUP_DELAY) {
+  // Tiempos vigentes de la partida de este anfitrión (se leen al usarlos, no al cargar).
+  function timingsFor(hostId) {
+    return getTimings(games.getGame(hostId));
+  }
+
+  function scheduleGameCleanup(hostId, delayMs) {
     const game = games.getGame(hostId);
     if (!game) return;
+    const timings = getTimings(game);
+    if (delayMs === undefined || delayMs === null) delayMs = timings.cleanupMs;
     if (game.cleanupTimer) clearTimeout(game.cleanupTimer);
-    if (game.gameOver && delayMs > GAME_CLEANUP_DELAY) {
-      delayMs = GAME_CLEANUP_DELAY;
+    if (game.gameOver && delayMs > timings.cleanupMs) {
+      delayMs = timings.cleanupMs;
     }
     game.cleanupTimer = setTimeout(() => {
       const current = games.getGame(hostId);
@@ -138,7 +142,8 @@ module.exports = function createGameHelpers({ io, games, players, cleanImportedT
     if (!game) return;
     clearHostDisconnectTimer(game);
     game.hostDisconnectedAt = Date.now();
-    game.hostReconnectDeadline = game.hostDisconnectedAt + HOST_RECONNECT_GRACE_MS;
+    const graceMs = getTimings(game).hostReconnectMs;
+    game.hostReconnectDeadline = game.hostDisconnectedAt + graceMs;
     game.hostDisconnectTimer = setTimeout(() => {
       const current = games.getGameByPin(game.pin);
       if (!current) return;
@@ -150,7 +155,7 @@ module.exports = function createGameHelpers({ io, games, players, cleanImportedT
         players.removePlayer(playersToRemove[i].playerId);
       }
       io.to(current.pin).emit('hostDisconnect');
-    }, HOST_RECONNECT_GRACE_MS);
+    }, graceMs);
   }
 
   function buildQuestions(questions = [], opts = {}) {
@@ -381,9 +386,7 @@ module.exports = function createGameHelpers({ io, games, players, cleanImportedT
   }
 
   return {
-    GAME_INACTIVITY_TIMEOUT,
-    HOST_RECONNECT_GRACE_MS,
-    PLAYER_RECONNECT_GRACE_MS,
+    timingsFor,
     scheduleGameCleanup,
     markHostConnected,
     scheduleHostReconnectCleanup,

@@ -50,3 +50,31 @@
     cursor: pointer;
     white-space: nowrap;
 }
+
+/* Opciones avanzadas del lobby: empiezan en línea nueva y cada tiempo va en su propia línea. */
+#host-options > #opt-advanced{
+    /* #host-options es una cuadrícula: ocupar todas las columnas = línea nueva. */
+    grid-column: 1 / -1;
+    display: block;
+    width: 100%;
+    margin-top: 8px;
+}
+#opt-advanced > summary{
+    cursor: pointer;
+    font-weight: 600;
+    padding: 4px 0;
+}
+#opt-advanced .opt-inline{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin: 8px 0;
+}
+#opt-advanced .opt-inline input{
+    width: 90px;
+}
+
+/* Al iniciar la partida: el botón se bloquea y aparece un aviso mientras llega la confirmación. */
+#start:disabled{ opacity: 0.6; cursor: wait; }
+.starting-msg{ margin: 8px 0 0; font-weight: 700; color: #fde68a; }

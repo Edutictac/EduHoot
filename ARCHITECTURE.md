@@ -229,6 +229,14 @@ Esdeveniments principals que rep el servidor (registrats en
 | `getScore` | Client | Demanar la puntuació/rànquing actual. |
 | `newQuiz` | Amfitrió | Carregar un qüestionari nou en una sala ja oberta. |
 | `requestDbNames` | Client | Demanar llistat de noms/qüestionaris (ús administratiu). |
+| `raiseHand` / `tabState` | Alumne | Alçar o baixar la mà; avisar si ha canviat de pestanya. |
+| `kick-player` / `unkick-player` | Amfitrió | Expulsar un alumne (bloqueja token i nom a la partida) o permetre-li tornar. |
+| `getKickedList` | Amfitrió | Demanar la llista d'expulsats (sense tokens). |
+| `setRandomNames` | Amfitrió | Activar o desactivar els noms aleatoris del lobby (bloquejat amb alumnat unit). |
+| `setGameTimings` | Amfitrió | Ampliar els temps de la partida (opcions avançades del lobby). |
+| `getAnswerStatus` | Amfitrió | Demanar l'estat de resposta (enviat, mà, pestanya, racha) de la pregunta actual. |
+| `timerSync` | Amfitrió | Pausar, reprendre o ampliar el temporitzador i avisar els alumnes. Una partida pausada no admet respostes ni avanç (`nextQuestion`, `skipQuestion`). |
+| `cancelGame` | Amfitrió | Cancel·lar la partida (després de confirmar): tanca la sala per a tothom i torna a `/create/`. |
 | `disconnect` | Socket.IO (automàtic) | Neteja quan cau la connexió d'un jugador/amfitrió. |
 
 ## Cicle de vida d'una partida: PIN, lobby i temps d'espera
@@ -241,19 +249,20 @@ abans que el professorat pulse "Començar". El handler `startGame` posa
 
 No hi ha cap col·lecció de base de dades per a "partides" — tot açò viu
 només en l'array en memòria de `src/server/utils/liveGames.js`, i es
-borra sol segons les constants de temps de `sockets/gameHelpers.js`:
+borra sol segons els temps de `sockets/gameHelpers.js`, que es llegeixen per
+partida amb `getTimings(game)` de `services/gameTimings.js`:
 
 - **100 s** després d'acabar la partida (`GameOver`), abans d'esborrar-la.
 - **30 min** sense cap activitat.
-- **30 s** de marge per a que el professorat reconnecte si es desconnecta
-  (p. ex. si tanca el navegador per error).
+- **30 s** de marge per a que el professorat reconnecte si es desconnecta.
 - **40 s** de marge per a que un alumne reconnecte.
 
-Hui en dia estos quatre temps estan fixats al codi: no es poden ajustar
-ni per variable d'entorn ni des d'un panell, i tampoc hi ha manera de
-crear o programar una partida amb antelació — naix quan el professorat
-obri el host i mor quan es neteja per algun dels motius de dalt. Millora
-de fer-los configurables (global + per partida) plantejada per al futur.
+Són els **mínims**. El professorat pot ampliar-los per a una partida concreta
+des de «Opcions avançades» del lobby (`setGameTimings`): reconnexió de
+l'amfitrió fins a 120 s, reconnexió de l'alumnat fins a 120 s, neteja fins a
+600 s i inactivitat fins a 60 min. Un valor fora de rang es descarta i
+s'usa el mínim. El canvi només afecta els temporitzadors que es programen
+després. No hi ha ajustos globals ni col·lecció de configuració.
 
 ### Lobby de l'amfitrió amb Vue
 
@@ -1171,6 +1180,11 @@ Fonts (cerca web, a verificar):
   més punts.
 - S'aplica el multiplicador del power-up de doble puntuació
   (`pointsMultiplier`) si està actiu en eixa pregunta.
+- **Racha d'encerts** (opció del lobby, activada per defecte): a partir de la
+  tercera resposta correcta seguida, +50 punts per resposta, amb tope de
+  +250 (`streakBonus` i `nextStreak` a `services/scoring.js`). Un fallo, un
+  crèdit parcial o no respondre reinicia la racha; una enquesta no la canvia.
+  El mode individual aplica la mateixa regla al navegador.
 - En preguntes de resposta múltiple hi ha **crèdit parcial amb
   penalització** (`getSubmissionScoreRatio`, `services/scoring.js:21`): cada opció
   correcta marcada suma, cada opció incorrecta marcada resta el mateix,
