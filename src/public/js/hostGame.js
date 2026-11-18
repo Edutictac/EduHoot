@@ -81,8 +81,8 @@ var i18n = {
         resultsTitle: 'Resultados',
         resultsNextToRanking: 'Ver clasificación',
         resultsNextQuestion: 'Siguiente pregunta (Enter)',
-        leftTitle: 'Han abandonado',
         leftTag: 'Abandono',
+        leftBtn: 'Abandonó',
         autoLabel: 'Avance automático',
         autoManual: 'Manual',
         autoIn: 'Siguiente en {s} s',
@@ -143,8 +143,8 @@ var i18n = {
         resultsTitle: 'Results',
         resultsNextToRanking: 'Show leaderboard',
         resultsNextQuestion: 'Next question (Enter)',
-        leftTitle: 'Left the game',
         leftTag: 'Left',
+        leftBtn: 'Left',
         autoLabel: 'Automatic advance',
         autoManual: 'Manual',
         autoIn: 'Next in {s} s',
@@ -205,8 +205,8 @@ var i18n = {
         resultsTitle: 'Resultats',
         resultsNextToRanking: 'Veure classificació',
         resultsNextQuestion: 'Següent pregunta (Enter)',
-        leftTitle: 'Han abandonat',
         leftTag: 'Abandonament',
+        leftBtn: 'Va abandonar',
         autoLabel: 'Avanç automàtic',
         autoManual: 'Manual',
         autoIn: 'Següent en {s} s',
@@ -314,7 +314,6 @@ var app = Vue.createApp({
             autoLeft: 0,
             autoEndAt: 0,
             kickedList: [],
-            leftList: [],
             timerPaused: false,
             winners: ['', '', '', '', ''],
             downloadReportVisible: false,
@@ -342,8 +341,10 @@ var app = Vue.createApp({
             return formatRichText(this.questionText);
         },
         answerStatusSummary: function(){
-            var sent = this.answerStatus.filter(function(p){ return p.answered; }).length;
-            return this.t('answerStatusCount').replace('{sent}', String(sent)).replace('{total}', String(this.answerStatus.length));
+            // Quien ha abandonado no cuenta: ya no responde.
+            var active = this.answerStatus.filter(function(p){ return !p.left; });
+            var sent = active.filter(function(p){ return p.answered; }).length;
+            return this.t('answerStatusCount').replace('{sent}', String(sent)).replace('{total}', String(active.length));
         },
         awayCount: function(){
             return this.answerStatus.filter(function(p){ return p.away; }).length;
@@ -1112,11 +1113,6 @@ setInterval(function(){
         app.autoLeft = Math.max(0, Math.ceil((app.autoEndAt - Date.now()) / 1000));
     }
 }, 250);
-
-// Quien ha abandonado la partida: lista aparte de los expulsados.
-socket.on('leftList', function(list){
-    app.leftList = Array.isArray(list) ? list : [];
-});
 
 socket.on('kickedList', function(list){
     app.kickedList = Array.isArray(list) ? list : [];

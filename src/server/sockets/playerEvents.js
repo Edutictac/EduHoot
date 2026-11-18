@@ -2,7 +2,7 @@ const { getQuestionMeta, normalizeCorrectAnswers } = require('../questionUtils')
 const { logger } = require('../logger');
 
 // player-join, player-join-game, playerAnswer.
-const { buildAnswerStatus } = require('./answerStatus');
+const { buildAnswerStatus, leftListOf } = require('./answerStatus');
 const { isKicked } = require('./kick');
 const { streakBonus, nextStreak, isStreakEnabled } = require('../services/scoring');
 const { isRandomName } = require('../services/randomNames');
@@ -29,7 +29,7 @@ module.exports = function createPlayerEvents({
 
   // Solo al anfitrión: estado de respuesta, mano levantada y pestaña de cada alumno.
   function emitAnswerStatus(hostId, game) {
-    io.to(hostId).emit('answerStatus', buildAnswerStatus(players.getPlayers(hostId), game.gameData.question));
+    io.to(hostId).emit('answerStatus', buildAnswerStatus(players.getPlayers(hostId), game.gameData.question, leftListOf(game, players.getPlayers(hostId))));
   }
 
   return function registerPlayerEvents(socket) {
@@ -107,13 +107,22 @@ module.exports = function createPlayerEvents({
         }
       }
 
-      const safeName = studentIdentity ? normalizePlayerName(studentIdentity.public_code) : normalizeSoloName(params.name);
+      // Quien ha abandonado y vuelve recupera su nombre anterior, sin poder elegirlo ni escribirlo.
+      // Solo quien ha sido expulsado puede elegir de nuevo (no está en la lista de abandonos).
+      const leftEntry = !studentIdentity && token ? (game.leftPlayers || []).find((l) => l.token === token) : null;
+      const lockedByLeave = !!leftEntry && !players.getPlayers(game.hostId).some((p) => p.name === leftEntry.name);
+      const safeName = lockedByLeave
+        ? leftEntry.name
+        : (studentIdentity ? normalizePlayerName(studentIdentity.public_code) : normalizeSoloName(params.name));
+      if (lockedByLeave) {
+        game.leftPlayers = game.leftPlayers.filter((l) => l !== leftEntry);
+      }
       if (isKicked(game, { name: safeName })) {
         socket.emit('playerJoinRejected', { code: 'kicked' });
         return;
       }
       // Con nombres aleatorios no se admite un nombre escrito a mano (feature 12).
-      if (game.randomNames && !studentIdentity && !isRandomName(safeName)) {
+      if (game.randomNames && !studentIdentity && !lockedByLeave && !isRandomName(safeName)) {
         socket.emit('playerJoinRejected', { code: 'randomNameRequired' });
         return;
       }

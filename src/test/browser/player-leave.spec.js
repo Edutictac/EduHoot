@@ -83,3 +83,23 @@ test('alumnado (partida): el botón de salir va flotante abajo a la izquierda, f
     expect(box.x).toBeLessThan(vp.width / 3);
     expect(box.y + box.height).toBeGreaterThan(vp.height * 0.6);
 });
+
+test('alumnado que abandonó: al volver recupera su nombre anterior, sin dado ni campo', async ({ page }) => {
+    await page.addInitScript(() => {
+        localStorage.setItem('playerTokens', JSON.stringify({ '12345:Lucía': 'tok-1' }));
+    });
+    await page.route(/^https:\/\//, route => route.abort());
+    await page.route('**/api/validate-pin/**', route => {
+        const withToken = route.request().url().includes('tokens=tok-1');
+        return route.fulfill({ json: { valid: true, randomNames: false, lockedName: withToken ? 'Lucía' : null } });
+    });
+    await page.route('**/api/random-names', route => route.fulfill({ json: ['Curious Owl'] }));
+    await page.route('**/api/validate-name**', route => route.fulfill({ json: { available: true } }));
+    await page.goto('/join.html?pin=12345&lang=es');
+    await page.waitForLoadState('load');
+
+    await expect(page.locator('#randomName')).toHaveText('Lucía');
+    await expect(page.locator('#rerollNameBtn')).toHaveCount(0);
+    await expect(page.locator('#name')).toHaveCount(0);
+    await expect(page.locator('.join-name-hint')).toHaveText('Recuperas tu nombre de antes.');
+});

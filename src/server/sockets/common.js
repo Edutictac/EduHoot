@@ -1,20 +1,12 @@
 const { getGamesCollection } = require('../data/repositories');
 const { logger } = require('../logger');
-const { buildAnswerStatus } = require('./answerStatus');
+const { buildAnswerStatus, leftListOf } = require('./answerStatus');
 const { recordKick, listKicked, unkick } = require('./kick');
 const { normalizeTimings } = require('../services/gameTimings');
 
 // disconnect, getScore, time, timeUp, requestDbNames — esdeveniments de
 // socket que no són específics ni d'amfitrió ni d'alumnat.
 module.exports = function createCommonEvents({ io, games, players, helpers, selectQuizzesForUser }) {
-  // Quien ha abandonado y aún no ha vuelto a entrar (mismo nombre).
-    function leftListOf(game) {
-      const current = players.getPlayers(game.hostId).map((p) => p.name);
-      return (game.leftPlayers || [])
-        .filter((l) => !current.includes(l.name))
-        .map((l) => ({ id: l.id, name: l.name, icon: l.icon }));
-    }
-
   const { scheduleHostReconnectCleanup, timingsFor, scheduleGameCleanup, emitQuestionOverPayloadDeferred, logGames, stopAutoAdvance } = helpers;
 
   return function registerCommonEvents(socket) {
@@ -85,7 +77,7 @@ module.exports = function createCommonEvents({ io, games, players, helpers, sele
     socket.on('getAnswerStatus', () => {
       const game = games.getGame(socket.id);
       if (!game || !game.gameData) return;
-      socket.emit('answerStatus', buildAnswerStatus(players.getPlayers(socket.id), game.gameData.question));
+      socket.emit('answerStatus', buildAnswerStatus(players.getPlayers(socket.id), game.gameData.question, leftListOf(game, players.getPlayers(socket.id))));
     });
 
     // Solo el anfitrión: pausa o tiempo restante del temporizador, para que los alumnos lo sigan.
@@ -114,7 +106,7 @@ module.exports = function createCommonEvents({ io, games, players, helpers, sele
       io.to(socket.id).emit('updatePlayerLobby', playersInGame);
       io.to(game.pin).emit('playersUpdated', playersInGame.length);
       if (game.gameData) {
-        io.to(socket.id).emit('answerStatus', buildAnswerStatus(playersInGame, game.gameData.question));
+        io.to(socket.id).emit('answerStatus', buildAnswerStatus(playersInGame, game.gameData.question, leftListOf(game, playersInGame)));
       }
       io.to(socket.id).emit('kickedList', listKicked(game));
       logger.info('Jugador expulsat per l\'amfitrió', { tag: 'player-kick', pin: game.pin, hostId: socket.id, playerId: target.playerId });
@@ -156,7 +148,6 @@ module.exports = function createCommonEvents({ io, games, players, helpers, sele
       const game = games.getGame(socket.id);
       if (!game) return;
       socket.emit('kickedList', listKicked(game));
-      socket.emit('leftList', leftListOf(game));
     });
 
     // El alumnado sale de la partida (con confirmación en su pantalla): se le quita de la lista del anfitrión.
@@ -168,7 +159,7 @@ module.exports = function createCommonEvents({ io, games, players, helpers, sele
       if (hostGame) {
         // Lista de abandonos del anfitrión (aparte de los expulsados). Sin tokens.
         hostGame.leftPlayers = (hostGame.leftPlayers || []).filter((l) => l.id !== socket.id);
-        hostGame.leftPlayers.push({ id: socket.id, name: player.name, icon: player.icon || '' });
+        hostGame.leftPlayers.push({ id: socket.id, name: player.name, icon: player.icon || '', token: player.token || '' });
       }
       if (player.token) players.tokens.delete(player.token);
       players.removePlayer(socket.id);
@@ -177,7 +168,7 @@ module.exports = function createCommonEvents({ io, games, players, helpers, sele
         const playersInGame = players.getPlayers(hostId);
         io.to(hostGame.pin).emit('updatePlayerLobby', playersInGame);
         io.to(hostId).emit('updatePlayerLobby', playersInGame);
-        io.to(hostId).emit('leftList', leftListOf(hostGame));
+        io.to(hostId).emit('answerStatus', buildAnswerStatus(playersInGame, hostGame.gameData ? hostGame.gameData.question : 0, leftListOf(hostGame, playersInGame)));
         logger.info('Alumne ha sortit de la partida', { tag: 'player-leave', pin: hostGame.pin, hostId, playerId: socket.id });
       }
       socket.emit('playerLeft');

@@ -665,7 +665,8 @@ socket.on('newScore', function(data){
 // Salir de la partida (confirmado por el alumnado): el servidor confirma y volvemos a la portada.
 var leaveResetTimer = null;
 socket.on('playerLeft', function(){
-    clearPersistedJoinState();
+    // Se conserva el token del PIN: así, al volver, recupera su nombre. Solo se olvida el último ingreso.
+    try{ localStorage.removeItem('playerLastJoin'); }catch(e){}
     socket.disconnect();
     window.location.href = '../../';
 });

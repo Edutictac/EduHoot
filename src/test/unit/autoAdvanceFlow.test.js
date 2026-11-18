@@ -74,3 +74,17 @@ test('avance automático: si el anfitrión sigue en resultados (clasificación) 
   helpers.stopAutoAdvance(game);
   assert.equal(first.cancelled, true);
 });
+
+test('abandonos: quien sale aparece en el estado como left, y vuelve a no estarlo si entra con el mismo nombre', () => {
+  const { buildAnswerStatus, leftListOf } = require('../../server/sockets/answerStatus');
+  const game = { leftPlayers: [{ id: 'x1', name: 'Lucía', icon: '🐰' }] };
+  const activeNow = [{ playerId: 'p1', name: 'Ana', gameData: { answeredQuestion: 1 } }];
+  const rows = buildAnswerStatus(activeNow, 1, leftListOf(game, activeNow));
+  const left = rows.find((r) => r.name === 'Lucía');
+  assert.equal(left.left, true);
+  assert.equal(left.answered, false);
+  assert.equal(rows.filter((r) => !r.left).length, 1);
+  // Vuelve con el mismo nombre: ya no es abandono.
+  const back = [...activeNow, { playerId: 'p2', name: 'Lucía', gameData: {} }];
+  assert.equal(leftListOf(game, back).length, 0);
+});

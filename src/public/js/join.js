@@ -115,6 +115,8 @@
                 pin: '',
                 // Con nombres aleatorios el alumnado no escribe el suyo: se le asigna uno de la lista.
                 randomNames: false,
+                // Quien ha abandonado la partida recupera su nombre: no lo puede elegir ni escribir.
+                nameLocked: false,
                 rolling: false,
                 rerollsUsed: 0,
                 name: '',
@@ -210,11 +212,18 @@
                         return body.join_token;
                     });
             },
-            applyValidPin: function(pin, randomNames){
+            applyValidPin: function(pin, randomNames, lockedName){
                 this.pinValidated = true;
                 this.pin = pin;
-                this.randomNames = !!randomNames;
                 this.modalOpen = false;
+                if(lockedName){
+                    this.name = lockedName;
+                    this.nameLocked = true;
+                    this.randomNames = true;
+                    this.nameError = '';
+                    return;
+                }
+                this.randomNames = !!randomNames;
                 if(this.randomNames){
                     this.rerollsUsed = readRerolls(pin);
                     this.rerollName(false);
@@ -257,13 +266,20 @@
                 }
                 this.validating = true;
                 this.pinError = '';
-                fetch('/api/validate-pin/' + encodeURIComponent(pin), {
+                // Tokens guardados en este navegador para este PIN (sirven para recuperar el nombre tras abandonar).
+                var storedTokens = loadTokens();
+                var tokenList = Object.keys(storedTokens)
+                    .filter(function(k){ return k.indexOf(pin + ':') === 0; })
+                    .map(function(k){ return storedTokens[k]; })
+                    .join(',');
+                var url = '/api/validate-pin/' + encodeURIComponent(pin) + (tokenList ? '?tokens=' + encodeURIComponent(tokenList) : '');
+                fetch(url, {
                     headers: { 'Accept': 'application/json' }
                 })
                     .then(function(res){ return res.json(); })
                     .then(function(data){
                         if(data && data.valid){
-                            self.applyValidPin(pin, !!data.randomNames);
+                            self.applyValidPin(pin, !!data.randomNames, data.lockedName || null);
                         }else{
                             self.pinError = t('join_pin_error', 'PIN incorrecto. Intenta de nuevo.');
                             self.focusRef('pinModalInput');
@@ -309,7 +325,7 @@
                         // Issue #28: el nom no es pot repetir en la partida. Si la
                         // consulta falla, s'entra igual: el servidor també ho comprova.
                         return checkNameAvailable(pinVal, name).then(function(available){
-                            if(!available && self.randomNames){
+                            if(!available && self.randomNames && !self.nameLocked){
                                 // Nombre aleatorio ya usado en esta partida: se asigna otro sin pedir nada al alumnado.
                                 return self.rerollName(false);
                             }

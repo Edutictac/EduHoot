@@ -83,25 +83,19 @@
         <div id="answerStatus" class="answer-status" v-show="answerStatus.length">
             <p class="answer-status-summary">{{ answerStatusSummary }}<span v-if="awayCount" class="answer-status-away"> · {{ awayText }}</span></p>
             <ul class="answer-status-list">
-                <li v-for="p in answerStatus" :key="p.playerId" :class="p.answered ? 'is-sent' : 'is-trying'">
+                <li v-for="p in answerStatus" :key="p.playerId" :class="p.left ? 'is-left' : (p.answered ? 'is-sent' : 'is-trying')">
                     <span class="answer-status-icon">{{ p.icon }}</span>
                     <span class="answer-status-name">{{ p.name }}</span>
                     <span v-if="p.streak >= 3" class="answer-status-fire" :title="p.streak + ' ' + t('streakInRow')">🔥 {{ p.streak }} {{ t('streakInRow') }}</span>
                     <span v-if="p.hand" class="answer-status-hand" :title="t('handRaised')">✋</span>
                     <span v-if="p.away" class="answer-status-away-dot" :title="t('awayFromTab')">⚠</span>
-                    <span v-if="timerVisible" class="answer-status-label">{{ p.answered ? t('answerSent') : t('answerTrying') }}</span>
-                    <button v-if="pendingKickId !== p.playerId" type="button" class="kick-btn" @click="askKick(p)">{{ t('kickBtn') }}</button>
+                    <span v-if="p.left" class="answer-status-label answer-status-label--left">{{ t('leftTag') }}</span>
+                    <span v-else-if="timerVisible" class="answer-status-label">{{ p.answered ? t('answerSent') : t('answerTrying') }}</span>
+                    <button v-if="p.left" type="button" class="kick-btn" disabled>{{ t('leftBtn') }}</button>
+                    <button v-else-if="pendingKickId !== p.playerId" type="button" class="kick-btn" @click="askKick(p)">{{ t('kickBtn') }}</button>
                     <button v-else type="button" class="kick-btn kick-btn--confirm" @click="confirmKick(p)">{{ t('kickConfirm') }}</button>
                 </li>
             </ul>
-        </div>
-        <div v-if="leftList.length" id="left-list" class="left-list">
-            <p class="left-title">{{ t('leftTitle') }}</p>
-            <div class="left-item" v-for="l in leftList" :key="l.id">
-                <span class="left-icon">{{ l.icon }}</span>
-                <span class="left-name">{{ l.name }}</span>
-                <span class="left-tag">{{ t('leftTag') }}</span>
-            </div>
         </div>
         <div v-if="kickedList.length" id="kicked-list" class="kicked-list">
             <p class="kicked-title">{{ t('kickedTitle') }}</p>

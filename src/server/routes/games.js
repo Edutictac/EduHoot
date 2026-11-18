@@ -16,7 +16,11 @@ module.exports = function createGamesRouter({ games, players, finishedSessionRep
       return res.json({ valid: false });
     }
     // randomNames: el anfitrión ha elegido nombres aleatorios (sin escribirlos).
-    res.json({ valid: true, randomNames: !!game.randomNames });
+    // lockedName: quien ha abandonado la partida recupera su nombre (tokens del navegador).
+    const tokens = String(req.query.tokens || '').split(',').filter(Boolean).slice(0, 20);
+    const left = tokens.length ? (game.leftPlayers || []).find((l) => l.token && tokens.includes(l.token)) : null;
+    const lockedName = left && !players.getPlayers(game.hostId).some((p) => p.name === left.name) ? left.name : null;
+    res.json({ valid: true, randomNames: !!game.randomNames, lockedName });
   });
 
   // Lista fija de nombres aleatorios (valenciana), independiente del idioma.

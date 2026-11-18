@@ -61,9 +61,9 @@
                         <span id="randomName" class="random-name">{{ name }}</span>
                         <!-- El formulario envía el nombre asignado: sin este campo llegaría vacío. -->
                         <input type="hidden" name="name" :value="name" />
-                        <button type="button" id="rerollNameBtn" class="reroll-btn" :class="{ 'is-rolling': rolling }" :disabled="rolling || rerollsLeft() <= 0" :title="rerollsLeft() > 0 ? t('join_random_reroll') : t('join_reroll_limit')" :aria-label="t('join_random_reroll')" @click="rerollByStudent">🎲</button>
+                        <button v-if="!nameLocked" type="button" id="rerollNameBtn" class="reroll-btn" :class="{ 'is-rolling': rolling }" :disabled="rolling || rerollsLeft() <= 0" :title="rerollsLeft() > 0 ? t('join_random_reroll') : t('join_reroll_limit')" :aria-label="t('join_random_reroll')" @click="rerollByStudent">🎲</button>
                     </div>
-                    <p class="join-name-hint">{{ t('join_name_hint') }}</p>
+                    <p class="join-name-hint">{{ nameLocked ? t('join_name_locked') : t('join_name_hint') }}</p>
                 </div>
                 <div id="student-auth-fields" class="student-auth" :class="{ hidden: !studentAuthEnabled }">
                     <p class="student-auth__intro">{{ t('join_student_intro') }}</p>

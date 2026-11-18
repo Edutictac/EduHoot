@@ -7,7 +7,7 @@ const {
 } = require('../questionUtils');
 const { logger } = require('../logger');
 const { isStreakEnabled } = require('../services/scoring');
-const { buildAnswerStatus } = require('./answerStatus');
+const { buildAnswerStatus, leftListOf } = require('./answerStatus');
 
 const { getTimings } = require('../services/gameTimings');
 const { normalizeAutoAdvance, AutoAdvanceTimer } = require('../services/autoAdvance');
@@ -430,7 +430,7 @@ module.exports = function createGameHelpers({ io, games, players, cleanImportedT
         }
       });
       if (changed) {
-        io.to(game.hostId).emit('answerStatus', buildAnswerStatus(playerData, game.gameData.question));
+        io.to(game.hostId).emit('answerStatus', buildAnswerStatus(playerData, game.gameData.question, leftListOf(game, playerData)));
       }
     }
     const questions = game.gameData.questions || [];
