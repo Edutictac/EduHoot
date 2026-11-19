@@ -1,6 +1,7 @@
 const { getGamesCollection } = require('../data/repositories');
 const { logger } = require('../logger');
 const { normalizeAutoAdvance } = require('../services/autoAdvance');
+const { hasMatchingQuestion, normalizeMatchingBlindStyle } = require('../questionUtils');
 
 // host-join, host-join-game, startGame, nextQuestion, skipQuestion, newQuiz.
 module.exports = function createHostEvents({
@@ -57,7 +58,10 @@ module.exports = function createHostEvents({
           }
 
           const playersInGame = players.getPlayers(socket.id);
-          socket.emit('showGamePin', { pin: existingByPin.pin });
+          socket.emit('showGamePin', {
+            pin: existingByPin.pin,
+            hasMatching: hasMatchingQuestion(existingByPin.gameData && existingByPin.gameData.originalQuestions)
+          });
           socket.emit('updatePlayerLobby', playersInGame);
           io.to(existingByPin.pin).emit('hostReconnected');
           return;
@@ -109,8 +113,10 @@ module.exports = function createHostEvents({
           logger.info('Partida creada', { tag: 'host-join', pin: game.pin, hostId: game.hostId });
           logGames('host-join');
 
+          // hasMatching: el lobby ofrece cómo responder a ciegas las correspondencias.
           socket.emit('showGamePin', {
-            pin: game.pin
+            pin: game.pin,
+            hasMatching: hasMatchingQuestion(originalQuestions)
           });
         } else {
           socket.emit('noGameFound');
@@ -404,6 +410,8 @@ module.exports = function createHostEvents({
       }, opts || {});
       // Avance automático entre preguntas: 0 = manual; si no, entero de 5 a 20 s.
       options.autoAdvanceSec = normalizeAutoAdvance(options.autoAdvanceSec);
+      // Correspondencia a ciegas: desplegables, toques con códigos (por defecto) o paso a paso.
+      options.matchingBlindStyle = normalizeMatchingBlindStyle(options.matchingBlindStyle);
       if (options.timePerQuestion !== undefined && options.timePerQuestion !== null && String(options.timePerQuestion).trim() !== '') {
         const parsedTime = parseInt(options.timePerQuestion, 10);
         if (Number.isNaN(parsedTime)) {

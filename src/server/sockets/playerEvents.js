@@ -1,5 +1,5 @@
 const { studentMetaOf } = require('../services/showAnswers');
-const { getQuestionMeta, normalizeCorrectAnswers } = require('../questionUtils');
+const { getQuestionMeta, normalizeCorrectAnswers, normalizeMatchingSubmission } = require('../questionUtils');
 const { logger } = require('../logger');
 
 // player-join, player-join-game, playerAnswer.
@@ -324,6 +324,12 @@ module.exports = function createPlayerEvents({
               } else {
                 normalizedSubmission = { text: String(num || '') };
               }
+            } else if (meta.type === 'matching') {
+              normalizedSubmission = normalizeMatchingSubmission(
+                num,
+                (meta.matchSolution || []).length,
+                (meta.matchRight || []).length
+              );
             } else if (meta.type === 'numeric') {
               if (num && typeof num === 'object' && num.number !== undefined) {
                 normalizedSubmission = { number: num.number };

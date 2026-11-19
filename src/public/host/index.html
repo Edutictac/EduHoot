@@ -50,6 +50,13 @@
                 <label><input type="checkbox" id="opt-rand-q" v-model="options.randomQuestions"> <span>{{ t('opt_rand_q') }}</span></label>
                 <label><input type="checkbox" id="opt-rand-a" v-model="options.randomAnswers"> <span>{{ t('opt_rand_a') }}</span></label>
                 <label><input type="checkbox" id="opt-send-students" v-model="options.sendToStudents"> <span>{{ t('opt_send_students') }}</span><br><small class="opt-hint">{{ t('opt_send_students_hint') }}</small></label>
+                <label v-if="hasMatching && !options.sendToStudents" class="opt-auto" id="opt-matching-blind-row"><span>{{ t('opt_matching_blind') }}</span>
+                    <select id="opt-matching-blind" v-model="options.matchingBlindStyle">
+                        <option value="codes">{{ t('opt_matching_blind_codes') }}</option>
+                        <option value="select">{{ t('opt_matching_blind_select') }}</option>
+                        <option value="steps">{{ t('opt_matching_blind_steps') }}</option>
+                    </select>
+                </label>
                 <label><input type="checkbox" id="opt-show-scores" v-model="options.showScoresBetween"> <span>{{ t('opt_show_scores') }}</span></label>
                 <label><input type="checkbox" id="opt-show-answers" v-model="options.showCorrectAnswers"> <span>{{ t('opt_show_answers') }}</span></label>
                 <label><input type="checkbox" id="opt-streak" v-model="options.streak"> <span>{{ t('opt_streak') }}</span></label>

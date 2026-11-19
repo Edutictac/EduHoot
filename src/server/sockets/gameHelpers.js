@@ -3,7 +3,9 @@ const {
   isFreeAnswerType,
   normalizeCorrectAnswers,
   getQuestionMeta,
-  isSubmissionCorrect
+  isSubmissionCorrect,
+  buildMatchingLayout,
+  normalizeMatchingBlindStyle
 } = require('../questionUtils');
 const { logger } = require('../logger');
 const { isStreakEnabled } = require('../services/scoring');
@@ -191,6 +193,32 @@ module.exports = function createGameHelpers({ io, games, players, cleanImportedT
         };
       }
 
+      // Correspondencia: la izquierda en orden fijo y la derecha barajada siempre
+      // (sin barajar, la solución sería el mismo orden). Se evita que salga igual.
+      if (type === 'matching') {
+        const pairs = Array.isArray(meta.pairs) ? meta.pairs : [];
+        const domain = pairs.map((_, idx) => idx);
+        let order = shuffleArray(domain);
+        if (domain.length > 1 && order.every((v, i) => v === i)) {
+          order = [...domain.slice(1), domain[0]];
+        }
+        const layout = buildMatchingLayout(pairs, order);
+        return {
+          question: cleanImportedText(q.question),
+          answers: [],
+          correct: 1,
+          correctAnswers: [1],
+          type,
+          time: useOverrideTime ? overrideTime : (q.time || 0),
+          pointsMultiplier: Number(q.pointsMultiplier) > 1 ? 2 : 1,
+          image: q.image || '',
+          video: q.video || '',
+          matchLeft: layout.matchLeft.map(cleanImportedText),
+          matchRight: layout.matchRight.map(cleanImportedText),
+          matchSolution: layout.matchSolution
+        };
+      }
+
       // Para verdadero/falso: trabajamos solo con 2 opciones y evitamos que el shuffle
       // meta strings vacíos en A/B o que el correcto acabe en 3/4.
       const rawAnswers = Array.isArray(q.answers) ? q.answers.map(cleanImportedText) : [];
@@ -243,10 +271,15 @@ module.exports = function createGameHelpers({ io, games, players, cleanImportedT
     const current = questions[questionNum];
     if (!current) return null;
     const meta = getQuestionMeta(current);
-    const answer1 = current.answers[0];
-    const answer2 = current.answers[1];
-    const answer3 = current.answers[2];
-    const answer4 = current.answers[3];
+    const answerList = Array.isArray(current.answers) ? current.answers : [];
+    const answer1 = answerList[0];
+    const answer2 = answerList[1];
+    const answer3 = answerList[2];
+    const answer4 = answerList[3];
+    // Correspondencia: el anfitrión recibe también la solución; el alumnado, solo las columnas.
+    const matching = meta.type === 'matching'
+      ? { matchLeft: meta.matchLeft, matchRight: meta.matchRight }
+      : null;
     const image = current.image || '';
     const video = current.video || '';
     const time = (game.gameData.options && game.gameData.options.timePerQuestion) || current.time || 20;
@@ -273,7 +306,8 @@ module.exports = function createGameHelpers({ io, games, players, cleanImportedT
         showScores: game.gameData.options ? game.gameData.options.showScoresBetween !== false : true,
         questionNumber: game.gameData.question,
         totalQuestions: game.gameData.totalQuestions || questions.length,
-        time
+        time,
+        ...(matching ? { ...matching, matchSolution: meta.matchSolution } : {})
       },
       playerPayload: {
         question: current.question,
@@ -282,7 +316,8 @@ module.exports = function createGameHelpers({ io, games, players, cleanImportedT
         image,
         video,
         pointsMultiplier,
-        time
+        time,
+        ...(matching || {})
       }
     };
   }
@@ -295,9 +330,19 @@ module.exports = function createGameHelpers({ io, games, players, cleanImportedT
     if (sendFull) return playerPayload;
     const answerCount = (playerPayload.answers || [])
       .filter((a) => a && String(a).trim()).length;
+    // Correspondencia a ciegas: solo el número de elementos de cada columna; el móvil
+    // muestra números (izquierda) y letras (derecha), y el texto está en el proyector.
+    const matchingCounts = playerPayload.type === 'matching'
+      ? {
+        leftCount: (playerPayload.matchLeft || []).length,
+        rightCount: (playerPayload.matchRight || []).length,
+        blindStyle: normalizeMatchingBlindStyle(options.matchingBlindStyle)
+      }
+      : {};
     return {
       blind: true,
       answerCount,
+      ...matchingCounts,
       type: playerPayload.type,
       pointsMultiplier: playerPayload.pointsMultiplier,
       time: playerPayload.time

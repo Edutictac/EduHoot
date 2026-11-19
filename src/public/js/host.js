@@ -244,6 +244,8 @@ var lobby = Vue.createApp({
             starting: false,
             // Alumnado expulsado en esta partida (sin tokens), para poder desbloquearlo.
             kickedList: [],
+            // El quiz tiene alguna correspondencia: se ofrece cómo responderla a ciegas.
+            hasMatching: false,
             errorKey: '',
             errorText: '',
             options: {
@@ -259,6 +261,8 @@ var lobby = Vue.createApp({
                 streak: true,
                 // Avance automático entre preguntas: 0 = manual; 3–20 s.
                 autoAdvanceSec: 0,
+                // Correspondencia a ciegas: codes (toques, por defecto), select o steps.
+                matchingBlindStyle: 'codes',
                 // Tiempos ampliados de esta partida (issue #13). Vacío = mínimo.
                 timings: { hostReconnectSec: '', playerReconnectSec: '', cleanupSec: '', inactivityMin: '' },
                 time: ''
@@ -410,6 +414,7 @@ socket.on('connect', function() {
 
 socket.on('showGamePin', function(data){
     lobby.pin = (data.pin || '').toString();
+    lobby.hasMatching = !!data.hasMatching;
     params.pin = data.pin;
     try{ localStorage.setItem(lastPinKey, data.pin); }catch(e){}
 });
@@ -469,6 +474,9 @@ function startGame(){
             }
         })()
     };
+    if(lobby.hasMatching && !opts.sendToStudents){
+        opts.matchingBlindStyle = options.matchingBlindStyle || 'codes';
+    }
     // v-model en un input numérico da un número o '' si está vacío.
     var rawTime = options.time == null ? '' : String(options.time).trim();
     if(rawTime){

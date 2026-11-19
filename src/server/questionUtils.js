@@ -1,4 +1,7 @@
-const VALID_TYPES = new Set(['quiz', 'multiple', 'true-false', 'short-answer', 'numeric', 'poll']);
+const VALID_TYPES = new Set(['quiz', 'multiple', 'true-false', 'short-answer', 'numeric', 'poll', 'matching']);
+
+// Correspondencia: como máximo 8 elementos en la columna derecha (parejas + impostoras).
+const MATCHING_MAX_ITEMS = 8;
 
 function normalizeFreeText(value) {
   let str = (value || '').toString().trim().toLowerCase();
@@ -55,6 +58,12 @@ function normalizeQuestionType(rawType) {
 
   if (key === 'quiz') return 'quiz';
   if (['poll', 'survey', 'encuesta', 'enquesta'].includes(key)) return 'poll';
+  if (
+    ['matching', 'match', 'correspondencia', 'emparejar', 'emparejamiento', 'emparellar',
+      'emparellament', 'relacionar'].includes(key)
+  ) {
+    return 'matching';
+  }
   if (key === 'multiple' || key.includes('multi')) return 'multiple';
 
   if (
@@ -112,6 +121,102 @@ function isFreeAnswerType(type) {
   return type === 'short-answer' || type === 'numeric';
 }
 
+// Correspondencia: lee las parejas de un array [{ left, right }] o de un texto
+// «izquierda -> derecha | ... | -> impostora». Una pareja sin izquierda es una
+// impostora (solo aparece en la columna derecha). Se descartan las derechas vacías
+// o repetidas y se limita a MATCHING_MAX_ITEMS.
+function parseMatchingPairs(raw) {
+  let list = [];
+  if (Array.isArray(raw)) {
+    list = raw.map((p) => ({
+      left: p && p.left !== undefined && p.left !== null ? String(p.left) : '',
+      right: p && p.right !== undefined && p.right !== null ? String(p.right) : ''
+    }));
+  } else if (typeof raw === 'string' && raw.includes('->')) {
+    list = raw.split(/[|\n]+/g).map((chunk) => {
+      const idx = chunk.indexOf('->');
+      if (idx === -1) return { left: '', right: chunk };
+      return { left: chunk.slice(0, idx), right: chunk.slice(idx + 2) };
+    });
+  }
+  const out = [];
+  const seen = new Set();
+  for (const p of list) {
+    const left = p.left.trim();
+    const right = p.right.trim();
+    if (!right) continue;
+    const key = normalizeFreeText(right) || right.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({ left, right });
+    if (out.length >= MATCHING_MAX_ITEMS) break;
+  }
+  return out;
+}
+
+function looksLikeMatchingText(raw) {
+  if (typeof raw !== 'string') return false;
+  return raw.split(/[|\n]+/g).filter((chunk) => /\S\s*->\s*\S/.test(chunk)).length >= 2;
+}
+
+// Disposición de una correspondencia en partida: la izquierda en el orden guardado
+// (solo las parejas reales), la derecha (con impostoras) en el orden que dé `order`,
+// y la solución: para cada elemento de la izquierda, el índice (desde 0) de su
+// derecha. Sin `order`, la derecha sigue el orden guardado.
+function buildMatchingLayout(pairs, order) {
+  const list = Array.isArray(pairs) ? pairs : [];
+  const domain = list.map((_, idx) => idx);
+  const rightOrder = Array.isArray(order) && order.length === domain.length ? order : domain;
+  const right = rightOrder.map((idx) => list[idx].right);
+  const left = [];
+  const solution = [];
+  list.forEach((pair, idx) => {
+    if (!pair.left) return;
+    left.push(pair.left);
+    solution.push(rightOrder.indexOf(idx));
+  });
+  return { matchLeft: left, matchRight: right, matchSolution: solution };
+}
+
+// Disposición ya barajada que trae una pregunta de partida, si es coherente.
+function readMatchingLayout(item) {
+  const left = item.matchLeft;
+  const right = item.matchRight;
+  const solution = item.matchSolution;
+  if (!Array.isArray(left) || !Array.isArray(right) || !Array.isArray(solution)) return null;
+  if (!left.length || solution.length !== left.length) return null;
+  const valid = solution.every((v) => Number.isInteger(v) && v >= 0 && v < right.length);
+  if (!valid) return null;
+  return {
+    matchLeft: left.map(String),
+    matchRight: right.map(String),
+    matchSolution: solution.slice()
+  };
+}
+
+// Respuesta del alumno: para cada elemento de la izquierda, el índice elegido de la
+// derecha (desde 0) o null si lo deja sin emparejar.
+function normalizeMatchingSubmission(raw, leftCount, rightCount) {
+  const list = Array.isArray(raw) ? raw : (raw && Array.isArray(raw.matches) ? raw.matches : []);
+  const out = [];
+  for (let i = 0; i < leftCount; i += 1) {
+    const v = list[i];
+    const n = v === null || v === undefined || v === '' ? NaN : Number(v);
+    out.push(Number.isInteger(n) && n >= 0 && n < rightCount ? n : null);
+  }
+  return out;
+}
+
+// Proporción de parejas acertadas (0..1).
+function matchingScoreRatio(meta, submission) {
+  const solution = meta && Array.isArray(meta.matchSolution) ? meta.matchSolution : [];
+  if (!solution.length) return 0;
+  const rightCount = Array.isArray(meta.matchRight) ? meta.matchRight.length : 0;
+  const answer = normalizeMatchingSubmission(submission, solution.length, rightCount);
+  const hits = solution.filter((value, idx) => answer[idx] === value).length;
+  return hits / solution.length;
+}
+
 function normalizeCorrectAnswers(rawCorrect, fallback = true) {
   const answers = [];
   const seen = new Set();
@@ -148,6 +253,8 @@ function normalizeQuestionMeta(item = {}) {
     const hasNumericSignals = inferredNumber !== null || inferredTol !== null;
     if (hasNumericSignals) {
       type = 'numeric';
+    } else if (looksLikeMatchingText(item.texto || item.text) || (Array.isArray(item.pairs) && item.pairs.length)) {
+      type = 'matching';
     } else {
       const rawText = (item.texto || item.text || item.acceptedAnswers || item.correctText || '').toString().trim();
       if (rawText) type = 'short-answer';
@@ -159,6 +266,13 @@ function normalizeQuestionMeta(item = {}) {
   let acceptedAnswers = [];
   let numericAnswer = null;
   let tolerance = null;
+  let pairs = [];
+  let layout = null;
+
+  if (type === 'matching') {
+    pairs = parseMatchingPairs(Array.isArray(item.pairs) ? item.pairs : (item.pairs || item.texto || item.text || ''));
+    layout = readMatchingLayout(item) || buildMatchingLayout(pairs);
+  }
 
   if (type === 'short-answer') {
     const rawText = item.texto || item.text || item.acceptedAnswers || item.correctText || item.correcta || item.correct;
@@ -189,10 +303,10 @@ function normalizeQuestionMeta(item = {}) {
   }
 
   // Para tipos no indexados, mantenemos defaults para compatibilidad.
-  if (type === 'short-answer' || type === 'numeric') {
+  if (type === 'short-answer' || type === 'numeric' || type === 'matching') {
     correctAnswers = [1];
   }
-  return {
+  const meta = {
     type,
     correctAnswers,
     correct: correctAnswers[0] || 1,
@@ -200,6 +314,11 @@ function normalizeQuestionMeta(item = {}) {
     numericAnswer,
     tolerance
   };
+  if (type === 'matching') {
+    meta.pairs = pairs;
+    Object.assign(meta, layout);
+  }
+  return meta;
 }
 
 function getQuestionMeta(question) {
@@ -207,13 +326,19 @@ function getQuestionMeta(question) {
     return { correctAnswers: [1], type: 'quiz' };
   }
   const meta = normalizeQuestionMeta(question);
-  return {
+  const out = {
     correctAnswers: meta.correctAnswers,
     type: meta.type,
     acceptedAnswers: meta.acceptedAnswers,
     numericAnswer: meta.numericAnswer,
     tolerance: meta.tolerance
   };
+  if (meta.type === 'matching') {
+    out.matchLeft = meta.matchLeft;
+    out.matchRight = meta.matchRight;
+    out.matchSolution = meta.matchSolution;
+  }
+  return out;
 }
 
 function looksLikeFreeTypeQuestion(q) {
@@ -237,6 +362,9 @@ function looksLikeFreeTypeQuestion(q) {
 function isSubmissionCorrect(meta, submission) {
   if (!meta || !Array.isArray(meta.correctAnswers) || !meta.correctAnswers.length) {
     return false;
+  }
+  if (meta.type === 'matching') {
+    return matchingScoreRatio(meta, submission) === 1;
   }
   if (meta.type === 'short-answer') {
     const raw = submission && typeof submission === 'object' && submission.text !== undefined ? submission.text : submission;
@@ -286,7 +414,24 @@ function buildAnswerFields(item = {}, meta, { hasVideo = false } = {}) {
       tolerance: meta.tolerance
     };
   }
+  if (meta.type === 'matching') {
+    return { pairs: Array.isArray(meta.pairs) ? meta.pairs.map((p) => ({ ...p })) : [] };
+  }
   return {};
+}
+
+// Cómo responde el móvil a ciegas una correspondencia (lo elige el profesor en el lobby):
+// select = desplegables, codes = toques con números y letras, steps = paso a paso.
+const MATCHING_BLIND_STYLES = ['codes', 'select', 'steps'];
+
+function normalizeMatchingBlindStyle(raw) {
+  const value = String(raw || '').trim().toLowerCase();
+  return MATCHING_BLIND_STYLES.includes(value) ? value : 'codes';
+}
+
+function hasMatchingQuestion(questions) {
+  return (Array.isArray(questions) ? questions : [])
+    .some((q) => q && normalizeQuestionMeta(q).type === 'matching');
 }
 
 module.exports = {
@@ -301,5 +446,13 @@ module.exports = {
   looksLikeFreeTypeQuestion,
   isSubmissionCorrect,
   buildAnswerFields,
+  parseMatchingPairs,
+  buildMatchingLayout,
+  normalizeMatchingSubmission,
+  matchingScoreRatio,
+  normalizeMatchingBlindStyle,
+  hasMatchingQuestion,
+  MATCHING_BLIND_STYLES,
+  MATCHING_MAX_ITEMS,
   VALID_TYPES
 };

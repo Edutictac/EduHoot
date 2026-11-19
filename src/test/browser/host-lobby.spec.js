@@ -192,3 +192,23 @@ test('«Cancelar partida» vuelve a la portada', async ({ page }) => {
     await page.evaluate(() => window.__serverEmit('gameCancelled', []));
     await page.waitForURL(url => url.pathname === '/');
 });
+
+test('correspondencia a ciegas: el selector solo sale con correspondencias y sin «Mostrar preguntas»', async ({ page }) => {
+    await openLobby(page, '?id=q1&lang=es');
+    await page.evaluate(() => window.__serverEmit('showGamePin', { pin: '12345' }));
+    await page.locator('#opt-send-students').uncheck();
+    await expect(page.locator('#opt-matching-blind')).toHaveCount(0);
+
+    await page.evaluate(() => window.__serverEmit('showGamePin', { pin: '12345', hasMatching: true }));
+    await expect(page.locator('#opt-matching-blind')).toHaveValue('codes');
+    await page.locator('#opt-send-students').check();
+    await expect(page.locator('#opt-matching-blind')).toHaveCount(0);
+    await page.locator('#opt-send-students').uncheck();
+    await page.locator('#opt-matching-blind').selectOption('steps');
+
+    await page.locator('#start').click();
+    await expect.poll(() => emitsNamed(page, 'startGame'), { timeout: 6000 }).toHaveLength(1);
+    const opts = (await emitsNamed(page, 'startGame'))[0];
+    expect(opts.sendToStudents).toBe(false);
+    expect(opts.matchingBlindStyle).toBe('steps');
+});

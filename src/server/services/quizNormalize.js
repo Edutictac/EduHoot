@@ -155,6 +155,12 @@ function normalizeQuestions(list = []) {
       if (Array.isArray(answerFields.acceptedAnswers)) {
         answerFields.acceptedAnswers = answerFields.acceptedAnswers.map(cleanImportedText);
       }
+      if (Array.isArray(answerFields.pairs)) {
+        answerFields.pairs = answerFields.pairs.map((p) => ({
+          left: cleanImportedText(p.left),
+          right: cleanImportedText(p.right)
+        }));
+      }
       return { ...base, ...answerFields };
     })
     .filter((q) => q.question.trim().length > 0);
@@ -271,10 +277,11 @@ function normalizeAllowClone(value, fallback = false) {
 }
 
 // Multijugador: preguntas de respuesta libre (se omiten en multijugador).
+// La correspondencia también se omite mientras el multijugador local no la admita.
 function isMultiplayerFreeTypeQuestion(q) {
   if (!q) return false;
   const meta = normalizeQuestionMeta(q);
-  if (isFreeAnswerType(meta.type)) return true;
+  if (isFreeAnswerType(meta.type) || meta.type === 'matching') return true;
   return looksLikeFreeTypeQuestion(q);
 }
 

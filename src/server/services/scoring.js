@@ -1,4 +1,4 @@
-const { isSubmissionCorrect } = require('../questionUtils');
+const { isSubmissionCorrect, matchingScoreRatio } = require('../questionUtils');
 
 const MAX_POINTS_PER_QUESTION = 1000;
 
@@ -20,6 +20,8 @@ function calculateQuestionScore(game) {
 
 function getSubmissionScoreRatio(meta, submission) {
   if (!meta || meta.type === 'poll') return 0;
+  // Correspondencia: proporción de parejas acertadas, sin restar por los fallos.
+  if (meta.type === 'matching') return matchingScoreRatio(meta, submission);
   if (meta.type !== 'multiple') return isSubmissionCorrect(meta, submission) ? 1 : 0;
   const selected = Array.isArray(submission) ? new Set(submission) : new Set();
   const correct = Array.isArray(meta.correctAnswers) ? meta.correctAnswers : [];
