@@ -158,3 +158,28 @@ test('el multijugador local omite la correspondencia mientras no la admita', () 
   assert.equal(isMultiplayerFreeTypeQuestion({ type: 'matching', pairs: capitals }), true);
   assert.equal(isMultiplayerFreeTypeQuestion({ type: 'quiz', answers: ['a', 'b'], correct: 1 }), false);
 });
+
+test('CSV: la correspondencia sale en «texto» y vuelve igual al importar', () => {
+  const { quizToCsv } = require('../../server/services/sessionReport')({ players: { getPlayers: () => [] } });
+  const { parseCsv, toQuestion } = require('../../server/importCsv');
+  const pairs = capitals;
+  const csv = quizToCsv({ questions: [{ question: 'Capitales', type: 'matching', time: 30, pairs }] });
+  const line = csv.split('\n')[1].split(';');
+  assert.equal(line[0], 'matching');
+  assert.equal(line[7], '');
+  assert.equal(line[10], 'Francia -> París | Italia -> Roma | Alemania -> Berlín | -> Lisboa');
+
+  const back = parseCsv(csv).map(toQuestion)[0];
+  assert.equal(back.type, 'matching');
+  assert.equal(back.time, 30);
+  assert.deepEqual(back.pairs, pairs);
+});
+
+test('CSV: con «correspondencia» o sin tipo, el texto con -> se lee como correspondencia', () => {
+  const { toQuestion } = require('../../server/importCsv');
+  for (const tipo of ['correspondencia', '']) {
+    const q = toQuestion({ tipo, pregunta: 'P', texto: 'a -> 1 | b -> 2 | -> 3', tiempo: '20' });
+    assert.equal(q.type, 'matching', tipo);
+    assert.deepEqual(q.pairs, [{ left: 'a', right: '1' }, { left: 'b', right: '2' }, { left: '', right: '3' }]);
+  }
+});

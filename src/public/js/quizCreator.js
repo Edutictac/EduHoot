@@ -78,6 +78,19 @@ var i18n = {
         questionTypeShort: 'Respuesta corta',
         questionTypeNumeric: 'Numérica',
         questionTypePoll: 'Encuesta (sin puntuación)',
+        questionTypeMatching: 'Correspondencia (emparejar)',
+        matchingHint: 'Escribe cada pareja. En la partida, la columna derecha se baraja.',
+        matchingLeft: 'Izquierda',
+        matchingRight: 'Derecha',
+        matchingAddPair: '+ Añadir pareja',
+        matchingImpostors: 'Impostoras: elementos de la derecha sin pareja (opcional)',
+        matchingAddImpostor: '+ Añadir impostora',
+        matchingCount: '{n} de 8 elementos en la columna derecha',
+        matchingRemove: 'Quitar',
+        matchingErrorPairs: 'Pregunta {n}: la correspondencia necesita al menos 2 parejas completas.',
+        matchingErrorIncomplete: 'Pregunta {n}: completa las dos columnas de cada pareja o quítala.',
+        matchingErrorDuplicate: 'Pregunta {n}: los elementos de la derecha no se pueden repetir.',
+        matchingErrorMax: 'Pregunta {n}: como máximo 8 elementos en la columna derecha.',
         questionTypeMultiHint: 'Marca todas las respuestas correctas.',
         questionTimeLabel: 'Tiempo límite (segundos)',
         shortAnswersLabel: 'Respuestas válidas (separadas por |)',
@@ -137,6 +150,19 @@ var i18n = {
         questionTypeShort: 'Short answer',
         questionTypeNumeric: 'Numeric',
         questionTypePoll: 'Poll (unscored)',
+        questionTypeMatching: 'Matching (pair up)',
+        matchingHint: 'Write each pair. During the game, the right column is shuffled.',
+        matchingLeft: 'Left',
+        matchingRight: 'Right',
+        matchingAddPair: '+ Add pair',
+        matchingImpostors: 'Distractors: right-column items with no pair (optional)',
+        matchingAddImpostor: '+ Add distractor',
+        matchingCount: '{n} of 8 items in the right column',
+        matchingRemove: 'Remove',
+        matchingErrorPairs: 'Question {n}: matching needs at least 2 complete pairs.',
+        matchingErrorIncomplete: 'Question {n}: fill in both columns of each pair or remove it.',
+        matchingErrorDuplicate: 'Question {n}: right-column items cannot be repeated.',
+        matchingErrorMax: 'Question {n}: at most 8 items in the right column.',
         questionTypeMultiHint: 'Check every answer that counts.',
         questionTimeLabel: 'Time limit (seconds)',
         shortAnswersLabel: 'Accepted answers (separated by |)',
@@ -196,6 +222,19 @@ var i18n = {
         questionTypeShort: 'Resposta curta',
         questionTypeNumeric: 'Numèrica',
         questionTypePoll: 'Enquesta (sense puntuació)',
+        questionTypeMatching: 'Correspondència (emparellar)',
+        matchingHint: 'Escriu cada parella. En la partida, la columna dreta es barreja.',
+        matchingLeft: 'Esquerra',
+        matchingRight: 'Dreta',
+        matchingAddPair: '+ Afegir parella',
+        matchingImpostors: 'Impostores: elements de la dreta sense parella (opcional)',
+        matchingAddImpostor: '+ Afegir impostora',
+        matchingCount: '{n} de 8 elements en la columna dreta',
+        matchingRemove: 'Llevar',
+        matchingErrorPairs: 'Pregunta {n}: la correspondència necessita almenys 2 parelles completes.',
+        matchingErrorIncomplete: 'Pregunta {n}: completa les dues columnes de cada parella o lleva-la.',
+        matchingErrorDuplicate: 'Pregunta {n}: els elements de la dreta no es poden repetir.',
+        matchingErrorMax: 'Pregunta {n}: com a màxim 8 elements en la columna dreta.',
         questionTypeMultiHint: 'Marca totes les respostes correctes.',
         questionTimeLabel: 'Temps límit (segons)',
         shortAnswersLabel: 'Respostes vàlides (separades per |)',
@@ -387,6 +426,14 @@ function buildQuizPayload(){
             base.acceptedAnswers = splitAccepted(shortText);
         }
 
+        // Correspondencia: parejas completas y, al final, impostoras (sin izquierda).
+        if(questionType === 'matching'){
+            base.answers = ['', '', '', ''];
+            base.correct = 1;
+            base.correctAnswers = [1];
+            base.pairs = matchingPairsOf(card);
+        }
+
         if(questionType === 'numeric'){
             base.answers = ['', '', '', ''];
             base.correct = 1;
@@ -410,6 +457,46 @@ function buildQuizPayload(){
     };
 }
 
+var MATCHING_MAX_ITEMS = 8;
+
+function trimText(v){
+    return (v === undefined || v === null) ? '' : String(v).trim();
+}
+
+function matchingPairsOf(card){
+    var out = [];
+    (card.pairs || []).forEach(function(p){
+        var left = trimText(p.left);
+        var right = trimText(p.right);
+        if(left && right) out.push({ left: left, right: right });
+    });
+    (card.impostors || []).forEach(function(text){
+        var right = trimText(text);
+        if(right) out.push({ left: '', right: right });
+    });
+    return out;
+}
+
+// Mensaje de error de la primera correspondencia mal hecha, o '' si están bien.
+function matchingCardError(card, num){
+    var msg = function(key){ return t(key).replace('{n}', num); };
+    var incomplete = (card.pairs || []).some(function(p){
+        return !trimText(p.left) !== !trimText(p.right);
+    });
+    if(incomplete) return msg('matchingErrorIncomplete');
+    var pairs = matchingPairsOf(card);
+    if(pairs.filter(function(p){ return p.left; }).length < 2) return msg('matchingErrorPairs');
+    if(pairs.length > MATCHING_MAX_ITEMS) return msg('matchingErrorMax');
+    var seen = {};
+    var duplicate = pairs.some(function(p){
+        var key = p.right.toLowerCase();
+        if(seen[key]) return true;
+        seen[key] = true;
+        return false;
+    });
+    return duplicate ? msg('matchingErrorDuplicate') : '';
+}
+
 function validateQuizBasics(quiz){
     if(!quiz.name || !quiz.name.trim()){
         alert(t('playErrorName'));
@@ -422,6 +509,14 @@ function validateQuizBasics(quiz){
     if(!quiz.questions.length){
         alert(t('playErrorQuestions'));
         return false;
+    }
+    for(var i = 0; i < questionCards.length; i++){
+        if(questionCards[i].type !== 'matching') continue;
+        var error = matchingCardError(questionCards[i], i + 1);
+        if(error){
+            alert(error);
+            return false;
+        }
     }
     return true;
 }
@@ -512,8 +607,11 @@ function applyTypeRules(card){
         card.answers[2] = '';
         card.answers[3] = '';
     }
-    if(card.type === 'short-answer' || card.type === 'numeric'){
+    if(card.type === 'short-answer' || card.type === 'numeric' || card.type === 'matching'){
         card.answers = ['', '', '', ''];
+    }
+    if(card.type === 'matching'){
+        while(card.pairs.length < 2) card.pairs.push({ left: '', right: '' });
     }
 }
 
@@ -531,6 +629,13 @@ function makeQuestionCard(data){
         short: Array.isArray(data.acceptedAnswers) ? data.acceptedAnswers.join('|') : '',
         num: (data.numericAnswer !== undefined && data.numericAnswer !== null) ? String(data.numericAnswer) : '',
         tol: (data.tolerance !== undefined && data.tolerance !== null) ? String(data.tolerance) : '0',
+        // Correspondencia: parejas (izquierda y derecha) e impostoras (solo derecha).
+        pairs: (Array.isArray(data.pairs) ? data.pairs : [])
+            .filter(function(p){ return p && trimText(p.left); })
+            .map(function(p){ return { left: trimText(p.left), right: trimText(p.right) }; }),
+        impostors: (Array.isArray(data.pairs) ? data.pairs : [])
+            .filter(function(p){ return p && !trimText(p.left) && trimText(p.right); })
+            .map(function(p){ return trimText(p.right); }),
         image: data.image || '',
         video: data.video || '',
         imageOk: false,
@@ -576,7 +681,8 @@ Vue.createApp({
             typeOptions: [
                 ['quiz', 'questionTypeSingle'], ['multiple', 'questionTypeMultiple'],
                 ['true-false', 'questionTypeTf'], ['short-answer', 'questionTypeShort'],
-                ['numeric', 'questionTypeNumeric'], ['poll', 'questionTypePoll']
+                ['numeric', 'questionTypeNumeric'], ['poll', 'questionTypePoll'],
+                ['matching', 'questionTypeMatching']
             ]
         };
     },
@@ -611,7 +717,20 @@ Vue.createApp({
             applyTypeRules(card);
         },
         showCorrect: function(card){
-            return ['multiple', 'short-answer', 'numeric', 'poll'].indexOf(card.type) === -1;
+            return ['multiple', 'short-answer', 'numeric', 'poll', 'matching'].indexOf(card.type) === -1;
+        },
+        // Elementos de la columna derecha (parejas e impostoras); como máximo 8.
+        rightCount: function(card){
+            return card.pairs.length + card.impostors.length;
+        },
+        matchingCountText: function(card){
+            return t('matchingCount').replace('{n}', this.rightCount(card));
+        },
+        addPair: function(card){
+            if(this.rightCount(card) < MATCHING_MAX_ITEMS) card.pairs.push({ left: '', right: '' });
+        },
+        addImpostor: function(card){
+            if(this.rightCount(card) < MATCHING_MAX_ITEMS) card.impostors.push('');
         },
         imageSrc: function(card){
             var url = (card.image || '').trim();

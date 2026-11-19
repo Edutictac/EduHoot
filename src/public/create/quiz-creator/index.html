@@ -90,8 +90,26 @@
                                 <option v-for="opt in typeOptions" :key="opt[0]" :value="opt[0]">{{ t(opt[1]) }}</option>
                             </select>
                         </div>
-                        <div class="answers" v-show="card.type !== 'short-answer' && card.type !== 'numeric'">
+                        <div class="answers" v-show="card.type !== 'short-answer' && card.type !== 'numeric' && card.type !== 'matching'">
                             <label v-for="n in 4" :key="n" v-show="!(card.type === 'true-false' && n > 2)">{{ t('answerLabel') + ' ' + n }}<input :id="(index + 1) + 'a' + n" type="text" :placeholder="t('answerLabel') + ' ' + n" v-model="card.answers[n - 1]"></label>
+                        </div>
+                        <div v-if="card.type === 'matching'" class="matching-editor" :id="'match' + (index + 1)">
+                            <p class="multi-correct__hint">{{ t('matchingHint') }}</p>
+                            <div class="matching-head" aria-hidden="true"><span>{{ t('matchingLeft') }}</span><span>{{ t('matchingRight') }}</span><span></span></div>
+                            <div v-for="(pair, p) in card.pairs" :key="'p' + p" class="matching-row">
+                                <input type="text" class="match-left" :aria-label="t('matchingLeft') + ' ' + (p + 1)" :placeholder="t('matchingLeft') + ' ' + (p + 1)" v-model="pair.left">
+                                <input type="text" class="match-right" :aria-label="t('matchingRight') + ' ' + (p + 1)" :placeholder="t('matchingRight') + ' ' + (p + 1)" v-model="pair.right">
+                                <button class="btn btn-ghost btn-small match-remove" type="button" :title="t('matchingRemove')" :aria-label="t('matchingRemove')" @click="card.pairs.splice(p, 1)">✕</button>
+                            </div>
+                            <button class="btn btn-ghost btn-small match-add-pair" type="button" :disabled="rightCount(card) >= 8" @click="addPair(card)">{{ t('matchingAddPair') }}</button>
+                            <p class="multi-correct__hint">{{ t('matchingImpostors') }}</p>
+                            <div v-for="(imp, k) in card.impostors" :key="'i' + k" class="matching-row is-impostor">
+                                <span></span>
+                                <input type="text" class="match-impostor" :aria-label="t('matchingAddImpostor')" v-model="card.impostors[k]">
+                                <button class="btn btn-ghost btn-small match-remove" type="button" :title="t('matchingRemove')" :aria-label="t('matchingRemove')" @click="card.impostors.splice(k, 1)">✕</button>
+                            </div>
+                            <button class="btn btn-ghost btn-small match-add-impostor" type="button" :disabled="rightCount(card) >= 8" @click="addImpostor(card)">{{ t('matchingAddImpostor') }}</button>
+                            <p class="matching-count">{{ matchingCountText(card) }}</p>
                         </div>
                         <div class="multi-correct" :class="{ hidden: card.type !== 'multiple' }">
                             <p class="multi-correct__hint">{{ t('questionTypeMultiHint') }}</p>

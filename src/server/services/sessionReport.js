@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { splitAcceptedAnswers, parseLenientNumber, getQuestionMeta } = require('../questionUtils');
+const { splitAcceptedAnswers, parseLenientNumber, getQuestionMeta, formatMatchingPairs } = require('../questionUtils');
 
 const finishedSessionReports = new Map(); // pin -> { csv, hostId, createdAt, cleanupTimer }
 const FINISHED_SESSION_REPORT_TTL_MS = 6 * 60 * 60 * 1000; // 6 horas
@@ -68,6 +68,12 @@ function quizToCsv(quiz) {
       texto = accepted.join('|');
       // Compatibilidad: en correctVals también ponemos las respuestas.
       correctVals = texto;
+    }
+
+    // Correspondencia: las parejas en `texto` («a -> b | -> impostora»).
+    if (type === 'matching') {
+      texto = formatMatchingPairs(q.pairs || []);
+      correctVals = '';
     }
 
     if (type === 'numeric') {

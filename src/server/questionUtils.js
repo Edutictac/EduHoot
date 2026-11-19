@@ -154,6 +154,13 @@ function parseMatchingPairs(raw) {
   return out;
 }
 
+// Parejas en una línea de texto (columna `texto` del CSV): «a -> b | -> impostora».
+function formatMatchingPairs(pairs) {
+  return parseMatchingPairs(pairs)
+    .map((p) => (p.left ? `${p.left} -> ${p.right}` : `-> ${p.right}`))
+    .join(' | ');
+}
+
 function looksLikeMatchingText(raw) {
   if (typeof raw !== 'string') return false;
   return raw.split(/[|\n]+/g).filter((chunk) => /\S\s*->\s*\S/.test(chunk)).length >= 2;
@@ -447,6 +454,7 @@ module.exports = {
   isSubmissionCorrect,
   buildAnswerFields,
   parseMatchingPairs,
+  formatMatchingPairs,
   buildMatchingLayout,
   normalizeMatchingSubmission,
   matchingScoreRatio,

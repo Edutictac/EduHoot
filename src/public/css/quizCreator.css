@@ -240,6 +240,43 @@ label{
     border: 1px dashed rgba(255,255,255,0.4);
     background: rgba(255,255,255,0.05);
 }
+.matching-editor{
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px dashed rgba(255,255,255,0.4);
+    background: rgba(255,255,255,0.05);
+}
+.matching-head,
+.matching-row{
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: center;
+}
+.matching-head{
+    font-size: 13px;
+    font-weight: 700;
+    opacity: 0.8;
+}
+.matching-row input{
+    min-width: 0;
+}
+.matching-editor .match-add-pair,
+.matching-editor .match-add-impostor{
+    align-self: flex-start;
+}
+.matching-editor button:disabled{
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.matching-count{
+    margin: 0;
+    font-size: 13px;
+    opacity: 0.8;
+}
 .multi-correct.hidden{
     display: none;
 }

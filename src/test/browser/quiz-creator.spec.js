@@ -114,7 +114,7 @@ test('arranca con una pregunta vacía de tipo quiz y textos en español', async 
     await expect(page.locator('#type1')).toHaveValue('quiz');
     await expect(page.locator('#correct1')).toHaveValue('1');
     await expect(page.locator('#time1')).toHaveValue('20');
-    await expect(page.locator('#type1 option')).toHaveCount(6);
+    await expect(page.locator('#type1 option')).toHaveCount(7);
     await expect(page.locator('#visibility')).toHaveValue('private');
     await expect(page.locator('#public-warning')).toBeHidden();
 });
@@ -465,4 +465,84 @@ test('vista previa de imagen y de vídeo de YouTube', async ({ page }) => {
     await expect(c.locator('iframe.video-thumb')).not.toHaveClass(/hidden/);
     await page.locator('#vid1').fill('');
     await expect(c.locator('iframe.video-thumb')).toHaveClass(/hidden/);
+});
+
+test('correspondencia: parejas, impostoras, límite de 8 y lo que se guarda', async ({ page }) => {
+    const calls = await mockBackend(page);
+    await openCreator(page);
+    await fillBasics(page);
+    await page.locator('#q1').fill('Capitales');
+    await page.locator('#type1').selectOption('matching');
+
+    const editor = page.locator('#match1');
+    await expect(editor.locator('.matching-row')).toHaveCount(2);
+    await expect(card(page, 1).locator('.answers')).toBeHidden();
+    await expect(page.locator('#correct1')).toBeHidden();
+
+    await editor.locator('.match-left').nth(0).fill('Francia');
+    await editor.locator('.match-right').nth(0).fill('París');
+    await editor.locator('.match-left').nth(1).fill('Italia');
+    await editor.locator('.match-right').nth(1).fill('Roma');
+    await editor.locator('.match-add-impostor').click();
+    await editor.locator('.match-impostor').fill('Lisboa');
+    await expect(editor.locator('.matching-count')).toHaveText('3 de 8 elementos en la columna derecha');
+
+    for (let i = 0; i < 5; i++) await editor.locator('.match-add-pair').click();
+    await expect(editor.locator('.matching-count')).toHaveText('8 de 8 elementos en la columna derecha');
+    await expect(editor.locator('.match-add-pair')).toBeDisabled();
+    await expect(editor.locator('.match-add-impostor')).toBeDisabled();
+    // Las filas vacías se quitan (o no se guardan si están del todo vacías).
+    for (let i = 0; i < 5; i++) await editor.locator('.matching-row:not(.is-impostor) .match-remove').last().click();
+    await expect(editor.locator('.match-add-pair')).toBeEnabled();
+
+    await page.locator('[data-i18n="btnPlayLocal"]').click();
+    await expect.poll(() => calls.local.length).toBe(1);
+    const q = calls.local[0].questions[0];
+    expect(q.type).toBe('matching');
+    expect(q.answers).toEqual(['', '', '', '']);
+    expect(q.pairs).toEqual([
+        { left: 'Francia', right: 'París' },
+        { left: 'Italia', right: 'Roma' },
+        { left: '', right: 'Lisboa' }
+    ]);
+});
+
+test('correspondencia: avisos al guardar si falta algo o se repite la derecha', async ({ page }) => {
+    const calls = await mockBackend(page);
+    const dialogs = collectDialogs(page);
+    await openCreator(page);
+    await fillBasics(page);
+    await page.locator('#type1').selectOption('matching');
+    const editor = page.locator('#match1');
+    const play = () => page.locator('[data-i18n="btnPlayLocal"]').click();
+
+    await editor.locator('.match-left').nth(0).fill('a');
+    await play();
+    await editor.locator('.match-right').nth(0).fill('1');
+    await play();
+    await editor.locator('.match-left').nth(1).fill('b');
+    await editor.locator('.match-right').nth(1).fill(' 1 ');
+    await play();
+
+    await expect.poll(() => dialogs.length).toBe(3);
+    expect(dialogs.map(d => d.message)).toEqual([
+        'Pregunta 1: completa las dos columnas de cada pareja o quítala.',
+        'Pregunta 1: la correspondencia necesita al menos 2 parejas completas.',
+        'Pregunta 1: los elementos de la derecha no se pueden repetir.'
+    ]);
+    expect(calls.local).toEqual([]);
+});
+
+test('correspondencia: al editar se cargan parejas e impostoras', async ({ page }) => {
+    const quiz = { ...editableQuiz, questions: [{
+        question: 'Capitales', type: 'matching', time: 20,
+        pairs: [{ left: 'Francia', right: 'París' }, { left: 'Italia', right: 'Roma' }, { left: '', right: 'Lisboa' }]
+    }] };
+    await mockBackend(page, { quiz });
+    await page.goto('/create/quiz-creator/?id=q9&lang=es');
+    await expect(page.locator('#type1')).toHaveValue('matching');
+    const editor = page.locator('#match1');
+    await expect(editor.locator('.match-left')).toHaveCount(2);
+    await expect(editor.locator('.match-right').nth(1)).toHaveValue('Roma');
+    await expect(editor.locator('.match-impostor')).toHaveValue('Lisboa');
 });

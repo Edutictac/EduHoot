@@ -195,6 +195,14 @@ function toQuestion(row) {
     };
   }
 
+  if (meta.type === 'matching') {
+    return {
+      ...base,
+      answers: ['', '', '', ''],
+      pairs: meta.pairs || []
+    };
+  }
+
   if (meta.type === 'numeric') {
     return {
       ...base,
