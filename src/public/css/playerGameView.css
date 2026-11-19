@@ -379,6 +379,7 @@ body{
 
 /* Resultado de la pregunta: «Correcto» y «Incorrecto» un 40 % más grandes que antes (28 → 39,2 px; 22 → 30,8 px en móvil). */
 #message.message--correct,
+#message.message--partial,
 #message.message--incorrect{
     display: inline-block;
     padding: 8px 20px;
@@ -396,7 +397,15 @@ body{
     color: #fff;
     background: #ff1744;
 }
+/* Parcialmente correcta: texto blanco sobre recuadro naranja oscuro (fondo naranja #f57c00). */
+#message.message--partial{
+    color: #fff;
+    background: #c2410c;
+}
 @media (max-width: 600px){
     #message.message--correct,
+    #message.message--partial,
     #message.message--incorrect{ font-size: 30.8px; }
 }
+
+.matching-pairs{ display: block; }

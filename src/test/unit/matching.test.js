@@ -183,3 +183,23 @@ test('CSV: con «correspondencia» o sin tipo, el texto con -> se lee como corre
     assert.deepEqual(q.pairs, [{ left: 'a', right: '1' }, { left: 'b', right: '2' }, { left: '', right: '3' }]);
   }
 });
+
+test('informe de la sesión: respuesta del alumno y correcta con números, letras y textos', () => {
+  const { buildQuestions } = makeHelpers();
+  const { liveSessionToCsv } = require('../../server/services/sessionReport')({ players: { getPlayers: () => [] } });
+  const questions = buildQuestions([{ question: 'Capitales', type: 'matching', pairs: capitals }], {});
+  const q = questions[0];
+  const player = {
+    name: 'Ana',
+    gameData: {
+      score: 300, correctCount: 0, wrongCount: 0,
+      answerHistory: [{ questionNumber: 1, submission: [q.matchSolution[0], null, null], isCorrect: false, scoreRatio: 1 / 3 }]
+    }
+  };
+  const csv = liveSessionToCsv({ pin: '123456', hostId: 'h', gameData: { questions, totalQuestions: 1, quizName: 'Q' } }, [player]);
+  const row = csv.split('\n').find((line) => line.includes('Ana') && line.includes('matching')).split(';');
+  const right = (i) => `${'ABCDEFGH'[q.matchSolution[i]]} ${q.matchRight[q.matchSolution[i]]}`;
+  assert.equal(row[14], `1 Francia → ${right(0)} | 2 Italia → (sin pareja) | 3 Alemania → (sin pareja)`);
+  assert.equal(row[15], `1 Francia → ${right(0)} | 2 Italia → ${right(1)} | 3 Alemania → ${right(2)}`);
+  assert.equal(row[16], 'parcial');
+});

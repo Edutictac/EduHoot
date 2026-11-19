@@ -184,7 +184,10 @@ module.exports = function createHostEvents({
               type: currentQuestion.type || 'quiz',
               image: currentQuestion.image || '',
               video: currentQuestion.video || '',
-              pointsMultiplier: Number(currentQuestion.pointsMultiplier) > 1 ? 2 : 1
+              pointsMultiplier: Number(currentQuestion.pointsMultiplier) > 1 ? 2 : 1,
+              ...(currentQuestion.type === 'matching'
+                ? { matchLeft: currentQuestion.matchLeft, matchRight: currentQuestion.matchRight }
+                : {})
             };
             io.to(game.pin).emit('playerQuestion', buildStudentPlayerPayload(fullPlayerPayload, game.gameData.options));
           }

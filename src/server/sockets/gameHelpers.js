@@ -13,7 +13,7 @@ const { buildAnswerStatus, leftListOf } = require('./answerStatus');
 
 const { getTimings } = require('../services/gameTimings');
 const { normalizeAutoAdvance, AutoAdvanceTimer } = require('../services/autoAdvance');
-const { studentMetaOf } = require('../services/showAnswers');
+const { studentMetaOf, showCorrectAnswersOf } = require('../services/showAnswers');
 const QUESTION_COUNTDOWN_SECONDS = 3;
 
 const answerRate = new Map(); // clave: hostId:ip -> { count, windowStart }
@@ -484,6 +484,8 @@ module.exports = function createGameHelpers({ io, games, players, cleanImportedT
     const meta = getQuestionMeta(current);
     meta.groupResult = getGroupAnswerResult(playerData, meta);
     meta.showScores = game.gameData.options ? game.gameData.options.showScoresBetween !== false : true;
+    // «Mostrar respuestas»: en una correspondencia, el proyector solo enseña la solución si está activado.
+    meta.showCorrectAnswers = showCorrectAnswersOf(game);
     // El anfitrión recibe el resultado completo; el alumnado, sin la respuesta correcta si está desactivado.
     io.to(game.hostId).emit('questionOver', playerData, meta);
     io.to(game.pin).except(game.hostId).emit('questionOver', playerData, studentMetaOf(game, meta));

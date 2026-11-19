@@ -108,6 +108,10 @@ var i18n = {
         kickConfirm: 'Confirmar',
         freeAnswersReceived: function(ans, total){ return 'Respuestas recibidas ' + ans + ' / ' + total; },
         correctAnswerLabel: 'Respuesta correcta:',
+        matchingResultsHint: 'Porcentaje de alumnos que aciertan cada pareja',
+        matchingSummary: 'Todo bien: {f} · parcial: {p} · ninguna: {n} (de {t})',
+        matchingNoPair: 'sin pareja',
+        matchingImpostors: 'Elementos sin pareja:',
         correctOptionBadge: 'Correcta',
         pointsDouble: 'Puntos dobles',
         questionCountdown: 'Prepara la siguiente pregunta...',
@@ -170,6 +174,10 @@ var i18n = {
         kickConfirm: 'Confirm',
         freeAnswersReceived: function(ans, total){ return 'Answers received ' + ans + ' / ' + total; },
         correctAnswerLabel: 'Correct answer:',
+        matchingResultsHint: 'Share of students who got each pair right',
+        matchingSummary: 'All right: {f} · partly: {p} · none: {n} (of {t})',
+        matchingNoPair: 'no pair',
+        matchingImpostors: 'Items with no pair:',
         correctOptionBadge: 'Correct',
         pointsDouble: 'Double points',
         questionCountdown: 'Get ready for the next question...',
@@ -232,6 +240,10 @@ var i18n = {
         kickConfirm: 'Confirmar',
         freeAnswersReceived: function(ans, total){ return 'Respostes rebudes ' + ans + ' / ' + total; },
         correctAnswerLabel: 'Resposta correcta:',
+        matchingResultsHint: "Percentatge d'alumnes que encerten cada parella",
+        matchingSummary: 'Tot bé: {f} · parcial: {p} · cap: {n} (de {t})',
+        matchingNoPair: 'sense parella',
+        matchingImpostors: 'Elements sense parella:',
         correctOptionBadge: 'Correcta',
         pointsDouble: 'Punts dobles',
         questionCountdown: 'Prepara la pregunta següent...',
@@ -297,6 +309,10 @@ var app = Vue.createApp({
             resultsMode: 'bars',
             resultsBars: [],
             resultsFreeLines: [],
+            // Correspondencia: columnas en pantalla y resultados por pareja.
+            matchLeft: [],
+            matchRight: [],
+            resultsMatching: { rows: [], impostors: [], summary: '' },
             rankingRows: [],
             groupCelebrationVisible: false,
             groupCelebrationGood: true,
@@ -406,8 +422,11 @@ var app = Vue.createApp({
             socket.emit('cancelGame');
         },
         addTimerSeconds: function(seconds){ hostAddTimerSeconds(seconds); },
+        matchLetter: function(i){
+            return 'ABCDEFGH'.charAt(i) || String(i + 1);
+        },
         answerHasContent: function(i){
-            if(this.questionType === 'short-answer' || this.questionType === 'numeric') return false;
+            if(this.questionType === 'short-answer' || this.questionType === 'numeric' || this.questionType === 'matching') return false;
             if(this.questionType === 'true-false' && i >= 2) return false;
             var text = this.answers[i];
             return !!(text && String(text).trim());
@@ -645,6 +664,55 @@ function renderResultsChart(answerCounts, totalPlayers, correctAnswers){
     }
     app.resultsMode = 'bars';
     app.resultsBars = bars;
+}
+
+// Correspondencia: para cada pareja, el porcentaje del alumnado que la ha acertado,
+// y cuántos lo han hecho todo bien, en parte o nada. Quien no ha respondido cuenta como «ninguna».
+var currentMatchSolution = [];
+function buildMatchingResults(playerData, payload){
+    var left = (payload && payload.matchLeft) || app.matchLeft || [];
+    var right = (payload && payload.matchRight) || app.matchRight || [];
+    var solution = (payload && Array.isArray(payload.matchSolution)) ? payload.matchSolution : currentMatchSolution;
+    var list = Array.isArray(playerData) ? playerData : [];
+    var total = list.length;
+    var hits = left.map(function(){ return 0; });
+    var full = 0, partial = 0, none = 0;
+    list.forEach(function(player){
+        var answer = player && player.gameData ? player.gameData.answer : null;
+        var own = 0;
+        if(Array.isArray(answer)){
+            solution.forEach(function(r, i){
+                if(answer[i] !== null && answer[i] !== undefined && Number(answer[i]) === r){
+                    hits[i] += 1;
+                    own += 1;
+                }
+            });
+        }
+        if(solution.length && own === solution.length) full += 1;
+        else if(own > 0) partial += 1;
+        else none += 1;
+    });
+    var letter = function(i){ return 'ABCDEFGH'.charAt(i) || String(i + 1); };
+    // Con «Mostrar respuestas» desactivado, la clase ve los porcentajes pero no la solución.
+    var showSolution = !(payload && payload.showCorrectAnswers === false);
+    var rows = left.map(function(text, i){
+        var r = solution[i];
+        return {
+            code: String(i + 1),
+            left: text,
+            right: (!showSolution || r === undefined || r === null) ? '' : letter(r) + ' ' + (right[r] || ''),
+            pct: total ? Math.round(hits[i] / total * 100) : 0
+        };
+    });
+    var impostors = [];
+    right.forEach(function(text, j){
+        if(showSolution && solution.indexOf(j) === -1) impostors.push(letter(j) + ' ' + text);
+    });
+    return {
+        rows: rows,
+        impostors: impostors,
+        summary: t('matchingSummary').replace('{f}', full).replace('{p}', partial).replace('{n}', none).replace('{t}', total)
+    };
 }
 
 function setLang(newLang){
@@ -1062,6 +1130,9 @@ socket.on('gameQuestions', function(data){
     updateQuestionPointsBadge(currentPointsMultiplier);
     app.questionText = data.q1 || '';
     setCurrentAnswerTexts([data.a1, data.a2, data.a3, data.a4]);
+    app.matchLeft = currentQuestionType === 'matching' ? (data.matchLeft || []).slice() : [];
+    app.matchRight = currentQuestionType === 'matching' ? (data.matchRight || []).slice() : [];
+    currentMatchSolution = currentQuestionType === 'matching' ? (data.matchSolution || []).slice() : [];
     app.answerHighlight = [null, null, null, null];
     hideAnswerSquares();
     defaultTime = data.time || defaultTime || 20;
@@ -1175,6 +1246,11 @@ socket.on('questionOver', function(playerData, payload){
     app.questionType = currentQuestionType;
     var totalPlayers = Array.isArray(playerData) ? playerData.length : 0;
 
+    if(currentQuestionType === 'matching'){
+        hideAnswerSquares();
+        app.resultsMode = 'matching';
+        app.resultsMatching = buildMatchingResults(playerData, payload);
+    }else
     // Tipos libres: no hay buckets 1-4; mostramos resumen simple.
     if(currentQuestionType === 'short-answer' || currentQuestionType === 'numeric'){
         hideAnswerSquares();

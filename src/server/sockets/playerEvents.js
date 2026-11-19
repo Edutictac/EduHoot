@@ -26,6 +26,7 @@ module.exports = function createPlayerEvents({
     scheduleGameCleanup,
     emitQuestionOverPayloadDeferred,
     recordPlayerAnswerHistory,
+    buildStudentPlayerPayload,
     logGames
   } = helpers;
 
@@ -217,15 +218,18 @@ module.exports = function createPlayerEvents({
             const elapsed = Math.floor((Date.now() - game.gameData.questionStartedAt) / 1000);
             timeLeft = Math.max(0, questionTimeSecs - elapsed);
           }
-          socket.emit('playerQuestion', {
+          // Igual que al lanzar la pregunta: a ciegas si el anfitrión lo ha elegido y,
+          // en una correspondencia, con sus columnas.
+          socket.emit('playerQuestion', buildStudentPlayerPayload({
             question: current.question,
             answers: current.answers,
             type: current.type || 'quiz',
             image: current.image || '',
             video: current.video || '',
             pointsMultiplier: Number(current.pointsMultiplier) > 1 ? 2 : 1,
-            time: timeLeft
-          });
+            time: timeLeft,
+            ...(current.type === 'matching' ? { matchLeft: current.matchLeft, matchRight: current.matchRight } : {})
+          }, game.gameData.options));
           socket.emit('questionMedia', { image: current.image || '', video: current.video || '' });
           // Si la pregunta ya cerró, informar al jugador reconectado
           if (game.gameData.questionLive === false) {

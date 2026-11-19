@@ -176,8 +176,26 @@ module.exports = function createSessionReportService({ players }) {
       return out.join(' | ');
     }
 
+    // Correspondencia: «1 Francia → D París | 2 Italia → (sin pareja)», con los
+    // números y letras que ve el alumnado.
+    function formatMatchingList(meta, rightIndices) {
+      const left = Array.isArray(meta.matchLeft) ? meta.matchLeft : [];
+      const right = Array.isArray(meta.matchRight) ? meta.matchRight : [];
+      const list = Array.isArray(rightIndices) ? rightIndices : [];
+      return left.map((text, i) => {
+        const r = list[i];
+        const chosen = (r === null || r === undefined || !Number.isInteger(Number(r)) || !right[r])
+          ? '(sin pareja)'
+          : `${'ABCDEFGH'.charAt(r) || r + 1} ${right[r]}`;
+        return `${i + 1} ${text} → ${chosen}`;
+      }).join(' | ');
+    }
+
     function formatSubmissionForCsv(meta, question, submission) {
       if (submission === undefined || submission === null || submission === '') return '';
+      if (meta.type === 'matching') {
+        return formatMatchingList(meta, submission);
+      }
       if (meta.type === 'short-answer') {
         const text = submission && typeof submission === 'object' && submission.text !== undefined
           ? submission.text
@@ -197,6 +215,9 @@ module.exports = function createSessionReportService({ players }) {
     }
 
     function formatCorrectForCsv(meta, question) {
+      if (meta.type === 'matching') {
+        return formatMatchingList(meta, meta.matchSolution);
+      }
       if (meta.type === 'short-answer') {
         const accepted = Array.isArray(meta.acceptedAnswers) ? meta.acceptedAnswers : [];
         return accepted.join(' | ');

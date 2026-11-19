@@ -237,7 +237,7 @@ test('resultado parcial y de encuesta: fondo y mensaje propios de cada caso', as
     await page.locator('#answer1').click();
     await serverEmit(page, 'answerResult', { outcome: 'partial' });
     await serverEmit(page, 'questionOver', [{ playerId: 'p1', name: 'Ana', gameData: { score: 10 } }]);
-    await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(255, 179, 0)');
+    await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(245, 124, 0)');
     await expect(page.locator('#message')).toHaveText('Respuesta parcialmente correcta: has sumado puntos.');
 
     await serverEmit(page, 'nextQuestionPlayer');

@@ -19,6 +19,11 @@ var reconnectGraceMs = 40000;
 var RECONNECT_GRACE_STORAGE_KEY = 'playerReconnectGrace';
 var ANSWER_SHAPE_KEYS = ['shape_triangle', 'shape_diamond', 'shape_circle', 'shape_square'];
 var ANSWER_LETTERS = ['A', 'B', 'C', 'D'];
+// Correspondencia: lo que envió el alumno y la proporción de acierto, para la corrección.
+var lastMatchAnswers = null;
+var lastScoreRatio = 0;
+// Color de «parcialmente correcta» (naranja) en todos los tipos de pregunta.
+var PARTIAL_COLOR = '#f57c00';
 
 function tPlayer(key, fallback){
     return window.i18nPlayer ? window.i18nPlayer.t(key) : (fallback || key);
@@ -80,6 +85,13 @@ var app = Vue.createApp({
             questionType: 'quiz',
             blind: false,
             blindActiveCount: 0,
+            // Correspondencia: textos de las columnas (o, a ciegas, cuántos hay) y forma de responder.
+            matchLeft: null,
+            matchRight: null,
+            matchLeftCount: 0,
+            matchRightCount: 0,
+            matchBlindStyle: 'codes',
+            matchKey: 0,
             multiSelections: [],
             playerAnswered: false,
             answersVisible: true,
@@ -155,6 +167,9 @@ var app = Vue.createApp({
         freeRowVisible: function(){
             return this.freeAnswerType && !this.playerAnswered && this.answersVisible;
         },
+        matchingVisible: function(){
+            return this.questionType === 'matching' && !this.playerAnswered && this.answersVisible;
+        },
         multiRowVisible: function(){
             return this.questionType === 'multiple' && !this.playerAnswered && this.answersVisible;
         },
@@ -213,6 +228,7 @@ var app = Vue.createApp({
             return !!(text && String(text).trim());
         },
         buttonVisible: function(i){
+            if(this.questionType === 'matching') return false;
             return this.answersVisible && this.buttonHasContent(i);
         },
         buttonHtml: function(i){
@@ -259,6 +275,11 @@ var app = Vue.createApp({
                 this.submitAnswer({ text: raw });
             }
         },
+        submitMatching: function(answers){
+            if(this.playerAnswered) return;
+            lastMatchAnswers = answers.slice();
+            this.submitAnswer(answers);
+        },
         submitAnswer: function(payload){
             if(this.playerAnswered) return;
             this.playerAnswered = true;
@@ -292,7 +313,7 @@ var app = Vue.createApp({
             if(!started) this.ttsSpeaking = false;
         }
     }
-}).mount('#player-game');
+}).component('matching-board', window.EduhootMatchingBoard).mount('#player-game');
 
 // Mostra/oculta el missatge gran (#message), substituint tot el seu
 // contingut (igual que feia abans `textContent = ...`, que esborrava
@@ -569,11 +590,32 @@ socket.on('answerResult', function(data){
     }else if(data && data.outcome){
         correct = data.outcome;
     }
+    lastScoreRatio = (data && data.outcome === 'correct') ? 1 : (Number(data && data.ratio) || 0);
     if(data && typeof data.streak === 'number'){
         app.streak = data.streak;
         app.streakBonus = Number(data.bonus) || 0;
     }
 });
+
+// Resultado de una correspondencia: cuántas parejas están bien y, si el anfitrión
+// muestra las respuestas (llega matchSolution), la corrección de cada una.
+function matchingResultHtml(payload, outcome){
+    var total = (payload.matchLeft || []).length;
+    var hits = outcome === 'correct' ? total : (outcome === 'partial' ? Math.round(lastScoreRatio * total) : 0);
+    var html = '<span class="matching-pairs">' + escapeHtml(tPlayer('matching_pairs_result', '{h} de {t} parejas')
+        .replace('{h}', hits).replace('{t}', total)) + '</span>';
+    if(outcome === 'correct' || !Array.isArray(payload.matchSolution) || !window.EduhootMatchingReview) return html;
+    var rows = window.EduhootMatchingReview(payload, lastMatchAnswers);
+    html += '<span class="matching-review">';
+    rows.forEach(function(row){
+        html += '<span class="matching-review-row" data-ok="' + row.ok + '"><span aria-hidden="true">' + (row.ok ? '✓' : '✗') + '</span><span>' +
+            '<b>' + escapeHtml(row.code + ' ' + row.left) + '</b> → ' +
+            escapeHtml(row.chosen === null ? tPlayer('matching_unpaired', 'sin emparejar') : row.chosen) +
+            (row.ok ? '' : '<span class="matching-review-fix">' + escapeHtml(tPlayer('correct_answer', 'Correct answer:') + ' ' + row.correct) + '</span>') +
+            '</span></span>';
+    });
+    return html + '</span>';
+}
 
 function updatePlayerRank(playerData){
     if(!Array.isArray(playerData) || playerData.length === 0){
@@ -604,12 +646,20 @@ socket.on('questionOver', function(playerData, payload){
         document.body.style.backgroundColor = '#607d8b';
         showMessage(tPlayer('poll_thanks', '¡Gracias por responder!'));
     }else if(correct === 'partial'){
-        document.body.style.backgroundColor = '#ffb300';
+        document.body.style.backgroundColor = PARTIAL_COLOR;
         showMessage(tPlayer('partial', 'Respuesta parcialmente correcta: has sumado puntos.'));
+        app.messageKind = 'partial';
+        if(payload && payload.type === 'matching') app.messageDetailHtml = matchingResultHtml(payload, 'partial');
     }else if(correct == true){
         document.body.style.backgroundColor = "#4CAF50";
         showMessage(window.i18nPlayer ? window.i18nPlayer.t('correct') : "Correct!");
         app.messageKind = 'correct';
+        if(payload && payload.type === 'matching') app.messageDetailHtml = matchingResultHtml(payload, 'correct');
+    }else if(payload && payload.type === 'matching'){
+        document.body.style.backgroundColor = "#f94a1e";
+        showMessage(window.i18nPlayer ? window.i18nPlayer.t('incorrect') : "Incorrect!");
+        app.messageKind = 'incorrect';
+        app.messageDetailHtml = matchingResultHtml(payload, 'incorrect');
     }else{
         document.body.style.backgroundColor = "#f94a1e";
         var incorrectMsg = window.i18nPlayer ? window.i18nPlayer.t('incorrect') : "Incorrect!";
@@ -807,6 +857,16 @@ socket.on('playerQuestion', function(data){
     // la primera pregunta de cada partida es queda invisible (l'únic cas on
     // no hi ha un nextQuestionPlayer/connect previ que ja ho faça).
     app.answersVisible = true;
+    lastMatchAnswers = null;
+    lastScoreRatio = 0;
+    if(data.type === 'matching'){
+        app.matchLeft = data.blind ? null : (data.matchLeft || []).slice();
+        app.matchRight = data.blind ? null : (data.matchRight || []).slice();
+        app.matchLeftCount = Number(data.leftCount) || 0;
+        app.matchRightCount = Number(data.rightCount) || 0;
+        app.matchBlindStyle = data.blindStyle || 'codes';
+        app.matchKey += 1;
+    }
     if(data.blind){
         app.blind = true;
         app.blindActiveCount = Math.max(0, Number(data.answerCount) || 0);

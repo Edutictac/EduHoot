@@ -79,6 +79,14 @@
             <video id="questionVideo" controls></video>
             <iframe id="questionIframe" allowfullscreen loading="lazy"></iframe>
         </div>
+        <div v-if="questionType === 'matching' && timerVisible" id="hostMatching" class="host-matching">
+            <div class="host-matching-col">
+                <div v-for="(text, i) in matchLeft" :key="'l' + i" class="host-matching-item" :data-host-left="i"><span class="host-matching-code">{{ i + 1 }}</span><span>{{ text }}</span></div>
+            </div>
+            <div class="host-matching-col">
+                <div v-for="(text, j) in matchRight" :key="'r' + j" class="host-matching-item" :data-host-right="j"><span class="host-matching-code">{{ matchLetter(j) }}</span><span>{{ text }}</span></div>
+            </div>
+        </div>
         <div id="hostAnswers" class="host-answers">
             <h3 id = "answer1" v-show="answerVisible(0)" :style="{ filter: answerFilter(0) }" v-html="answerHtml(0)"></h3>
             <h3 id = "answer2" v-show="answerVisible(1)" :style="{ filter: answerFilter(1) }" v-html="answerHtml(1)"></h3>
@@ -123,7 +131,18 @@
                 <span id="closeRanking" class="close" @click="closeRanking" :style="{ display: closeVisible ? 'block' : 'none' }">&times;</span>
                 <div id="resultsStepChart" class="results-step" v-show="modalStep === 'chart'">
                     <h3 id="resultsTitle">{{ t('resultsTitle') }}</h3>
-                    <div id="resultsChart" class="results-chart" aria-label="Resultados por respuesta">
+                    <div v-if="resultsMode === 'matching'" id="resultsMatching" class="results-matching">
+                        <p class="results-matching-hint">{{ t('matchingResultsHint') }}</p>
+                        <div v-for="row in resultsMatching.rows" :key="row.code" class="results-matching-row">
+                            <span class="results-matching-fill" :style="{ width: row.pct + '%' }"></span>
+                            <span class="host-matching-code">{{ row.code }}</span>
+                            <span class="results-matching-text">{{ row.right ? row.left + ' → ' + row.right : row.left }}</span>
+                            <span class="results-matching-pct">{{ row.pct }}%</span>
+                        </div>
+                        <p v-if="resultsMatching.impostors.length" class="results-matching-impostors">{{ t('matchingImpostors') }} {{ resultsMatching.impostors.join(', ') }}</p>
+                        <p class="results-matching-summary">{{ resultsMatching.summary }}</p>
+                    </div>
+                    <div v-show="resultsMode !== 'matching'" id="resultsChart" class="results-chart" aria-label="Resultados por respuesta">
                         <template v-if="resultsMode === 'bars'">
                             <div v-for="bar in resultsBars" :key="bar.index" :class="'results-bar results-bar--' + bar.index + (bar.correct ? ' results-bar--correct' : '')">
                                 <div class="results-bar-track"><div class="results-bar-fill" :style="{ height: bar.pct + '%' }"></div></div>
