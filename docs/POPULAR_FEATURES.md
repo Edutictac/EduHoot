@@ -696,7 +696,8 @@ la numeració 1-32 de dalt.
   portada/destacada per al qüestionari, que aparega en diversos llocs
   (p. ex. la llista pública de qüestionaris o la pantalla d'entrada a
   un d'ells).
-- **W7 — Tipus de pregunta de correspondència.** Un tipus nou de
+- **W7 — Tipus de pregunta de correspondència (inclosa en la
+  feature 7, «emparellar»).** Un tipus nou de
   pregunta en què l'alumnat relaciona els elements d'una columna amb els
   d'una altra (p. ex. paraula–definició, país–capital). Caldria
   definir-lo en el model de pregunta, l'editor, la importació/exportació
