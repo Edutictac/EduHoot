@@ -312,3 +312,52 @@ test('alumnado (unión): en dev, la fila del logo baja al alto del distintivo y 
     const brand = await page.locator('.join-brand').boundingBox();
     expect(brand.y).toBeGreaterThanOrEqual(badge.y + badge.height);
 });
+
+test('portada: en pantallas anchas los botones van en 2 columnas; en estrechas, uno debajo de otro', async ({ page }) => {
+    await page.route(/^https:\/\//, route => route.abort());
+    await page.route('**/api/**', route => route.fulfill({ json: {} }));
+    const tops = async () => page.locator('.landing-actions .btn').evaluateAll(els => els.map(el => Math.round(el.getBoundingClientRect().top)));
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto('/?lang=es');
+    await page.waitForLoadState('load');
+    let t = await tops();
+    expect(t[0]).toBe(t[1]);
+    expect(t[2]).toBe(t[3]);
+    expect(t[2]).toBeGreaterThan(t[0]);
+    await page.setViewportSize({ width: 800, height: 800 });
+    t = await tops();
+    expect(t[1]).toBeGreaterThan(t[0]);
+    expect(t[3]).toBeGreaterThan(t[2]);
+});
+
+test('portada en 2 columnas: «Instalar app» centrado, del ancho de una columna y con la altura de un botón normal', async ({ page }) => {
+    await page.route(/^https:\/\//, route => route.abort());
+    await page.route('**/api/**', route => route.fulfill({ json: {} }));
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto('/?lang=es');
+    await page.waitForLoadState('load');
+    await page.locator('#installApp').evaluate(el => { el.hidden = false; });
+    const btn = await page.locator('.landing-actions .btn').first().boundingBox();
+    const install = await page.locator('#installApp').boundingBox();
+    const shell = await page.locator('.landing-shell').boundingBox();
+    expect(Math.abs(install.width - btn.width)).toBeLessThanOrEqual(2);
+    // Los botones de la rejilla crecen en alto; «Instalar app» mantiene la altura de un botón normal.
+    expect(install.height).toBeGreaterThanOrEqual(44);
+    expect(install.height).toBeLessThan(btn.height);
+    expect(Math.abs((install.x + install.width / 2) - (shell.x + shell.width / 2))).toBeLessThanOrEqual(2);
+});
+
+test('portada en 2 columnas: los botones crecen hasta abajo dejando un 20 % libre', async ({ page }) => {
+    await page.route(/^https:\/\//, route => route.abort());
+    await page.route('**/api/**', route => route.fulfill({ json: {} }));
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto('/?lang=es');
+    await page.waitForLoadState('load');
+    const shell = await page.locator('.landing-shell').boundingBox();
+    const padBottom = await page.locator('.landing-shell').evaluate(el => parseFloat(getComputedStyle(el).paddingBottom));
+    const actions = await page.locator('.landing-actions').boundingBox();
+    const btn = await page.locator('.landing-actions .btn').first().boundingBox();
+    const free = (shell.y + shell.height - padBottom) - (actions.y + actions.height);
+    expect(Math.abs(free / (free + actions.height) - 0.2)).toBeLessThanOrEqual(0.02);
+    expect(btn.height).toBeGreaterThan(60);
+});
