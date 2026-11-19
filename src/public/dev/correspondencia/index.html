@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+        <meta name="robots" content="noindex">
+        <title>Correspondencia (prueba) | EduHoot</title>
+        <link href="/css/fonts.css" rel="stylesheet">
+        <link rel="stylesheet" href="poc.css">
+    </head>
+    <body>
+<div class="wrap">
+  <header class="top">
+    <h1>Pregunta de correspondencia · prueba de concepto</h1>
+    <p>Maqueta de la feature 7 («emparejar»). Las respuestas de la clase son simuladas. Prueba el móvil con toques: primero un elemento de la izquierda y luego uno de la derecha.</p>
+  </header>
+
+  <div class="controls" role="group" aria-label="Opciones de la prueba">
+    <label for="opt-pairs">Parejas
+      <select id="opt-pairs"></select></label>
+    <label for="opt-imp">Impostoras
+      <select id="opt-imp"></select></label>
+    <label for="opt-show"><input id="opt-show" type="checkbox" checked> Mostrar respuestas</label>
+    <label for="opt-blind">A ciegas
+      <select id="opt-blind">
+        <option value="codes">Toques con códigos</option>
+        <option value="select">Desplegables</option>
+        <option value="steps">Paso a paso</option>
+      </select></label>
+    <button class="ghost btn-reset" id="btn-reset" type="button">Nueva partida</button>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" data-view="student" aria-selected="true" type="button">Móvil del alumno</button>
+    <button class="tab" role="tab" data-view="blind" aria-selected="false" type="button">Móvil a ciegas</button>
+    <button class="tab" role="tab" data-view="projector" aria-selected="false" type="button">Proyector</button>
+    <button class="tab" role="tab" data-view="results" aria-selected="false" type="button">Resultados en el proyector</button>
+  </div>
+
+  <div class="stage" id="stage"></div>
+
+  <section class="notes" id="notes"></section>
+</div>
+
+        <script src="poc.js"></script>
+    </body>
+</html>

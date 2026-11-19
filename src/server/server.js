@@ -244,6 +244,11 @@ app.get(['/create', '/create/', '/create/index.html'], (req, res) => {
     res.type('html').send(out);
   });
 });
+// Páginas de desarrollo y maquetas (/dev): solo existen con NODE_ENV=development.
+// En stage y producción, 404. Va antes de los ficheros estáticos.
+if (process.env.NODE_ENV !== 'development') {
+  app.use('/dev', (req, res) => res.status(404).type('text').send('Not found'));
+}
 app.use(express.static(publicPath, {
   etag: true,
   lastModified: true,
