@@ -6,6 +6,7 @@
         <link rel="stylesheet" href="../css/solo.css">
         <link rel="stylesheet" href="/css/countdown.css">
         <link rel="stylesheet" href="/css/answers.css">
+        <link rel="stylesheet" href="/css/matching.css">
         <link rel="stylesheet" href="/css/dropdowns.css">
         <link rel="stylesheet" href="../css/music-player.css">
         <link href="/css/fonts.css" rel="stylesheet">
@@ -174,6 +175,7 @@
                             <video id="question-video" controls playsinline :src="media.video || null" :style="{ display: media.video ? 'block' : 'none' }"></video>
                             <iframe id="question-iframe" title="video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen :src="media.youtube || null" :style="{ display: media.youtube ? 'block' : 'none' }"></iframe>
                         </div>
+                        <matching-board v-if="showMatching" :key="'match-' + s.idx" :left="question.matchLeft" :right="question.matchRight" :t="boardT" @submit="submitMatching"></matching-board>
                         <div id="answers" class="answers answer-grid">
                             <div v-if="isFree" class="free-answer-row">
                                 <input id="solo-free-input" class="free-answer-input" type="text" autocomplete="off" :placeholder="meta.type === 'numeric' ? t('freeNumberPlaceholder') : t('freeTextPlaceholder')" v-model="s.freeText" :disabled="s.locked" @keydown.enter.prevent="submitFree">
@@ -246,6 +248,12 @@
                                             <button type="button" class="flashcard__option" :class="{ 'is-picked': isCardPicked(o.n) }" :aria-pressed="isCardPicked(o.n) ? 'true' : 'false'" @click.stop="cardsPick(o.n)">{{ o.text }}</button>
                                         </li>
                                     </ul>
+                                    <div v-if="cardsMatchLeft.length" class="flashcard__match">
+                                        <p class="flashcard__label">{{ t('flashcardsMatchLeft') }}</p>
+                                        <ul class="flashcard__answers flashcard__match-left">
+                                            <li v-for="(text, i) in cardsMatchLeft" :key="i">{{ text }}</li>
+                                        </ul>
+                                    </div>
                                     <!-- El media es desmunta en girar perquè el vídeo o l'àudio no segueixin sonant de dors. -->
                                     <div class="flashcard__media" v-if="!s.cards.flipped && (cardsMedia.image || cardsMedia.video || cardsMedia.youtube)">
                                         <img v-if="cardsMedia.image" alt="" :src="cardsMedia.image">
@@ -289,7 +297,7 @@
         </div>
         <div id="feedback-modal" class="solo-modal" :class="{ show: s.feedbackModalOpen }" @click.self="closeFeedback">
             <div class="solo-modal__content">
-                <h3 id="feedback-title">{{ t('wrongText') }}</h3>
+                <h3 id="feedback-title">{{ feedbackTitle }}</h3>
                 <p id="feedback-body">{{ feedbackBody }}</p>
                 <button id="feedback-close" class="btn btn-primary" @click="closeFeedback">OK</button>
             </div>
@@ -342,6 +350,7 @@
         <script src="/js/env-badge.js"></script>
         <script src="../js/i18n-solo.js"></script>
         <script src="../js/solo-storage.js"></script>
+        <script src="../js/matchingBoard.js"></script>
         <script src="../js/solo-questions.js"></script>
         <script src="../js/solo-library.js"></script>
         <script src="../js/solo-music.js"></script>

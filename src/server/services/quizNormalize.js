@@ -277,11 +277,11 @@ function normalizeAllowClone(value, fallback = false) {
 }
 
 // Multijugador: preguntas de respuesta libre (se omiten en multijugador).
-// La correspondencia también se omite mientras el multijugador local no la admita.
 function isMultiplayerFreeTypeQuestion(q) {
   if (!q) return false;
   const meta = normalizeQuestionMeta(q);
-  if (isFreeAnswerType(meta.type) || meta.type === 'matching') return true;
+  if (meta.type === 'matching') return false;
+  if (isFreeAnswerType(meta.type)) return true;
   return looksLikeFreeTypeQuestion(q);
 }
 

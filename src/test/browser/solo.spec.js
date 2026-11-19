@@ -346,7 +346,8 @@ test('partida completa: tipos de pregunta, puntos, avisos y resultado', async ({
     // Parcial no cuenta como acierto: pide confirmar con el modal.
     const modal = page.locator('#feedback-modal');
     await expect(modal).toHaveClass(/\bshow\b/);
-    await expect(page.locator('#feedback-title')).toHaveText('Respuesta incorrecta');
+    await expect(page.locator('#feedback')).toHaveClass(/feedback--partial/);
+    await expect(page.locator('#feedback-title')).toHaveText('Parcialmente correcta');
     await expect(page.locator('#feedback-body')).toHaveText('Respuesta correcta: 2, 5');
     await page.locator('#feedback-close').click();
     await expect(modal).not.toHaveClass(/\bshow\b/);

@@ -209,7 +209,7 @@ function setLang(newLang){
             },
             format: format
         }
-    }).mount('#solo-app');
+    }).component('matching-board', window.EduhootMatchingBoard).mount('#solo-app');
 
     applyStaticText();
     initSoloMusicPlayer();

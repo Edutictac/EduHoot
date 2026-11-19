@@ -187,6 +187,9 @@
       playSame: 'Repetir mismas preguntas',
       pickAnother: 'Elegir otro quiz',
       submitAnswers: 'Enviar respuestas',
+      matchingHint: 'Toca un elemento de la izquierda y después su pareja.',
+      matchingCount: '{n} de {t} emparejadas',
+      matchingPairsResult: '{hits} de {total} parejas',
       iconLabel: 'Icono'
     },
     en: {
@@ -262,6 +265,9 @@
       playSame: 'Play same questions',
       pickAnother: 'Pick another quiz',
       submitAnswers: 'Submit answers',
+      matchingHint: 'Tap an item on the left, then its match.',
+      matchingCount: '{n} of {t} matched',
+      matchingPairsResult: '{hits} of {total} pairs',
       iconLabel: 'Icon'
     },
     ca: {
@@ -337,6 +343,9 @@
       playSame: 'Repetir mateixes preguntes',
       pickAnother: 'Triar un altre quiz',
       submitAnswers: 'Enviar respostes',
+      matchingHint: 'Toca un element de l\'esquerra i després la seua parella.',
+      matchingCount: '{n} de {t} emparellades',
+      matchingPairsResult: '{hits} de {total} parelles',
       iconLabel: 'Icona'
     },
     va: {
@@ -368,6 +377,29 @@
       player.multiSelections.push(choice);
     }else{
       player.multiSelections.splice(existingIdx, 1);
+    }
+  }
+
+  // Correspondencia: cada pareja acertada suma; las mal hechas no restan.
+  function submitMatchingAnswer(playerId, answers){
+    if(state.phaseLocked) return;
+    var player = state.players[playerId];
+    if(!player || player.answered) return;
+    var q = getQuestionForPlayer(playerId);
+    if(!q) return;
+    var meta = normalizeQuestionMeta(q);
+    if(meta.type !== 'matching') return;
+    var result = EduhootMatching.score(meta.matchSolution, answers);
+    player.answered = true;
+    player.matchResult = result;
+    player.outcome = result.ratio === 1 ? 'ok' : (result.ratio > 0 ? 'partial' : 'bad');
+    if(result.ratio > 0){
+      player.correct += 1;
+      var bonus = Math.max(100, Math.round(1000 * (state.timerLeft / state.timerTotal)));
+      player.score += Math.round(bonus * result.ratio);
+    }
+    if(allAnswered()){
+      finishRoundAndContinue();
     }
   }
 
@@ -496,6 +528,18 @@
 
   function normalizeQuestionMeta(q){
     var type = (q && q.type) ? String(q.type).toLowerCase() : 'quiz';
+    // Correspondencia (feature 7): lógica compartida en matchingBoard.js (EduhootMatching).
+    if(type === 'matching'){
+      var layout = EduhootMatching.layoutOf(q);
+      return {
+        type: 'matching',
+        correctAnswers: [1],
+        pairs: EduhootMatching.parsePairs(q && q.pairs),
+        matchLeft: layout.matchLeft,
+        matchRight: layout.matchRight,
+        matchSolution: layout.matchSolution
+      };
+    }
     if(type !== 'multiple' && type !== 'true-false') type = 'quiz';
     var answers = Array.isArray(q && q.correctAnswers) ? q.correctAnswers.slice() : [];
     if(!answers.length && q && typeof q.correct !== 'undefined'){
@@ -524,6 +568,25 @@
 
   function randomizeOneQuestion(q){
     var meta = normalizeQuestionMeta(q);
+
+    // Correspondencia: se baraja la columna derecha.
+    if(meta.type === 'matching'){
+      var layout = EduhootMatching.shuffledLayout(meta.pairs);
+      return {
+        question: (q && q.question) || '',
+        answers: ['', '', '', ''],
+        correct: 1,
+        correctAnswers: [1],
+        type: 'matching',
+        image: (q && q.image) || '',
+        video: (q && q.video) || '',
+        time: q && q.time,
+        pairs: meta.pairs,
+        matchLeft: layout.matchLeft,
+        matchRight: layout.matchRight,
+        matchSolution: layout.matchSolution
+      };
+    }
 
     var answers = Array.isArray(q && q.answers) ? q.answers.slice(0, 4) : ['', '', '', ''];
     while(answers.length < 4) answers.push('');
@@ -564,6 +627,7 @@
   }
 
   function getVisibleAnswers(q, type){
+    if(type === 'matching') return [];
     var answers = Array.isArray(q && q.answers) ? q.answers.slice(0, 4) : ['', '', '', ''];
     while(answers.length < 4) answers.push('');
     if(type === 'true-false'){
@@ -1094,6 +1158,7 @@
       p.multiSelections = [];
       p.selectedAnswers = [];
       p.multiSubmitted = false;
+      p.matchResult = null;
       p.shownScore = p.score;
     });
   }
@@ -1596,6 +1661,20 @@
       submitMulti: function(playerId){
         submitMultiAnswer(playerId);
       },
+      submitMatching: function(playerId, answers){
+        submitMatchingAnswer(playerId, answers);
+      },
+      // Correspondencia: el tablero de cada jugador, mientras no ha respondido.
+      matchingFor: function(p){
+        var q = getQuestionForPlayer(p.id);
+        if(!q || p.answered || state.revealed) return null;
+        var meta = normalizeQuestionMeta(q);
+        return meta.type === 'matching' ? meta : null;
+      },
+      boardT: function(key){
+        var map = { matching_hint: 'matchingHint', matching_count: 'matchingCount', submit_free: 'submitAnswers' };
+        return t(map[key] || key);
+      },
       questionTextFor: function(p){
         var q = getQuestionForPlayer(p.id);
         return (q && q.question) ? q.question : '';
@@ -1628,9 +1707,11 @@
       },
       feedbackFor: function(p){
         if(!state.revealed) return { text: '', cls: '' };
-        if(p.outcome === 'ok') return { text: this.t('correctText'), cls: 'ok' };
-        if(p.outcome === 'partial') return { text: this.t('partialText'), cls: 'partial' };
-        if(p.outcome === 'bad') return { text: this.t('wrongText'), cls: 'bad' };
+        // Correspondencia: además, cuántas parejas están bien.
+        var pairs = p.matchResult ? ' · ' + format(this.t('matchingPairsResult'), p.matchResult) : '';
+        if(p.outcome === 'ok') return { text: this.t('correctText') + pairs, cls: 'ok' };
+        if(p.outcome === 'partial') return { text: this.t('partialText') + pairs, cls: 'partial' };
+        if(p.outcome === 'bad') return { text: this.t('wrongText') + pairs, cls: 'bad' };
         if(p.outcome === 'timeout') return { text: this.t('timeup'), cls: 'muted' };
         return { text: '', cls: 'muted' };
       },
@@ -1638,7 +1719,7 @@
         return (p.icon ? p.icon + ' ' : '') + p.name + ' — ' + (p.score || 0);
       }
     }
-  }).mount('#multiplayer-app');
+  }).component('matching-board', window.EduhootMatchingBoard).mount('#multiplayer-app');
 
   applyStaticText();
   bindEvents();

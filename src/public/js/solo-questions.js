@@ -73,7 +73,7 @@
 
     function normalizeQuestionMeta(q){
         var type = (q && q.type) ? String(q.type).toLowerCase() : 'quiz';
-        var allowed = { 'quiz': true, 'multiple': true, 'true-false': true, 'short-answer': true, 'numeric': true, 'poll': true };
+        var allowed = { 'quiz': true, 'multiple': true, 'true-false': true, 'short-answer': true, 'numeric': true, 'poll': true, 'matching': true };
         if(!allowed[type]){
             type = 'quiz';
         }
@@ -92,6 +92,24 @@
             numericAnswer = parseLenientNumber(q && (q.numericAnswer !== undefined ? q.numericAnswer : (q.numero !== undefined ? q.numero : q.correct)));
             var tol = parseLenientNumber(q && (q.tolerance !== undefined ? q.tolerance : q.tolerancia));
             tolerance = (tol === null) ? 0 : tol;
+        }
+
+        // Correspondencia (feature 7): lógica compartida en matchingBoard.js (EduhootMatching).
+        if(type === 'matching'){
+            var pairs = EduhootMatching.parsePairs(q && q.pairs);
+            var layout = EduhootMatching.layoutOf(q);
+            return {
+                type: type,
+                correctAnswers: [1],
+                correct: 1,
+                acceptedAnswers: [],
+                numericAnswer: null,
+                tolerance: null,
+                pairs: pairs,
+                matchLeft: layout.matchLeft,
+                matchRight: layout.matchRight,
+                matchSolution: layout.matchSolution
+            };
         }
 
         // Para tipos no indexados mantenemos compatibilidad (correctAnswers = [1]).
@@ -137,7 +155,7 @@
     }
 
     function getVisibleAnswers(q, type){
-        if(type === 'short-answer' || type === 'numeric'){
+        if(type === 'short-answer' || type === 'numeric' || type === 'matching'){
             return [];
         }
         var answers = Array.isArray(q && q.answers) ? q.answers.slice(0, 4) : ['', '', '', ''];
@@ -161,6 +179,25 @@
 
     function randomizeOneQuestion(q){
         var meta = normalizeQuestionMeta(q);
+
+        // Correspondencia: se baraja la columna derecha (nunca queda en el orden guardado).
+        if(meta.type === 'matching'){
+            var layout = EduhootMatching.shuffledLayout(meta.pairs);
+            return {
+                question: q.question || '',
+                answers: ['', '', '', ''],
+                correct: 1,
+                correctAnswers: [1],
+                type: 'matching',
+                image: q.image || '',
+                video: q.video || '',
+                time: q.time,
+                pairs: meta.pairs,
+                matchLeft: layout.matchLeft,
+                matchRight: layout.matchRight,
+                matchSolution: layout.matchSolution
+            };
+        }
 
         if(meta.type === 'short-answer' || meta.type === 'numeric'){
             return {

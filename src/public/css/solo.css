@@ -696,6 +696,7 @@ body.playing #game-panel{
     text-align: center;
 }
 .feedback--success,
+.feedback--partial,
 .feedback--error,
 .feedback--muted{
     padding: 6px 12px;
@@ -719,6 +720,17 @@ body.playing #game-panel{
 }
 .feedback--success::before{
     content: '✓';
+    font-size: 16px;
+}
+/* Parcialmente correcta: naranja, como en «Jugar a l'aula». */
+.feedback--partial{
+    background: #c2410c;
+    color: #fff;
+    box-shadow: 0 12px 28px rgba(245,124,0,0.4);
+    border-color: rgba(255,255,255,0.35);
+}
+.feedback--partial::before{
+    content: '◐';
     font-size: 16px;
 }
 .feedback--error{

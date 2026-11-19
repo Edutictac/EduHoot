@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <title>Multiplayer | EduHoot</title>
     <link rel="stylesheet" href="../css/multiplayer.css">
+    <link rel="stylesheet" href="/css/matching.css">
     <link rel="stylesheet" href="/css/dropdowns.css">
     <link rel="stylesheet" href="../css/music-player.css">
     <link href="/css/fonts.css" rel="stylesheet">
@@ -212,6 +213,7 @@
                 <div class="player-score" data-score="1">{{ t('score') + ': ' + p.shownScore }}</div>
               </div>
               <div class="player-feedback" :class="feedbackFor(p).cls" data-feedback="1">{{ feedbackFor(p).text }}</div>
+              <matching-board v-if="matchingFor(p)" :key="'match-' + s.idx + '-' + p.id" :left="matchingFor(p).matchLeft" :right="matchingFor(p).matchRight" :t="boardT" @submit="submitMatching(p.id, $event)"></matching-board>
               <div class="answers" data-answers="1">
                 <button v-for="(ans, idx) in answersFor(p)" :key="idx" type="button" class="answer" :class="answerClass(p, idx + 1)" :data-answer="idx + 1" :disabled="p.answered || s.revealed" @click="answerClick(p.id, idx + 1)">{{ ans || ('A' + (idx + 1)) }}</button>
               </div>
@@ -270,6 +272,7 @@
     <script src="/js/languages.js"></script>
     <script src="/js/env-badge.js"></script>
     <script src="../js/libs/vue.global.prod.js"></script>
+    <script src="../js/matchingBoard.js"></script>
     <script src="../js/multiplayer.js"></script>
       <script src="/js/app-version.js"></script>
     </body>

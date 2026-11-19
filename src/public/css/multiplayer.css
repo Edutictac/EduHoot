@@ -1007,3 +1007,17 @@ body.mode-per-player .question-card{
 }
 
 #multiplayer-app{ display: contents; }
+
+/* Correspondencia (feature 7): el tablero cabe en el panel de cada jugador; si no
+   cabe entero (paneles bajos, móvil), el panel se desplaza en lugar de solaparse. */
+.player-panel:has(.matching-board){
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.player-panel .matching-board{ margin: 0; gap: 8px; }
+.player-panel .matching-hint{ font-size: 12px; }
+.player-panel .matching-cols{ gap: 6px; }
+.player-panel .matching-col{ gap: 6px; }
+.player-panel .matching-item{ min-height: 40px; padding: 6px 8px; font-size: 14px; }
+.player-panel .matching-code{ width: 22px; height: 22px; font-size: 12px; }
+.player-panel .matching-send{ min-height: 44px; min-width: 0; padding: 8px 14px; }

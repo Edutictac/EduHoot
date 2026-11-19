@@ -27,6 +27,12 @@ function cardAnswerTexts(q, t){
         if(meta.tolerance) text += ' (' + format(t('flashcardTolerance'), { tol: meta.tolerance }) + ')';
         return [text];
     }
+    // Correspondencia: en el reverso, las parejas («Francia → París»).
+    if(meta.type === 'matching'){
+        return meta.pairs
+            .filter(function(p){ return p.left; })
+            .map(function(p){ return p.left + ' → ' + p.right; });
+    }
     var answers = Array.isArray(q.answers) ? q.answers : [];
     return meta.correctAnswers
         .map(function(n){ return answers[n - 1]; })
@@ -143,6 +149,13 @@ var soloFlashcards = {
             return answers
                 .map(function(a, i){ return { n: i + 1, text: a === null || a === undefined ? '' : String(a) }; })
                 .filter(function(o){ return o.text.trim() !== ''; });
+        },
+        // Correspondencia: en el anverso, la columna izquierda (lo que hay que emparejar).
+        cardsMatchLeft: function(){
+            var cur = this.cardsCurrent;
+            if(!cur) return [];
+            var meta = normalizeQuestionMeta(cur.q);
+            return meta.type === 'matching' ? meta.matchLeft : [];
         },
         cardsBackParts: function(){
             var cur = this.cardsCurrent;
@@ -316,7 +329,7 @@ var soloFlashcards = {
             }
             var cur = this.cardsCurrent;
             if(!cur) return;
-            var parts = this.s.cards.flipped ? this.cardsBackParts : [this.cardsFrontText];
+            var parts = this.s.cards.flipped ? this.cardsBackParts : [this.cardsFrontText].concat(this.cardsMatchLeft);
             if(!parts.length) return;
             this.s.ttsSpeaking = true;
             var started = EduhootTTS.speakParts(parts, document.documentElement.lang, function(){

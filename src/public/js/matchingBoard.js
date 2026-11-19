@@ -164,6 +164,100 @@
             '</div>'
     };
 
+    // Lógica de la pregunta en el navegador (modo Solo y multijugador local): la misma
+    // que server/questionUtils.js. Parejas {left, right}; sin izquierda = impostora.
+    var MATCHING_MAX_ITEMS = 8;
+
+    function normalizeKey(value){
+        var str = String(value || '').trim().toLowerCase();
+        try{ str = str.normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }catch(e){}
+        return str.replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+    }
+
+    function parsePairs(raw){
+        var list = [];
+        if(Array.isArray(raw)){
+            list = raw.map(function(p){
+                return {
+                    left: p && p.left !== undefined && p.left !== null ? String(p.left) : '',
+                    right: p && p.right !== undefined && p.right !== null ? String(p.right) : ''
+                };
+            });
+        }else if(typeof raw === 'string' && raw.indexOf('->') !== -1){
+            list = raw.split(/[|\n]+/g).map(function(chunk){
+                var idx = chunk.indexOf('->');
+                if(idx === -1) return { left: '', right: chunk };
+                return { left: chunk.slice(0, idx), right: chunk.slice(idx + 2) };
+            });
+        }
+        var out = [];
+        var seen = {};
+        for(var i = 0; i < list.length && out.length < MATCHING_MAX_ITEMS; i++){
+            var left = list[i].left.trim();
+            var right = list[i].right.trim();
+            if(!right) continue;
+            var key = normalizeKey(right) || right.toLowerCase();
+            if(seen[key]) continue;
+            seen[key] = true;
+            out.push({ left: left, right: right });
+        }
+        return out;
+    }
+
+    // Izquierda: solo las parejas reales, en su orden. Derecha (con impostoras) en el
+    // orden que dé `order`. Solución: para cada izquierda, el índice de su derecha.
+    function buildLayout(pairs, order){
+        var domain = pairs.map(function(_, i){ return i; });
+        var ord = Array.isArray(order) && order.length === pairs.length ? order : domain;
+        var layout = { matchLeft: [], matchRight: ord.map(function(i){ return pairs[i].right; }), matchSolution: [] };
+        pairs.forEach(function(p, i){
+            if(!p.left) return;
+            layout.matchLeft.push(p.left);
+            layout.matchSolution.push(ord.indexOf(i));
+        });
+        return layout;
+    }
+
+    // Derecha barajada; nunca queda en el orden guardado.
+    function shuffledLayout(pairs){
+        var domain = pairs.map(function(_, i){ return i; });
+        var order = domain.slice();
+        for(var i = order.length - 1; i > 0; i--){
+            var j = Math.floor(Math.random() * (i + 1));
+            var tmp = order[i]; order[i] = order[j]; order[j] = tmp;
+        }
+        if(order.length > 1 && order.every(function(v, k){ return v === k; })){
+            order = domain.slice(1).concat(domain[0]);
+        }
+        return buildLayout(pairs, order);
+    }
+
+    // Disposición de una pregunta: la que trae (ya barajada) o la del orden guardado.
+    function layoutOf(q){
+        if(q && Array.isArray(q.matchLeft) && Array.isArray(q.matchRight) && Array.isArray(q.matchSolution)){
+            return { matchLeft: q.matchLeft, matchRight: q.matchRight, matchSolution: q.matchSolution };
+        }
+        return buildLayout(parsePairs(q && q.pairs));
+    }
+
+    // Proporción de acierto: parejas bien hechas / parejas; las mal hechas no restan.
+    function score(solution, answers){
+        var list = Array.isArray(answers) ? answers : [];
+        var hits = (solution || []).filter(function(r, i){ return list[i] === r; }).length;
+        var total = (solution || []).length;
+        return { hits: hits, total: total, ratio: total ? hits / total : 0 };
+    }
+
+    window.EduhootMatching = {
+        MAX_ITEMS: MATCHING_MAX_ITEMS,
+        parsePairs: parsePairs,
+        buildLayout: buildLayout,
+        shuffledLayout: shuffledLayout,
+        layoutOf: layoutOf,
+        score: score,
+        letter: letter
+    };
+
     // Texto de la corrección de una correspondencia (pantalla de resultado): una línea por
     // elemento de la izquierda, con lo elegido y, si falla, la pareja correcta.
     window.EduhootMatchingReview = function(meta, answers){

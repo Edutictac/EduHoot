@@ -154,8 +154,8 @@ test('«Mostrar respuestas» desactivado: no llega la solución de la correspond
   assert.deepEqual(out.matchLeft, ['Francia', 'Italia', 'Alemania']);
 });
 
-test('el multijugador local omite la correspondencia mientras no la admita', () => {
-  assert.equal(isMultiplayerFreeTypeQuestion({ type: 'matching', pairs: capitals }), true);
+test('el multijugador local admite la correspondencia', () => {
+  assert.equal(isMultiplayerFreeTypeQuestion({ type: 'matching', pairs: capitals }), false);
   assert.equal(isMultiplayerFreeTypeQuestion({ type: 'quiz', answers: ['a', 'b'], correct: 1 }), false);
 });
 

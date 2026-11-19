@@ -236,7 +236,17 @@ function startQuiz(){
         var scoreRatio = 0;
         var correctAnswerText = '';
 
-        if(meta.type === 'short-answer'){
+        if(meta.type === 'matching'){
+            // Proporcional: cada pareja acertada suma; las mal hechas no restan.
+            var solution = meta.matchSolution || [];
+            var matchResult = EduhootMatching.score(solution, timedOut ? [] : choice);
+            scoreRatio = matchResult.ratio;
+            isCorrect = matchResult.total > 0 && matchResult.hits === matchResult.total;
+            correctAnswerText = solution.map(function(r, i){
+                return (i + 1) + ' ' + meta.matchLeft[i] + ' → ' + (meta.matchRight[r] || '');
+            }).join(' · ');
+            state.lastMatchHits = { hits: matchResult.hits, total: matchResult.total };
+        }else if(meta.type === 'short-answer'){
             var rawText = timedOut ? '' : (typeof choice === 'string' ? choice : String(choice || ''));
             var normalized = normalizeFreeText(rawText);
             var accepted = Array.isArray(meta.acceptedAnswers) ? meta.acceptedAnswers : splitAcceptedAnswers(meta.acceptedAnswers);
@@ -321,8 +331,12 @@ function startQuiz(){
             state.feedback = { text: t('pollThanks'), kind: 'muted' };
         }else if(isCorrect){
             state.feedback = { text: t('correctText'), kind: 'success' };
-        }else if(meta.type === 'multiple' && scoreRatio > 0){
-            state.feedback = { text: t('partialText'), kind: 'success' };
+        }else if((meta.type === 'multiple' || meta.type === 'matching') && scoreRatio > 0){
+            var partialText = t('partialText');
+            if(meta.type === 'matching'){
+                partialText += ' · ' + format(t('matchingPairsResult'), state.lastMatchHits);
+            }
+            state.feedback = { text: partialText, kind: 'partial' };
         }else{
             var label = t('correctLabel');
             state.feedback = {
@@ -343,6 +357,7 @@ function startQuiz(){
         }
         state.awaitingConfirm = true;
         state.lastWrong = {
+            partial: scoreRatio > 0,
             correct: Array.isArray(meta.correctAnswers) ? meta.correctAnswers : [1],
             correctText: correctAnswerText,
             question: q.question || ''
@@ -396,6 +411,13 @@ var soloPlay = {
         },
         isFree: function(){
             return this.meta.type === 'short-answer' || this.meta.type === 'numeric';
+        },
+        // Correspondencia: el tablero se ve mientras se puede responder.
+        showMatching: function(){
+            return this.meta.type === 'matching' && !this.s.locked && !(this.s.countdown > 0);
+        },
+        feedbackTitle: function(){
+            return this.s.lastWrong && this.s.lastWrong.partial ? this.t('partialTitle') : this.t('wrongText');
         },
         answers: function(){
             return this.question && !this.isFree ? getVisibleAnswers(this.question, this.meta.type) : [];
@@ -501,6 +523,12 @@ var soloPlay = {
         answer: function(n){ handleSoloAnswerInteraction(n); },
         submitFree: function(){ submitSoloFreeAnswer(); },
         submitMulti: function(){ submitSoloMultiAnswers(); },
+        submitMatching: function(answers){ answerQuestion(answers); },
+        // Textos del tablero de correspondencia (matchingBoard.js) con el diccionario de /solo/.
+        boardT: function(key){
+            var map = { matching_hint: 'matchingHint', matching_count: 'matchingCount', submit_free: 'submitFreeAnswer' };
+            return t(map[key] || key);
+        },
         closeFeedback: function(){ hideFeedbackModal(); },
         closeRanking: function(){ hideRankingModal(); },
         saveName: function(){ saveNameAndSubmit(); },
