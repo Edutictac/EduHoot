@@ -154,14 +154,25 @@
                             <span v-if="s.streak > 0" id="streak-pill" class="pill pill-muted">🔥 {{ s.streak }}{{ s.streakBonus > 0 ? ' · +' + s.streakBonus : '' }}</span>
                         </span>
                     </div>
-                    <div class="tts-timer-wrap" :class="{ 'has-tts': ttsAvailable }">
-                        <div class="game-timer solo-timer" role="timer">
-                            <div class="game-timer__fill" :style="{ width: timerPct + '%', background: timerColor }"></div>
-                            <span id="timer-pill" class="game-timer__text">{{ t('timer') + ': ' + Math.ceil(s.timerLeft) + 's' }}</span>
+                    <!-- Barra de tiempo con los botones de pausa y cancelación a su derecha (sin quitar alto). -->
+                    <div class="solo-timer-row">
+                        <div class="tts-timer-wrap" :class="{ 'has-tts': ttsAvailable }">
+                            <div class="game-timer solo-timer" role="timer">
+                                <div class="game-timer__fill" :style="{ width: timerPct + '%', background: timerColor }"></div>
+                                <span id="timer-pill" class="game-timer__text">{{ t('timer') + ': ' + Math.ceil(s.timerLeft) + 's' }}</span>
+                            </div>
+                            <button v-if="ttsAvailable" id="tts-button" type="button" class="tts-btn" :aria-pressed="s.ttsSpeaking ? 'true' : 'false'" :aria-label="s.ttsSpeaking ? t('ttsStop') : t('ttsListen')" :title="s.ttsSpeaking ? t('ttsStop') : t('ttsListen')" @click="toggleSpeech"><span aria-hidden="true">{{ s.ttsSpeaking ? '⏹' : '🔊' }}</span></button>
                         </div>
-                        <button v-if="ttsAvailable" id="tts-button" type="button" class="tts-btn" :aria-pressed="s.ttsSpeaking ? 'true' : 'false'" :aria-label="s.ttsSpeaking ? t('ttsStop') : t('ttsListen')" :title="s.ttsSpeaking ? t('ttsStop') : t('ttsListen')" @click="toggleSpeech"><span aria-hidden="true">{{ s.ttsSpeaking ? '⏹' : '🔊' }}</span></button>
+                        <span class="solo-controls">
+                            <button id="solo-pause" type="button" class="pill solo-control" :disabled="!canPause" :aria-pressed="s.paused ? 'true' : 'false'" :aria-label="s.paused ? t('resumeGame') : t('pauseGame')" :title="s.paused ? t('resumeGame') : t('pauseGame')" @click="togglePause"><span aria-hidden="true">{{ s.paused ? '▶\uFE0E' : '❚❚' }}</span><span class="solo-control__text">{{ s.paused ? t('resumeGame') : t('pauseGame') }}</span></button>
+                            <button id="solo-cancel" type="button" class="pill solo-control solo-cancel" :class="{ 'is-confirming': s.cancelConfirming }" :aria-label="s.cancelConfirming ? t('cancelGameConfirm') : t('cancelGame')" :title="s.cancelConfirming ? t('cancelGameConfirm') : t('cancelGame')" @click="askCancel"><span aria-hidden="true">✕</span><span class="solo-control__text">{{ s.cancelConfirming ? t('cancelGameConfirm') : t('cancelGame') }}</span></button>
+                        </span>
                     </div>
-                    <div class="question-card">
+                    <div v-if="s.paused" id="solo-paused" class="question-card solo-paused" role="status">
+                        <p class="solo-paused__title">{{ t('pausedTitle') }}</p>
+                        <p class="muted">{{ t('pausedHint') }}</p>
+                    </div>
+                    <div class="question-card" v-show="!s.paused">
                         <!-- Compte arrere 3-2-1 abans de cada pregunta (proposta 23). -->
                         <div id="solo-countdown" class="question-countdown" :class="{ 'is-visible': s.countdown > 0, 'is-ticking': s.countdown > 0 }" aria-live="polite" v-if="s.countdown > 0">
                             <div class="question-countdown__label">{{ t('countdownLabel') }}</div>

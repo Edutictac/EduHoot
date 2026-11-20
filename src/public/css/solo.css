@@ -52,6 +52,8 @@ a{
 
 .back-link{
     display: inline-block;
+    /* Durante la partida el body es flex en columna: sin esto se estira a todo el ancho. */
+    align-self: flex-start;
     margin-bottom: 10px;
     padding: 6px 10px;
     border-radius: 10px;
@@ -1196,3 +1198,66 @@ body.playing #answers > .free-answer-row{ grid-column: 1 / -1; }
 .cards-mark .btn{ min-width: 140px; }
 .cards-tools{ margin-top: 16px; }
 .cards-counts{ font-size: 13px; width: 100%; text-align: center; }
+
+/* Pausa y cancelación de la partida (modo Solo): botones pequeños a la derecha de
+   la barra de tiempo, con la misma altura que tenía la barra sola. */
+.solo-timer-row{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 6px 0;
+}
+.solo-timer-row .solo-timer{ margin-top: 0; margin-bottom: 0; }
+.solo-controls{
+    display: inline-flex;
+    flex-shrink: 0;
+    gap: 6px;
+}
+.solo-control{
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 26px;
+    min-height: 0;
+    padding: 0 8px;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    background: rgba(255,255,255,0.10);
+    border: 1px solid rgba(255,255,255,0.35);
+    cursor: pointer;
+}
+.solo-control:hover:not(:disabled){ background: rgba(255,255,255,0.2); }
+.solo-control:disabled{ opacity: 0.5; cursor: default; }
+.solo-cancel.is-confirming{
+    background: #dc2626;
+    border-color: #dc2626;
+    color: #fff;
+}
+/* Pantallas estrechas: solo el icono (con nombre accesible); la confirmación de
+   «Cancelar partida» se lee siempre. */
+@media (max-width: 600px){
+    .solo-control:not(.is-confirming) .solo-control__text{
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+    }
+}
+.solo-paused{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    text-align: center;
+    min-height: 200px;
+}
+.solo-paused__title{
+    margin: 0;
+    font-size: 26px;
+    font-weight: 800;
+}

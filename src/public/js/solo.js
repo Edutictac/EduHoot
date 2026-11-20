@@ -28,6 +28,10 @@ var state = Vue.reactive({
         timer: null,
         // Segons que queden del compte arrere 3-2-1 (0 = no se'n mostra cap).
         countdown: 0,
+        // Pausa de la partida (la pregunta y el tiempo quedan congelados) y
+        // confirmación en dos pasos de «Cancelar partida».
+        paused: false,
+        cancelConfirming: false,
         timerTotal: 20,
         timerLeft: 20,
         locked: false,

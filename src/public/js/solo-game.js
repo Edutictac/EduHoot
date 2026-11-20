@@ -66,9 +66,11 @@ function startQuiz(){
 
     var SOLO_COUNTDOWN_SECONDS = 3;
     var countdownTimer = null;
+    var countdownDone = null;
 
     function runCountdown(seconds, done){
         stopCountdown();
+        countdownDone = done;
         state.countdown = seconds;
         countdownTimer = setInterval(function(){
             state.countdown -= 1;
@@ -222,6 +224,89 @@ function startQuiz(){
         }
     }
 
+    // Sigue contando desde el tiempo que quedaba (tras una pausa).
+    function resumeTimer(){
+        if(state.timer) clearInterval(state.timer);
+        state.timer = setInterval(function(){
+            state.timerLeft = Math.max(0, state.timerLeft - 0.1);
+            if(state.timerLeft <= 0){
+                clearInterval(state.timer);
+                state.timer = null;
+                answerQuestion(null, true);
+            }
+        }, 100);
+    }
+
+    // Pausa: se puede mientras corre el tiempo de una pregunta o la cuenta atrás.
+    // La pregunta se tapa (no se puede leer ni responder) y el tiempo se congela.
+    function canPauseSolo(){
+        return state.view === 'game' && !state.paused && (!!state.timer || state.countdown > 0);
+    }
+
+    var pausedCountdown = 0;
+    function pauseSolo(){
+        if(!canPauseSolo()) return;
+        EduhootTTS.cancel();
+        state.ttsSpeaking = false;
+        if(state.countdown > 0){
+            pausedCountdown = state.countdown;
+            if(countdownTimer){
+                clearInterval(countdownTimer);
+                countdownTimer = null;
+            }
+        }else{
+            pausedCountdown = 0;
+            stopTimer();
+        }
+        state.paused = true;
+    }
+
+    function resumeSolo(){
+        if(!state.paused) return;
+        state.paused = false;
+        if(pausedCountdown > 0){
+            var seconds = pausedCountdown;
+            pausedCountdown = 0;
+            runCountdown(seconds, countdownDone);
+        }else{
+            resumeTimer();
+        }
+    }
+
+    // Cancelar la partida: primer toque pide confirmación unos segundos; el segundo
+    // la termina sin guardar la puntuación y vuelve al formulario del quiz.
+    var cancelResetTimer = null;
+    function askCancelSolo(){
+        if(!state.cancelConfirming){
+            state.cancelConfirming = true;
+            clearTimeout(cancelResetTimer);
+            cancelResetTimer = setTimeout(function(){ state.cancelConfirming = false; }, 4000);
+            return;
+        }
+        clearTimeout(cancelResetTimer);
+        cancelSolo();
+    }
+
+    function cancelSolo(){
+        state.cancelConfirming = false;
+        state.paused = false;
+        pausedCountdown = 0;
+        stopTimer();
+        stopCountdown();
+        EduhootTTS.cancel();
+        state.ttsSpeaking = false;
+        state.feedbackModalOpen = false;
+        state.awaitingConfirm = false;
+        state.lastWrong = null;
+        state.locked = false;
+        state.multiSelections = [];
+        state.feedback = { text: '', kind: '' };
+        state.questions = [];
+        state.idx = 0;
+        // El formulario del quiz también se ve en modo «playing»: no se quita.
+        state.view = 'start';
+    }
+
 
 
     function answerQuestion(choice, timedOut){
@@ -349,7 +434,10 @@ function startQuiz(){
         state.multiSelections = [];
         state.lastWrong = null;
         if(isCorrect || meta.type === 'poll'){
+            var runAt = state.questions;
             setTimeout(function(){
+                // Si se ha cancelado la partida mientras tanto, no se sigue.
+                if(state.view !== 'game' || state.questions !== runAt) return;
                 state.idx += 1;
                 renderQuestion();
             }, 1200);
@@ -449,6 +537,9 @@ var soloPlay = {
             var total = getQuestions().length;
             return format(this.t('questionOf'), { current: this.s.idx + 1, total: total });
         },
+        canPause: function(){
+            return this.s.paused || canPauseSolo();
+        },
         showMultiSubmit: function(){
             return this.meta.type === 'multiple' && !this.s.locked;
         },
@@ -523,6 +614,8 @@ var soloPlay = {
         answer: function(n){ handleSoloAnswerInteraction(n); },
         submitFree: function(){ submitSoloFreeAnswer(); },
         submitMulti: function(){ submitSoloMultiAnswers(); },
+        togglePause: function(){ if(this.s.paused) resumeSolo(); else pauseSolo(); },
+        askCancel: function(){ askCancelSolo(); },
         submitMatching: function(answers){ answerQuestion(answers); },
         // Textos del tablero de correspondencia (matchingBoard.js) con el diccionario de /solo/.
         boardT: function(key){
