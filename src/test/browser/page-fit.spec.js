@@ -361,3 +361,23 @@ test('portada en 2 columnas: los botones crecen hasta abajo dejando un 20 % libr
     expect(Math.abs(free / (free + actions.height) - 0.2)).toBeLessThanOrEqual(0.02);
     expect(btn.height).toBeGreaterThan(60);
 });
+
+test('modo Solo: un texto muy largo (sin espacios) no se sale de la ventana de corrección', async ({ page }) => {
+    await page.route(/^https:\/\//, route => route.abort());
+    await page.route('**/api/**', route => route.fulfill({ json: [] }));
+    await page.goto('/solo/?lang=es');
+    await page.waitForLoadState('load');
+    await page.evaluate(() => {
+        const long = 'Supercalifragilisticoespialidoso_sin_espacios_' + 'x'.repeat(200);
+        document.getElementById('feedback-modal').classList.add('show');
+        document.getElementById('feedback-body').textContent = 'Respuesta correcta: ' + 'texto largo '.repeat(120) + long;
+    });
+    const content = page.locator('#feedback-modal .solo-modal__content');
+    const box = await content.boundingBox();
+    const viewport = page.viewportSize();
+    expect(await content.evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true);
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(viewport.width);
+    expect(box.y + box.height).toBeLessThanOrEqual(viewport.height);
+    await expect(page.locator('#feedback-close')).toBeAttached();
+});

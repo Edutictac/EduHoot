@@ -1199,6 +1199,19 @@ body.playing #answers > .free-answer-row{ grid-column: 1 / -1; }
 .cards-tools{ margin-top: 16px; }
 .cards-counts{ font-size: 13px; width: 100%; text-align: center; }
 
+/* Ventanas (corrección, ranking, nombre): el texto nunca se sale del recuadro. Con
+   textos largos el recuadro se ensancha (hasta 760 px) y, si no cabe en alto, se
+   desplaza por dentro sin salirse de la pantalla. */
+.solo-modal__content{
+    width: auto;
+    min-width: min(420px, 100%);
+    max-width: min(760px, 100%);
+    max-height: calc(100dvh - 32px);
+    overflow-y: auto;
+    overflow-wrap: anywhere;
+    box-sizing: border-box;
+}
+
 /* Pausa y cancelación de la partida (modo Solo): botones pequeños a la derecha de
    la barra de tiempo, con la misma altura que tenía la barra sola. */
 .solo-timer-row{
@@ -1260,4 +1273,15 @@ body.playing #answers > .free-answer-row{ grid-column: 1 / -1; }
     margin: 0;
     font-size: 26px;
     font-weight: 800;
+}
+
+/* Enunciados, respuestas y tarjetas: una palabra o expresión sin espacios que no
+   cabe se parte, en lugar de salirse del recuadro. */
+.question-text,
+.answer,
+.game-progress__title,
+.flashcard__answers li,
+.flashcard__option{
+    overflow-wrap: anywhere;
+    min-width: 0;
 }

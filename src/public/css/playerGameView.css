@@ -409,3 +409,25 @@ body{
 }
 
 .matching-pairs{ display: block; }
+
+/* Resultado de la pregunta y ranking: el texto largo (una palabra o un enlace sin
+   espacios) se parte en lugar de salirse del recuadro. */
+#message,
+.player-correct-answer,
+.player-modal__content{
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    box-sizing: border-box;
+}
+.player-modal__content{
+    max-height: calc(100dvh - 32px);
+    overflow-y: auto;
+}
+
+/* Enunciado y respuestas: el texto sin espacios que no cabe se parte. */
+#questionText,
+#answerGrid .button{
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    box-sizing: border-box;
+}

@@ -1021,3 +1021,18 @@ body.mode-per-player .question-card{
 .player-panel .matching-item{ min-height: 40px; padding: 6px 8px; font-size: 14px; }
 .player-panel .matching-code{ width: 22px; height: 22px; font-size: 12px; }
 .player-panel .matching-send{ min-height: 44px; min-width: 0; padding: 8px 14px; }
+
+/* El texto largo (respuestas, nombres) no se sale de las ventanas ni de los avisos. */
+.mp-modal__content{
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  overflow-wrap: anywhere;
+  box-sizing: border-box;
+}
+.player-feedback{ overflow-wrap: anywhere; }
+/* Enunciados y respuestas: el texto sin espacios que no cabe se parte. */
+.question-text,
+.answer{
+  overflow-wrap: anywhere;
+  min-width: 0;
+}

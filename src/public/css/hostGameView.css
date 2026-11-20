@@ -898,3 +898,12 @@ h3[id^="answer"]::before{
     .host-matching-item{ font-size: 16px; min-height: 44px; padding: 6px 10px; }
     .results-matching-row{ font-size: 16px; }
 }
+
+/* Enunciado, respuestas y resultados: el texto sin espacios que no cabe se parte. */
+#question,
+.host-answers h3,
+.results-bar-text,
+.results-free-line{
+    overflow-wrap: anywhere;
+    min-width: 0;
+}

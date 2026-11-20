@@ -129,3 +129,6 @@
 .tts-btn:hover,
 .tts-btn:focus-visible{ opacity: 1; }
 .tts-btn[aria-pressed="true"]{ opacity: 1; box-shadow: 0 0 0 2px currentColor; }
+
+/* Texto largo sin espacios (una palabra, un enlace): se parte en lugar de salirse del botón. */
+.answer-shape{ overflow-wrap: anywhere; min-width: 0; }
