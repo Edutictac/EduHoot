@@ -73,6 +73,16 @@
 
 ### Millores de contingut i accessibilitat
 
+- **Pregunta de correspondència**: l'alumnat relaciona cada element amb la
+  seua parella amb tocs. Pots afegir elements «impostors» sense parella.
+  Puntua cada parella encertada. Es pot importar i exportar amb Moodle
+  (XML i GIFT) i imprimir com a fitxa.
+- **Mode a cegues amb correspondència**: tries al lobby com respon el
+  mòbil: tocs amb números i lletres, desplegables o pas a pas.
+- **Pausa en el mode individual**: l'alumnat pot pausar, reprendre o
+  cancel·lar la seua partida.
+- **Encert parcial en taronja**: verd és correcte, taronja parcial i roig
+  incorrecte, en tots els modes.
 - **Importar més formats**: a més del CSV, es podran importar qüestionaris
   en GIFT, JSON i XML de Moodle/AULES, així que podràs reaprofitar bancs de
   preguntes que ja tingues.
@@ -183,6 +193,16 @@
 
 ### Mejoras de contenido y accesibilidad
 
+- **Pregunta de correspondencia**: el alumnado relaciona cada elemento con
+  su pareja con toques. Puedes añadir elementos «impostores» sin pareja.
+  Puntúa cada pareja acertada. Se puede importar y exportar con Moodle
+  (XML y GIFT) e imprimir como ficha.
+- **Modo a ciegas con correspondencia**: eliges en el lobby cómo responde
+  el móvil: toques con números y letras, desplegables o paso a paso.
+- **Pausa en el modo individual**: el alumnado puede pausar, reanudar o
+  cancelar su partida.
+- **Acierto parcial en naranja**: verde es correcto, naranja parcial y rojo
+  incorrecto, en todos los modos.
 - **Importar más formatos**: además del CSV, se podrán importar
   cuestionarios en GIFT, JSON y XML de Moodle/AULES, así que podrás
   reaprovechar bancos de preguntas que ya tengas.
@@ -264,6 +284,15 @@
 
 ### Content and accessibility improvements
 
+- **Matching question**: students pair each item with its match by
+  tapping. You can add "distractor" items with no pair. Each correct pair
+  scores. It can be imported and exported with Moodle (XML and GIFT) and
+  printed as a worksheet.
+- **Blind mode with matching**: choose in the lobby how phones answer:
+  taps with numbers and letters, drop-down lists or step by step.
+- **Pause in solo mode**: students can pause, resume or cancel their game.
+- **Partial answers in orange**: green is correct, orange partial and red
+  wrong, in every mode.
 - **Import more formats**: besides CSV, quizzes will be importable in
   GIFT, JSON and Moodle/AULES XML, so you can reuse question banks you
   already have.

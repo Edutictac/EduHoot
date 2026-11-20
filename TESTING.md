@@ -78,14 +78,17 @@ problemes d'estil, variables sense usar, etc.
   repartiment de preguntes per mode (`gameHelpers.test.js`), puntuació
   (`scoring.test.js`), exportació a Moodle (`moodleExport.test.js`), la
   llista d'ús sense connexió de `sw.js` (`swAssets.test.js`), la CSP
-  (`csp.test.js`) i els noms únics en `player-join` (`playerJoinNames.test.js`).
+  (`csp.test.js`), els noms únics en `player-join` (`playerJoinNames.test.js`)
+  i la pregunta de correspondència (`matching.test.js`: model, puntuació,
+  partida, CSV, Moodle XML, GIFT i informe).
 - **`test/integration/`** — alça el servidor Express real (amb Mongo en
   memòria) i prova l'API HTTP d'extrem a extrem: `api.test.js`,
   `sessionReport.test.js`, `auth-migration.test.js` i `authentik.test.js`
   (migració de comptes a Authentik), `commonsUrl.test.js` (el xip apunta al
   Commons de `EDUTICTAC_COMMONS_URL`), i `devLogin.test.js` /
   `devLoginOff.test.js` (`/dev/login` funciona en desenvolupament i dona 404
-  fora d'ell), i `devOidc.test.js` (flux d'Authentik complet contra l'OIDC
+  fora d'ell), `devPages.test.js` / `devPagesOff.test.js` (el mateix per a
+  tot `/dev/`), i `devOidc.test.js` (flux d'Authentik complet contra l'OIDC
   simulat de dev: rol del seed, rebuig sense rol docent i PKCE), i
   `adminLogs.test.js` (visor de logs, «Cargar más» amb `before`/`beforeId`
   i configuració de nivell/mida de la col·lecció capped, tot protegit per
@@ -115,6 +118,13 @@ problemes d'estil, variables sense usar, etc.
   icona, nom i identitat d'alumne en `/join.html`),
   `player-lobby.spec.js` (sala d'espera `/player/` amb Socket.IO fals),
   `admin-stats.spec.js` i `admin-logs.spec.js` (panells d'administració).
+  Correspondència: `player-matching.spec.js` (mòbil, amb els tres modes a
+  cegues), `host-matching.spec.js` (projector i resultats),
+  `solo-matching.spec.js` (Solo, flashcards i multijugador local),
+  `create-export-matching.spec.js` (PDF, DOCX i ODT, amb les llibreries
+  substituïdes) i `matching-poc.spec.js` (prova de concepte de `/dev/`).
+  A més, `solo-pause.spec.js` (pausar i cancel·lar en Solo) i
+  `long-text.spec.js` (el text llarg sense espais no se n'ix del requadre).
 
 ### Scripts puntuals que NO són part del flux de test estàndard
 
@@ -161,7 +171,7 @@ regressions que cap test automàtic ni comprovació puntual cobrix:
 1. **Biblioteca i creació** (`/create/`):
    - Crear un qüestionari nou amb almenys una pregunta de cada tipus
      (`quiz`, `multiple`, `true-false`, `short-answer`, `numeric`,
-     `poll`) — vore `ARCHITECTURE.md` si cal recordar què és cada u.
+     `poll`, `matching`) — vore `ARCHITECTURE.md` si cal recordar què és cada u.
    - Editar-lo, afegir etiquetes, canviar la visibilitat
      (privat/no llistat/públic), clonar-lo i esborrar el clon.
    - Pujar un qüestionari per CSV (vore `README.md`).
@@ -175,7 +185,7 @@ regressions que cap test automàtic ni comprovació puntual cobrix:
    partida sencera des d'un sol dispositiu.
 4. **Solo**: jugar amb un enllaç directe (`/solo/?id=<quizId>` o
    `/solo/?tag=...`), comprovar que les preguntes d'enquesta no obrin
-   el diàleg d'error ni puntuen, i que l'estadística final i el
+   el diàleg d'error ni puntuen, pausar i reprendre una pregunta, i que l'estadística final i el
    rànquing global es mostren bé.
 5. **Informe i exportació**: des de "Jugar a l'aula", descarregar
    l'informe CSV de la partida i comprovar que les columnes tenen

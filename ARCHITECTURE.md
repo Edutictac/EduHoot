@@ -111,9 +111,12 @@ src/
 │   ├── player/              # vista de l'alumnat (+ game/)
 │   ├── solo/                 # mode individual
 │   ├── multiplayer/           # mode pantalla compartida
+│   ├── dev/                   # maquetes (només amb NODE_ENV=development)
 │   ├── js/                     # tot el JS del frontend; create.js i solo.js
 │   │                           # repartits en create-*.js / solo-*.js i
-│   │                           # i18n-create.js / i18n-solo.js
+│   │                           # i18n-create.js / i18n-solo.js;
+│   │                           # matchingBoard.js: tauler i lògica de la
+│   │                           # correspondència (aula, Solo, multijugador)
 │   └── css/, icons/, fonts/, svg/, effects/, music/
 ├── test/
 │   ├── unit/, integration/, browser/   (vore TESTING.md)
@@ -491,8 +494,13 @@ la app com a *mixin* de Vue: `soloCatalog` (`solo-library.js`) i
   seus colors de fons. Es conserven «Volver» i «MODO INDIVIDUAL»; per això,
   en mòbil la imatge de la pregunta és una mica més baixa que en l'aula
   (19% de l'alçada en lloc del 24%), perquè les quatre respostes càpien.
+- **Pausar, reprendre i cancel·lar**: botons a la dreta de la barra de
+  temps (només la icona en mòbil). La pausa congela el temps o el compte
+  arrere i tapa la pregunta; cancel·lar demana confirmació (4 s) i torna
+  al formulari del qüestionari sense guardar la puntuació.
 - **Proves**: `src/test/browser/solo.spec.js` (amb `page.clock` per al
-  temporitzador), a més de `solo-library.spec.js` i `solo-poll.spec.js`.
+  temporitzador), a més de `solo-library.spec.js`, `solo-poll.spec.js` i
+  `solo-pause.spec.js`.
 
 ### Biblioteca de qüestionaris amb Vue
 
@@ -773,8 +781,11 @@ El CSV mescla dos nivells d'informació en el mateix fitxer:
   cada pregunta responguda per cada alumne, amb el que va respondre, si
   va ser correcte, i quant va tardar. `resultado` pot ser `correcta`,
   `incorrecta`, `parcial` (encert parcial en preguntes de resposta
-  múltiple), `encuesta` (preguntes `poll`, sense valoració) o
+  múltiple o de correspondència), `encuesta` (preguntes `poll`, sense valoració) o
   `sin responder` (mapeig de `resultado` en `sessionReport.js`).
+
+En una correspondència, `respuestaJugador` i `respuestaCorrecta` porten
+els codis i els textos: `1 França → D París | 2 Itàlia → (sin pareja)`.
 
 **No hi ha una columna de "% d'encerts" ja calculada.** Per a obtindre'l
 cal calcular-lo a partir d'`aciertos` / `preguntasTotales` en un full de
@@ -795,8 +806,18 @@ Moodle/AULES i muntar ahí un "Qüestionari" natiu.
   `services/moodleExport.js`.
 - **Tipus de pregunta que convertix**: opció múltiple d'una o diverses
   respostes correctes (`multichoice`), verdader/fals (`truefalse`),
-  resposta curta (`shortanswer`) i numèrica amb tolerància
-  (`numerical`). L'enunciat i les respostes s'exporten en HTML.
+  resposta curta (`shortanswer`), numèrica amb tolerància
+  (`numerical`) i correspondència (`matching`: una `<subquestion>` per
+  parella; la impostora, amb el text buit). L'enunciat i les respostes
+  s'exporten en HTML.
+- **Importació** (`moodleXmlImport.js` i `giftImport.js`): els mateixos
+  tipus. En GIFT, `{=a -> b =c -> d = -> impostora}`. S'ometen, amb el
+  motiu, els emparellaments que repetixen una resposta en diverses
+  parelles (Moodle ho permet; EduHoot no, perquè la solució seria
+  ambigua), els de menys de 2 parelles i els de més de 8 elements.
+- **PDF, DOCX i ODT** (`create-export.js`): la correspondència ix com a
+  fitxa, amb l'esquerra numerada, la dreta barrejada amb lletres i, amb
+  respostes, la solució (`1 → D, 2 → A`).
 - **Què no inclou**: això exporta només el banc de preguntes, no la
   partida en si. En Moodle/AULES l'alumne resoldria el qüestionari de
   forma independent, sense la mecànica de joc d'EduHoot (marcador, ritme
@@ -1037,6 +1058,13 @@ posterior ("Resposta correcta: X" queda buit en este mode) — el repàs
 de respostes es fa sempre a la pantalla compartida, igual que en el
 Kahoot clàssic.
 
+**Correspondència a cegues**: el mòbil rep només `leftCount`,
+`rightCount` i `blindStyle`, i mostra números (esquerra) i lletres
+(dreta), els mateixos codis que el projector. Si el qüestionari té alguna
+correspondència i la casella està desmarcada, el lobby mostra el selector
+«Correspondencias a ciegas» (`options.matchingBlindStyle`): `codes` (tocs,
+per defecte), `select` (desplegables) o `steps` (pas a pas).
+
 ## Avanç de pregunta: automàtic o manual?
 
 **Hui no existix cap opció perquè les preguntes avancen soles.** No hi
@@ -1093,22 +1121,32 @@ de `/create/` com en la importació de CSV):
   `parseLenientNumber()`).
 - **`poll`** (encuesta/enquesta): sense resposta correcta, mai compta en
   la puntuació (vore "Preguntes d'enquesta" més avall).
+- **`matching`** (correspondència, feature 7): parelles `pairs: [{ left,
+  right }]`; una parella sense `left` és una impostora (només a la dreta).
+  Fins a 8 elements i sense repetir la dreta (`parseMatchingPairs()`). En
+  partida, l'esquerra va en orde fix i la dreta es barreja
+  (`buildMatchingLayout()`); l'alumne envia, per cada element de
+  l'esquerra, l'índex triat de la dreta. En CSV va en la columna `texto`:
+  `França -> París | -> Lisboa`. La lògica del navegador (Solo i
+  multijugador) està en `matchingBoard.js` (`window.EduhootMatching`).
 
 **Tipus provats en partida real de "Jugar a l'aula"**: `quiz`,
 `multiple`, `short-answer` i `numeric` ([issue #24](https://github.com/Edutictac/EduHoot/issues/24),
 resolta). El mode Multijugador (pantalla compartida) seguix excloent
 `short-answer`/`numeric` perquè el mòbil hi funciona com a mando sense
-teclat.
+teclat; `matching` sí que s'hi admet (un tauler per panell).
 
 **Noms alternatius acceptats en la importació de CSV**: la funció de
 normalització és tolerant amb sinònims i variants en català/castellà
 (p. ex. `encuesta`/`enquesta` → `poll`, `respuesta corta`/`resposta
 curta` → `short-answer`, `verdadero/falso`/`vertader/fals` →
-`true-false`). Qualsevol valor no reconegut cau per defecte a `quiz`.
+`true-false`, `correspondencia`/`emparejar`/`emparellar`/`relacionar` →
+`matching`). Sense tipus, un `texto` amb almenys dos `->` també és
+`matching`. Qualsevol valor no reconegut cau per defecte a `quiz`.
 
 **Noms diferents en l'exportació a Moodle XML**: Moodle fa servir una
 altra nomenclatura pels mateixos conceptes (`multichoice`, `truefalse`,
-`shortanswer`, `numerical`, vore "Exportació a Moodle XML" més avall);
+`shortanswer`, `numerical`, `matching`, vore "Exportació a Moodle XML" més avall);
 no hi ha equivalent per a `poll`, que no s'exporta.
 
 ## Comparativa de tipus amb Kahoot, Wayground i AULES
@@ -1143,8 +1181,7 @@ poden crear una vegada i usar en cada entorn.
   varies correctes), vertader/fals, resposta curta, emparellament,
   numèrica, assaig, incrustades (*Cloze*), emplenar buits amb desplegable,
   arrossegar i deixar anar en text o sobre imatge, calculada i descripció
-  (no puntua). Un XML de Moodle pot incloure emparellaments encara que
-  EduHoot no els exporte.
+  (no puntua).
 
 ### Comparativa
 
@@ -1155,7 +1192,7 @@ poden crear una vegada i usar en cada entorn.
 | Vertader/fals | Sí (`true-false`), sense prova en aula | Sí | No confirmat | Sí |
 | Resposta curta | Sí (`short-answer`), no en Multijugador | Sí (*type answer*, 20 car.) | Sí (oberta, buits) | Sí |
 | Numèrica | Sí (`numeric`), no en Multijugador | No confirmat | No confirmat | Sí |
-| Emparellament | No | No | Sí (*Match*) | Sí |
+| Emparellament | Sí (`matching`, amb impostores) | No | Sí (*Match*) | Sí |
 | Ordenar | No | Sí (*puzzle*) | Aproximat (desplegable, arrossegar) | Sí (arrossegar) |
 | Imatge amb marcador | No | Sí (*pin answer*) | Etiquetat (arrossegar text) | Sí (arrossegar sobre imatge) |
 | Enquesta (no puntua) | Sí (`poll`) | Sí | Sí | No (no és tipus del banc) |
@@ -1163,10 +1200,10 @@ poden crear una vegada i usar en cada entorn.
 
 ### Implicacions per a EduHoot
 
-- **Exportació a Moodle XML:** `services/moodleExport.js` només converteix
-  `multichoice`, `truefalse`, `shortanswer` i `numerical`. Els
-  emparellaments, els assajos i les incrustades no es poden exportar
-  des d'EduHoot, tot i que el format Moodle sí els admet.
+- **Exportació a Moodle XML:** `services/moodleExport.js` converteix
+  `multichoice`, `truefalse`, `shortanswer`, `numerical` i `matching`. Els
+  assajos i les incrustades no es poden exportar des d'EduHoot, tot i que
+  el format Moodle sí els admet.
 - **Partida a l'aula:** en els tipus que EduHoot pot fer a l'aula, només
   `quiz` i `multiple` estan provats en partida real; `true-false` té el
   codi però no consta com a provat.
@@ -1201,6 +1238,12 @@ Fonts (cerca web, a verificar):
   penalització** (`getSubmissionScoreRatio`, `services/scoring.js:21`): cada opció
   correcta marcada suma, cada opció incorrecta marcada resta el mateix,
   amb un mínim de 0 — no és tot o res.
+- En correspondència, la puntuació és **proporcional i sense
+  penalització** (`matchingScoreRatio`): parelles encertades / parelles.
+  L'alumnat veu verd (tot bé), taronja (`#f57c00`, parcial) o roig, i
+  «X de N parelles»; amb «Mostrar respuestas», la correcció de cada
+  parella. El projector mostra el percentatge d'encert per parella, i la
+  solució i les impostores només amb «Mostrar respuestas».
 - La puntuació final (`puntuacionFinal` en el CSV) és la **suma
   acumulada d'estos punts per pregunta**. El rànquing i el podi es
   basen en els punts, no en el % d'encerts; el CSV guarda eixe recompte

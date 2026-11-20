@@ -180,6 +180,8 @@ També insereix **5 usuaris locals de prova** (email + contrasenya), per a prova
 
 **Entrar com a docent en dev**: `/create/` ja no té formulari de contrasenya (l'únic accés és el xip d'EduTicTac amb Authentik). Per a usar estos usuaris, obri `http://localhost:3000/dev/login` (o fes clic al distintiu «Entorn: desenvolupament») i tria'n un; et porta a `/create/` amb la sessió iniciada. La pàgina només existix amb `NODE_ENV=development` (404 en stage i producció).
 
+**Maquetes en `/dev/`**: tot `/dev/` (també `/dev/login`) només existix en desenvolupament. La prova de concepte de la pregunta de correspondència està en `http://localhost:3000/dev/correspondencia/` (sense sessió). Si canvies `server.js`, reinicia el contenidor (`docker compose restart app`).
+
 Les sessions viuen en memòria: cada vegada que `node --watch` reinicia el servidor (en guardar un fitxer) es tanquen totes, i cal tornar a passar per `/dev/login`.
 
 **Authentik simulat**: `docker compose` alça també el servei `oidc` (`src/scripts/dev-oidc.js`, sense dependències), que fa d'Authentik en `http://localhost:8081` (`OIDC_PORT`). Des de `/dev/login`, «Entrar amb l'OIDC simulat» passa pel flux real (`/api/auth/authentik/start` → callback → rol per `groups`) i permet triar entre:

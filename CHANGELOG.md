@@ -19,6 +19,20 @@ fitxers corresponents, i els originals es van eliminar.
 ## [Sense publicar]
 
 ### Afegit
+- Nou tipus de pregunta **correspondència** (`matching`, feature 7,
+  «emparellar»): fins a 8 elements entre parelles i impostores (només a la
+  dreta). Puntuació parcial i proporcional, sense penalització. Funciona en
+  l'editor, el CSV (columna `texto`: `a -> b | -> impostora`), «Jugar a
+  l'aula», Solo, flashcards i multijugador local; s'exporta i s'importa en
+  XML de Moodle i GIFT, i s'exporta a PDF, DOCX i ODT com a fitxa. En
+  «Jugar a l'aula» a cegues, el professorat tria al lobby com respon el
+  mòbil: tocs amb codis (per defecte), desplegables o pas a pas.
+- Mode Solo: pausar, reprendre i cancel·lar la partida. La pausa congela el
+  temps i tapa la pregunta; cancel·lar demana confirmació.
+- Portada: en pantalles amples, els botons van en 2 columnes i ocupen la
+  part de baix.
+- `/dev/` (maquetes i prova de concepte de la correspondència en
+  `/dev/correspondencia/`) només existix amb `NODE_ENV=development`.
 - Pantalla completa a `/solo/` i «Jugar a l'aula»: la partida ocupa tota la
   finestra visible del navegador, en PC i en mòbil, amb un marge petit. La
   mida la llig `js/viewport-fit.js` (`visualViewport`), així que també
@@ -145,6 +159,8 @@ fitxers corresponents, i els originals es van eliminar.
 
 ### Canviat
 
+- L'encert parcial es mostra en taronja (abans àmbar o verd) en tots els
+  modes i tipus de pregunta.
 - Els textos d'importació de cuestionaris ja no parlen només de CSV: diuen
   «fitxer» i accepten CSV o XML de Moodle.
 - La casella «Puntuacions entre preguntes i ranking» també controla el Top 10
@@ -181,6 +197,11 @@ fitxers corresponents, i els originals es van eliminar.
   (`/admin-*`) també són ara apps de Vue 3. Funciona igual que abans.
 
 ### Corregit
+- En reconnectar-se a mitja pregunta, l'alumnat rebia la pregunta completa
+  encara que l'amfitrió haguera triat el mode a cegues.
+- El text llarg sense espais (enunciats, respostes, finestres de correcció)
+  ja no se n'ix del seu requadre.
+- Mode Solo: «Tornar» s'estirava a tot l'ample durant la partida.
 - La sala d'espera de l'alumnat tradueix els missatges de connexió i de
   reconnexió, que quedaven en castellà en canviar d'idioma.
 - En "Jugar a l'aula", en el mòbil la barra de temps de l'alumnat es

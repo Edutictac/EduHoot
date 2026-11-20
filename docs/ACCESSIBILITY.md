@@ -47,6 +47,12 @@ Ja implementat, no cal tornar a proposar-ho:
 - **Cronòmetre amb doble canal** (barra visual + text numèric) al
   jugador i a l'amfitrió.
 - El viewport no bloqueja el zoom (no hi ha `user-scalable=no`).
+- **Correspondència** (`matchingBoard.js`): cada parella no depén només
+  del color; cada element porta el seu codi (número o lletra) i el de la
+  seua parella, i els botons tenen `aria-pressed`. Els colors de parella
+  eviten el verd, el taronja i el roig del resultat.
+- **Text llarg**: enunciats, respostes i finestres parteixen una paraula
+  o un enllaç sense espais en lloc d'eixir-se'n del requadre.
 
 ## Buits detectats
 

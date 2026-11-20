@@ -100,7 +100,7 @@ decisió de producte.
 | 4 | Power-ups (doble puntuació, 50/50, congelar ratxa) | 🟩 | 🔴 | ➖ Neutre | 🙂 Segur¹ | ➖ Neutra | ✅ Encaixa | Fase 2 |
 | 5 | Avatars de personatge personalitzables | 🟩 | 🟡 | ✖️ Cap | 🙂 Segur | ➖ Neutra | ✅ Encaixa | 📦 Aparcada |
 | 6 | Mode equips, amb variant "relay" | 🟩 | 🔴 | 📚 Alt | ⚠️ Risc lleu² | 🤝 Alta | ✅ Encaixa | Fase 2 |
-| 7 | Tipus de pregunta: ordenar i emparellar | 🟩 | 🔴 | 📚 Alt | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 2 |
+| 7 | Tipus de pregunta: ordenar i emparellar (◐ emparellar fet) | 🟩 | 🔴 | 📚 Alt | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 2 |
 | 8 | Memes i GIF com a feedback | 🟦 | 🟡 | ✖️ Cap | 🙂 Segur | ➖ Neutra | ✅ Encaixa | 📦 Aparcada |
 | 9 | Música/so de tensió per fases | 🟨 | 🟡 | ✖️ Cap | 🙂 Segur | ➖ Neutra | ✅ Encaixa | 📦 Aparcada |
 | 10 | Modes de joc immersius tipus arcade | 🟦 | 🔴 | ➖ Neutre | ⚠️ Risc³ | 🚧 Baixa | ✅ Encaixa | Fase 4 |
@@ -226,6 +226,10 @@ el context, que ja estan en la taula).
    → **Criteri pedagògic:** 📚 Aprenentatge: Alt (seqüenciació i relació
    de conceptes són formats d'avaluació amb valor pedagògic clar) ·
    🙂 Clima: Segur · ➖ Inclusió: Neutra → **Prioritat alta.**
+   **Emparellar, implementat** (tipus `matching`, «correspondència»):
+   fins a 8 elements amb impostores, puntuació proporcional, en tots els
+   modes, CSV, Moodle XML, GIFT i PDF/DOCX/ODT (vore `ARCHITECTURE.md`).
+   **Pendent:** ordenar.
 
 8. 🟦 **Wayground** — Memes i GIF com a feedback d'encert/fallada — 🟡 Mitjana
    → **Criteri pedagògic:** ✖️ Aprenentatge: Cap · 🙂 Clima: Segur ·
@@ -299,6 +303,8 @@ el context, que ja estan en la taula).
     GIFT i XML de Moodle, que són els formats de pregunta més
     estàndards, i afegir la resta de formats de Moodle/AULES de forma
     incremental sobre la mateixa base).
+    L'XML de Moodle i el GIFT ja importen també els emparellaments
+    (correspondència, feature 7).
 
 16. 🟨 **Kahoot** — Reaccions en directe (emoji) enviades pel jugador —
     🟡 Mitjana
@@ -696,12 +702,10 @@ la numeració 1-32 de dalt.
   portada/destacada per al qüestionari, que aparega en diversos llocs
   (p. ex. la llista pública de qüestionaris o la pantalla d'entrada a
   un d'ells).
-- **W7 — Tipus de pregunta de correspondència (inclosa en la
-  feature 7, «emparellar»).** Un tipus nou de
-  pregunta en què l'alumnat relaciona els elements d'una columna amb els
-  d'una altra (p. ex. paraula–definició, país–capital). Caldria
-  definir-lo en el model de pregunta, l'editor, la importació/exportació
-  (CSV, Moodle) i les pantalles de joc.
+- **✅ W7 — Tipus de pregunta de correspondència (inclosa en la
+  feature 7, «emparellar»).** L'alumnat relaciona els elements d'una
+  columna amb els d'una altra (p. ex. paraula–definició, país–capital).
+  Implementada: vore la feature 7.
 - **❌ W8 — Identificador de navegador per a les entrades del registre
   (descartada: poca utilitat i falta de base legal per a registrar dades
   de l'alumnat).**

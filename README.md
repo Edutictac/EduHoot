@@ -44,7 +44,9 @@ El xip d'EduTicTac obri la sessió Authentik d'EduHoot. Configura `AUTHENTIK_ISS
 
 ### Funcions clau
 
-- Importació de CSV i de contingut generat per IA.
+- Importació de CSV, XML de Moodle, GIFT i contingut generat per IA.
+- Tipus de pregunta: resposta única o múltiple, vertader/fals, resposta
+  curta, numèrica, enquesta i correspondència (emparellar).
 - Importació pública de Kahoot per URL o ID.
 - Control de visibilitat (privat, per enllaç, públic) i permisos de clonació.
 - Botó de “Saltar pregunta” i marcador de progrés.
@@ -134,7 +136,9 @@ automáticamente desde la imagen publicada. La guía vigente es
 
 ### Funciones clave
 
-- Importación de CSV y de contenido generado por IA.
+- Importación de CSV, XML de Moodle, GIFT y contenido generado por IA.
+- Tipos de pregunta: respuesta única o múltiple, verdadero/falso, respuesta
+  corta, numérica, encuesta y correspondencia (emparejar).
 - Importación pública de Kahoot por URL o ID.
 - Control de visibilidad (privado, por enlace, público) y permisos para clonar.
 - Botón de “Saltar pregunta” y contador de progreso.
@@ -209,7 +213,9 @@ from the published image. See
 
 ### Key features
 
-- CSV import and AI-generated content ingestion.
+- Import from CSV, Moodle XML, GIFT and AI-generated content.
+- Question types: single or multiple answer, true/false, short answer,
+  numeric, poll and matching.
 - Public Kahoot import via URL or ID.
 - Visibility controls (private, by link, public) with clone permissions.
 - “Skip question” button and progress tracking.
