@@ -1,4 +1,4 @@
-const { splitAcceptedAnswers, parseLenientNumber } = require('../questionUtils');
+const { splitAcceptedAnswers, parseLenientNumber, parseMatchingPairs } = require('../questionUtils');
 
 function escapeHtmlText(value = '') {
   return String(value || '')
@@ -108,6 +108,28 @@ function quizToMoodleXml(quiz) {
         lines.push(`      <text>${wrapCdata(escapeHtmlText(ans || ''))}</text>`);
         lines.push('      <feedback><text><![CDATA[]]></text></feedback>');
         lines.push('    </answer>');
+      });
+      lines.push('  </question>');
+      return;
+    }
+
+    // Correspondencia: una <subquestion> por pareja; la impostora, con el texto vacío.
+    if (qType === 'matching') {
+      lines.push('  <question type="matching">');
+      lines.push(`    <name><text>${wrapCdata(nameText)}</text></name>`);
+      lines.push('    <questiontext format="html">');
+      lines.push(`      <text>${wrapCdata(html)}</text>`);
+      lines.push('    </questiontext>');
+      lines.push('    <defaultgrade>1</defaultgrade>');
+      lines.push('    <penalty>0.0</penalty>');
+      lines.push('    <hidden>0</hidden>');
+      lines.push('    <shuffleanswers>true</shuffleanswers>');
+      parseMatchingPairs(question.pairs || []).forEach((pair) => {
+        const left = pair.left ? `<p>${escapeHtmlText(pair.left)}</p>` : '';
+        lines.push('    <subquestion format="html">');
+        lines.push(`      <text>${wrapCdata(left)}</text>`);
+        lines.push(`      <answer><text>${wrapCdata(pair.right)}</text></answer>`);
+        lines.push('    </subquestion>');
       });
       lines.push('  </question>');
       return;

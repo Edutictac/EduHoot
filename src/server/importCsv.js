@@ -173,6 +173,8 @@ function toQuestion(row) {
     type: row.tipo,
     correct: row.correcta,
     texto: row.texto,
+    // Correspondencia importada de Moodle o GIFT: parejas ya separadas.
+    pairs: Array.isArray(row.pairs) ? row.pairs : undefined,
     numero: row.numero,
     tolerancia: row.tolerancia
   });

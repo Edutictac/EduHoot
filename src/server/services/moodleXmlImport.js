@@ -1,12 +1,13 @@
 // Importación de XML de Moodle (feature 15). Lee el formato que exporta EduHoot
 // (services/moodleExport.js) y los tipos habituales de Moodle: opción múltiple,
-// verdadero/falso, respuesta corta y numérica. Las demás preguntas se omiten y se
+// verdadero/falso, respuesta corta, numérica y emparejamiento (correspondencia). Las demás preguntas se omiten y se
 // devuelven en `skipped`.
 //
 // Sin dependencias: un lector de etiquetas acotado a este formato, para no añadir
 // una librería XML a las dependencias de producción.
 
 const { toQuestion } = require('../importCsv');
+const { MATCHING_MAX_ITEMS, normalizeFreeText } = require('../questionUtils');
 
 // Token: CDATA (contenido literal), comentario, etiqueta de cierre, etiqueta de
 // apertura (con sus atributos) o texto.
@@ -154,8 +155,35 @@ function questionToRow(question) {
     };
   }
 
+  if (type === 'matching') {
+    const pairs = children(question, 'subquestion').map((sub) => {
+      const answer = child(sub, 'answer');
+      return {
+        left: plainText(child(sub, 'text') ? child(sub, 'text').text : sub.text),
+        right: answer ? plainText(child(answer, 'text') ? child(answer, 'text').text : answer.text) : ''
+      };
+    }).filter((p) => p.right);
+    const result = checkMatchingPairs(pairs);
+    if (result.skipped) return result;
+    return { row: { ...base, tipo: 'matching', pairs } };
+  }
+
   if (type === 'category') return null;
   return { skipped: 'unsupported-type:' + type };
+}
+
+// Correspondencia importada (Moodle o GIFT): al menos 2 parejas, como mucho 8
+// elementos y sin repetir la derecha (EduHoot no admite una respuesta para varias).
+function checkMatchingPairs(pairs) {
+  if (pairs.filter((p) => p.left).length < 2) return { skipped: 'not-enough-pairs' };
+  if (pairs.length > MATCHING_MAX_ITEMS) return { skipped: 'too-many-pairs' };
+  const seen = new Set();
+  for (const p of pairs) {
+    const key = normalizeFreeText(p.right) || p.right.toLowerCase();
+    if (seen.has(key)) return { skipped: 'repeated-match-answer' };
+    seen.add(key);
+  }
+  return {};
 }
 
 // Motivo legible (en castellano) para el docente, a partir del código interno.
@@ -165,7 +193,10 @@ function describeSkipReason(code) {
     'no-correct-answer': 'no tiene respuesta correcta',
     'bad-truefalse': 'verdadero/falso incompleto',
     'no-accepted-answer': 'no tiene respuesta aceptada',
-    'no-numeric-answer': 'no tiene valor numérico'
+    'no-numeric-answer': 'no tiene valor numérico',
+    'not-enough-pairs': 'la correspondencia necesita al menos 2 parejas',
+    'too-many-pairs': 'la correspondencia tiene más de 8 elementos',
+    'repeated-match-answer': 'la correspondencia repite una respuesta en varias parejas'
   };
   if (reasons[code]) return reasons[code];
   if (String(code).startsWith('unsupported-type:')) {
@@ -201,4 +232,4 @@ function parseMoodleXml(content) {
   return { questions: rows.map(toQuestion), skipped };
 }
 
-module.exports = { parseMoodleXml, parseXml, decodeEntities, plainText, describeSkipReason };
+module.exports = { parseMoodleXml, parseXml, decodeEntities, plainText, describeSkipReason, checkMatchingPairs };

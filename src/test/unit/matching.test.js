@@ -203,3 +203,47 @@ test('informe de la sesión: respuesta del alumno y correcta con números, letra
   assert.equal(row[15], `1 Francia → ${right(0)} | 2 Italia → ${right(1)} | 3 Alemania → ${right(2)}`);
   assert.equal(row[16], 'parcial');
 });
+
+test('Moodle XML: la correspondencia se exporta con <subquestion> y se vuelve a importar igual', () => {
+  const { quizToMoodleXml } = require('../../server/services/moodleExport');
+  const { parseMoodleXml } = require('../../server/services/moodleXmlImport');
+  const xml = quizToMoodleXml({ name: 'Q', questions: [{ question: 'Capitales', type: 'matching', pairs: capitals }] });
+  assert.match(xml, /<question type="matching">/);
+  assert.equal((xml.match(/<subquestion /g) || []).length, 4);
+  assert.match(xml, /<subquestion format="html">\s*<text><!\[CDATA\[\]\]><\/text>\s*<answer><text><!\[CDATA\[Lisboa\]\]><\/text><\/answer>/);
+
+  const { questions, skipped } = parseMoodleXml(xml);
+  assert.deepEqual(skipped, []);
+  assert.equal(questions[0].type, 'matching');
+  assert.equal(questions[0].question, 'Capitales');
+  assert.deepEqual(questions[0].pairs, capitals);
+});
+
+test('Moodle XML: se omite la correspondencia que repite una respuesta, la de 1 pareja y la de más de 8', () => {
+  const { parseMoodleXml } = require('../../server/services/moodleXmlImport');
+  const sub = (l, r) => `<subquestion format="html"><text><![CDATA[<p>${l}</p>]]></text><answer><text>${r}</text></answer></subquestion>`;
+  const q = (name, subs) => `<question type="matching"><name><text>${name}</text></name><questiontext format="html"><text>P</text></questiontext>${subs}</question>`;
+  const many = Array.from({ length: 9 }, (_, i) => sub('L' + i, 'R' + i)).join('');
+  const xml = `<quiz>${q('Repite', sub('España', 'Europa') + sub('Francia', 'Europa'))}${q('Una', sub('a', '1'))}${q('Nueve', many)}</quiz>`;
+  const { questions, skipped } = parseMoodleXml(xml);
+  assert.equal(questions.length, 0);
+  assert.deepEqual(skipped.map((s) => [s.name, s.code]), [
+    ['Repite', 'repeated-match-answer'],
+    ['Una', 'not-enough-pairs'],
+    ['Nueve', 'too-many-pairs']
+  ]);
+  assert.equal(skipped[0].reason, 'la correspondencia repite una respuesta en varias parejas');
+});
+
+test('GIFT: =izquierda -> derecha es una correspondencia; «= -> texto», una impostora', () => {
+  const { parseGift } = require('../../server/services/giftImport');
+  const { questions, skipped } = parseGift('::Capitales:: Relaciona {=Francia -> París =Italia -> Roma = -> Lisboa}');
+  assert.deepEqual(skipped, []);
+  assert.equal(questions[0].type, 'matching');
+  assert.equal(questions[0].question, 'Relaciona');
+  assert.deepEqual(questions[0].pairs, [
+    { left: 'Francia', right: 'París' },
+    { left: 'Italia', right: 'Roma' },
+    { left: '', right: 'Lisboa' }
+  ]);
+});

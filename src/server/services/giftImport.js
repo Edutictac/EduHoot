@@ -1,14 +1,14 @@
 // Importación de GIFT de Moodle (feature 15). Formato de texto plano:
 //   ::Título:: Enunciado {=correcta ~incorrecta ~incorrecta}
 // Tipos admitidos: opción múltiple (una o varias correctas con %peso%), verdadero/falso,
-// respuesta corta (varias respuestas «=») y numérica (#valor, #valor:tolerancia o
-// #mín..máx). Las categorías, los comentarios y el resto de tipos se omiten o ignoran
+// respuesta corta (varias respuestas «=»), numérica (#valor, #valor:tolerancia o
+// #mín..máx) y emparejamiento (=izquierda -> derecha; «= -> texto» es una impostora). Las categorías, los comentarios y el resto de tipos se omiten o ignoran
 // y las omitidas se devuelven en `skipped`, igual que en el XML.
 //
 // Sin dependencias, como el lector de XML.
 
 const { toQuestion } = require('../importCsv');
-const { describeSkipReason } = require('./moodleXmlImport');
+const { describeSkipReason, checkMatchingPairs } = require('./moodleXmlImport');
 
 // Primera posición de `ch` sin escapar (un «\» escapa el carácter siguiente).
 function findUnescaped(str, ch, from = 0) {
@@ -104,8 +104,21 @@ function blockToRow(body) {
     return { row: { ...base, tipo: 'numeric', numero: numeric.numero, tolerancia: numeric.tolerancia } };
   }
 
-  // Emparejamiento: «=pregunta -> respuesta». No se admite.
-  if (/->/.test(inner)) return { skipped: 'unsupported-type:matching' };
+  // Emparejamiento: «=izquierda -> derecha» (correspondencia). Sin izquierda, impostora.
+  if (/->/.test(inner)) {
+    const pairs = splitAnswers(inner)
+      .filter((a) => a.prefix === '=')
+      .map((a) => {
+        const idx = a.text.indexOf('->');
+        return idx < 0
+          ? { left: '', right: a.text.trim() }
+          : { left: a.text.slice(0, idx).trim(), right: a.text.slice(idx + 2).trim() };
+      })
+      .filter((p) => p.right);
+    const result = checkMatchingPairs(pairs);
+    if (result.skipped) return result;
+    return { row: { ...base, tipo: 'matching', pairs } };
+  }
 
   const answers = splitAnswers(inner).filter((a) => a.text !== '' || a.weight !== 0);
   const correct = answers.filter((a) => a.weight > 0 && a.text !== '');

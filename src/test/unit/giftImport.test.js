@@ -66,7 +66,7 @@ test('preguntas no admitidas quedan en skipped con motivo', () => {
   const { questions, skipped } = parseGift(`
 ::Redacción:: Escribe un texto {}
 
-::Emparejar:: Une {=capital -> Paris =país -> Francia}
+::Emparejar:: Une {=capital -> Paris}
 
 ::Demasiadas:: Elige {=a ~b ~c ~d ~e}
 
@@ -77,7 +77,7 @@ test('preguntas no admitidas quedan en skipped con motivo', () => {
   assert.equal(questions.length, 0);
   assert.deepEqual(skipped.map((s) => [s.name, s.code]), [
     ['Redacción', 'unsupported-type:essay'],
-    ['Emparejar', 'unsupported-type:matching'],
+    ['Emparejar', 'not-enough-pairs'],
     ['Demasiadas', 'too-many-answers'],
     ['Sin correcta', 'no-correct-answer'],
     ['Rota', 'malformed']
