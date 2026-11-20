@@ -8,7 +8,7 @@ const {
   normalizeMatchingBlindStyle
 } = require('../questionUtils');
 const { logger } = require('../logger');
-const { isStreakEnabled } = require('../services/scoring');
+const { isStreakEnabled, questionTimeOf } = require('../services/scoring');
 const { buildAnswerStatus, leftListOf } = require('./answerStatus');
 
 const { getTimings } = require('../services/gameTimings');
@@ -282,7 +282,7 @@ module.exports = function createGameHelpers({ io, games, players, cleanImportedT
       : null;
     const image = current.image || '';
     const video = current.video || '';
-    const time = (game.gameData.options && game.gameData.options.timePerQuestion) || current.time || 20;
+    const time = questionTimeOf(game.gameData, current);
     const pointsMultiplier = Number(current.pointsMultiplier) > 1 ? 2 : 1;
     return {
       current,

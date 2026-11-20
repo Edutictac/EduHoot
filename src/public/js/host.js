@@ -246,6 +246,9 @@ var lobby = Vue.createApp({
             kickedList: [],
             // El quiz tiene alguna correspondencia: se ofrece cómo responderla a ciegas.
             hasMatching: false,
+            // Título del quiz elegido (lo envía el servidor con el PIN).
+            quizName: '',
+            matchingExtraChoices: [25, 50, 75, 100],
             errorKey: '',
             errorText: '',
             options: {
@@ -263,6 +266,8 @@ var lobby = Vue.createApp({
                 autoAdvanceSec: 0,
                 // Correspondencia a ciegas: codes (toques, por defecto), select o steps.
                 matchingBlindStyle: 'codes',
+                // Más tiempo en las correspondencias: 25, 50, 75 o 100 % (por defecto, 50 %).
+                matchingExtraTime: 50,
                 // Tiempos ampliados de esta partida (issue #13). Vacío = mínimo.
                 timings: { hostReconnectSec: '', playerReconnectSec: '', cleanupSec: '', inactivityMin: '' },
                 time: ''
@@ -415,6 +420,7 @@ socket.on('connect', function() {
 socket.on('showGamePin', function(data){
     lobby.pin = (data.pin || '').toString();
     lobby.hasMatching = !!data.hasMatching;
+    lobby.quizName = (data.quizName || '').toString();
     params.pin = data.pin;
     try{ localStorage.setItem(lastPinKey, data.pin); }catch(e){}
 });
@@ -476,6 +482,9 @@ function startGame(){
     };
     if(lobby.hasMatching && !opts.sendToStudents){
         opts.matchingBlindStyle = options.matchingBlindStyle || 'codes';
+    }
+    if(lobby.hasMatching){
+        opts.matchingExtraTime = parseInt(options.matchingExtraTime, 10) || 50;
     }
     // v-model en un input numérico da un número o '' si está vacío.
     var rawTime = options.time == null ? '' : String(options.time).trim();

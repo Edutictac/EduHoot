@@ -178,7 +178,7 @@ També insereix **5 usuaris locals de prova** (email + contrasenya), per a prova
 | `docent3@exemple.local` | `editor` |
 | `docent4@exemple.local` | `editor` |
 
-**Entrar com a docent en dev**: `/create/` ja no té formulari de contrasenya (l'únic accés és el xip d'EduTicTac amb Authentik). Per a usar estos usuaris, obri `http://localhost:3000/dev/login` (o fes clic al distintiu «Entorn: desenvolupament») i tria'n un; et porta a `/create/` amb la sessió iniciada. La pàgina només existix amb `NODE_ENV=development` (404 en stage i producció).
+**Entrar com a docent en dev**: `/create/` ja no té formulari de contrasenya (l'únic accés és el xip d'EduTicTac amb Authentik). Per a usar estos usuaris, obri `http://localhost:3000/dev/login` (o fes clic al distintiu «Entorn: desenvolupament») i tria'n un; et porta a `/create/` amb la sessió iniciada. La pàgina només existix amb `NODE_ENV=development` (404 en stage i producció). Les maquetes de `/dev/` (p. ex. `/dev/anfitrion/`) també es veuen en stage, però només amb una sessió de rol admin (401 sense sessió, 403 si no és admin); en producció, 404.
 
 **Maquetes en `/dev/`**: tot `/dev/` (també `/dev/login`) només existix en desenvolupament. La prova de concepte de la pregunta de correspondència està en `http://localhost:3000/dev/correspondencia/` (sense sessió). Si canvies `server.js`, reinicia el contenidor (`docker compose restart app`).
 

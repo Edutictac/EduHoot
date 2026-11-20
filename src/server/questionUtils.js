@@ -436,6 +436,16 @@ function normalizeMatchingBlindStyle(raw) {
   return MATCHING_BLIND_STYLES.includes(value) ? value : 'codes';
 }
 
+// Más tiempo para las correspondencias (lo elige el anfitrión): porcentaje sobre el
+// tiempo de la pregunta. Por defecto, un 50 % más.
+const MATCHING_EXTRA_TIME_PERCENTS = [25, 50, 75, 100];
+const MATCHING_EXTRA_TIME_DEFAULT = 50;
+
+function normalizeMatchingExtraTime(raw) {
+  const value = parseInt(raw, 10);
+  return MATCHING_EXTRA_TIME_PERCENTS.includes(value) ? value : MATCHING_EXTRA_TIME_DEFAULT;
+}
+
 function hasMatchingQuestion(questions) {
   return (Array.isArray(questions) ? questions : [])
     .some((q) => q && normalizeQuestionMeta(q).type === 'matching');
@@ -460,6 +470,9 @@ module.exports = {
   matchingScoreRatio,
   normalizeMatchingBlindStyle,
   hasMatchingQuestion,
+  normalizeMatchingExtraTime,
+  MATCHING_EXTRA_TIME_PERCENTS,
+  MATCHING_EXTRA_TIME_DEFAULT,
   MATCHING_BLIND_STYLES,
   MATCHING_MAX_ITEMS,
   VALID_TYPES

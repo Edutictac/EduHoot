@@ -19,6 +19,7 @@
         <div id="lobby-app"></div>
         <template id="lobby-tpl">
         <div class="lobby-card">
+            <p v-if="quizName" id="lobby-quiz-name" class="lobby-quiz-name">{{ quizName }}</p>
             <p v-if="pin" id="lobby-pin" class="lobby-pin">{{ pinText }}</p>
             <div v-if="playerName" class="lobby-hero" :data-state="connState">
                 <div class="lobby-avatar-box">

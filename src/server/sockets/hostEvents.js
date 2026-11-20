@@ -1,7 +1,7 @@
 const { getGamesCollection } = require('../data/repositories');
 const { logger } = require('../logger');
 const { normalizeAutoAdvance } = require('../services/autoAdvance');
-const { hasMatchingQuestion, normalizeMatchingBlindStyle } = require('../questionUtils');
+const { hasMatchingQuestion, normalizeMatchingBlindStyle, normalizeMatchingExtraTime } = require('../questionUtils');
 
 // host-join, host-join-game, startGame, nextQuestion, skipQuestion, newQuiz.
 module.exports = function createHostEvents({
@@ -60,6 +60,7 @@ module.exports = function createHostEvents({
           const playersInGame = players.getPlayers(socket.id);
           socket.emit('showGamePin', {
             pin: existingByPin.pin,
+            quizName: (existingByPin.gameData && existingByPin.gameData.quizName) || '',
             hasMatching: hasMatchingQuestion(existingByPin.gameData && existingByPin.gameData.originalQuestions)
           });
           socket.emit('updatePlayerLobby', playersInGame);
@@ -116,6 +117,7 @@ module.exports = function createHostEvents({
           // hasMatching: el lobby ofrece cómo responder a ciegas las correspondencias.
           socket.emit('showGamePin', {
             pin: game.pin,
+            quizName: game.gameData.quizName || '',
             hasMatching: hasMatchingQuestion(originalQuestions)
           });
         } else {
@@ -173,7 +175,13 @@ module.exports = function createHostEvents({
               });
             }
           }
-          socket.emit('gamePin', { pin: game.pin });
+          // Título del quiz y, si hay correspondencias, el margen de tiempo (se puede cambiar).
+          socket.emit('gamePin', {
+            pin: game.pin,
+            quizName: game.gameData.quizName || '',
+            hasMatching: (game.gameData.questions || []).some((q) => q && q.type === 'matching'),
+            matchingExtraTime: normalizeMatchingExtraTime(game.gameData.options && game.gameData.options.matchingExtraTime)
+          });
           socket.emit('hostSession', { hostId: game.hostId, pin: game.pin });
           io.to(game.pin).emit('hostReconnected');
           if (!game.gameData.questionPending) {
@@ -231,6 +239,14 @@ module.exports = function createHostEvents({
       game.gameData.options = game.gameData.options || {};
       game.gameData.options.autoAdvanceSec = normalizeAutoAdvance(data && data.seconds);
       emitAutoAdvanceState(game);
+    });
+
+    // Más tiempo en las correspondencias durante la partida: se aplica desde la siguiente pregunta.
+    socket.on('setMatchingExtraTime', (data) => {
+      const game = games.getGame(socket.id);
+      if (!game || !game.gameData) return;
+      game.gameData.options = game.gameData.options || {};
+      game.gameData.options.matchingExtraTime = normalizeMatchingExtraTime(data && data.percent);
     });
 
     socket.on('nextQuestion', async () => {
@@ -415,6 +431,8 @@ module.exports = function createHostEvents({
       options.autoAdvanceSec = normalizeAutoAdvance(options.autoAdvanceSec);
       // Correspondencia a ciegas: desplegables, toques con códigos (por defecto) o paso a paso.
       options.matchingBlindStyle = normalizeMatchingBlindStyle(options.matchingBlindStyle);
+      // Más tiempo en las correspondencias: 25, 50, 75 o 100 % (50 % por defecto).
+      options.matchingExtraTime = normalizeMatchingExtraTime(options.matchingExtraTime);
       if (options.timePerQuestion !== undefined && options.timePerQuestion !== null && String(options.timePerQuestion).trim() !== '') {
         const parsedTime = parseInt(options.timePerQuestion, 10);
         if (Number.isNaN(parsedTime)) {

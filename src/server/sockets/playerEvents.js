@@ -5,7 +5,7 @@ const { logger } = require('../logger');
 // player-join, player-join-game, playerAnswer.
 const { buildAnswerStatus, leftListOf } = require('./answerStatus');
 const { isKicked } = require('./kick');
-const { streakBonus, nextStreak, isStreakEnabled } = require('../services/scoring');
+const { streakBonus, nextStreak, isStreakEnabled, questionTimeOf } = require('../services/scoring');
 const { isRandomName } = require('../services/randomNames');
 const { isValidTypedName } = require('../services/nameRules');
 
@@ -33,6 +33,11 @@ module.exports = function createPlayerEvents({
   // Solo al anfitrión: estado de respuesta, mano levantada y pestaña de cada alumno.
   function emitAnswerStatus(hostId, game) {
     io.to(hostId).emit('answerStatus', buildAnswerStatus(players.getPlayers(hostId), game.gameData.question, leftListOf(game, players.getPlayers(hostId))));
+  }
+
+  // Título del quiz: el alumnado lo ve en la sala de espera y durante la partida.
+  function quizNameOf(game) {
+    return String((game && game.gameData && game.gameData.quizName) || '');
   }
 
   return function registerPlayerEvents(socket) {
@@ -69,7 +74,7 @@ module.exports = function createPlayerEvents({
         const playersInGame = players.getPlayers(hostId);
         io.to(game.pin).emit('updatePlayerLobby', playersInGame);
         io.to(hostId).emit('updatePlayerLobby', playersInGame);
-        socket.emit('playerJoinAck', { ok: true, pin: game.pin, hostId });
+        socket.emit('playerJoinAck', { ok: true, pin: game.pin, hostId, quizName: quizNameOf(game) });
         if (ackExtra) socket.emit(ackExtra.event, ackExtra.payload);
         if (game.gameLive) {
           socket.emit('gameStartedPlayer');
@@ -201,6 +206,7 @@ module.exports = function createPlayerEvents({
 
         const playerData = players.getPlayers(game.hostId);
         socket.emit('playerGameData', playerData);
+        socket.emit('quizInfo', { quizName: quizNameOf(game) });
         const questions = game.gameData.questions || [];
         const current = questions[game.gameData.question - 1];
         if (current) {
@@ -212,7 +218,7 @@ module.exports = function createPlayerEvents({
             });
             return;
           }
-          const questionTimeSecs = (game.gameData.options && game.gameData.options.timePerQuestion) || current.time || 20;
+          const questionTimeSecs = questionTimeOf(game.gameData, current);
           let timeLeft = questionTimeSecs;
           if (game.gameData.questionLive && game.gameData.questionStartedAt) {
             const elapsed = Math.floor((Date.now() - game.gameData.questionStartedAt) / 1000);

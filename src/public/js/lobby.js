@@ -54,7 +54,9 @@ var lobby = Vue.createApp({
             // Número de alumnos en la sala. Solo se guarda el total, nunca los nombres.
             count: null,
             // Código de la partida, para comprobar que se está en la correcta.
-            pin: initialParams.pin ? String(initialParams.pin) : ''
+            pin: initialParams.pin ? String(initialParams.pin) : '',
+            // Título del quiz (llega con la confirmación de entrada).
+            quizName: ''
         };
     },
     computed: {
@@ -158,8 +160,9 @@ socket.on('connect', function() {
     }, 1200);
 });
 
-socket.on('playerJoinAck', function(){
+socket.on('playerJoinAck', function(data){
     joinAck = true;
+    if(data && data.quizName) lobby.quizName = String(data.quizName);
     if(joinRetryTimer){
         clearTimeout(joinRetryTimer);
         joinRetryTimer = null;

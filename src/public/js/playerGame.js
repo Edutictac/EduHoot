@@ -78,6 +78,8 @@ var app = Vue.createApp({
             autoLeft: 0,
             autoEndAt: 0,
             leaveConfirming: false,
+            // Título del quiz (lo envía el servidor al entrar en la partida).
+            quizName: '',
             questionText: '',
             ttsSpeaking: false,
             ttsReady: false,
@@ -790,6 +792,10 @@ socket.on('playerGameData', function(data){
            app.playerScore = data[i].gameData.score;
        }
    }
+});
+
+socket.on('quizInfo', function(data){
+    app.quizName = (data && data.quizName) ? String(data.quizName) : '';
 });
 
 socket.on('questionMedia', function(data){

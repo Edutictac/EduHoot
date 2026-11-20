@@ -52,6 +52,14 @@ body{
     box-shadow: var(--shadow);
     backdrop-filter: blur(12px);
 }
+/* Título del quiz, encima de la barra de nombre y puntos. */
+.quiz-name-text{
+    margin: 0 0 6px;
+    text-align: center;
+    font-weight: 700;
+    color: var(--text-main);
+    overflow-wrap: anywhere;
+}
 #nameText, #scoreText, #rankText{
     margin: 0;
     font-weight: 600;

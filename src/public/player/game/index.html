@@ -17,6 +17,7 @@
              app de Vue, feta en dos blocs (vore ARCHITECTURE.md). -->
         <div id="player-game"></div>
         <template id="player-game-tpl">
+            <p id = "quizNameText" class="quiz-name-text" v-if="quizName">{{ quizName }}</p>
             <div id = "stats">
                 <h4 id = "nameText">{{ nameDisplay }}</h4>
                 <h4 id = "scoreText">{{ scoreDisplay }}</h4>

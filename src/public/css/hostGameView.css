@@ -155,6 +155,19 @@ body{
     align-items: center;
     gap: 10px;
 }
+/* Título del quiz entre el PIN y los botones de arriba. */
+.host-top .spacer{
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.game-quiz-name{
+    margin: 0;
+    text-align: center;
+    font-weight: 700;
+    font-size: 1.2em;
+    color: #ffee70;
+    overflow-wrap: anywhere;
+}
 .pin-badge{
     min-width: 120px;
     padding: 8px 12px;
@@ -907,3 +920,22 @@ h3[id^="answer"]::before{
     overflow-wrap: anywhere;
     min-width: 0;
 }
+
+/* Casilla «Puntuaciones y ranking» más grande, como las de la sala. */
+.scores-toggle input[type="checkbox"]{
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: #ffee70;
+}
+
+/* Símbolo de estado junto al tiempo: pausa (⏸) si el profesor ha pausado; reproducción (▶) si la partida sigue. */
+.timer-state{
+    display: inline-flex;
+    vertical-align: middle;
+    margin-left: 10px;
+    font-size: 1.1em;
+}
+.timer-state svg{ fill: currentColor; }
+.timer-state.is-paused{ color: #ffee70; }
+.timer-state.is-playing{ color: #7ee787; }

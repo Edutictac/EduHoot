@@ -81,3 +81,16 @@ test('getSubmissionScoreRatio en multiple pondera aciertos y fallos', () => {
 test('getSubmissionScoreRatio en multiple sin correctAnswers da 0', () => {
   assert.equal(getSubmissionScoreRatio({ type: 'multiple', correctAnswers: [] }, [1]), 0);
 });
+
+test('questionTimeOf: una correspondencia tiene un 50 % más por defecto y el margen elegido', () => {
+  const { questionTimeOf } = require('../../server/services/scoring');
+  const matching = { type: 'matching', time: 20 };
+  assert.equal(questionTimeOf({ options: {} }, matching), 30);
+  assert.equal(questionTimeOf({ options: { matchingExtraTime: 25 } }, matching), 25);
+  assert.equal(questionTimeOf({ options: { matchingExtraTime: 100 } }, matching), 40);
+  assert.equal(questionTimeOf({ options: { matchingExtraTime: 33 } }, matching), 30);
+  // El tiempo fijado en el lobby también se amplía en las correspondencias.
+  assert.equal(questionTimeOf({ options: { timePerQuestion: 60, matchingExtraTime: 75 } }, matching), 105);
+  // Las demás preguntas no cambian.
+  assert.equal(questionTimeOf({ options: { matchingExtraTime: 100 } }, { type: 'quiz', time: 20 }), 20);
+});

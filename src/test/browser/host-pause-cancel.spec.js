@@ -60,6 +60,20 @@ test('anfitrión: pausar la partida congela el tiempo y bloquea saltar la pregun
     await expect(page.locator('#skipQButton')).toBeEnabled();
 });
 
+test('anfitrión: junto al tiempo hay un símbolo de reproducción en marcha y de pausa si está pausada', async ({ page }) => {
+    await openGame(page);
+    const icon = page.locator('#timerStateIcon');
+    await expect(icon).toHaveClass(/is-playing/);
+    await expect(icon).toHaveAttribute('aria-label', 'Partida en marcha');
+    await expect(icon.locator('path')).toHaveCount(1);
+    await page.locator('#timerPauseBtn').click();
+    await expect(icon).toHaveClass(/is-paused/);
+    await expect(icon).toHaveAttribute('aria-label', 'Partida en pausa');
+    await expect(icon.locator('rect')).toHaveCount(2);
+    await page.locator('#timerPauseBtn').click();
+    await expect(icon).toHaveClass(/is-playing/);
+});
+
 test('anfitrión: cancelar partida pide confirmación antes de cerrar', async ({ page }) => {
     await openGame(page);
     await page.locator('#cancelGameBtn').click();

@@ -2,7 +2,7 @@ const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { MongoMemoryServer } = require('mongodb-memory-server');
 
-// Fuera de desarrollo (stage, producción), /dev no existe.
+// En producción, /dev no existe (en stage requiere admin: devPagesStage.test.js).
 let mongod;
 let httpServer;
 let baseUrl;
@@ -13,7 +13,7 @@ before(async () => {
   mongod = await MongoMemoryServer.create();
   process.env.MONGO_URL = mongod.getUri();
   previousNodeEnv = process.env.NODE_ENV;
-  process.env.NODE_ENV = 'staging';
+  process.env.NODE_ENV = 'production';
   let app;
   ({ app, mongoClient } = require('../../server/server.js'));
   httpServer = app.listen(0);
@@ -33,7 +33,7 @@ function request(path) {
   return fetch(`${baseUrl}${path}`, { redirect: 'manual' });
 }
 
-test('/dev responde 404 fuera de desarrollo', async () => {
+test('/dev responde 404 en producción', async () => {
   for (const path of ['/dev/correspondencia/', '/dev/correspondencia/poc.js', '/dev/login']) {
     assert.equal((await request(path)).status, 404, path);
   }

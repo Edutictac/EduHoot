@@ -51,6 +51,14 @@ body{
     flex-direction: column;
     justify-content: center;
 }
+/* Título del quiz, encima de «Únete a la partida»; si es largo, pasa a otra línea. */
+.quiz-name{
+    margin: 0 0 6px;
+    font-size: 1.5em;
+    font-weight: 700;
+    color: #ffee70; /* amarillo de la portada: se distingue de «Únete a la partida» */
+    overflow-wrap: anywhere;
+}
 /* Logo a la izquierda del título; centrado en vertical con el bloque de unión. */
 .host-logo{
     width: 64px;
@@ -160,6 +168,30 @@ body{
     box-shadow: var(--shadow);
     backdrop-filter: blur(12px);
 }
+/* Dos grupos: casillas arriba y ajustes (listas y números) debajo, cada uno con su título. */
+.opt-group{
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 28px;
+    align-items: start;
+}
+.opt-group + .opt-group,
+#host-options .advanced-options{
+    margin-top: 6px;
+    padding-top: 12px;
+    border-top: 1px solid var(--card-stroke);
+}
+.opt-group__title{
+    grid-column: 1 / -1;
+    margin: 0;
+    font-size: 0.78em;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #ffee70;
+    opacity: 0.9;
+}
 #host-options label{
     display: flex;
     align-items: center;
@@ -167,8 +199,18 @@ body{
     font-weight: 600;
     flex-wrap: wrap;
 }
-#host-options input[type="checkbox"]{
-    transform: scale(1.05);
+/* Casillas y botones de opción grandes: se ven bien en el proyector y se pulsan sin fallar. */
+#host-options input[type="checkbox"],
+#host-options input[type="radio"]{
+    width: 20px;
+    height: 20px;
+    flex: none;
+    margin: 0;
+    cursor: pointer;
+    accent-color: #ffee70;
+}
+#host-options label{
+    cursor: pointer;
 }
 .opt-hint{
     flex-basis: 100%;
@@ -292,6 +334,7 @@ body{
     .qr-card{ width: 100%; min-width: 0; }
     .qr-img{ width: 132px; height: 132px; }
     #host-options{ padding: 10px; grid-template-columns: 1fr; }
+    .opt-group{ grid-template-columns: 1fr; }
     .opt-inline{ justify-content: flex-start; }
     #start, #cancel{
         width: 100%;

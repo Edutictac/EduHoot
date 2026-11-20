@@ -244,9 +244,22 @@ app.get(['/create', '/create/', '/create/index.html'], (req, res) => {
     res.type('html').send(out);
   });
 });
-// Páginas de desarrollo y maquetas (/dev): solo existen con NODE_ENV=development.
-// En stage y producción, 404. Va antes de los ficheros estáticos.
-if (process.env.NODE_ENV !== 'development') {
+// Páginas de desarrollo y maquetas (/dev):
+// - desarrollo: se sirven sin sesión;
+// - stage (NODE_ENV=staging): solo con sesión de rol admin;
+// - producción: 404.
+// Va antes de los ficheros estáticos.
+if (process.env.NODE_ENV === 'staging') {
+  const requireAdminPage = (req, res, next) => {
+    res.set('Cache-Control', 'private, no-store');
+    if (!req.user) return res.status(401).type('text').send('Cal una sessió d\'administració. Entra amb el xip d\'EduTicTac.');
+    if (req.user.role !== 'admin') return res.status(403).type('text').send('Cal el rol d\'administració.');
+    return next();
+  };
+  // La entrada rápida de desarrollo no existe en stage, ni siquiera para admin.
+  app.use('/dev/login', (req, res) => res.status(404).type('text').send('Not found'));
+  app.use('/dev', sessionMiddleware, requireAdminPage, express.static(path.join(publicPath, 'dev')));
+} else if (process.env.NODE_ENV !== 'development') {
   app.use('/dev', (req, res) => res.status(404).type('text').send('Not found'));
 }
 app.use(express.static(publicPath, {

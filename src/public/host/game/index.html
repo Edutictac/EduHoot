@@ -25,7 +25,7 @@
         <div class="host-shell">
             <div class="host-top">
                 <div id="pin-badge" class="pin-badge" title="PIN del juego" :style="{ display: pin ? 'inline-flex' : 'none' }">{{ pinText }}</div>
-                <div class="spacer"></div>
+                <div class="spacer"><p v-if="quizName" id="quizName" class="game-quiz-name">{{ quizName }}</p></div>
                 <button type="button" id="fullscreenToggle" class="fullscreen-toggle" @click="toggleFullscreen" aria-pressed="false">⛶</button>
                 <label class="lang-switch">
                     <span data-i18n="langLabel">Idioma</span>
@@ -34,13 +34,18 @@
             </div>
         <h4 id = "questionNum">{{ questionNumText }}</h4>
         <div class="auto-advance-row" v-if="!gameOverMode">
-            <label>{{ t('autoLabel') }}
+            <label :title="t('autoTip')">{{ t('autoLabel') }}
                 <select id="autoAdvanceSelect" v-model.number="autoAdvanceSec" @change="emitAutoAdvanceSec">
                     <option :value="0">{{ t('autoManual') }}</option>
                     <option v-for="n in autoAdvanceChoices" :key="n" :value="n">{{ n }} s</option>
                 </select>
             </label>
-            <label class="scores-toggle">
+            <label v-if="hasMatching" :title="t('matchingExtraTip')">{{ t('matchingExtraLabel') }}
+                <select id="matchingExtraSelect" v-model.number="matchingExtraTime" @change="emitMatchingExtraTime">
+                    <option v-for="p in matchingExtraChoices" :key="p" :value="p">+{{ p }} %</option>
+                </select>
+            </label>
+            <label class="scores-toggle" :title="t('scoresTip')">
                 <span>{{ t('scoresToggle') }}</span>
                 <input type="checkbox" id="scoresToggle" v-model="showScoresToggle" @change="emitShowScores">
             </label>
@@ -54,7 +59,11 @@
         </div>
         <div id="questionPointsBadge" class="question-points-badge points-badge-pop" :key="'badge-' + badgeKey" :style="{ display: badgeVisible ? 'inline-flex' : 'none' }">{{ pointsBadgeText }}</div>
         <h4 id = "playersAnswered" v-show="playersAnsweredVisible">{{ playersAnsweredText }}</h4>
-        <h3 id = "timerText" v-show="timerVisible"><span data-i18n="timeLeft">{{ t('timeLeft') }} </span><span id = "num">{{ timerText }}</span></h3>
+        <h3 id = "timerText" v-show="timerVisible"><span data-i18n="timeLeft">{{ t('timeLeft') }} </span><span id = "num">{{ timerText }}</span>
+            <span id="timerStateIcon" class="timer-state" :class="timerPaused ? 'is-paused' : 'is-playing'" role="img" :aria-label="timerPaused ? t('statePaused') : t('statePlaying')" :title="timerPaused ? t('statePaused') : t('statePlaying')">
+                <svg v-if="timerPaused" viewBox="0 0 24 24" width="1em" height="1em" aria-hidden="true"><rect x="5" y="4" width="5" height="16" rx="1.2"/><rect x="14" y="4" width="5" height="16" rx="1.2"/></svg>
+                <svg v-else viewBox="0 0 24 24" width="1em" height="1em" aria-hidden="true"><path d="M7 4.5v15a1 1 0 0 0 1.5.86l12-7.5a1 1 0 0 0 0-1.72l-12-7.5A1 1 0 0 0 7 4.5z"/></svg>
+            </span></h3>
         <div id="timerControls" class="timer-controls" v-show="timerVisible">
             <button type="button" id="timerPauseBtn" @click="toggleTimerPause">{{ timerPaused ? t('timerResume') : t('timerPause') }}</button>
             <button type="button" id="timerAddBtn" @click="addTimerSeconds(15)">{{ t('timerAdd15') }}</button>

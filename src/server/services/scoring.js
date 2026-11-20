@@ -1,14 +1,21 @@
-const { isSubmissionCorrect, matchingScoreRatio } = require('../questionUtils');
+const { isSubmissionCorrect, matchingScoreRatio, normalizeMatchingExtraTime } = require('../questionUtils');
 
 const MAX_POINTS_PER_QUESTION = 1000;
+
+// Segundos de una pregunta: el tiempo fijado en el lobby o el de la pregunta (20 si no
+// tiene). Una correspondencia tiene además el margen elegido (25–100 %, 50 % por defecto).
+function questionTimeOf(gameData, current) {
+  const options = (gameData && gameData.options) || {};
+  const base = Number(options.timePerQuestion || (current && current.time) || 20) || 20;
+  if (!current || current.type !== 'matching') return base;
+  return Math.round(base * (1 + normalizeMatchingExtraTime(options.matchingExtraTime) / 100));
+}
 
 function calculateQuestionScore(game) {
   const gameData = game && game.gameData ? game.gameData : {};
   const questions = Array.isArray(gameData.questions) ? gameData.questions : [];
   const current = questions[(Number(gameData.question) || 1) - 1] || {};
-  const limitSeconds = Number(
-    (gameData.options && gameData.options.timePerQuestion) || current.time || 20
-  );
+  const limitSeconds = questionTimeOf(gameData, current);
   const limitMs = Math.max(1, limitSeconds) * 1000;
   const startedAt = Number(gameData.questionStartedAt) || Date.now();
   const elapsedMs = Math.max(0, Date.now() - startedAt);
@@ -58,6 +65,7 @@ function isStreakEnabled(game) {
 module.exports = {
   MAX_POINTS_PER_QUESTION,
   STREAK_MIN_FOR_BONUS,
+  questionTimeOf,
   calculateQuestionScore,
   getSubmissionScoreRatio,
   streakBonus,

@@ -6,7 +6,7 @@ if (process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH) {
 
 // Prueba de concepto de la pregunta de correspondencia (feature 7): /dev/correspondencia/.
 // La maqueta expone su estado en window.matchingPoc para conocer la solución.
-const URL = '/dev/correspondencia/';
+const URL = '/dev/correspondencia/?lang=es';
 
 async function solution(page) {
     return page.evaluate(() => window.matchingPoc.state.game.solution.slice());

@@ -223,10 +223,29 @@ test('anfitrión: en 1280×800 las opciones van en 2 columnas y «Iniciar» qued
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto('/host/?lang=es');
     await page.waitForLoadState('load');
-    const xs = await page.locator('#host-options > label').evaluateAll(els => [...new Set(els.map(e => Math.round(e.getBoundingClientRect().x)))]);
+    const xs = await page.locator('.opt-group--checks > label').evaluateAll(els => [...new Set(els.map(e => Math.round(e.getBoundingClientRect().x)))]);
     expect(xs.length).toBe(2);
+    // Las casillas van juntas, arriba; los ajustes (listas y números) debajo, sin mezclarse.
+    const checks = await page.locator('.opt-group--checks').boundingBox();
+    const values = await page.locator('.opt-group--values').boundingBox();
+    expect(values.y).toBeGreaterThanOrEqual(checks.y + checks.height - 1);
+    expect(await page.locator('.opt-group--checks input[type=checkbox]').count()).toBe(6);
+    expect(await page.locator('.opt-group--checks select, .opt-group--checks input[type=number]').count()).toBe(0);
     const start = await page.locator('#start').boundingBox();
     expect(start.y + start.height).toBeLessThanOrEqual(800);
+});
+
+test('anfitrión: todas las opciones y parámetros del lobby tienen tooltip de ayuda', async ({ page }) => {
+    await page.route(/^https:\/\//, route => route.abort());
+    await page.route('**/api/**', route => route.fulfill({ json: {} }));
+    await page.route('**/socket.io/socket.io.js', route => route.fulfill({ contentType: 'application/javascript', body: 'window.io = function(){ var s = { id: "h", connected: false, on: function(){ return s; }, emit: function(){ return s; }, connect: function(){ return s; }, disconnect: function(){ return s; } }; return s; };' }));
+    await page.goto('/host/?lang=es');
+    await page.waitForLoadState('load');
+    await page.locator('#opt-advanced summary').click();
+    const sinAyuda = await page.evaluate(() => [...document.querySelectorAll('#host-options input, #host-options select, #host-options summary, #host-options fieldset')]
+        .filter(el => { let n = el; while (n && n.id !== 'host-options') { if (n.title && n.title.length > 20) return false; n = n.parentElement; } return true; })
+        .map(el => el.id || el.tagName));
+    expect(sinAyuda).toEqual([]);
 });
 
 test('portada: el contenido ocupa el ancho disponible con el mismo margen', async ({ page }) => {
@@ -347,19 +366,26 @@ test('portada en 2 columnas: «Instalar app» centrado, del ancho de una columna
     expect(Math.abs((install.x + install.width / 2) - (shell.x + shell.width / 2))).toBeLessThanOrEqual(2);
 });
 
-test('portada en 2 columnas: los botones crecen hasta abajo dejando un 20 % libre', async ({ page }) => {
+test('portada en 2 columnas: los botones crecen en alto como mucho hasta el doble de un botón normal', async ({ page }) => {
     await page.route(/^https:\/\//, route => route.abort());
     await page.route('**/api/**', route => route.fulfill({ json: {} }));
-    await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto('/?lang=es');
     await page.waitForLoadState('load');
-    const shell = await page.locator('.landing-shell').boundingBox();
-    const padBottom = await page.locator('.landing-shell').evaluate(el => parseFloat(getComputedStyle(el).paddingBottom));
-    const actions = await page.locator('.landing-actions').boundingBox();
-    const btn = await page.locator('.landing-actions .btn').first().boundingBox();
-    const free = (shell.y + shell.height - padBottom) - (actions.y + actions.height);
-    expect(Math.abs(free / (free + actions.height) - 0.2)).toBeLessThanOrEqual(0.02);
-    expect(btn.height).toBeGreaterThan(60);
+    await page.locator('#installApp').evaluate(el => { el.hidden = false; });
+    const heights = async () => {
+        const btn = await page.locator('.landing-actions .btn').first().boundingBox();
+        const normal = await page.locator('#installApp').boundingBox();
+        return { btn: btn.height, normal: normal.height };
+    };
+    // Pantalla alta: el botón llega al tope (el doble) y no lo pasa.
+    await page.setViewportSize({ width: 1280, height: 1400 });
+    let h = await heights();
+    expect(h.btn).toBeLessThanOrEqual(2 * h.normal + 1);
+    expect(h.btn).toBeGreaterThanOrEqual(2 * h.normal - 2);
+    // Pantalla más baja: crece algo, pero menos.
+    await page.setViewportSize({ width: 1280, height: 640 });
+    h = await heights();
+    expect(h.btn).toBeLessThanOrEqual(2 * h.normal + 1);
 });
 
 test('modo Solo: un texto muy largo (sin espacios) no se sale de la ventana de corrección', async ({ page }) => {

@@ -31,8 +31,19 @@ fitxers corresponents, i els originals es van eliminar.
   temps i tapa la pregunta; cancel·lar demana confirmació.
 - Portada: en pantalles amples, els botons van en 2 columnes i ocupen la
   part de baix.
-- `/dev/` (maquetes i prova de concepte de la correspondència en
-  `/dev/correspondencia/`) només existix amb `NODE_ENV=development`.
+- `/dev/` (maquetes i proves de concepte: correspondència en
+  `/dev/correspondencia/`, pantalla de l'amfitrió en `/dev/anfitrion/`):
+  en desenvolupament, sense sessió; en stage, només amb rol admin; en
+  producció, 404. `/dev/login` només existix en desenvolupament. Les
+  maquetes es poden veure en ca, va, es i en (selector d'idioma o `?lang=`).
+- Amfitrió (sala): caselles i botons d'opció més grans, sense els textos
+  d'ajuda fixos (ara són tooltips); les opcions van en dos blocs, caselles i ajustos, amb
+  títol; totes tenen un tooltip d'ajuda, també els controls de dalt de la
+  partida. El títol del qüestionari ix en groc en la sala i en la partida de
+  l'amfitrió, i també en les pantalles de l'alumnat.
+- Correspondència: més temps (+25, +50, +75 o +100 %; per defecte +50 %),
+  triat en la sala i canviable durant la partida.
+- Portada: els botons no creixen en alt més del doble d'un botó normal.
 - Pantalla completa a `/solo/` i «Jugar a l'aula»: la partida ocupa tota la
   finestra visible del navegador, en PC i en mòbil, amb un marge petit. La
   mida la llig `js/viewport-fit.js` (`visualViewport`), així que també

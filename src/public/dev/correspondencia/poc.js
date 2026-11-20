@@ -1,11 +1,8 @@
 // Prueba de concepto de la pregunta de correspondencia (feature 7, «emparejar»).
 // Maqueta independiente: no usa el servidor ni el código de partida.
 (function(){
-  var BANK = [
-    ['Francia','París'],['Italia','Roma'],['Alemania','Berlín'],['Portugal','Lisboa'],
-    ['Grecia','Atenas'],['Austria','Viena'],['Suecia','Estocolmo'],['Polonia','Varsovia']
-  ];
-  var IMPOSTORS = ['Oslo','Praga','Dublín','Bruselas','Ámsterdam','Budapest'];
+  var i18n = PocI18n(window.CORRESPONDENCIA_TEXTS);
+  var t = i18n.t;
   var LETTERS = 'ABCDEFGH';
   var PAIR_COLORS = ['--p1','--p2','--p3','--p4','--p5','--p6','--p7','--p8'];
   var TIME = 40;
@@ -38,6 +35,7 @@
 
   // Igual que el servidor: izquierda en orden fijo, derecha barajada; solución = índice de la derecha.
   function newGame(){
+    var BANK = t('bank'), IMPOSTORS = t('impostors');
     var pairs = BANK.slice(0, state.pairs).map(function(p){ return { left:p[0], right:p[1] }; });
     shuffle(IMPOSTORS).slice(0, state.imp).forEach(function(r){ pairs.push({ left:'', right:r }); });
     var domain = pairs.map(function(_, i){ return i; });
@@ -95,34 +93,34 @@
 
   // ---------- Vistas ----------
   function stats(){
-    return '<div class="stats"><span>Marta</span><span>Puntos: 2.350</span></div>' +
+    return '<div class="stats"><span>' + t('student') + '</span><span>' + t('points') + '</span></div>' +
       '<div class="timebar" aria-hidden="true"><i style="width:' + (state.game.timeLeft / TIME * 100) + '%"></i></div>';
   }
   function footer(b){
     var done = b.answers.filter(function(a){ return a !== null; }).length;
-    return '<div class="footer-bar"><span class="count">' + done + ' de ' + b.answers.length + ' emparejadas</span>' +
-      '<button class="send" type="button" data-act="send"' + (done ? '' : ' disabled') + '>Enviar</button></div>';
+    return '<div class="footer-bar"><span class="count">' + t('paired', { n: done, total: b.answers.length }) + '</span>' +
+      '<button class="send" type="button" data-act="send"' + (done ? '' : ' disabled') + '>' + t('send') + '</button></div>';
   }
   function resultView(b){
     var g = state.game, res = b.sent;
     var kind = res.ratio === 1 ? 'correct' : (res.ratio > 0 ? 'partial' : 'incorrect');
-    var title = kind === 'correct' ? '¡Correcto!' : (kind === 'partial' ? 'Parcialmente correcta' : 'Incorrecta');
+    var title = kind === 'correct' ? t('correct') : (kind === 'partial' ? t('partial') : t('incorrect'));
     var pts = Math.round(820 * res.ratio);
     var html = '<div class="result" data-kind="' + kind + '" role="status">' +
       '<p class="big">' + title + '</p>' +
-      '<p class="sub">' + res.hits + ' de ' + res.total + ' parejas</p>' +
-      '<span class="pts">+' + pts + ' puntos</span>';
+      '<p class="sub">' + t('pairsOf', { hits: res.hits, total: res.total }) + '</p>' +
+      '<span class="pts">' + t('plusPoints', { n: pts }) + '</span>';
     if(state.show && kind !== 'correct'){
       html += '<div class="review">';
       g.left.forEach(function(l, i){
         var a = b.answers[i], ok = a === g.solution[i];
         html += '<div class="row"><span class="mark">' + (ok ? '✓' : '✗') + '</span><span><b>' + esc(l) + '</b> → ' +
-          (a === null ? '<i>sin emparejar</i>' : esc(g.right[a])) +
-          (ok ? '' : '<span class="fix">Correcta: ' + esc(g.right[g.solution[i]]) + '</span>') + '</span></div>';
+          (a === null ? '<i>' + t('unpaired') + '</i>' : esc(g.right[a])) +
+          (ok ? '' : '<span class="fix">' + t('fixOk') + esc(g.right[g.solution[i]]) + '</span>') + '</span></div>';
       });
       html += '</div>';
     }
-    html += '<button class="ghost" type="button" data-act="retry">Volver a la pregunta</button></div>';
+    html += '<button class="ghost" type="button" data-act="retry">' + t('retry') + '</button></div>';
     return html;
   }
   function phone(inner, b){
@@ -134,7 +132,7 @@
   // `attr` distingue el modo normal (data-left/right) del a ciegas (data-bleft/bright).
   function columns(b, texts, attr){
     var g = state.game;
-    var html = '<div class="cols' + (texts ? '' : ' codes-only') + '"><div class="col"><h3>' + (texts ? 'Países' : 'Números') + '</h3>';
+    var html = '<div class="cols' + (texts ? '' : ' codes-only') + '"><div class="col"><h3>' + (texts ? t('colCountries') : t('colNumbers')) + '</h3>';
     g.left.forEach(function(l, i){
       var a = b.answers[i], sel = b.selected && b.selected.side === 'left' && b.selected.idx === i;
       html += '<button type="button" class="item' + (a !== null ? ' paired' : '') + (sel ? ' selected' : '') + '" data-' + attr + 'left="' + i + '"' +
@@ -142,7 +140,7 @@
         '<span class="code">' + (i+1) + '</span>' + (texts ? '<span class="txt">' + esc(l) + '</span>' : '') +
         (a !== null ? '<span class="tag">' + LETTERS[a] + '</span>' : '') + '</button>';
     });
-    html += '</div><div class="col"><h3>' + (texts ? 'Capitales' : 'Letras') + '</h3>';
+    html += '</div><div class="col"><h3>' + (texts ? t('colCapitals') : t('colLetters')) + '</h3>';
     g.right.forEach(function(r, j){
       var owner = b.answers.indexOf(j), sel = b.selected && b.selected.side === 'right' && b.selected.idx === j;
       html += '<button type="button" class="item' + (owner !== -1 ? ' paired' : '') + (sel ? ' selected' : '') + '" data-' + attr + 'right="' + j + '"' +
@@ -155,8 +153,8 @@
 
   function studentView(){
     var b = state.game.student;
-    return phone('<p class="qtext">Relaciona cada país con su capital</p>' +
-      '<p class="hint">Toca un país y después su capital. Toca una pareja para deshacerla.</p>' +
+    return phone('<p class="qtext">' + t('q') + '</p>' +
+      '<p class="hint">' + t('hintStudent') + '</p>' +
       columns(b, true, ''), b);
   }
 
@@ -167,10 +165,10 @@
     g.left.forEach(function(_, i){
       var a = b.answers[i];
       html += '<label class="sel-row" for="bsel-' + i + '"><span class="num" style="background:' + pairColor(i) + '">' + (i+1) + '</span>' +
-        '<select id="bsel-' + i + '" data-bsel="' + i + '"' + (b.sent ? ' disabled' : '') + '><option value="">Elige una letra</option>';
+        '<select id="bsel-' + i + '" data-bsel="' + i + '"' + (b.sent ? ' disabled' : '') + '><option value="">' + t('pickLetter') + '</option>';
       g.right.forEach(function(_, j){
         var owner = b.answers.indexOf(j);
-        var note = owner !== -1 && owner !== i ? ' (ahora en el ' + (owner+1) + ')' : '';
+        var note = owner !== -1 && owner !== i ? t('nowIn', { n: owner+1 }) : '';
         html += '<option value="' + j + '"' + (a === j ? ' selected' : '') + '>' + LETTERS[j] + note + '</option>';
       });
       html += '</select></label>';
@@ -182,14 +180,14 @@
   function blindSteps(b){
     var g = state.game, i = b.step;
     var html = '<div class="steps"><div class="step-now"><span class="num big-num" style="background:' + pairColor(i) + '">' + (i+1) + '</span>' +
-      '<span>¿Qué letra va con el <b>' + (i+1) + '</b>?</span></div><div class="letters">';
+      '<span>' + t('whichLetter', { n: i+1 }) + '</span></div><div class="letters">';
     g.right.forEach(function(_, j){
       var owner = b.answers.indexOf(j);
       html += '<button type="button" class="letter' + (owner === i ? ' on' : '') + '" data-bstep="' + j + '"' +
         (owner !== -1 ? ' style="background:' + pairColor(owner) + '"' : '') + ' aria-pressed="' + (owner === i) + '">' +
         LETTERS[j] + (owner !== -1 && owner !== i ? '<small>' + (owner+1) + '</small>' : '') + '</button>';
     });
-    html += '</div><div class="chips" aria-label="Parejas">';
+    html += '</div><div class="chips" aria-label="' + t('pairsAria') + '">';
     g.left.forEach(function(_, k){
       var a = b.answers[k];
       html += '<button type="button" class="chip' + (k === i ? ' current' : '') + '" data-bgo="' + k + '">' + (k+1) + ' → ' + (a === null ? '?' : LETTERS[a]) + '</button>';
@@ -202,16 +200,16 @@
     if(state.blindStyle === 'codes') body = columns(b, false, 'b');
     else if(state.blindStyle === 'steps') body = blindSteps(b);
     else body = blindSelect(b);
-    var hint = state.blindStyle === 'codes' ? 'Toca un número y después su letra.'
-      : (state.blindStyle === 'steps' ? 'Elige la letra de cada número. Toca abajo una pareja para cambiarla.' : 'Elige en cada número la letra de su pareja.');
-    return phone('<p class="qtext">Mira la pregunta en la pantalla</p><p class="hint">' + hint + '</p>' + body, b);
+    var hint = state.blindStyle === 'codes' ? t('hintCodes')
+      : (state.blindStyle === 'steps' ? t('hintSteps') : t('hintSelect'));
+    return phone('<p class="qtext">' + t('blindQ') + '</p><p class="hint">' + hint + '</p>' + body, b);
   }
 
   function projectorView(withResults){
     var g = state.game;
-    var html = '<div class="projector"><div class="pj-top"><span>Pregunta 4 de 10</span>' +
-      (withResults ? '<span>Resultados</span>' : '<span class="pj-timer">' + g.timeLeft + '</span>') + '</div>' +
-      '<p class="pj-q">Relaciona cada país con su capital</p><div class="pj-cols"><div class="pj-col">';
+    var html = '<div class="projector"><div class="pj-top"><span>' + t('pjQ') + '</span>' +
+      (withResults ? '<span>' + t('pjResults') + '</span>' : '<span class="pj-timer">' + g.timeLeft + '</span>') + '</div>' +
+      '<p class="pj-q">' + t('q') + '</p><div class="pj-cols"><div class="pj-col">';
     g.left.forEach(function(l, i){
       if(withResults){
         var pct = Math.round(g.classHits[i] * 100);
@@ -224,40 +222,21 @@
     html += '</div><div class="pj-col">';
     g.right.forEach(function(r, j){
       var imp = withResults && state.show && g.impostor[j];
-      html += '<div class="pj-item' + (imp ? ' is-impostor' : '') + '"><span class="code">' + LETTERS[j] + '</span><span>' + esc(r) + (imp ? ' <small>(sin pareja)</small>' : '') + '</span></div>';
+      html += '<div class="pj-item' + (imp ? ' is-impostor' : '') + '"><span class="code">' + LETTERS[j] + '</span><span>' + esc(r) + (imp ? ' <small>' + t('noPair') + '</small>' : '') + '</span></div>';
     });
     html += '</div></div><div class="pj-foot">' +
-      (withResults ? '<span>Todo bien: ' + g.classSummary.full + ' · parcial: ' + g.classSummary.partial + ' · ninguna: ' + g.classSummary.none + ' (de 24)</span><span>Porcentaje de alumnos que aciertan cada pareja</span>'
-                   : '<span>Respuestas: 17 de 24</span><span>PIN 482 913</span>') +
+      (withResults ? '<span>' + t('pjSummary', { full: g.classSummary.full, partial: g.classSummary.partial, none: g.classSummary.none }) + '</span><span>' + t('pjPct') + '</span>'
+                   : '<span>' + t('pjAnswers') + '</span><span>' + t('pjPin') + '</span>') +
       '</div></div>';
     return html;
   }
-
-  var NOTES = {
-    student: ['Cada pareja toma un color (nunca verde, naranja ni rojo, que son los del resultado) y además muestra el código de su compañera, para no depender solo del color.',
-      'Se puede empezar por cualquiera de las dos columnas. Tocar una pareja hecha la deshace.',
-      'Se puede enviar sin completar todas las parejas: puntúan las acertadas.',
-      'Resultado: verde si todas están bien, naranja (con texto oscuro, por contraste) si solo algunas, rojo si ninguna. Con «Mostrar respuestas» se ve la corrección.'],
-    blind: {
-      select: ['Desplegables: una fila por número, con el menú nativo del móvil. Dos toques por pareja y poco espacio en pantalla.',
-        'Si eliges una letra que ya estaba en otro número, pasa a este (el menú lo avisa).'],
-      codes: ['Toques con códigos: el mismo gesto que con la pregunta visible, pero los botones solo llevan números y letras.',
-        'Ventaja: el alumnado aprende un único gesto para los dos modos.'],
-      steps: ['Paso a paso: un número cada vez, con botones grandes; al elegir una letra pasa al siguiente número libre.',
-        'Las fichas de abajo resumen las parejas y permiten volver a una para cambiarla.']
-    },
-    projector: ['El proyector numera la izquierda (1–8) y pone letras a la derecha (A–H): los mismos códigos que ve el alumnado.',
-      'Con 8 parejas el texto se reduce; las frases largas tendrán que caber en dos líneas.'],
-    results: ['Para cada pareja, el porcentaje de la clase que la ha acertado (datos simulados).',
-      'Con «Mostrar respuestas» desactivado no se muestra la solución ni se marcan las impostoras.']
-  };
 
   function render(){
     if(state.view === 'student') stage.innerHTML = studentView();
     else if(state.view === 'blind') stage.innerHTML = blindView();
     else stage.innerHTML = projectorView(state.view === 'results');
-    var list = state.view === 'blind' ? NOTES.blind[state.blindStyle] : NOTES[state.view];
-    notes.innerHTML = '<h2>Qué mirar en esta vista</h2><ul>' + list.map(function(n){ return '<li>' + esc(n) + '</li>'; }).join('') + '</ul>';
+    var list = t(state.view === 'blind' ? 'notes_' + state.blindStyle : 'notes_' + state.view);
+    notes.innerHTML = '<h2>' + t('notesTitle') + '</h2><ul>' + list.map(function(n){ return '<li>' + esc(n) + '</li>'; }).join('') + '</ul>';
   }
 
   stage.addEventListener('click', function(e){
@@ -311,6 +290,8 @@
 
   // Para las pruebas de navegador (test/browser/matching-poc.spec.js).
   window.matchingPoc = { state: state, newGame: function(){ newGame(); render(); } };
+
+  i18n.onChange(function(){ newGame(); render(); });
 
   newGame();
   render();

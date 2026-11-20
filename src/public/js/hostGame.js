@@ -84,6 +84,12 @@ var i18n = {
         leftTag: 'Abandono',
         leftBtn: 'Abandonó',
         autoLabel: 'Avance automático',
+        statePaused: 'Partida en pausa',
+        statePlaying: 'Partida en marcha',
+        matchingExtraLabel: 'Más tiempo en correspondencias',
+        autoTip: 'Pasa solo a la siguiente pregunta tras los resultados, esperando los segundos indicados. «Manual» = lo decides tú con el botón. Se aplica desde la siguiente pregunta.',
+        scoresTip: 'Muestra u oculta la puntuación y el ranking entre preguntas y el podio final.',
+        matchingExtraTip: 'Tiempo extra (en %) de las preguntas de correspondencia. Se aplica desde la siguiente pregunta.',
         autoManual: 'Manual',
         autoIn: 'Siguiente en {s} s',
         autoPaused: 'Avance pausado',
@@ -150,6 +156,12 @@ var i18n = {
         leftTag: 'Left',
         leftBtn: 'Left',
         autoLabel: 'Automatic advance',
+        statePaused: 'Game paused',
+        statePlaying: 'Game running',
+        matchingExtraLabel: 'Extra time for matching',
+        autoTip: 'Moves on to the next question by itself after the results, waiting the seconds shown. "Manual" = you decide with the button. Applies from the next question.',
+        scoresTip: 'Shows or hides scores and ranking between questions and the final podium.',
+        matchingExtraTip: 'Extra time (in %) for matching questions. Applies from the next question.',
         scoresToggle: 'Scores and ranking',
         autoManual: 'Manual',
         autoIn: 'Next in {s} s',
@@ -216,6 +228,12 @@ var i18n = {
         leftTag: 'Abandonament',
         leftBtn: 'Va abandonar',
         autoLabel: 'Avanç automàtic',
+        statePaused: 'Partida en pausa',
+        statePlaying: 'Partida en marxa',
+        matchingExtraLabel: 'Més temps en correspondències',
+        autoTip: 'Passa sol a la pregunta següent després dels resultats, esperant els segons indicats. «Manual» = ho decidixes tu amb el botó. S\'aplica des de la pregunta següent.',
+        scoresTip: 'Mostra o amaga la puntuació i el rànquing entre preguntes i el podi final.',
+        matchingExtraTip: 'Temps extra (en %) de les preguntes de correspondència. S\'aplica des de la pregunta següent.',
         scoresToggle: 'Puntuacions i rànquing',
         autoManual: 'Manual',
         autoIn: 'Següent en {s} s',
@@ -325,6 +343,11 @@ var app = Vue.createApp({
             cancelGameConfirming: false,
             // Avance automático entre preguntas (servidor): 0 = manual.
             autoAdvanceSec: 0,
+            // Título del quiz y margen de las correspondencias (si el quiz tiene alguna).
+            quizName: '',
+            hasMatching: false,
+            matchingExtraTime: 50,
+            matchingExtraChoices: [25, 50, 75, 100],
             // Puntuaciones y ranking: se puede cambiar en cualquier momento de la partida.
             showScoresToggle: true,
             autoActive: false,
@@ -450,6 +473,9 @@ var app = Vue.createApp({
         },
         emitAutoAdvanceSec: function(){
             socket.emit('setAutoAdvance', { seconds: this.autoAdvanceSec });
+        },
+        emitMatchingExtraTime: function(){
+            socket.emit('setMatchingExtraTime', { percent: this.matchingExtraTime });
         },
         emitShowScores: function(){
             socket.emit('setShowScores', { enabled: !!this.showScoresToggle });
@@ -1210,6 +1236,11 @@ socket.on('updatePlayersAnswered', function(data){
 });
 
 socket.on('gamePin', function(data){
+    if(data){
+        app.quizName = (data.quizName || '').toString();
+        app.hasMatching = !!data.hasMatching;
+        if(data.matchingExtraTime) app.matchingExtraTime = Number(data.matchingExtraTime) || 50;
+    }
     if(data && data.pin){
         setPinBadge(data.pin);
         try{ localStorage.setItem(lastPinKey, data.pin); }catch(e){}

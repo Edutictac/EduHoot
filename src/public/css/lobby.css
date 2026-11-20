@@ -177,6 +177,14 @@ body{
     html.has-account-chip .lobby-card{ padding-top: 56px; }
 }
 
+/* Título del quiz, lo primero de la tarjeta. */
+.lobby-quiz-name{
+    margin: 0 0 10px;
+    font-size: 20px;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
 /* Código de la partida: discreto, encima de la tarjeta de identidad. */
 .lobby-pin{
     margin: 0 0 14px;
