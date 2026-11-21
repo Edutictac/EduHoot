@@ -119,3 +119,40 @@ test('multijugador local: cada jugador empareja en su panel y se revela al final
     await expect(bob.locator('[data-feedback]')).toHaveText('Parcialmente correcto · 1 de 3 parejas');
     await expect(bob.locator('[data-feedback]')).toHaveClass(/\bpartial\b/);
 });
+
+test('Solo: el tiempo de correspondencia suma el % extra elegido (por defecto +50 %)', async ({ page }) => {
+    await mockBackend(page);
+    await page.clock.install();
+    await page.goto('/solo/?id=m1&lang=es');
+    await expect(page.locator('#matching-extra')).toHaveValue('50');
+    await page.locator('#matching-extra').selectOption('100');
+    await page.clock.pauseAt(await page.evaluate(() => Date.now() + 1000));
+    await page.locator('#start-btn').click();
+    await page.clock.runFor(3200);
+    // Pregunta de 30 s con +100 % = 60 s (menos lo ya transcurrido).
+    const left = parseInt((await page.locator('#timer-pill').innerText()).replace(/\D/g, ''), 10);
+    expect(left).toBeGreaterThan(55);
+    expect(left).toBeLessThanOrEqual(60);
+});
+
+test('Solo: opciones de la partida (barajar preguntas, mostrar respuestas) y racha siempre visible', async ({ page }) => {
+    await mockBackend(page);
+    await page.goto('/solo/?id=m1&lang=es');
+    await expect(page.locator('#opt-shuffle-questions')).not.toBeChecked();
+    await expect(page.locator('#opt-show-answers')).toBeChecked();
+    await page.locator('#opt-show-answers').uncheck();
+    await page.clock.install();
+    await page.clock.pauseAt(await page.evaluate(() => Date.now() + 1000));
+    await page.locator('#start-btn').click();
+    await page.clock.runFor(3000);
+    await expect(page.locator('#streak-pill')).toHaveText(/0/);
+    await page.locator('[data-match-left="0"]').click();
+    await page.locator('[data-match-right="0"]').click();
+    await page.locator('[data-match-left="1"]').click();
+    await page.locator('[data-match-right="1"]').click();
+    await page.locator('[data-match-left="2"]').click();
+    await page.locator('[data-match-right="2"]').click();
+    await page.locator('.matching-send').click();
+    await expect(page.locator('#feedback-body')).not.toContainText('→');
+    await expect(page.locator('#feedback-body')).toHaveText('');
+});

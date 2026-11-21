@@ -80,7 +80,7 @@
 .starting-msg{ margin: 8px 0 0; font-weight: 700; color: #fde68a; }
 
 /* Avance automático: desplegable en el lobby (Manual, o de 5 a 20 s). */
-.opt-auto{ display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.opt-auto{ display: flex; align-items: center; justify-content: flex-start; gap: 8px; }
 .opt-auto select{ min-width: 110px; }
 
 /* Tiempo por pregunta: el aviso va justo debajo del campo, en el mismo bloque de la cuadrícula. */

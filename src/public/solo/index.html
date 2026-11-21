@@ -19,7 +19,7 @@
     </head>
     <body>
         <a class="back-link" href="/" data-i18n="back">← Volver</a>
-        <edutictac-account class="site-account site-account--top" data-home-only data-base="https://commons.edutictac.es"></edutictac-account>
+        <edutictac-account class="site-account site-account--fixed" data-base="https://commons.edutictac.es"></edutictac-account>
         <header class="hero">
             <img class="hero__logo" src="/icons/logo.svg" alt="EduHoot logo">
             <div class="hero__text">
@@ -138,6 +138,17 @@
                     <div class="question-count-controls">
                         <input id="question-time" type="number" min="5" max="120" step="1" inputmode="numeric" autocomplete="off" :placeholder="t('questionTimePlaceholder')" :value="s.timeInput" @input="onTimeInput">
                     </div>
+                    <template v-if="hasMatching">
+                        <label for="matching-extra" class="muted">{{ t('matchingExtraLabel') }}</label>
+                        <div class="question-count-controls">
+                            <select id="matching-extra" :value="s.matchingExtraTime" @change="onMatchingExtra">
+                                <option v-for="p in [25, 50, 75, 100]" :key="p" :value="p">+{{ p }} %</option>
+                            </select>
+                        </div>
+                    </template>
+
+                    <label class="solo-check"><input type="checkbox" id="opt-shuffle-questions" v-model="s.shuffleQuestions"> <span>{{ t('optShuffleQuestions') }}</span></label>
+                    <label class="solo-check"><input type="checkbox" id="opt-show-answers" v-model="s.showAnswers"> <span>{{ t('optShowAnswers') }}</span></label>
 
                     <button id="start-btn" class="btn btn-primary" @click="start">{{ t('startButton') }}</button>
                     <p class="muted">{{ t('startHint') }}</p>
@@ -151,7 +162,7 @@
                         <span class="game-progress__stats">
                             <span id="question-progress" class="pill" :aria-label="(s.idx + 1) + ' / ' + s.questions.length">{{ progressText }}</span>
                             <span id="score-pill" class="pill pill-muted">{{ t('score') + ': ' + s.score }}</span>
-                            <span v-if="s.streak > 0" id="streak-pill" class="pill pill-muted">🔥 {{ s.streak }}{{ s.streakBonus > 0 ? ' · +' + s.streakBonus : '' }}</span>
+                            <span id="streak-pill" class="pill pill-muted">🔥 {{ s.streak }}{{ s.streakBonus > 0 ? ' · +' + s.streakBonus : '' }}</span>
                         </span>
                     </div>
                     <!-- Barra de tiempo con los botones de pausa y cancelación a su derecha (sin quitar alto). -->

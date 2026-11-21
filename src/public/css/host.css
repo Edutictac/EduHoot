@@ -228,8 +228,18 @@ body{
     color: #fff;
 }
 .opt-inline{
-    justify-content: space-between;
+    justify-content: flex-start;
 }
+/* Opciones avanzadas: texto, cuadro numérico y «?» en tres columnas, así los cuadros quedan alineados. */
+#host-options .advanced-options label.opt-inline{
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 80px 24px;
+    column-gap: 10px;
+    align-items: center;
+    max-width: 520px;
+}
+#host-options .advanced-options label.opt-inline input{ width: 80px; }
+#host-options .advanced-options label.opt-inline .help{ margin-left: 0; }
 
 .players-list{
     width: 100%;
@@ -399,4 +409,29 @@ body.host-game-embedded > *:not(#host-game-frame){
 .host-top-row edutictac-account.site-account{
     width: max-content !important;
     margin-left: auto !important;
+}
+
+/* Ayuda «?»: se abre con toque, clic o teclado (el tooltip nativo no sale en móvil). */
+.help{ position: relative; display: inline-flex; margin-left: 6px; vertical-align: middle; }
+.help-btn{
+    width: 20px; height: 20px; padding: 0; border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.7); background: transparent; color: #fff;
+    font-size: 12px; font-weight: 800; line-height: 1; cursor: pointer;
+}
+.help-btn[aria-expanded="true"]{ background: #fff; color: #1b1b3a; }
+.help-pop{
+    position: absolute; z-index: 20; left: 50%; bottom: calc(100% + 8px); transform: translateX(-50%);
+    width: min(280px, 70vw); background: #fff; color: #1b1b3a; border-radius: 10px;
+    padding: 10px 12px; font-weight: 500; font-size: 13px; line-height: 1.35; text-align: left;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+}
+
+/* «Opciones avanzadas» con el mismo estilo y color que el título «Opciones de la partida». */
+#host-options .advanced-options > summary{
+    font-size: 0.78em;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #ffee70;
+    cursor: pointer;
 }

@@ -12,6 +12,11 @@ var state = Vue.reactive({
         questions: [],
     desiredQuestionCount: null,
         desiredQuestionTime: null,
+        // Porcentaje extra de tiempo en preguntas de correspondencia (25/50/75/100).
+        matchingExtraTime: 50,
+        // Opciones de la partida: orden de preguntas barajado (no por defecto) y mostrar la respuesta correcta.
+        shuffleQuestions: false,
+        showAnswers: true,
         page: 0,
         pageSize: 12,
         sortOrder: 'plays',

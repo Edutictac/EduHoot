@@ -248,6 +248,22 @@ test('anfitrión: todas las opciones y parámetros del lobby tienen tooltip de a
     expect(sinAyuda).toEqual([]);
 });
 
+test('anfitrión: cada opción tiene un «?» que abre la ayuda y se cierra con Esc', async ({ page }) => {
+    await page.route(/^https:\/\//, route => route.abort());
+    await page.route('**/api/**', route => route.fulfill({ json: {} }));
+    await page.route('**/socket.io/socket.io.js', route => route.fulfill({ contentType: 'application/javascript', body: 'window.io = function(){ var s = { id: "h", connected: false, on: function(){ return s; }, emit: function(){ return s; }, connect: function(){ return s; }, disconnect: function(){ return s; } }; return s; };' }));
+    await page.goto('/host/?lang=es');
+    await page.waitForLoadState('load');
+    await page.locator('#opt-advanced summary').click();
+    const botones = page.locator('#host-options .help-btn');
+    expect(await botones.count()).toBeGreaterThanOrEqual(15);
+    await botones.first().click();
+    await expect(page.locator('#host-options .help-pop')).toHaveCount(1);
+    await expect(page.locator('#host-options .help-pop')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#host-options .help-pop')).toHaveCount(0);
+});
+
 test('portada: el contenido ocupa el ancho disponible con el mismo margen', async ({ page }) => {
     await page.route(/^https:\/\//, route => route.abort());
     await page.route('**/api/**', route => route.fulfill({ json: {} }));

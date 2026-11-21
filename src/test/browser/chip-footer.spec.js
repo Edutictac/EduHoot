@@ -78,7 +78,7 @@ test.describe('xip de compte', () => {
         await expect(page.locator('edutictac-account')).toBeHidden();
     });
 
-    for (const path of ['/join.html', '/player/', '/solo/', '/multiplayer/']) {
+    for (const path of ['/join.html', '/player/', '/multiplayer/']) {
         test(`${path}: alumnat i joc públic només tenen «Inici» i conserven el selector propi`, async ({ page }) => {
             await page.route(/^https:\/\//, route => route.abort());
             await stubBase(page);
@@ -90,4 +90,15 @@ test.describe('xip de compte', () => {
             await expect(page.locator('#lang-switcher, .lang-switch').first()).toBeVisible();
         });
     }
+
+    test('/solo/: chip completo de la cuenta; el selector de idioma lo lleva el chip', async ({ page }) => {
+        await page.route(/^https:\/\//, route => route.abort());
+        await stubBase(page);
+        await stubCommons(page);
+        await page.goto('/solo/');
+
+        await expect(page.locator('edutictac-account')).not.toHaveAttribute('data-home-only', /.*/);
+        await expect(page.locator('html')).not.toHaveClass(/account-home-only/);
+        await expect(page.locator('.hero__lang .lang-switch')).toBeHidden();
+    });
 });

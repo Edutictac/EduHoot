@@ -235,6 +235,8 @@ var lobby = Vue.createApp({
     data: function(){
         return {
             lang: getHostLobbyLang(),
+            // Clave de la ayuda «?» abierta (null = ninguna).
+            helpOpen: null,
             pin: '',
             players: [],
             // Alumno pendiente de confirmar la expulsión (dos pasos, issue #29).
@@ -312,6 +314,7 @@ var lobby = Vue.createApp({
         }
     },
     methods: {
+        toggleHelp: function(key){ this.helpOpen = (this.helpOpen === key) ? null : key; },
         // Expulsión en dos pasos: el primer toque pide confirmación durante unos segundos.
         askKick: function(player){
             this.pendingKickId = player.playerId;
@@ -566,6 +569,14 @@ function openEmbeddedHostGame(url){
         return false;
     }
 }
+
+// La ayuda «?» se cierra al pulsar fuera o con Esc.
+document.addEventListener('click', function(e){
+    if(lobby.helpOpen && !e.target.closest('.help')){ lobby.helpOpen = null; }
+});
+document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape' && lobby.helpOpen){ lobby.helpOpen = null; }
+});
 
 // Precarga del gong al cargar la portada
 initHostLobbyGong();

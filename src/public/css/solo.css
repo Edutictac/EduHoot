@@ -1285,3 +1285,7 @@ body.playing #answers > .free-answer-row{ grid-column: 1 / -1; }
     overflow-wrap: anywhere;
     min-width: 0;
 }
+
+/* Opciones de la partida en Solo: casillas a 20 px, como en la pantalla del anfitrión. */
+.solo-check{ display: flex; align-items: center; gap: 8px; margin: 8px 0; font-weight: 600; cursor: pointer; }
+.solo-check input{ width: 20px; height: 20px; flex: none; margin: 0; cursor: pointer; accent-color: #ffee70; }

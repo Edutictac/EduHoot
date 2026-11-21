@@ -14,7 +14,7 @@ function startQuiz(){
         state.locked = false;
         var desiredCount = getDesiredQuestionCount();
         state.desiredQuestionCount = desiredCount;
-        var randomized = randomizeQuestions(state.quizData.questions || []);
+        var randomized = randomizeQuestions(state.quizData.questions || [], state.shuffleQuestions);
         if(desiredCount > 0 && desiredCount < randomized.length){
             state.questions = randomized.slice(0, desiredCount);
         }else{
@@ -47,7 +47,12 @@ function startQuiz(){
         var time = (typeof state.desiredQuestionTime === 'number' && state.desiredQuestionTime > 0)
             ? state.desiredQuestionTime
             : ((typeof q.time === 'number' && q.time > 0) ? q.time : 20);
-        state.timerTotal = Math.max(5, Math.min(120, time));
+        time = Math.max(5, Math.min(120, time));
+        // Correspondencia: más margen (+25/50/75/100 %), elegido por el alumno.
+        if(meta.type === 'matching'){
+            time = Math.round(time * (1 + (state.matchingExtraTime || 0) / 100));
+        }
+        state.timerTotal = time;
         state.timerLeft = state.timerTotal;
         // Compte arrere 3-2-1 (com en «Jugar a l'aula»): la pregunta, les
         // respostes i el temporitzador no comencen fins que acaba.
@@ -204,7 +209,7 @@ function startQuiz(){
     }
 
     function startTimer(seconds){
-        state.timerTotal = Math.max(5, Math.min(120, seconds));
+        state.timerTotal = Math.max(5, Math.min(240, seconds));
         state.timerLeft = state.timerTotal;
         if(state.timer) clearInterval(state.timer);
         state.timer = setInterval(function(){
@@ -375,7 +380,7 @@ function startQuiz(){
             }
 
             state.marks = {
-                correct: correctList.slice(),
+                correct: state.showAnswers ? correctList.slice() : [],
                 wrong: meta.type === 'poll' ? [] : selected.filter(function(n){ return correctList.indexOf(n) === -1; })
             };
 
@@ -430,6 +435,11 @@ function startQuiz(){
                     : t('wrongText'),
                 kind: 'error'
             };
+        }
+        // «Mostrar respuestas» desmarcado: no se revela cuál era la correcta.
+        if(!state.showAnswers && state.feedback.kind === 'error'){
+            state.feedback = { text: t('wrongText'), kind: 'error' };
+            correctAnswerText = '';
         }
         state.multiSelections = [];
         state.lastWrong = null;
@@ -501,6 +511,10 @@ var soloPlay = {
             return this.meta.type === 'short-answer' || this.meta.type === 'numeric';
         },
         // Correspondencia: el tablero se ve mientras se puede responder.
+        hasMatching: function(){
+            return (this.s.quizData && Array.isArray(this.s.quizData.questions) ? this.s.quizData.questions : [])
+                .some(function(q){ return q && q.type === 'matching'; });
+        },
         showMatching: function(){
             return this.meta.type === 'matching' && !this.s.locked && !(this.s.countdown > 0);
         },
@@ -552,6 +566,8 @@ var soloPlay = {
         feedbackBody: function(){
             var label = this.t('correctLabel');
             var text = this.s.lastWrong ? (this.s.lastWrong.correctText || '') : '';
+            // Sin respuesta que mostrar («Mostrar respuestas» desmarcado), tampoco la etiqueta.
+            if(!text) return '';
             return (label === 'correctLabel' ? '' : label + ' ') + text;
         }
     },
@@ -604,6 +620,9 @@ var soloPlay = {
             if(v == null) return;
             this.s.timeInput = ev.target.value = String(v);
             this.s.desiredQuestionTime = v;
+        },
+        onMatchingExtra: function(ev){
+            this.s.matchingExtraTime = parseInt(ev.target.value, 10) || 50;
         },
         onNameInput: function(ev){
             this.s.nameInput = ev.target.value = normalizeName(ev.target.value);

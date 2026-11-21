@@ -169,8 +169,8 @@
     margin: 0;
     padding: 12px 22px;
     border-radius: 14px;
-    color: #14101f;
-    background: #fff;
+    color: #1f1300;
+    background: linear-gradient(135deg, #fb923c, #f97316);
 }
 .matching-send:disabled{
     color: #fff;

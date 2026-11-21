@@ -253,9 +253,10 @@
         };
     }
 
-    function randomizeQuestions(baseQuestions){
+    // Las respuestas se barajan siempre; el orden de las preguntas solo si se pide.
+    function randomizeQuestions(baseQuestions, shuffleOrder){
         var source = Array.isArray(baseQuestions) ? baseQuestions : [];
-        var shuffledOrder = shuffleArray(source);
+        var shuffledOrder = shuffleOrder ? shuffleArray(source) : source.slice();
         return shuffledOrder.map(function(q){ return randomizeOneQuestion(q); });
     }
 

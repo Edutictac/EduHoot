@@ -46,7 +46,7 @@ function emitsNamed(page, name) {
 test('anfitrión: las opciones avanzadas están plegadas y tienen valores normales', async ({ page }) => {
     await openHost(page);
     await expect(page.locator('#opt-advanced')).not.toHaveAttribute('open', /.*/);
-    await expect(page.locator('#opt-advanced summary')).toHaveText('Opciones avanzadas');
+    await expect(page.locator('#opt-advanced summary')).toHaveText(/^Opciones avanzadas/);
     await expect(page.locator('#opt-t-inactivity')).toHaveValue('');
 });
 
