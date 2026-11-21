@@ -88,7 +88,7 @@ test('doble respuesta rechazada; el anfitrión recibe progreso sin puntos', () =
   t.send(a, 'spAnswer', 2);
   assert.equal(last(a, 'answerRejected').args[0].reason, 'already-answered');
   const prog = t.log.filter((l) => l.ev === 'spProgress' && l.room === 'host').pop().a[0];
-  assert.deepEqual(prog[0], { name: 'Ana', icon: '', question: 1, total: 2, answered: 1, finished: false });
+  assert.deepEqual(prog[0], { playerId: 'a', name: 'Ana', icon: '', question: 1, total: 2, answered: 1, finished: false });
   function last(s, e) { return t.last(s, e); }
 });
 
@@ -141,7 +141,8 @@ test('reconexión: se retoma la pregunta en curso, la respondida o el final', ()
   const a = t.connect('a', 'Ana');
   const player = t.players.getPlayer('a');
   t.ev.resume(a, t.game, player);
-  assert.equal(a.emitted.length, 0);
+  assert.equal(a.emitted.length, 1);
+  assert.equal(a.emitted[0].event, 'spIdle');
   t.send(a, 'spNext');
   t.ev.resume(a, t.game, player);
   assert.equal(t.last(a, 'spQuestion').args[0].question, 'a');

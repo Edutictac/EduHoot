@@ -1,0 +1,8 @@
+/* Pantalla del alumnado en el modo autoritme. Reutiliza playerGameView.css; aquí, solo lo propio. */
+.sp-progress{ opacity: 0.85; }
+.sp-result{ display: flex; flex-direction: column; align-items: center; gap: 12px; margin: 12px auto; max-width: 560px; }
+.sp-result__points{ font-size: 1.4em; font-weight: 800; margin: 0; }
+.sp-next{ min-width: 220px; min-height: 54px; padding: 12px 22px; border-radius: 14px; color: #14101f; background: #fff; font-weight: 800; }
+.sp-done{ text-align: center; max-width: 560px; margin: 24px auto; }
+.sp-done__line{ font-size: 1.3em; font-weight: 700; margin: 8px 0; }
+.sp-done__hint{ opacity: 0.85; margin-top: 16px; }

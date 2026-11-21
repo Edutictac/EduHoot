@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Game | EduHoot</title>
+        <link rel="stylesheet" href="/css/answers.css">
+        <link rel="stylesheet" href="/css/matching.css">
+        <link rel="stylesheet" href="../../css/playerGameView.css">
+        <link rel="stylesheet" href="../../css/playerLiveStatus.css">
+        <link rel="stylesheet" href="../../css/playerSelfPaced.css">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link href="/css/fonts.css" rel="stylesheet">
+        <link rel="stylesheet" href="/css/page-fit.css">
+    </head>
+    <body>
+        <!-- Modo autoritme (feature 3): cada alumno avanza a su ritmo. Pantalla propia, separada de
+             /player/game/ (partida en vivo); comparte con ella estilos, el tablero de correspondencia
+             y las piezas de js/playerCommon.js. -->
+        <div id="player-sp"></div>
+        <template id="player-sp-tpl">
+            <p id="quizNameText" class="quiz-name-text" v-if="quizName">{{ quizName }}</p>
+            <div id="stats">
+                <h4 id="nameText">{{ nameDisplay }}</h4>
+                <h4 id="scoreText">{{ scoreDisplay }}</h4>
+                <h4 id="streakText" class="streak-text" v-show="streak > 0">🔥 {{ streak }}</h4>
+                <h4 id="progressText" class="sp-progress" v-if="questionNumber > 0 && !done">{{ progressText }}</h4>
+            </div>
+
+            <!-- Resumen final -->
+            <section id="spDone" class="sp-done" v-if="done">
+                <h2>{{ t('sp_done_title') }}</h2>
+                <p class="sp-done__line">{{ fmt('sp_done_score', { n: summary.score }) }}</p>
+                <p class="sp-done__line">{{ fmt('sp_done_correct', { c: summary.correctCount, t: summary.total }) }}</p>
+                <p class="sp-done__line" v-if="summary.bestStreak > 1">{{ fmt('sp_done_streak', { n: summary.bestStreak }) }}</p>
+                <p class="sp-done__line" v-if="summary.rank">{{ fmt('sp_done_rank', { r: summary.rank, p: summary.players }) }}</p>
+                <p class="sp-done__hint">{{ closed ? t('sp_closed') : t('sp_done_wait') }}</p>
+            </section>
+
+            <template v-else>
+                <h3 id="questionText" v-html="questionHtml"></h3>
+                <div id="playerStatusRow" v-show="state === 'question'">
+                    <div class="tts-timer-wrap">
+                        <div id="playerTimer" class="game-timer">
+                            <div id="playerTimerFill" class="game-timer__fill" :style="{ width: timerPct + '%', background: timerColor }"></div>
+                            <span id="playerTimerText" class="game-timer__text">{{ timerText }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div id="playerImageWrap">
+                    <img id="playerQuestionImage" alt="">
+                    <video id="playerQuestionVideo" controls></video>
+                    <iframe id="playerQuestionIframe" allowfullscreen loading="lazy"></iframe>
+                </div>
+
+                <!-- Resultado de la pregunta -->
+                <div id="spResult" class="sp-result" v-if="state === 'result'">
+                    <h2 id="message" :class="'message--' + result.kind">{{ result.message }}<span v-if="result.detailHtml" class="player-correct-answer" v-html="result.detailHtml"></span></h2>
+                    <p id="spPoints" class="sp-result__points" v-if="result.points > 0">{{ fmt('sp_points_gained', { n: result.points + result.bonus }) }}</p>
+                    <button type="button" id="spNextBtn" class="button sp-next" @click="next">{{ isLast ? t('sp_finish') : t('sp_next') }}</button>
+                </div>
+                <h2 id="message" v-else-if="message" class="message--info">{{ message }}</h2>
+
+                <template v-if="state === 'question'">
+                    <div id="freeSubmitRow" :style="{ display: freeAnswerType ? 'flex' : 'none' }">
+                        <input id="freeAnswerInput" ref="freeAnswerInput" type="text" autocomplete="off" :inputmode="questionType === 'numeric' ? 'decimal' : 'text'" :placeholder="freePlaceholder" v-model="freeAnswerValue" @keydown.enter.prevent="submitFree" />
+                        <button type="button" id="freeSubmitBtn" class="button free-submit" @click="submitFree">{{ t('submit_free') }}</button>
+                    </div>
+                    <matching-board v-if="questionType === 'matching'" :key="'match-' + matchKey" :left="matchLeft" :right="matchRight" :left-count="matchLeftCount" :right-count="matchRightCount" :blind-style="matchBlindStyle" :t="t" @submit="submitMatching"></matching-board>
+                    <div id="answerGrid" class="answer-grid">
+                        <button v-for="i in 4" :key="i" :id="'answer' + i" class="button answer-shape" :class="['answer-shape--' + i, { 'multi-selected': multiSelections.indexOf(i) !== -1 }]" v-show="buttonVisible(i - 1)" v-html="buttonHtml(i - 1)" @click="onAnswerClick(i)"></button>
+                    </div>
+                    <div id="multiSubmitRow" :style="{ display: questionType === 'multiple' ? 'flex' : 'none' }">
+                        <button type="button" id="multiSubmitBtn" class="button multi-submit" @click="submitMulti">{{ t('submit_multiple') }}</button>
+                    </div>
+                </template>
+                <!-- Respondida y sin resultado a la vista (p. ej. tras reconectar) -->
+                <div class="sp-result" v-if="state === 'answered'">
+                    <h2 class="message--info">{{ t('status_submitted') }}</h2>
+                    <button type="button" id="spNextBtn" class="button sp-next" @click="next">{{ isLast ? t('sp_finish') : t('sp_next') }}</button>
+                </div>
+            </template>
+            <button type="button" id="leaveGameBtn" class="leave-game-btn" :class="{ 'is-confirming': leaveConfirming }" @click="askLeave">{{ leaveConfirming ? t('lobby_leave_confirm') : t('lobby_leave') }}</button>
+        </template>
+        <div id="lang-switcher" data-lang-buttons></div>
+        <script src="/js/languages.js"></script>
+        <script src="/js/env-badge.js"></script>
+        <script src="../../js/i18n-player.js"></script>
+        <script src="../../js/viewport-fit.js"></script>
+        <script src="../../socket.io/socket.io.js"></script>
+        <script src="../../js/libs/jqueryLibrary.js"></script>
+        <script src="../../js/libs/deparam.js"></script>
+        <script src="../../js/libs/vue.global.prod.js"></script>
+        <script src="../../js/matchingBoard.js"></script>
+        <script src="../../js/playerCommon.js"></script>
+        <script src="../../js/playerSelfPaced.js"></script>
+    </body>
+</html>

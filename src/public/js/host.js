@@ -266,6 +266,8 @@ var lobby = Vue.createApp({
                 streak: true,
                 // Avance automático entre preguntas: 0 = manual; 3–20 s.
                 autoAdvanceSec: 0,
+                // Modo de la partida: 'live' (en directo) o 'selfPaced' (cada alumno a su ritmo).
+                mode: 'live',
                 // Correspondencia a ciegas: codes (toques, por defecto), select o steps.
                 matchingBlindStyle: 'codes',
                 // Más tiempo en las correspondencias: 25, 50, 75 o 100 % (por defecto, 50 %).
@@ -475,6 +477,7 @@ function startGame(){
         showCorrectAnswers: !!options.showCorrectAnswers,
         streak: !!options.streak,
         autoAdvanceSec: parseInt(options.autoAdvanceSec, 10) || 0,
+        mode: options.mode === 'selfPaced' ? 'selfPaced' : 'live',
         pin: (function(){
             try{
                 return (params && params.pin) || localStorage.getItem(lastPinKey) || '';
@@ -531,8 +534,10 @@ socket.on('gameStarted', function(id){
     try{ pin = localStorage.getItem(lastPinKey); }catch(e){}
     var qs = '?id=' + encodeURIComponent(id);
     if(pin) qs += '&pin=' + encodeURIComponent(pin);
-    if(!openEmbeddedHostGame("/host/game/" + qs)){
-        window.location.href="/host/game/" + qs;
+    // Autoritme: pantalla propia del anfitrión (progreso por alumno).
+    var gameUrl = (lobby.options.mode === 'selfPaced' ? "/host/self-paced/" : "/host/game/") + qs;
+    if(!openEmbeddedHostGame(gameUrl)){
+        window.location.href = gameUrl;
     }
 });
 

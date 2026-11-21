@@ -1,0 +1,25 @@
+/* Pantalla del anfitrión en el modo autoritme: lista de progreso por alumno. */
+.sp-summary{ text-align: center; margin: 8px 0; }
+.sp-empty{ text-align: center; opacity: 0.8; }
+.sp-list{ list-style: none; margin: 12px auto; padding: 0; max-width: 960px; display: grid; gap: 8px; }
+.sp-row{ display: grid; grid-template-columns: 32px minmax(90px, 220px) 1fr 80px auto; gap: 10px; align-items: center;
+    padding: 8px 12px; border-radius: 12px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); }
+.sp-row.is-finished{ background: rgba(34,197,94,0.22); }
+.sp-row__icon{ font-size: 22px; text-align: center; }
+.sp-row__name{ font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sp-row__bar{ height: 12px; border-radius: 999px; background: rgba(255,255,255,0.2); overflow: hidden; }
+.sp-row__fill{ display: block; height: 100%; background: linear-gradient(135deg, #22c55e, #16a34a); transition: width .3s; }
+.sp-row__count{ text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+.sp-podium{ text-align: center; margin-top: 16px; }
+@media (max-width: 600px){
+    .sp-row{ grid-template-columns: 28px 1fr 64px auto; }
+    .sp-row__bar{ grid-column: 1 / -1; order: 5; }
+}
+
+/* Botones propios (hostGameView.css oculta por id los de la partida en vivo). */
+.sp-btn{ display: inline-block; padding: 12px 22px; border-radius: 14px; border: 1px solid var(--card-stroke, rgba(255,255,255,0.3));
+    background: rgba(15,23,42,0.8); color: var(--text-main, #fff); font-weight: 700; cursor: pointer; }
+.sp-btn--end{ background: rgba(218,68,83,0.22); }
+.sp-btn--end.is-confirming{ background: #da4453; border-color: #da4453; color: #fff; }
+.sp-btn--report{ background: rgba(16,185,129,0.22); }
+.sp-btn:hover{ filter: brightness(1.1); }

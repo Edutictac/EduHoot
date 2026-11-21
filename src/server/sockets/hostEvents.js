@@ -155,6 +155,20 @@ module.exports = function createHostEvents({
             return;
           }
 
+          // Autoritme: no hay pregunta común; el anfitrión solo vuelve a ver el progreso.
+          if (game.gameData.options && game.gameData.options.mode === 'selfPaced') {
+            socket.emit('gamePin', {
+              pin: game.pin,
+              quizName: game.gameData.quizName || '',
+              hasMatching: false,
+              matchingExtraTime: normalizeMatchingExtraTime(game.gameData.options.matchingExtraTime)
+            });
+            socket.emit('hostSession', { hostId: game.hostId, pin: game.pin });
+            io.to(game.pin).emit('hostReconnected');
+            selfPaced.emitProgress(game);
+            if (game.gameData.selfPacedEnded) socket.emit('GameOver', selfPaced.podiumOf(game));
+            return;
+          }
           const currentIdx = Math.max(0, Math.min((game.gameData.question || 1) - 1, kahootQuestions.length - 1));
           const currentQuestion = kahootQuestions[currentIdx];
           const countdownRemaining = game.gameData.questionPending
@@ -205,7 +219,7 @@ module.exports = function createHostEvents({
           socket.emit('noGameFound');
         }
 
-        io.to(game.pin).emit('gameStartedPlayer');
+        io.to(game.pin).emit('gameStartedPlayer', { mode: (game.gameData.options && game.gameData.options.mode) || 'live' });
       } else {
         socket.emit('noGameFound');
       }
@@ -474,7 +488,7 @@ module.exports = function createHostEvents({
       game.gameOver = false;
       logger.info('Partida iniciada', { tag: 'game-start', pin: game.pin, hostId: game.hostId, playersCount: gamePlayers.length, questionsCount: game.gameData.questions.length });
       scheduleGameCleanup(socket.id, timingsFor(socket.id).inactivityMs);
-      io.to(game.pin).emit('gameStartedPlayer');
+      io.to(game.pin).emit('gameStartedPlayer', { mode: options.mode });
       socket.emit('gameStarted', game.hostId);
       // Autoritme: no hay pregunta común; cada alumno pide la suya.
       if (options.mode === 'selfPaced') {

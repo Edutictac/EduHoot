@@ -19,6 +19,15 @@ fitxers corresponents, i els originals es van eliminar.
 ## [Sense publicar]
 
 ### Afegit
+- **Mode autoritme** (feature 3) en «Jugar a l'aula»: en el lobby l'amfitrió
+  tria «Al seu ritme» i cada alumne respon en el seu dispositiu, amb el seu
+  propi rellotge, sense «Pregunta següent». El servidor porta l'estat i la
+  puntuació de cada alumne (`services/selfPaced.js`,
+  `sockets/selfPacedEvents.js`). Pantalles pròpies: `/player/self-paced/`
+  (alumnat) i `/host/self-paced/` (progrés per alumne, expulsar i «Acabar
+  partida» amb podi i informe CSV). Sense rànquing en viu; qui entra tard
+  comença en la primera pregunta. Peces comunes de l'alumnat en
+  `js/playerCommon.js`. Per defecte continua el mode en directe.
 - Nou tipus de pregunta **correspondència** (`matching`, feature 7,
   «emparellar»): fins a 8 elements entre parelles i impostores (només a la
   dreta). Puntuació parcial i proporcional, sense penalització. Funciona en

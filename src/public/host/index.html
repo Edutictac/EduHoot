@@ -61,12 +61,17 @@
                 <!-- Grupo 2: ajustes que se eligen de una lista o se escriben. -->
                 <div class="opt-group opt-group--values" role="group" aria-labelledby="opt-group-values-title">
                     <h3 id="opt-group-values-title" class="opt-group__title">{{ t('opt_group_values') }}</h3>
+                    <label class="opt-auto" :title="t('tip_mode')"><span>{{ t('opt_mode') }}</span>
+                        <select id="opt-mode" v-model="options.mode">
+                            <option value="live">{{ t('opt_mode_live') }}</option>
+                            <option value="selfPaced">{{ t('opt_mode_self') }}</option>
+                        </select><span class="help"><button type="button" class="help-btn" :aria-expanded="helpOpen==='mode' ? 'true' : 'false'" :aria-label="t('help_aria')" @click.prevent.stop="toggleHelp('mode')">?</button><span v-if="helpOpen==='mode'" class="help-pop" role="note">{{ t('tip_mode') }}</span></span></label>
                     <fieldset id="opt-name-mode" class="name-mode" :title="t('tip_name_mode')">
                         <legend>{{ t('opt_name_mode') }} <span class="help"><button type="button" class="help-btn" :aria-expanded="helpOpen==='name_mode' ? 'true' : 'false'" :aria-label="t('help_aria')" @click.prevent.stop="toggleHelp('name_mode')">?</button><span v-if="helpOpen==='name_mode'" class="help-pop" role="note">{{ t('tip_name_mode') }}</span></span></legend>
                         <label :title="t('tip_name_typed')"><input type="radio" name="name-mode" value="typed" v-model="options.nameMode" :disabled="nameModeLocked" @change="emitNameMode"> <span>{{ t('opt_name_typed') }}</span><span class="help"><button type="button" class="help-btn" :aria-expanded="helpOpen==='name_typed' ? 'true' : 'false'" :aria-label="t('help_aria')" @click.prevent.stop="toggleHelp('name_typed')">?</button><span v-if="helpOpen==='name_typed'" class="help-pop" role="note">{{ t('tip_name_typed') }}</span></span></label>
                         <label :title="t('tip_name_random')"><input type="radio" name="name-mode" value="random" v-model="options.nameMode" :disabled="nameModeLocked" @change="emitNameMode"> <span>{{ t('opt_name_random') }}</span><span class="help"><button type="button" class="help-btn" :aria-expanded="helpOpen==='name_random' ? 'true' : 'false'" :aria-label="t('help_aria')" @click.prevent.stop="toggleHelp('name_random')">?</button><span v-if="helpOpen==='name_random'" class="help-pop" role="note">{{ t('tip_name_random') }}</span></span></label>
                     </fieldset>
-                    <label class="opt-auto" :title="t('tip_auto')"><span>{{ t('opt_auto') }}</span>
+                    <label v-if="options.mode !== 'selfPaced'" class="opt-auto" :title="t('tip_auto')"><span>{{ t('opt_auto') }}</span>
                         <select id="opt-auto" v-model.number="options.autoAdvanceSec">
                             <option :value="0">{{ t('opt_auto_manual') }}</option>
                             <option v-for="n in autoAdvanceChoices" :key="n" :value="n">{{ n }} s</option>

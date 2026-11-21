@@ -258,9 +258,11 @@ socket.on('hostReconnected', function(){
 });
 
 //When the host clicks start game, the player screen changes
-socket.on('gameStartedPlayer', function(){
+socket.on('gameStartedPlayer', function(data){
     var params = jQuery.deparam(window.location.search);
-    var url = "/player/game/?id=" + socket.id;
+    // Autoritme: pantalla propia, cada alumno avanza a su ritmo.
+    var page = (data && data.mode === 'selfPaced') ? '/player/self-paced/' : '/player/game/';
+    var url = page + "?id=" + socket.id;
     if(params.pin) url += "&pin=" + encodeURIComponent(params.pin);
     if(params.token) url += "&token=" + encodeURIComponent(params.token);
     if(params.name) url += "&name=" + encodeURIComponent(params.name);

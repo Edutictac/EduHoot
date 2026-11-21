@@ -78,7 +78,7 @@ module.exports = function createPlayerEvents({
         socket.emit('playerJoinAck', { ok: true, pin: game.pin, hostId, quizName: quizNameOf(game) });
         if (ackExtra) socket.emit(ackExtra.event, ackExtra.payload);
         if (game.gameLive) {
-          socket.emit('gameStartedPlayer');
+          socket.emit('gameStartedPlayer', { mode: (game.gameData && game.gameData.options && game.gameData.options.mode) || 'live' });
         }
       };
 

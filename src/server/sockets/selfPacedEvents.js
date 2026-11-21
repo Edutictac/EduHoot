@@ -31,7 +31,7 @@ module.exports = function createSelfPacedEvents({
 
   // Lo que ve el anfitrión: avance por alumno, sin puntos (no hay ranking en vivo).
   function progressList(game) {
-    return players.getPlayers(game.hostId).map((p) => Object.assign({ name: p.name, icon: p.icon || '' }, sp.progressOf(game, p)));
+    return players.getPlayers(game.hostId).map((p) => Object.assign({ playerId: p.playerId, name: p.name, icon: p.icon || '' }, sp.progressOf(game, p)));
   }
   function emitProgress(game) {
     io.to(game.hostId).emit('spProgress', progressList(game));
@@ -85,7 +85,7 @@ module.exports = function createSelfPacedEvents({
     const now = Date.now();
     const state = sp.ensureState(player);
     if (state.finished) { socket.emit('spFinished', finishedPayload(game, player)); return; }
-    if (state.index === 0) return; // aún no ha pedido la primera pregunta
+    if (state.index === 0) { socket.emit('spIdle'); return; } // aún no ha pedido la primera pregunta
     if (!state.answered && sp.remainingMs(game, player, now) === 0 && sp.expireQuestion(game, player, now)) {
       emitProgress(game);
     }
@@ -111,20 +111,26 @@ module.exports = function createSelfPacedEvents({
     };
   }
 
+  // Cinco primeros (solo quien tiene puntos) y si se muestra el podio.
+  function podiumOf(game) {
+    const top = players.getPlayers(game.hostId).slice().sort((a, b) => b.gameData.score - a.gameData.score).slice(0, 5);
+    const name = (i) => (top[i] && top[i].gameData.score > 0 ? top[i].name : '');
+    return {
+      num1: name(0), num2: name(1), num3: name(2), num4: name(3), num5: name(4),
+      showPodium: game.gameData.options ? game.gameData.options.showScoresBetween !== false : true
+    };
+  }
+
   async function finishGame(game) {
     if (game.gameOver) return;
     const playersInGame = players.getPlayers(game.hostId);
     playersInGame.forEach((p) => sp.finishPlayer(p));
-    const top = playersInGame.slice().sort((a, b) => b.gameData.score - a.gameData.score).slice(0, 5);
-    const name = (i) => (top[i] && top[i].gameData.score > 0 ? top[i].name : '');
     game.gameLive = false;
     game.gameOver = true;
+    game.gameData.selfPacedEnded = true;
     // Cada alumno recibe su resumen; después, el cierre general (podio) para quien lo muestra.
     playersInGame.forEach((p) => io.to(p.playerId).emit('spFinished', finishedPayload(game, p)));
-    io.to(game.pin).emit('GameOver', {
-      num1: name(0), num2: name(1), num3: name(2), num4: name(3), num5: name(4),
-      showPodium: game.gameData.options ? game.gameData.options.showScoresBetween !== false : true
-    });
+    io.to(game.pin).emit('GameOver', podiumOf(game));
     emitProgress(game);
     logger.info('Partida autoritme finalitzada', { tag: 'game-end', pin: game.pin, hostId: game.hostId, playersCount: playersInGame.length });
     cacheFinishedSessionReport(game, playersInGame);
@@ -192,5 +198,5 @@ module.exports = function createSelfPacedEvents({
     });
   }
 
-  return { register, resume, emitProgress, startPlayers: (game) => players.getPlayers(game.hostId).forEach((p) => { delete p.gameData.sp; }) };
+  return { register, resume, emitProgress, podiumOf, startPlayers: (game) => players.getPlayers(game.hostId).forEach((p) => { delete p.gameData.sp; }) };
 };
