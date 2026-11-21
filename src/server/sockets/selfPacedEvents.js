@@ -6,9 +6,8 @@
 // Anfitrión → servidor: spProgressRequest, spEnd
 // Servidor → anfitrión: spProgress
 const sp = require('../services/selfPaced');
+const payloads = require('../services/selfPacedPayloads');
 const { getQuestionMeta, normalizeSubmission } = require('../questionUtils');
-const { studentMetaOf } = require('../services/showAnswers');
-const { questionTimeOf } = require('../services/scoring');
 const { logger } = require('../logger');
 
 module.exports = function createSelfPacedEvents({
@@ -57,41 +56,14 @@ module.exports = function createSelfPacedEvents({
     io.to(game.hostId).emit('spProgress', progressList(game));
   }
 
-  function questionPayload(game, player, now) {
-    const q = sp.currentQuestion(game, player);
-    const state = sp.ensureState(player);
-    const meta = getQuestionMeta(q);
-    const full = {
-      question: q.question,
-      answers: [0, 1, 2, 3].map((i) => (Array.isArray(q.answers) ? q.answers[i] : undefined)),
-      type: meta.type,
-      image: q.image || '',
-      video: q.video || '',
-      pointsMultiplier: Number(q.pointsMultiplier) > 1 ? 2 : 1,
-      time: Math.ceil(sp.remainingMs(game, player, now) / 1000),
-      ...(meta.type === 'matching' ? { matchLeft: meta.matchLeft, matchRight: meta.matchRight } : {})
-    };
-    return {
-      ...buildStudentPlayerPayload(full, game.gameData.options),
-      questionNumber: state.index,
-      totalQuestions: sp.progressOf(game, player).total,
-      timeTotal: questionTimeOf(game.gameData, q),
-      hand: !!state.hand
-    };
-  }
+  const questionPayload = (game, player, now) => payloads.questionPayload(game, player, now, buildStudentPlayerPayload);
 
   function finishedPayload(game, player) {
-    const ranking = players.getPlayers(game.hostId).slice().sort((a, b) => b.gameData.score - a.gameData.score);
-    const rank = ranking.findIndex((p) => p === player) + 1;
-    const showScores = showScoresOf(game);
+    const ranking = players.getPlayers(game.hostId).slice().sort((x, y) => y.gameData.score - x.gameData.score);
+    // Ranking solo al final y solo si el anfitrión muestra puntuaciones.
     return {
-      score: player.gameData.score,
-      correctCount: player.gameData.correctCount || 0,
-      wrongCount: player.gameData.wrongCount || 0,
-      bestStreak: player.gameData.bestStreak || 0,
-      total: game.gameData.scoredQuestionsCount || 0,
-      // Ranking solo al final y solo si el anfitrión muestra puntuaciones.
-      ...(showScores ? { rank, players: ranking.length } : {})
+      ...payloads.finishedPayload(game, player),
+      ...(showScoresOf(game) ? { rank: ranking.findIndex((p) => p === player) + 1, players: ranking.length } : {})
     };
   }
 
@@ -115,22 +87,7 @@ module.exports = function createSelfPacedEvents({
   }
 
   function resultPayload(game, player, res) {
-    const q = sp.currentQuestion(game, player);
-    const meta = getQuestionMeta(q);
-    const state = sp.ensureState(player);
-    return {
-      outcome: res.outcome,
-      ratio: res.scoreRatio,
-      points: res.points,
-      bonus: res.bonus,
-      streak: Number(player.gameData.streak) || 0,
-      score: player.gameData.score,
-      questionNumber: state.index,
-      totalQuestions: sp.progressOf(game, player).total,
-      // Respuesta correcta solo si «Mostrar respuestas» está activado.
-      meta: studentMetaOf(game, meta),
-      ...(showScoresOf(game) ? rankingFor(game, player) : {})
-    };
+    return { ...payloads.resultPayload(game, player, res), ...(showScoresOf(game) ? rankingFor(game, player) : {}) };
   }
 
   // Cinco primeros (solo quien tiene puntos) y si se muestra el podio.

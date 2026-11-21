@@ -7,7 +7,9 @@ const {
   RATINGS_COLLECTION,
   RATING_VOTES_COLLECTION,
   LOGS_COLLECTION,
-  SETTINGS_COLLECTION
+  SETTINGS_COLLECTION,
+  HOMEWORK_COLLECTION,
+  HOMEWORK_ATTEMPTS_COLLECTION
 } = require('./db');
 
 async function getGamesCollection() {
@@ -50,7 +52,19 @@ async function getSettingsCollection() {
   return database.collection(SETTINGS_COLLECTION);
 }
 
+async function getHomeworksCollection() {
+  const database = await getDb();
+  return database.collection(HOMEWORK_COLLECTION);
+}
+
+async function getHomeworkAttemptsCollection() {
+  const database = await getDb();
+  return database.collection(HOMEWORK_ATTEMPTS_COLLECTION);
+}
+
 module.exports = {
+  getHomeworksCollection,
+  getHomeworkAttemptsCollection,
   getGamesCollection,
   getUsersCollection,
   getSoloScoresCollection,

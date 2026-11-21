@@ -12,6 +12,8 @@ const RATINGS_COLLECTION = 'quizRatings';
 const RATING_VOTES_COLLECTION = 'quizRatingVotes';
 const LOGS_COLLECTION = 'appLogs';
 const SETTINGS_COLLECTION = 'appSettings';
+const HOMEWORK_COLLECTION = 'homeworks';
+const HOMEWORK_ATTEMPTS_COLLECTION = 'homeworkAttempts';
 const DEFAULT_LOGS_CAPPED_SIZE_BYTES = 10 * 1024 * 1024; // 10MB, ajustable des de /admin/logs
 const MONGO_MAX_RETRIES = 5;
 const MONGO_RETRY_DELAY_MS = 3000;
@@ -73,6 +75,8 @@ async function ensureIndexes(dbInstance) {
   const ephemerals = dbInstance.collection(EPHEMERAL_COLLECTION);
   const ratings = dbInstance.collection(RATINGS_COLLECTION);
   const ratingVotes = dbInstance.collection(RATING_VOTES_COLLECTION);
+  const homeworks = dbInstance.collection(HOMEWORK_COLLECTION);
+  const homeworkAttempts = dbInstance.collection(HOMEWORK_ATTEMPTS_COLLECTION);
   indexesReadyPromise = Promise.all([
     games.createIndex({ id: 1 }, { unique: true, sparse: true }),
     games.createIndex({ visibility: 1 }),
@@ -84,7 +88,11 @@ async function ensureIndexes(dbInstance) {
     ephemerals.createIndex({ id: 1 }, { unique: true, sparse: true }),
     ephemerals.createIndex({ expires: 1 }, { expireAfterSeconds: 0 }),
     ratings.createIndex({ quizId: 1 }, { unique: true, sparse: true }),
-    ratingVotes.createIndex({ quizId: 1, deviceId: 1 }, { unique: true })
+    ratingVotes.createIndex({ quizId: 1, deviceId: 1 }, { unique: true }),
+    // Deures: codi únic (issue #15: la unicitat la garantix l'índex, no una comprovació prèvia).
+    homeworks.createIndex({ code: 1 }, { unique: true }),
+    homeworks.createIndex({ ownerId: 1, createdAt: -1 }),
+    homeworkAttempts.createIndex({ code: 1, studentKey: 1, attemptNo: 1 }, { unique: true })
   ]).catch((err) => {
     console.error('ensureIndexes error', err);
     indexesReadyPromise = null;
@@ -140,5 +148,7 @@ module.exports = {
   RATING_VOTES_COLLECTION,
   LOGS_COLLECTION,
   SETTINGS_COLLECTION,
+  HOMEWORK_COLLECTION,
+  HOMEWORK_ATTEMPTS_COLLECTION,
   DEFAULT_LOGS_CAPPED_SIZE_BYTES
 };

@@ -298,6 +298,15 @@ app.use(createGamesRouter({ games, players, finishedSessionReports, liveSessionT
 
 app.use('/api/player-auth', createPlayerAuthRouter({ commons, authRateLimiter }));
 
+// Deures asíncrons (feature 1). `buildQuestions` es el mismo que usa la partida en directo
+// (la factoría no abre sockets: io no se usa al construir las preguntas).
+const homeworkService = require('./services/homework')({
+  getHomeworksCollection: require('./data/repositories').getHomeworksCollection,
+  getHomeworkAttemptsCollection: require('./data/repositories').getHomeworkAttemptsCollection,
+  buildQuestions: require('./sockets/gameHelpers')({ io: null, games, players, cleanImportedText }).buildQuestions
+});
+app.use(require('./routes/homework')({ homework: homeworkService, requireRole, findGameById, canUseQuiz, liveSessionToCsv, buildReportFileName }));
+
 app.use(createAdminRouter({
   requireRole,
   sanitizeImportedQuiz,

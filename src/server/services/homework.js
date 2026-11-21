@@ -1,0 +1,395 @@
+// Deures asíncrons (feature 1): un quiz amb data límit que l'alumnat fa al seu ritme, sense
+// professorat present. Reutilitza el motor d'autoritme (services/selfPaced.js): el «game» i el
+// «player» es construïxen des de MongoDB en cada petició i es guarden en acabar l'acció.
+// El servidor mana: temps, puntuació i resposta correcta. Vore HOMEWORK_PLAN.md.
+const crypto = require('crypto');
+const sp = require('./selfPaced');
+const payloads = require('./selfPacedPayloads');
+const { getQuestionMeta, normalizeSubmission } = require('../questionUtils');
+const { isValidTypedName } = require('./nameRules');
+
+// Sense caràcters ambigus (0/O, 1/I/L).
+const ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+const CODE_LENGTH = 8;
+const RECOVERY_LENGTH = 6;
+const MAX_STUDENTS = 500;
+const MAX_ATTEMPTS_LIMIT = 20;
+const MIN_LEAD_MS = 60 * 1000;
+const MAX_LEAD_MS = 180 * 24 * 60 * 60 * 1000;
+// Una resposta enviada just abans de la data límit s'accepta (retard de la xarxa).
+const DEADLINE_GRACE_MS = sp.SELF_PACED_GRACE_MS;
+
+function randomString(length) {
+  let out = '';
+  for (let i = 0; i < length; i += 1) out += ALPHABET.charAt(crypto.randomInt(ALPHABET.length));
+  return out;
+}
+
+function normalizeCode(value) {
+  return String(value || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+}
+
+function hashRecovery(recovery) {
+  return crypto.createHash('sha256').update(normalizeCode(recovery)).digest('hex');
+}
+
+function safeEqualHex(a, b) {
+  const x = Buffer.from(String(a || ''), 'hex');
+  const y = Buffer.from(String(b || ''), 'hex');
+  return x.length > 0 && x.length === y.length && crypto.timingSafeEqual(x, y);
+}
+
+function studentKeyOf(name) {
+  return String(name || '').normalize('NFC').trim().toLowerCase();
+}
+
+function emptyGameData() {
+  return { score: 0, answer: 0, correctCount: 0, wrongCount: 0, streak: 0, bestStreak: 0, answerHistory: [] };
+}
+
+// Opcions del deure: només les que afecten el joc. El mode és sempre autoritme.
+function normalizeOptions(raw) {
+  const o = raw || {};
+  const out = { mode: 'selfPaced', sendToStudents: true, streak: o.streak !== false, showCorrectAnswers: o.showCorrectAnswers !== false };
+  const time = parseInt(o.timePerQuestion, 10);
+  if (Number.isFinite(time) && time > 0) out.timePerQuestion = Math.max(5, Math.min(120, time));
+  if (o.matchingExtraTime !== undefined) out.matchingExtraTime = o.matchingExtraTime;
+  return out;
+}
+
+class ConflictError extends Error {}
+
+module.exports = function createHomeworkService({ getHomeworksCollection, getHomeworkAttemptsCollection, buildQuestions }) {
+  const identity = (full) => full;
+
+  // ----- Docent -----
+
+  async function createHomework({ ownerId, ownerNickname, quiz, title, deadline, maxAttempts, options }, now = Date.now()) {
+    const deadlineMs = Number(deadline);
+    if (!Number.isFinite(deadlineMs) || deadlineMs < now + MIN_LEAD_MS) return { error: 'deadline-too-soon' };
+    if (deadlineMs > now + MAX_LEAD_MS) return { error: 'deadline-too-far' };
+    const attempts = maxAttempts === undefined || maxAttempts === null || maxAttempts === '' ? 1 : parseInt(maxAttempts, 10);
+    if (!Number.isInteger(attempts) || attempts < 0 || attempts > MAX_ATTEMPTS_LIMIT) return { error: 'bad-attempts' };
+    const opts = normalizeOptions(options);
+    // Còpia de les preguntes: si el docent edita el quiz després, el deure no canvia.
+    const questions = buildQuestions(Array.isArray(quiz.questions) ? quiz.questions : [], {
+      randomQuestions: false,
+      randomAnswers: !(options && options.randomAnswers === false),
+      timePerQuestion: opts.timePerQuestion
+    });
+    if (!questions || !questions.length) return { error: 'no-questions' };
+    const collection = await getHomeworksCollection();
+    const cleanTitle = String(title || quiz.name || '').trim().slice(0, 80);
+    for (let attempt = 0; attempt < 6; attempt += 1) {
+      const doc = {
+        code: randomString(CODE_LENGTH),
+        ownerId: String(ownerId || ''),
+        ownerNickname: String(ownerNickname || ''),
+        quizId: quiz.id !== undefined ? quiz.id : String(quiz._id || ''),
+        quizName: String(quiz.name || ''),
+        title: cleanTitle || String(quiz.name || ''),
+        questions,
+        totalQuestions: questions.length,
+        scoredQuestionsCount: questions.filter((q) => q.type !== 'poll').length,
+        options: opts,
+        deadline: deadlineMs,
+        maxAttempts: attempts,
+        status: 'open',
+        createdAt: now
+      };
+      try {
+        await collection.insertOne(doc);
+        return { homework: doc };
+      } catch (err) {
+        if (!(err && err.code === 11000)) throw err; // código repetido: otro intento
+      }
+    }
+    return { error: 'code-unavailable' };
+  }
+
+  async function getByCode(code) {
+    const c = normalizeCode(code);
+    if (c.length !== CODE_LENGTH) return null;
+    const collection = await getHomeworksCollection();
+    return collection.findOne({ code: c });
+  }
+
+  async function listForOwner(ownerId) {
+    const collection = await getHomeworksCollection();
+    const attempts = await getHomeworkAttemptsCollection();
+    const list = await collection.find({ ownerId: String(ownerId) }, { projection: { questions: 0 } }).sort({ createdAt: -1 }).toArray();
+    const counts = await attempts.aggregate([
+      { $match: { code: { $in: list.map((h) => h.code) } } },
+      { $group: { _id: '$code', students: { $addToSet: '$studentKey' }, finished: { $sum: { $cond: ['$finished', 1, 0] } } } }
+    ]).toArray();
+    const byCode = new Map(counts.map((c) => [c._id, c]));
+    return list.map((h) => ({ ...h, students: (byCode.get(h.code) || { students: [] }).students.length, finishedAttempts: (byCode.get(h.code) || { finished: 0 }).finished }));
+  }
+
+  async function setStatus(hw, status) {
+    const collection = await getHomeworksCollection();
+    await collection.updateOne({ code: hw.code }, { $set: { status } });
+  }
+
+  async function extendDeadline(hw, deadline, now = Date.now()) {
+    const ms = Number(deadline);
+    if (!Number.isFinite(ms) || ms < now + MIN_LEAD_MS || ms > now + MAX_LEAD_MS) return false;
+    const collection = await getHomeworksCollection();
+    await collection.updateOne({ code: hw.code }, { $set: { deadline: ms, status: 'open' } });
+    return true;
+  }
+
+  async function remove(hw) {
+    const collection = await getHomeworksCollection();
+    const attempts = await getHomeworkAttemptsCollection();
+    await attempts.deleteMany({ code: hw.code });
+    await collection.deleteOne({ code: hw.code });
+  }
+
+  function isOpen(hw, now) {
+    return hw.status === 'open' && now <= hw.deadline;
+  }
+
+  function publicInfo(hw, now = Date.now()) {
+    return {
+      code: hw.code,
+      title: hw.title,
+      quizName: hw.quizName,
+      totalQuestions: hw.totalQuestions,
+      maxAttempts: hw.maxAttempts,
+      deadline: hw.deadline,
+      open: isOpen(hw, now)
+    };
+  }
+
+  // ----- Alumnat -----
+
+  async function attemptsOf(code, studentKey) {
+    const collection = await getHomeworkAttemptsCollection();
+    return collection.find({ code, studentKey }).sort({ attemptNo: 1 }).toArray();
+  }
+
+  async function authenticate(hw, name, recovery) {
+    const key = studentKeyOf(name);
+    if (!key || !recovery) return { ok: false };
+    const attempts = await attemptsOf(hw.code, key);
+    if (!attempts.length || !safeEqualHex(attempts[0].recoveryHash, hashRecovery(recovery))) return { ok: false };
+    return { ok: true, key, attempts };
+  }
+
+  function summaryOf(hw, attempts) {
+    return attempts.map((a) => ({ attemptNo: a.attemptNo, finished: !!a.finished, score: Number(a.gameData && a.gameData.score) || 0 }));
+  }
+
+  // Alta (sin código de recuperación) o reentrada (con nombre y código).
+  async function join(hw, { name, icon, recovery }, now = Date.now()) {
+    const typed = String(name || '').trim();
+    const key = studentKeyOf(typed);
+    if (recovery) {
+      const auth = await authenticate(hw, typed, recovery);
+      if (!auth.ok) return { error: 'bad-recovery' };
+      return { student: { name: auth.attempts[0].name, recovery: normalizeCode(recovery) }, attempts: summaryOf(hw, auth.attempts), maxAttempts: hw.maxAttempts, open: isOpen(hw, now) };
+    }
+    if (!isValidTypedName(typed)) return { error: 'bad-name' };
+    if (!isOpen(hw, now)) return { error: 'closed' };
+    const collection = await getHomeworkAttemptsCollection();
+    if (await collection.countDocuments({ code: hw.code, studentKey: key })) return { error: 'name-taken' };
+    if (await collection.countDocuments({ code: hw.code, attemptNo: 1 }) >= MAX_STUDENTS) return { error: 'full' };
+    const code = randomString(RECOVERY_LENGTH);
+    const doc = {
+      code: hw.code, studentKey: key, name: typed, icon: String(icon || '').slice(0, 8), attemptNo: 1,
+      recoveryHash: hashRecovery(code), gameData: emptyGameData(), finished: false, version: 0, startedAt: now, updatedAt: now
+    };
+    try {
+      await collection.insertOne(doc);
+    } catch (err) {
+      if (err && err.code === 11000) return { error: 'name-taken' }; // dos altas a la vez con el mismo nombre
+      throw err;
+    }
+    return { student: { name: typed, recovery: code }, attempts: summaryOf(hw, [doc]), maxAttempts: hw.maxAttempts, open: true };
+  }
+
+  function gameOf(hw) {
+    return { gameData: { questions: hw.questions, options: hw.options, totalQuestions: hw.totalQuestions, scoredQuestionsCount: hw.scoredQuestionsCount, quizName: hw.quizName } };
+  }
+
+  async function save(attempt, player) {
+    const collection = await getHomeworkAttemptsCollection();
+    const res = await collection.updateOne(
+      { _id: attempt._id, version: attempt.version },
+      { $set: { gameData: player.gameData, finished: !!attempt.finished, finishedAt: attempt.finishedAt || null, updatedAt: attempt.updatedAt }, $inc: { version: 1 } }
+    );
+    if (!res.matchedCount) throw new ConflictError('conflict');
+    attempt.version += 1;
+  }
+
+  function finishedEvent(hw, attempts, attempt, player, extra = {}) {
+    const all = attempts.map((a) => (a._id === attempt._id ? { ...a, gameData: player.gameData, finished: true } : a));
+    const best = all.reduce((m, a) => Math.max(m, Number(a.gameData && a.gameData.score) || 0), 0);
+    return {
+      name: 'spFinished',
+      data: {
+        ...payloads.finishedPayload(gameOf(hw), player),
+        homework: true,
+        attemptNo: attempt.attemptNo,
+        maxAttempts: hw.maxAttempts,
+        bestScore: best,
+        canRetry: false,
+        ...extra
+      }
+    };
+  }
+
+  function questionEvents(game, player, now) {
+    const q = sp.currentQuestion(game, player);
+    return [
+      { name: 'spQuestion', data: payloads.questionPayload(game, player, now, identity) },
+      { name: 'questionMedia', data: { image: q.image || '', video: q.video || '' } }
+    ];
+  }
+
+  // Una acción del alumno sobre su intento más reciente. Devuelve { events } o { error }.
+  async function actOnce(hw, { name, recovery }, op, value, now) {
+    const auth = await authenticate(hw, name, recovery);
+    if (!auth.ok) return { error: 'bad-recovery' };
+    let attempts = auth.attempts;
+    let attempt = attempts[attempts.length - 1];
+    const game = gameOf(hw);
+    const open = isOpen(hw, op === 'answer' ? now - DEADLINE_GRACE_MS : now);
+
+    if (op === 'newAttempt') {
+      if (!open) return { error: 'closed' };
+      if (!attempt.finished) return { error: 'attempt-running' };
+      if (hw.maxAttempts !== 0 && attempt.attemptNo >= hw.maxAttempts) return { error: 'no-attempts-left' };
+      const fresh = {
+        code: hw.code, studentKey: attempt.studentKey, name: attempt.name, icon: attempt.icon, attemptNo: attempt.attemptNo + 1,
+        recoveryHash: attempt.recoveryHash, gameData: emptyGameData(), finished: false, version: 0, startedAt: now, updatedAt: now
+      };
+      const collection = await getHomeworkAttemptsCollection();
+      try { await collection.insertOne(fresh); } catch (err) {
+        if (err && err.code === 11000) throw new ConflictError('conflict');
+        throw err;
+      }
+      return { events: [{ name: 'spIdle', data: null }], attemptNo: fresh.attemptNo };
+    }
+
+    const player = { name: attempt.name, gameData: attempt.gameData };
+    const state = sp.ensureState(player);
+    attempt.updatedAt = now;
+
+    // Cerrado (fecha límite o cierre del docente): el intento a medias termina con sus puntos.
+    if (!attempt.finished && !open) {
+      sp.finishPlayer(player);
+      attempt.finished = true;
+      attempt.finishedAt = Math.min(now, hw.deadline);
+      await save(attempt, player);
+    }
+    if (attempt.finished) {
+      return { events: [finishedEvent(hw, attempts, attempt, player, { canRetry: open && (hw.maxAttempts === 0 || attempt.attemptNo < hw.maxAttempts), closed: !open })] };
+    }
+
+    if (op === 'resume') {
+      if (state.index === 0) return { events: [{ name: 'spIdle', data: null }] };
+      if (!state.answered && sp.remainingMs(game, player, now) === 0 && sp.expireQuestion(game, player, now)) await save(attempt, player);
+      if (state.answered) return { events: [{ name: 'spAnswered', data: { questionNumber: state.index, totalQuestions: hw.totalQuestions } }] };
+      return { events: questionEvents(game, player, now) };
+    }
+
+    if (op === 'next') {
+      // No se salta una pregunta en curso: si aún hay tiempo se reenvía la misma.
+      if (state.index > 0 && !state.answered && !sp.expireQuestion(game, player, now)) return { events: questionEvents(game, player, now) };
+      if (!sp.beginNext(game, player, now)) {
+        attempt.finished = true;
+        attempt.finishedAt = now;
+        await save(attempt, player);
+        return { events: [finishedEvent(hw, attempts, attempt, player, { canRetry: open && (hw.maxAttempts === 0 || attempt.attemptNo < hw.maxAttempts) })] };
+      }
+      await save(attempt, player);
+      return { events: questionEvents(game, player, now) };
+    }
+
+    if (op === 'answer') {
+      const q = sp.currentQuestion(game, player);
+      if (!q) return { events: [{ name: 'answerRejected', data: { reason: 'no-question' } }] };
+      const res = sp.submitAnswer(game, player, normalizeSubmission(getQuestionMeta(q), value), now);
+      if (!res.ok) return { events: [{ name: 'answerRejected', data: { reason: res.reason } }] };
+      await save(attempt, player);
+      return { events: [{ name: 'spResult', data: payloads.resultPayload(game, player, res) }] };
+    }
+
+    if (op === 'timeUp') {
+      if (!sp.expireQuestion(game, player, now)) return { events: [] };
+      await save(attempt, player);
+      return { events: [{ name: 'spResult', data: payloads.resultPayload(game, player, { outcome: 'timeout', scoreRatio: 0, points: 0, bonus: 0 }) }] };
+    }
+
+    return { error: 'bad-op' };
+  }
+
+  // Dos dispositivos a la vez: si otro guardó antes, se vuelve a cargar y se reintenta una vez.
+  async function act(hw, who, op, value, now = Date.now()) {
+    try {
+      return await actOnce(hw, who, op, value, now);
+    } catch (err) {
+      if (!(err instanceof ConflictError)) throw err;
+      return actOnce(hw, who, op, value, now);
+    }
+  }
+
+  // ----- Resultados (docente) -----
+
+  // Un intento sin acabar en un deure cerrado cuenta como terminado, con sus puntos.
+  async function results(hw, now = Date.now()) {
+    const collection = await getHomeworkAttemptsCollection();
+    const all = await collection.find({ code: hw.code }).sort({ studentKey: 1, attemptNo: 1 }).toArray();
+    const closed = !isOpen(hw, now);
+    const byStudent = new Map();
+    all.forEach((a) => {
+      if (!byStudent.has(a.studentKey)) byStudent.set(a.studentKey, []);
+      byStudent.get(a.studentKey).push(a);
+    });
+    const rows = [];
+    const bestPlayers = [];
+    byStudent.forEach((list) => {
+      const scored = list.map((a) => ({ a, score: Number(a.gameData && a.gameData.score) || 0 }));
+      const best = scored.reduce((m, s) => (s.score > m.score ? s : m), scored[0]);
+      const last = list[list.length - 1];
+      const state = last.finished ? 'finished' : (closed ? 'expired' : (sp.ensureState({ gameData: last.gameData }).index > 0 ? 'in-progress' : 'not-started'));
+      rows.push({
+        name: list[0].name,
+        icon: list[0].icon || '',
+        state,
+        attempts: list.length,
+        bestScore: best.score,
+        correctCount: best.a.gameData.correctCount || 0,
+        wrongCount: best.a.gameData.wrongCount || 0,
+        answered: (best.a.gameData.answerHistory || []).length,
+        finishedAt: best.a.finishedAt || null
+      });
+      bestPlayers.push({ name: list[0].name, icon: list[0].icon || '', gameData: best.a.gameData });
+    });
+    rows.sort((x, y) => y.bestScore - x.bestScore || x.name.localeCompare(y.name, 'es'));
+    // Estadística por pregunta, sobre el mejor intento de cada alumno.
+    const questionStats = hw.questions.map((q, i) => {
+      let answered = 0;
+      let correct = 0;
+      bestPlayers.forEach((p) => {
+        const h = (p.gameData.answerHistory || []).find((x) => x.questionNumber === i + 1);
+        if (h) { answered += 1; if (h.isCorrect) correct += 1; }
+      });
+      return { number: i + 1, question: q.question, type: q.type, answered, correct };
+    });
+    bestPlayers.sort((x, y) => (y.gameData.score || 0) - (x.gameData.score || 0));
+    return { rows, questionStats, bestPlayers, students: rows.length };
+  }
+
+  return {
+    createHomework, getByCode, listForOwner, setStatus, extendDeadline, remove,
+    publicInfo, isOpen, join, act, results,
+    // Para pruebas
+    _internals: { normalizeCode, hashRecovery, studentKeyOf, randomString }
+  };
+};
+
+module.exports.ALPHABET = ALPHABET;
+module.exports.CODE_LENGTH = CODE_LENGTH;
