@@ -24,6 +24,7 @@
                         <span data-i18n="langLabel">Idioma</span>
                         <select id="lang-select" data-lang-options="name"></select>
                     </label>
+                    <a id="my-homework" class="btn btn-ghost btn-small" href="homework/" data-i18n="myHomework">Mis deberes</a>
                     <button id="open-account" type="button" class="btn btn-ghost btn-small hidden" data-i18n="btnAccount">Preferencias</button>
                 </div>
             </div>
@@ -368,6 +369,7 @@
                                     <button class="btn btn-ghost icon-only" :title="perms(quiz).canStart ? t('playMultiplayer') : t('cannotStartPrivate')" :aria-label="t('playMultiplayer')" :disabled="!perms(quiz).canStart" @click="launch(quiz, 'multiplayer')">👥</button>
                                     <button class="btn btn-ghost icon-only" :title="perms(quiz).canStart ? t('playSolo') : t('cannotStartPrivate')" :aria-label="t('playSolo')" :disabled="!perms(quiz).canStart" @click="launch(quiz, 'solo')">👤</button>
                                     <button class="btn btn-ghost icon-only" :title="perms(quiz).canStart ? t('reviewCards') : t('cannotStartPrivate')" :aria-label="t('reviewCards')" :disabled="!perms(quiz).canStart" @click="launch(quiz, 'cards')">🔁</button>
+                                    <button class="btn btn-ghost icon-only" :title="perms(quiz).canStart ? t('assignHomework') : t('cannotStartPrivate')" :aria-label="t('assignHomework')" :disabled="!perms(quiz).canStart" @click="launch(quiz, 'homework')">📚</button>
                                     <button class="btn btn-ghost icon-only" :title="perms(quiz).canEdit ? t('edit') : t('cannotEditNotOwner')" :disabled="!perms(quiz).canEdit" @click="edit(quiz)">✏️</button>
                                     <button class="btn btn-ghost icon-only" :title="t('download')" @click="downloadCsv(quiz)">⬇️</button>
                                     <button class="btn btn-ghost icon-only" :title="t('exportMoodleXml')" @click="downloadMoodle(quiz)"><img src="/icons/moodle.png" alt="Moodle" class="moodle-icon-img"></button>

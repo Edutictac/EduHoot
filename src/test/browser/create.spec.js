@@ -149,7 +149,7 @@ test('biblioteca sin sesión: tarjetas, recuento, metadatos y permisos', async (
     await expect(geo.locator('.tag-remove')).toHaveCount(0);
     await expect(geo.locator('button', { hasText: 'Guardar en mi cuenta' })).toHaveCount(0);
     await expect(geo.locator('.game-actions > button.btn-primary')).toHaveText('Jugar en el aula');
-    await expect(geo.locator('.game-actions > button')).toHaveText(['Jugar en el aula', '👥', '👤', '🔁', '✏️', '⬇️', '', '📄', '🗑️']);
+    await expect(geo.locator('.game-actions > button')).toHaveText(['Jugar en el aula', '👥', '👤', '🔁', '📚', '✏️', '⬇️', '', '📄', '🗑️']);
 
     // Privado de otro: no se puede lanzar.
     const bio = card(page, 'Biologia');

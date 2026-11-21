@@ -19,6 +19,16 @@ fitxers corresponents, i els originals es van eliminar.
 ## [Sense publicar]
 
 ### Afegit
+- **Deures asíncrons** (feature 1): el docent crea un deure des d'un quiz (botó 📚
+  de la biblioteca) amb data límit, intents (1, 2, 3, 5 o il·limitats; compta el
+  millor), temps per pregunta i opcions de resposta, i comparteix un enllaç
+  (`/homework/?code=…`). L'alumnat entra sense compte, només amb un nom, i rep un
+  **codi de recuperació** per a continuar des d'un altre dispositiu. Reutilitza el
+  motor d'autoritme (`services/homework.js` sobre `services/selfPaced.js`): temps i
+  puntuació els decidix el servidor, l'estat viu en MongoDB (col·leccions
+  `homeworks` i `homeworkAttempts`) i es parla per HTTP (`/api/homework/:code/…`),
+  sense sockets. Docent: llista, tancar/reobrir/ampliar el termini, eliminar,
+  resultats per alumne i per pregunta i informe CSV (`/create/homework/`).
 - **Mode autoritme** (feature 3) en «Jugar a l'aula»: en el lobby l'amfitrió
   tria «Al seu ritme» i cada alumne respon en el seu dispositiu, amb el seu
   propi rellotge, sense «Pregunta següent». El servidor porta l'estat i la

@@ -13,3 +13,22 @@
 .sp-ranking ol{ margin: 4px 0; padding-left: 28px; text-align: left; }
 .sp-ranking li.is-me{ font-weight: 800; }
 .sp-ranking__me{ margin: 4px 0; text-align: center; font-weight: 700; }
+
+/* Deures asíncrons (?hw=): entrada del alumnado. */
+.hw-entry-open #player-sp, .hw-entry-open #leaveGameBtn{ display: none; }
+.hw-entry{ width: 100%; max-width: 480px; margin: 24px auto; text-align: center; box-sizing: border-box; }
+.hw-entry[hidden], .hw-entry [hidden]{ display: none; }
+.hw-entry__kicker{ margin: 0; text-transform: uppercase; letter-spacing: .08em; opacity: .8; font-weight: 700; }
+.hw-entry__title{ margin: 4px 0 8px; font-size: 1.8em; overflow-wrap: anywhere; }
+.hw-entry__line{ margin: 4px 0; opacity: .9; }
+.hw-entry__closed{ margin: 10px 0; padding: 8px 12px; border-radius: 10px; background: rgba(0,0,0,.35); font-weight: 700; }
+.hw-entry__form{ display: flex; flex-direction: column; gap: 8px; margin-top: 16px; text-align: left; }
+.hw-entry__form label{ font-weight: 700; }
+.hw-entry input{ min-height: 48px; padding: 8px 14px; border: 0; border-radius: 12px; font: inherit; font-size: 18px; color: #14101f; background: #fff; box-sizing: border-box; width: 100%; }
+.hw-entry__hint{ margin: 0; font-size: .9em; opacity: .85; }
+.hw-entry .button{ width: 100%; margin: 8px 0 0; background: #fff; color: #14101f; min-height: 54px; }
+.hw-entry .button:disabled{ opacity: .6; cursor: default; }
+.hw-entry__link{ background: none; border: 0; color: inherit; text-decoration: underline; font: inherit; padding: 10px; cursor: pointer; min-height: 44px; }
+.hw-entry__error{ margin: 12px 0; padding: 8px 12px; border-radius: 10px; background: rgba(0,0,0,.4); font-weight: 700; }
+.hw-entry__code{ margin-top: 16px; }
+.hw-entry__code-value{ font-size: 2.4em; font-weight: 800; letter-spacing: .2em; margin: 8px 0; user-select: all; font-variant-numeric: tabular-nums; }

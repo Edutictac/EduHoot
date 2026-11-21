@@ -1,0 +1,23 @@
+/* Deures (docente): crear, lista y resultados. Reutiliza create.css (botones, page-shell). */
+.hw-shell{ max-width: 960px; margin: 0 auto; }
+.hw-card{ background: rgba(255,255,255,0.92); color: #1f2937; border-radius: 16px; padding: 16px 20px; margin: 14px 0; box-sizing: border-box; }
+.hw-card h2, .hw-card h3{ margin: 4px 0 8px; }
+.hw-muted{ opacity: .8; margin: 4px 0; }
+.hw-notice, .hw-error{ margin: 12px 0; padding: 8px 12px; border-radius: 10px; background: rgba(0,0,0,.08); font-weight: 600; }
+.hw-error{ background: #fee2e2; color: #991b1b; }
+.hw-form{ display: grid; gap: 12px; max-width: 520px; }
+.hw-form label{ display: grid; gap: 4px; font-weight: 600; }
+.hw-form input[type="text"], .hw-form input[type="datetime-local"], .hw-form select{ min-height: 40px; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 10px; font: inherit; }
+.hw-form .hw-check{ display: flex; gap: 8px; align-items: center; font-weight: 500; }
+.hw-actions{ display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+.hw-link{ font-family: monospace; word-break: break-all; background: #f1f5f9; padding: 6px 10px; border-radius: 8px; user-select: all; }
+.hw-item__head{ display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.hw-badge{ padding: 2px 10px; border-radius: 999px; font-size: .85em; font-weight: 700; background: #e2e8f0; white-space: nowrap; }
+.hw-badge.is-open{ background: #bbf7d0; }
+.hw-badge.is-closed, .hw-badge.is-expired{ background: #fecaca; }
+.hw-reopen-box{ display: flex; flex-wrap: wrap; gap: 8px; align-items: end; margin-top: 8px; }
+.hw-table-wrap{ overflow-x: auto; }
+.hw-table{ width: 100%; border-collapse: collapse; }
+.hw-table th, .hw-table td{ text-align: left; padding: 6px 10px; border-bottom: 1px solid #e2e8f0; }
+.hw-table .hw-q{ max-width: 380px; overflow-wrap: anywhere; }
+.btn.is-confirming{ outline: 2px solid #991b1b; }

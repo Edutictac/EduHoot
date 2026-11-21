@@ -16,6 +16,32 @@
         <!-- Modo autoritme (feature 3): cada alumno avanza a su ritmo. Pantalla propia, separada de
              /player/game/ (partida en vivo); comparte con ella estilos, el tablero de correspondencia
              y las piezas de js/playerCommon.js. -->
+        <!-- Deures asíncrons (?hw=CÓDIGO): entrada del alumnado; la pantalla de juego es la de abajo. -->
+        <section id="hwEntry" class="hw-entry" hidden>
+            <p id="hwHeading" class="hw-entry__kicker"></p>
+            <h1 id="hwTitle" class="hw-entry__title"></h1>
+            <p id="hwDeadline" class="hw-entry__line"></p>
+            <p id="hwMeta" class="hw-entry__line"></p>
+            <p id="hwClosed" class="hw-entry__closed" hidden></p>
+            <form id="hwForm" class="hw-entry__form" autocomplete="off" hidden>
+                <label id="hwNameLabel" for="hwName"></label>
+                <input id="hwName" type="text" maxlength="20" autocapitalize="words" autocorrect="off" spellcheck="false" required>
+                <p id="hwNameHint" class="hw-entry__hint"></p>
+                <div id="hwRecoveryRow" hidden>
+                    <label id="hwRecoveryLabel" for="hwRecovery"></label>
+                    <input id="hwRecovery" type="text" maxlength="12" autocapitalize="characters" autocorrect="off" spellcheck="false">
+                </div>
+                <button id="hwSubmit" type="submit" class="button"></button>
+                <button id="hwModeToggle" type="button" class="hw-entry__link"></button>
+            </form>
+            <p id="hwError" class="hw-entry__error" role="alert" hidden></p>
+            <div id="hwCodeBox" class="hw-entry__code" hidden>
+                <h2 id="hwCodeTitle"></h2>
+                <p id="hwCodeValue" class="hw-entry__code-value"></p>
+                <p id="hwCodeText"></p>
+                <button id="hwCodeGo" type="button" class="button"></button>
+            </div>
+        </section>
         <div id="player-sp"></div>
         <template id="player-sp-tpl">
             <p id="quizNameText" class="quiz-name-text" v-if="quizName">{{ quizName }}</p>
@@ -33,7 +59,13 @@
                 <p class="sp-done__line">{{ fmt('sp_done_correct', { c: summary.correctCount, t: summary.total }) }}</p>
                 <p class="sp-done__line" v-if="summary.bestStreak > 1">{{ fmt('sp_done_streak', { n: summary.bestStreak }) }}</p>
                 <p class="sp-done__line" v-if="summary.rank">{{ fmt('sp_done_rank', { r: summary.rank, p: summary.players }) }}</p>
-                <p class="sp-done__hint">{{ closed ? t('sp_closed') : t('sp_done_wait') }}</p>
+                <template v-if="summary.homework">
+                    <p class="sp-done__line" v-if="summary.maxAttempts !== 1">{{ fmt('hw_best', { n: summary.bestScore }) }}</p>
+                    <p class="sp-done__hint">{{ summary.closed ? t('hw_done_closed') : t('hw_done_saved') }}</p>
+                    <p class="sp-done__hint" v-if="hwRecovery()">{{ fmt('hw_your_code', { n: playerName, c: hwRecovery() }) }}</p>
+                    <button type="button" id="hwRetryBtn" class="button sp-next" v-if="summary.canRetry" @click="newAttempt">{{ t('hw_retry') }}</button>
+                </template>
+                <p class="sp-done__hint" v-else>{{ closed ? t('sp_closed') : t('sp_done_wait') }}</p>
             </section>
 
             <template v-else>
@@ -87,7 +119,7 @@
                     <button type="button" id="spNextBtn" class="button sp-next" @click="next">{{ isLast ? t('sp_finish') : t('sp_next') }}</button>
                 </div>
             </template>
-            <div id="raiseHandRow" v-if="state === 'question' && !done">
+            <div id="raiseHandRow" v-if="state === 'question' && !done && !isHomework">
                 <button type="button" id="raiseHandBtn" class="raise-hand-btn" :aria-pressed="handRaised ? 'true' : 'false'" @click="toggleHand">✋ {{ handRaised ? t('handLower') : t('handRaise') }}</button>
             </div>
             <button type="button" id="leaveGameBtn" class="leave-game-btn" :class="{ 'is-confirming': leaveConfirming }" @click="askLeave">{{ leaveConfirming ? t('lobby_leave_confirm') : t('lobby_leave') }}</button>
@@ -104,6 +136,7 @@
         <script src="../../js/matchingBoard.js"></script>
         <script src="../../js/tts.js"></script>
         <script src="../../js/playerCommon.js"></script>
+        <script src="../../js/homeworkTransport.js"></script>
         <script src="../../js/playerSelfPaced.js"></script>
     </body>
 </html>

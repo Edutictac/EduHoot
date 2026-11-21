@@ -249,7 +249,7 @@ module.exports = function createHomeworkService({ getHomeworksCollection, getHom
   }
 
   // Una acción del alumno sobre su intento más reciente. Devuelve { events } o { error }.
-  async function actOnce(hw, { name, recovery }, op, value, now) {
+  async function actOnce(hw, { name, recovery }, op, value, now, ctx) {
     const auth = await authenticate(hw, name, recovery);
     if (!auth.ok) return { error: 'bad-recovery' };
     let attempts = auth.attempts;
@@ -274,6 +274,7 @@ module.exports = function createHomeworkService({ getHomeworksCollection, getHom
     }
 
     const player = { name: attempt.name, gameData: attempt.gameData };
+    ctx.player = player;
     const state = sp.ensureState(player);
     attempt.updatedAt = now;
 
@@ -328,12 +329,22 @@ module.exports = function createHomeworkService({ getHomeworksCollection, getHom
 
   // Dos dispositivos a la vez: si otro guardó antes, se vuelve a cargar y se reintenta una vez.
   async function act(hw, who, op, value, now = Date.now()) {
+    let out;
+    const ctx = {};
     try {
-      return await actOnce(hw, who, op, value, now);
+      out = await actOnce(hw, who, op, value, now, ctx);
     } catch (err) {
       if (!(err instanceof ConflictError)) throw err;
-      return actOnce(hw, who, op, value, now);
+      out = await actOnce(hw, who, op, value, now, ctx);
     }
+    // Puntos y racha actuales, para el encabezado de la pantalla del alumno.
+    if (!out.error) {
+      const gd = ctx.player ? ctx.player.gameData : emptyGameData();
+      out.score = Number(gd.score) || 0;
+      out.streak = Number(gd.streak) || 0;
+      out.title = hw.title;
+    }
+    return out;
   }
 
   // ----- Resultados (docente) -----

@@ -519,6 +519,7 @@ var libraryApp = {
             if(mode === 'solo') startSolo(quiz.id);
             else if(mode === 'cards') startSoloCards(quiz.id);
             else if(mode === 'multiplayer') startMultiplayer(quiz.id);
+            else if(mode === 'homework') window.location.href = '/create/homework/?quiz=' + encodeURIComponent(quiz.id);
             else startGame(quiz.id);
         },
         edit: function(quiz){

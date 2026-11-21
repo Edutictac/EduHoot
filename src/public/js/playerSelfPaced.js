@@ -10,6 +10,8 @@ var tickTimer = null;
 var timeUpTimer = null;
 var leaveResetTimer = null;
 var PARTIAL_COLOR = '#f57c00';
+// Deures asíncrons (?hw=): el «socket» es un adaptador HTTP (js/homeworkTransport.js) y no hay anfitrión.
+var isHomework = !!window.EDUHOOT_HOMEWORK;
 
 function tPlayer(key, fallback){
     return window.i18nPlayer ? window.i18nPlayer.t(key) : (fallback || key);
@@ -72,6 +74,7 @@ var app = Vue.createApp({
         nameDisplay: function(){ return this.t('name') + ' ' + this.playerName; },
         scoreDisplay: function(){ return this.t('score') + ' ' + this.playerScore; },
         progressText: function(){ return fmtPlayer('sp_question_of', { n: this.questionNumber, t: this.totalQuestions }); },
+        isHomework: function(){ return isHomework; },
         isLast: function(){ return this.questionNumber >= this.totalQuestions; },
         questionHtml: function(){ return formatRichText(this.questionText); },
         freeAnswerType: function(){ return this.questionType === 'short-answer' || this.questionType === 'numeric'; },
@@ -118,6 +121,9 @@ var app = Vue.createApp({
             socket.emit('spAnswer', payload);
         },
         next: function(){ socket.emit('spNext'); },
+        // Deures con varios intentos: empieza otro; el servidor responde «spIdle» y se pide la primera pregunta.
+        newAttempt: function(){ socket.emit('spNewAttempt'); },
+        hwRecovery: function(){ return (window.EDUHOOT_HOMEWORK && window.EDUHOOT_HOMEWORK.recovery) || ''; },
         toggleHand: function(){
             this.handRaised = !this.handRaised;
             socket.emit('spHand', { raised: this.handRaised });
@@ -149,6 +155,7 @@ var app = Vue.createApp({
 // ----- Parámetros y token (igual que en la pantalla en vivo) -----
 var params = jQuery.deparam(window.location.search);
 try{
+  if(!isHomework){
     var last = localStorage.getItem('playerLastJoin');
     if(last && (!params.pin || !params.name)){
         var parsed = JSON.parse(last);
@@ -159,6 +166,7 @@ try{
             if(!token && parsed.token) token = parsed.token;
         }
     }
+  }
 }catch(e){}
 if(params.token){
     token = params.token;
@@ -169,6 +177,7 @@ if(params.token){
     }catch(e){}
 }
 function persistJoinState(){
+    if(isHomework) return;
     try{
         localStorage.setItem('playerLastJoin', JSON.stringify({ pin: params.pin || '', name: params.name || '', token: token || '', icon: params.icon || '' }));
     }catch(e){}

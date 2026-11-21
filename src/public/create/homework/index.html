@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Homework | EduHoot</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="/css/create.css">
+        <link rel="stylesheet" href="/css/dropdowns.css">
+        <link href="/css/fonts.css" rel="stylesheet">
+        <link rel="stylesheet" href="/css/edutictac-footer.css">
+        <link rel="stylesheet" href="/css/edutictac-shared.css">
+        <link rel="stylesheet" href="/css/homeworkManage.css">
+        <script src="/js/edutictac-chip.js"></script>
+        <script src="https://commons.edutictac.es/assets/account-widget.js" defer></script>
+        <link rel="icon" href="/icons/logo.svg" type="image/svg+xml">
+    </head>
+    <body>
+        <!-- Deures asíncrons (feature 1), lado del docente: crear (?quiz=ID), lista y resultados (?code=). -->
+        <a id="back" href="/create/" data-hw="back"></a>
+        <edutictac-account class="site-account site-account--top" data-base="https://commons.edutictac.es"></edutictac-account>
+        <div id="hw-app"></div>
+        <template id="hw-tpl">
+        <div class="page-shell hw-shell">
+            <div class="top-row">
+                <h1 id="hwPageTitle">{{ t('title') }}</h1>
+                <div class="top-actions">
+                    <label class="lang-switch">
+                        <span>{{ t('langLabel') }}</span>
+                        <select id="lang-select" data-lang-options="name"></select>
+                    </label>
+                </div>
+            </div>
+
+            <p v-if="loading" class="hw-muted">{{ t('loading') }}</p>
+            <p v-else-if="!user" id="hwNeedLogin" class="hw-notice">{{ t('needLogin') }} <a href="/create/">{{ t('goLogin') }}</a></p>
+
+            <!-- Crear -->
+            <section v-else-if="view === 'new'" id="hwNew" class="hw-card">
+                <template v-if="!created">
+                    <h2>{{ t('newTitle') }}</h2>
+                    <p class="hw-muted" v-if="quizName">{{ t('quizLabel') }}: <b>{{ quizName }}</b></p>
+                    <form id="hwNewForm" class="hw-form" @submit.prevent="create">
+                        <label>{{ t('fTitle') }}<input id="hwFTitle" type="text" maxlength="80" v-model="form.title"></label>
+                        <label>{{ t('fDeadline') }}<input id="hwFDeadline" type="datetime-local" required v-model="form.deadline"></label>
+                        <label>{{ t('fAttempts') }}
+                            <select id="hwFAttempts" v-model="form.maxAttempts">
+                                <option value="1">{{ t('attempts1') }}</option>
+                                <option value="2">2</option><option value="3">3</option><option value="5">5</option>
+                                <option value="0">{{ t('attemptsUnlimited') }}</option>
+                            </select>
+                        </label>
+                        <label>{{ t('fTime') }}
+                            <select id="hwFTime" v-model="form.timePerQuestion">
+                                <option value="">{{ t('timeQuiz') }}</option>
+                                <option value="10">10 s</option><option value="20">20 s</option><option value="30">30 s</option>
+                                <option value="60">60 s</option><option value="120">120 s</option>
+                            </select>
+                        </label>
+                        <label class="hw-check"><input id="hwFShow" type="checkbox" v-model="form.showCorrectAnswers"> {{ t('fShowAnswers') }}</label>
+                        <label class="hw-check"><input id="hwFShuffle" type="checkbox" v-model="form.randomAnswers"> {{ t('fShuffle') }}</label>
+                        <p v-if="error" id="hwFormError" class="hw-error" role="alert">{{ t(error) }}</p>
+                        <button id="hwCreateBtn" type="submit" class="btn btn-primary" :disabled="busy">{{ t('create') }}</button>
+                    </form>
+                </template>
+                <template v-else>
+                    <h2>{{ t('createdTitle') }}</h2>
+                    <p>{{ t('createdText') }}</p>
+                    <p id="hwLink" class="hw-link">{{ linkOf(created) }}</p>
+                    <p class="hw-muted">{{ t('code') }}: <b id="hwCode">{{ created.code }}</b></p>
+                    <div class="hw-actions">
+                        <button id="hwCopyBtn" type="button" class="btn btn-primary" @click="copy(created)">{{ copied === created.code ? t('copied') : t('copyLink') }}</button>
+                        <a class="btn btn-ghost" href="/create/homework/" id="hwToList">{{ t('myHomework') }}</a>
+                    </div>
+                </template>
+            </section>
+
+            <!-- Resultados -->
+            <section v-else-if="view === 'results' && results" id="hwResults" class="hw-card">
+                <h2>{{ results.homework.title }}</h2>
+                <p class="hw-muted">{{ statusText(results.homework) }} · {{ deadlineText(results.homework) }} · {{ fmt('studentsN', { n: results.students }) }}</p>
+                <div class="hw-actions">
+                    <a id="hwCsvBtn" class="btn btn-primary" :href="'/api/homeworks/' + results.homework.code + '/report.csv'">{{ t('downloadCsv') }}</a>
+                    <button type="button" class="btn btn-ghost" id="hwRefreshBtn" @click="loadResults">{{ t('refresh') }}</button>
+                    <a class="btn btn-ghost" href="/create/homework/">{{ t('myHomework') }}</a>
+                </div>
+                <p v-if="!results.rows.length" id="hwNoStudents" class="hw-muted">{{ t('noStudents') }}</p>
+                <div class="hw-table-wrap" v-else>
+                    <table class="hw-table" id="hwStudents">
+                        <thead><tr><th>{{ t('colName') }}</th><th>{{ t('colState') }}</th><th>{{ t('colAttempts') }}</th><th>{{ t('colBest') }}</th><th>{{ t('colCorrect') }}</th></tr></thead>
+                        <tbody>
+                            <tr v-for="r in results.rows" :key="r.name">
+                                <td>{{ (r.icon ? r.icon + ' ' : '') + r.name }}</td>
+                                <td>{{ t('state_' + r.state) }}</td>
+                                <td>{{ r.attempts }}</td>
+                                <td>{{ r.bestScore }}</td>
+                                <td>{{ r.correctCount }} / {{ r.correctCount + r.wrongCount }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <h3 v-if="results.rows.length">{{ t('byQuestion') }}</h3>
+                <div class="hw-table-wrap" v-if="results.rows.length">
+                    <table class="hw-table" id="hwQuestions">
+                        <thead><tr><th>#</th><th>{{ t('colQuestion') }}</th><th>{{ t('colOk') }}</th></tr></thead>
+                        <tbody>
+                            <tr v-for="q in results.questionStats" :key="q.number">
+                                <td>{{ q.number }}</td>
+                                <td class="hw-q">{{ plain(q.question) }}</td>
+                                <td>{{ q.answered ? Math.round(q.correct * 100 / q.answered) + ' %' : '–' }} ({{ q.correct }}/{{ q.answered }})</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Lista -->
+            <section v-else id="hwList">
+                <p v-if="error" class="hw-error" role="alert">{{ t(error) }}</p>
+                <p v-if="!list.length" id="hwEmpty" class="hw-muted">{{ t('empty') }}</p>
+                <article v-for="h in list" :key="h.code" class="hw-card hw-item" :data-code="h.code">
+                    <div class="hw-item__head">
+                        <h2>{{ h.title }}</h2>
+                        <span class="hw-badge" :class="'is-' + stateOf(h)">{{ statusText(h) }}</span>
+                    </div>
+                    <p class="hw-muted">{{ h.quizName }} · {{ deadlineText(h) }} · {{ fmt('studentsN', { n: h.students }) }} · {{ fmt('finishedN', { n: h.finishedAttempts }) }}</p>
+                    <p class="hw-link">{{ linkOf(h) }}</p>
+                    <div class="hw-actions">
+                        <button type="button" class="btn btn-primary hw-copy" @click="copy(h)">{{ copied === h.code ? t('copied') : t('copyLink') }}</button>
+                        <a class="btn btn-ghost hw-results" :href="'/create/homework/?code=' + h.code">{{ t('results') }}</a>
+                        <button type="button" class="btn btn-ghost hw-toggle" v-if="stateOf(h) === 'open'" @click="setStatus(h, 'closed')">{{ t('close') }}</button>
+                        <button type="button" class="btn btn-ghost hw-reopen" v-else @click="reopen(h)">{{ t('reopen') }}</button>
+                        <button type="button" class="btn btn-danger hw-delete" :class="{ 'is-confirming': deleting === h.code }" @click="askDelete(h)">{{ deleting === h.code ? t('deleteConfirm') : t('delete') }}</button>
+                    </div>
+                    <div v-if="reopening === h.code" class="hw-reopen-box">
+                        <label>{{ t('newDeadline') }}<input type="datetime-local" class="hw-new-deadline" v-model="newDeadline"></label>
+                        <button type="button" class="btn btn-primary hw-reopen-ok" @click="confirmReopen(h)">{{ t('reopenOk') }}</button>
+                    </div>
+                </article>
+            </section>
+        </div>
+        </template>
+        <script src="/js/libs/vue.global.prod.js"></script>
+        <script src="/js/languages.js"></script>
+        <script src="/js/env-badge.js"></script>
+        <script src="/js/homeworkManage.js"></script>
+    </body>
+</html>
