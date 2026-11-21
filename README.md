@@ -53,6 +53,9 @@ El xip d'EduTicTac obri la sessió Authentik d'EduHoot. Configura `AUTHENTIK_ISS
 - Recuperació ràpida de jugadors quan la connexió cau.
 - Tres modes de joc: **Jugar a l’aula** (amb PIN), **Multijugador**
   (pantalla compartida) i **Solo** (individual, al teu ritme).
+- A l’aula, cada alumne pot anar **al seu ritme** (mode autoritme), i es
+  poden assignar **deures** amb data límit, intents i informe (vore
+  `ARCHITECTURE.md`).
 - L’alumnat s’uneix amb un nom lliure i una icona; l’amfitrió avança les
   preguntes a mà, no hi ha avanç automàtic.
 - Informe de partida en CSV, i exportació del banc de preguntes a Moodle

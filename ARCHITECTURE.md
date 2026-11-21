@@ -33,6 +33,7 @@ funcionament del projecte.
 - [Pantalla completa de la partida](#pantalla-completa-de-la-partida)
 - [Modes de joc](#modes-de-joc)
 - [Avanç de pregunta: automàtic o manual?](#avanç-de-pregunta-automàtic-o-manual)
+- [Mode autoritme i deures asíncrons](#mode-autoritme-i-deures-asíncrons)
 - [Comparativa de tipus amb Kahoot, Wayground i AULES](#comparativa-de-tipus-amb-kahoot-wayground-i-aules)
 - [Càlcul de la puntuació](#càlcul-de-la-puntuació)
 
@@ -85,6 +86,9 @@ src/
 │   │   ├── quizzes.js         # accés, permisos i creació de quizzes
 │   │   ├── ephemeralQuizzes.js # quizzes "local-*" sense compte (caduquen)
 │   │   ├── soloScores.js      # rànquing Solo amb escriptura en lots
+│   │   ├── selfPaced.js       # autoritme: estat, temps i puntuació per alumne (pur)
+│   │   ├── selfPacedPayloads.js # missatges a l'alumne (pregunta, resultat, final)
+│   │   ├── homework.js        # deures: creació, intents, accions i resultats
 │   │   └── kahootImport.js    # importació de Kahoot i rèplica d'imatges
 │   ├── routes/
 │   │   ├── quizzes.js         # /api/quizzes..., /api/public-quizzes, /api/tags
@@ -92,12 +96,14 @@ src/
 │   │   ├── auth.js            # /api/auth/... (login, Google, Authentik, usuaris)
 │   │   ├── playerAuth.js      # /api/player-auth/... (Edutictac ID)
 │   │   ├── admin.js           # /api/admin/..., /admin
+│   │   ├── homework.js        # /api/homework/:code/... (alumnat) i /api/homeworks (docent)
 │   │   └── devLogin.js        # /dev/login (només amb NODE_ENV=development)
 │   ├── sockets/
 │   │   ├── index.js           # io.on('connection') i sessió del socket
 │   │   ├── hostEvents.js      # host-join, startGame, nextQuestion...
 │   │   ├── playerEvents.js    # player-join, playerAnswer...
 │   │   ├── common.js          # disconnect, timeUp, getScore...
+│   │   ├── selfPacedEvents.js # autoritme en classe: spNext, spAnswer, spHand...
 │   │   └── gameHelpers.js     # temporitzadors, preguntes, neteja de partides
 │   ├── importCsv.js       # anàlisi de CSV -> preguntes
 │   ├── questionUtils.js   # utilitats de tipus de pregunta
@@ -106,9 +112,10 @@ src/
 │       ├── liveGames.js   # helpers de partides en memòria
 │       └── players.js     # helpers de jugadors
 ├── public/
-│   ├── create/             # creador de qüestionaris (+ quiz-creator/)
-│   ├── host/                # vista del professorat (+ game/)
-│   ├── player/              # vista de l'alumnat (+ game/)
+│   ├── create/             # creador de qüestionaris (+ quiz-creator/, homework/)
+│   ├── host/                # vista del professorat (+ game/, self-paced/)
+│   ├── homework/            # enllaç curt /homework/?code= (redirigix)
+│   ├── player/              # vista de l'alumnat (+ game/, self-paced/)
 │   ├── solo/                 # mode individual
 │   ├── multiplayer/           # mode pantalla compartida
 │   ├── dev/                   # maquetes (només amb NODE_ENV=development)
@@ -175,6 +182,8 @@ de `data/repositories.js`:
 | `quizRatingVotes` | `RATING_VOTES_COLLECTION` | Vot individual de valoració, per a evitar vots duplicats. |
 | `appLogs` | `LOGS_COLLECTION` | Logs del servidor, en una col·lecció capped (circular) redimensionable. |
 | `appSettings` | `SETTINGS_COLLECTION` | Configuració editable en calent, com el nivell i la mida del logging. |
+| `homeworks` | `HOMEWORK_COLLECTION` | Deures: còpia de les preguntes, opcions, data límit i intents. Codi únic (índex). |
+| `homeworkAttempts` | `HOMEWORK_ATTEMPTS_COLLECTION` | Un document per alumne i intent: puntuació, historial i estat (`sp`). Índex únic `code + studentKey + attemptNo`. |
 
 Les partides en curs ("live games") **no estan en Mongo**: viuen en un
 `Map` en memòria del procés Node mentre la partida està activa. Només al
@@ -1003,6 +1012,8 @@ d'ells està pensat per a una classe amb un dispositiu per alumne:
 | **"Multijugador"** | `startMultiplayer(quiz.id)` → `/multiplayer/` | Pensat per a 2-4 jugadors compartint **una sola pantalla/dispositiu** (text "Juega en la misma pantalla" en `src/public/multiplayer/index.html`). No servix per a una classe amb un dispositiu per alumne. |
 | **"Solo"** | `startSolo(quiz.id)` → `/solo/` | Mode individual, per a practicar fora de classe (vore també els [enllaços directes al mode Solo](README.md) del README). No és un mode de grup. |
 
+Dins de "Jugar a l'aula", el lobby permet triar el **mode de la partida**: en directe (per defecte) o **al seu ritme** (autoritme). A més, el botó 📚 crea un **deure** amb data límit. Vore [Mode autoritme i deures asíncrons](#mode-autoritme-i-deures-asíncrons).
+
 Per a una classe amb molts alumnes, cada un amb el seu propi dispositiu,
 l'única opció correcta hui és **"Jugar a l'aula"**.
 
@@ -1064,6 +1075,57 @@ Kahoot clàssic.
 correspondència i la casella està desmarcada, el lobby mostra el selector
 «Correspondencias a ciegas» (`options.matchingBlindStyle`): `codes` (tocs,
 per defecte), `select` (desplegables) o `steps` (pas a pas).
+
+## Mode autoritme i deures asíncrons
+
+Dos maneres de deixar que cada alumne vaja al seu ritme. Les dues usen el
+mateix motor, `services/selfPaced.js`: un mòdul **pur** (sense sockets ni
+MongoDB) que guarda l'estat de l'alumne en `player.gameData.sp`
+(`index`, `startedAt`, `answered`, `finished`, `hand`) i rep l'hora (`now`)
+com a paràmetre. **El servidor mana**: temps, puntuació i resposta correcta
+(marge de xarxa de 1,5 s). Els missatges a l'alumne (`spQuestion`,
+`spResult`, `spFinished`…) els construïx `services/selfPacedPayloads.js`.
+
+| | Autoritme (en classe) | Deures |
+|---|---|---|
+| Opció | Lobby de `/host/`: «Mode» → «Al seu ritme» (`options.mode = 'selfPaced'`) | Botó 📚 de la biblioteca → `/create/homework/?quiz=ID` |
+| Durada | Una classe; l'acaba l'amfitrió (`spEnd`) | Dies; l'acaba la data límit |
+| Transport | Socket.IO (`sockets/selfPacedEvents.js`) | HTTP (`routes/homework.js`), sense sockets |
+| Estat | En memòria, com la partida en viu | MongoDB (`homeworks`, `homeworkAttempts`) |
+| Pantalla alumnat | `/player/self-paced/` | La mateixa, amb `?hw=CODI` |
+| Pantalla docent | `/host/self-paced/` (progrés, Top 10 si hi ha puntuacions, expulsar, acabar) | `/create/homework/` (llista, resultats, CSV) |
+| Identitat | Nom + token de la sessió | Nom + **codi de recuperació** (SHA-256 en BD) |
+
+**Autoritme.** Cada alumne demana la seua pregunta (`spNext`), contesta
+(`spAnswer`) i, si s'acaba el temps, avisa (`spTimeUp`); el servidor ho
+comprova amb el seu rellotge. Qui entra tard comença en la primera pregunta.
+Amb la casella «Mostrar puntuacions i rànquing» marcada, l'amfitrió veu un Top
+10 en viu i l'alumne el Top 10 després de cada resultat; sense marcar, ningú
+veu punts ni rànquing. L'alumne pot llegir la pregunta en veu alta i alçar la
+mà (`spHand`, es veu en la llista de l'amfitrió).
+
+**Deures.** El docent crea el deure (`POST /api/homeworks`): es **copien les
+preguntes** en eixe moment, de manera que editar el quiz després no el canvia.
+L'alumnat entra amb l'enllaç `/homework/?code=…` (redirigix a
+`/player/self-paced/?hw=…`), tria un nom (3–20 lletres o números) i rep el codi
+de recuperació; amb nom i codi es reprén des d'un altre dispositiu. Cada acció
+(`resume`, `next`, `answer`, `timeUp`, `newAttempt`) és una petició a
+`POST /api/homework/:code/act`; la resposta duu els mateixos esdeveniments que
+el servidor en directe, i `js/homeworkTransport.js` els entrega a
+`playerSelfPaced.js` com si vingueren d'un socket. Detalls de seguretat i
+concurrència:
+
+- Cada intent té un camp `version`; si dos dispositius guarden alhora, un
+  reintenta una vegada (control optimista).
+- Els intents fallits del codi de recuperació es limiten (10 per IP, deure i
+  nom cada 10 minuts; 200 en total per deure i nom).
+- Passada la data límit (o tancat pel docent) l'intent a mitges es tanca amb
+  els seus punts; ningú nou pot entrar.
+- El codi del deure és únic per l'índex de Mongo, amb reintent en crear-lo
+  (issue #15).
+
+Pendent: entrada amb identitat de Commons i enviar-li la puntuació (vore
+`HOMEWORK_PLAN.md`, fora del repositori).
 
 ## Avanç de pregunta: automàtic o manual?
 

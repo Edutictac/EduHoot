@@ -71,6 +71,19 @@
 
 ## Pròximament
 
+### Cada alumne al seu ritme
+
+- **Mode «Al seu ritme»**: al lobby tries que cada alumne avance pel seu
+  compte, amb el seu propi temps, sense «Pregunta següent». Veus el progrés
+  de tothom, pots expulsar i acabes la partida quan vulgues. Si actives les
+  puntuacions, hi ha Top 10 en viu; l'alumnat pot escoltar la pregunta i
+  alçar la mà.
+- **Deures amb data límit**: des de la biblioteca (botó 📚) assignes un
+  quiz com a deure: tries la data límit, els intents i el temps, i
+  comparteixes un enllaç. L'alumnat entra només amb un nom i rep un codi
+  per a continuar des d'un altre dispositiu. Veus qui ha fet el deure, la
+  nota de cada pregunta i descarregues l'informe en CSV.
+
 ### Millores de contingut i accessibilitat
 
 - **Pregunta de correspondència**: l'alumnat relaciona cada element amb la
@@ -191,6 +204,19 @@
 
 ## Próximamente
 
+### Cada alumno a su ritmo
+
+- **Modo «A su ritmo»**: en el lobby eliges que cada alumno avance por su
+  cuenta, con su propio tiempo, sin «Siguiente pregunta». Ves el progreso
+  de todos, puedes expulsar y terminas la partida cuando quieras. Si activas
+  las puntuaciones, hay Top 10 en vivo; el alumnado puede escuchar la
+  pregunta y levantar la mano.
+- **Deberes con fecha límite**: desde la biblioteca (botón 📚) asignas un
+  quiz como deber: eliges la fecha límite, los intentos y el tiempo, y
+  compartes un enlace. El alumnado entra solo con un nombre y recibe un
+  código para continuar desde otro dispositivo. Ves quién ha hecho el
+  deber, el acierto de cada pregunta y descargas el informe en CSV.
+
 ### Mejoras de contenido y accesibilidad
 
 - **Pregunta de correspondencia**: el alumnado relaciona cada elemento con
@@ -281,6 +307,19 @@
   then review only the ones you didn't know.
 
 ## Coming soon
+
+### Each student at their own pace
+
+- **"At their own pace" mode**: in the lobby you choose that each student
+  moves on alone, with their own timer, without "Next question". You see
+  everyone's progress, can kick students and end the game whenever you
+  like. If you turn scores on, there is a live Top 10; students can listen
+  to the question and raise their hand.
+- **Homework with a deadline**: from the library (📚 button) you assign a
+  quiz as homework: pick the deadline, the attempts and the time, and share
+  a link. Students join with just a name and get a code to continue from
+  another device. You see who did the homework and how each question went,
+  and you can download the CSV report.
 
 ### Content and accessibility improvements
 

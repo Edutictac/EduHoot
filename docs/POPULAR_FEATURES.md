@@ -183,6 +183,10 @@ el context, que ja estan en la taula).
    → **Criteri pedagògic:** 📚 Aprenentatge: Alt · 🙂 Clima: Segur ·
    🤝 Inclusió: Neutra → **Prioritat alta** (encara que es manté en Fase 3
    per dependre tècnicament de la proposta 3).
+   **Implementat** (sense Commons): enllaç `/homework/?code=…`, nom + codi de
+   recuperació, intents configurables, data límit, resultats i CSV (vore
+   `ARCHITECTURE.md`, «Mode autoritme i deures asíncrons»). **Pendent:** entrada
+   i puntuació amb identitat de Commons.
 
 2. 🟨 **Kahoot** — Podi final animat amb confeti — 🟡 Mitjana
    La imatge més icònica i reconeixible del gènere.
@@ -196,6 +200,10 @@ el context, que ja estan en la taula).
    diferenciat, reduïx la pressió d'un temps compartit) · 🙂 Clima:
    Segur · 🤝 Inclusió: Alta → **Prioritat alta**, reforça el seu paper
    de peça base de la Fase 3.
+   **Implementat** en «Jugar a l'aula» (lobby → «Al seu ritme»): estat i
+   puntuació per alumne en el servidor, pantalles pròpies d'alumnat i
+   amfitrió, lectura en veu alta, mà alçada i Top 10 segons la casella de
+   puntuacions. **Pendent:** multijugador (decisió: de moment no).
 
 4. 🟩 **Ambdues** — Power-ups: doble puntuació manual, 50/50 i congelar
    ratxa — 🔴 Alta

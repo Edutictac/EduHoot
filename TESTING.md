@@ -92,7 +92,13 @@ problemes d'estil, variables sense usar, etc.
   simulat de dev: rol del seed, rebuig sense rol docent i PKCE), i
   `adminLogs.test.js` (visor de logs, «Cargar más» amb `before`/`beforeId`
   i configuració de nivell/mida de la col·lecció capped, tot protegit per
-  rol admin).
+  rol admin), `selfPacedSockets.test.js` (autoritme amb sockets reals de xarxa
+  amb `socket.io-client`: partida completa, entrada tard, reconnexió, rellotge
+  del servidor, respostes ocultes i mode en directe intacte) i
+  `homework.test.js` (deures per HTTP: creació i permisos, codi de
+  recuperació, partida completa, intents, dos dispositius alhora, data límit,
+  resultats i CSV, força bruta; el temps es controla movent la data límit en
+  la BD).
 - **`test/browser/`** — tests de navegador amb Playwright:
   `language.spec.js` (canvi d'idioma), `auth-state.spec.js` (estat de sessió
   i pont amb el xip), `player-game.spec.js` (joc de l'alumnat des del PIN a
@@ -123,6 +129,13 @@ problemes d'estil, variables sense usar, etc.
   `solo-matching.spec.js` (Solo, flashcards i multijugador local),
   `create-export-matching.spec.js` (PDF, DOCX i ODT, amb les llibreries
   substituïdes) i `matching-poc.spec.js` (prova de concepte de `/dev/`).
+  Autoritme i deures: `player-self-paced.spec.js` i `host-self-paced.spec.js`
+  (pantalles de classe, amb Socket.IO fals), `homework.spec.js` (entrada,
+  codi de recuperació, reintents i talls de xarxa, amb la API simulada) i
+  `homework-manage.spec.js` (panell del docent: crear, llista i resultats).
+  Nota: el servidor de proves és estàtic (`python3 -m http.server`), per això
+  l'API sempre es simula amb `page.route`; les rutes més recents tenen
+  prioritat.
   A més, `solo-pause.spec.js` (pausar i cancel·lar en Solo) i
   `long-text.spec.js` (el text llarg sense espais no se n'ix del requadre).
 
