@@ -11,18 +11,23 @@ function questionTimeOf(gameData, current) {
   return Math.round(base * (1 + normalizeMatchingExtraTime(options.matchingExtraTime) / 100));
 }
 
+// Puntos de una pregunta según el tiempo gastado: 1000 al empezar, 0 al agotarse el tiempo,
+// por el multiplicador de la pregunta. Lo usan la partida compartida (un reloj para todos)
+// y el modo autoritme (un reloj por alumno).
+function pointsForElapsed(current, limitSeconds, elapsedMs) {
+  const limitMs = Math.max(1, limitSeconds) * 1000;
+  const remainingRatio = Math.max(0, Math.min(1, (limitMs - Math.max(0, elapsedMs)) / limitMs));
+  const multiplierRaw = Number(current && current.pointsMultiplier);
+  const multiplier = Number.isFinite(multiplierRaw) && multiplierRaw > 0 ? multiplierRaw : 1;
+  return Math.round(MAX_POINTS_PER_QUESTION * remainingRatio * multiplier);
+}
+
 function calculateQuestionScore(game) {
   const gameData = game && game.gameData ? game.gameData : {};
   const questions = Array.isArray(gameData.questions) ? gameData.questions : [];
   const current = questions[(Number(gameData.question) || 1) - 1] || {};
-  const limitSeconds = questionTimeOf(gameData, current);
-  const limitMs = Math.max(1, limitSeconds) * 1000;
   const startedAt = Number(gameData.questionStartedAt) || Date.now();
-  const elapsedMs = Math.max(0, Date.now() - startedAt);
-  const remainingRatio = Math.max(0, Math.min(1, (limitMs - elapsedMs) / limitMs));
-  const multiplierRaw = Number(current.pointsMultiplier);
-  const multiplier = Number.isFinite(multiplierRaw) && multiplierRaw > 0 ? multiplierRaw : 1;
-  return Math.round(MAX_POINTS_PER_QUESTION * remainingRatio * multiplier);
+  return pointsForElapsed(current, questionTimeOf(gameData, current), Date.now() - startedAt);
 }
 
 function getSubmissionScoreRatio(meta, submission) {
@@ -66,6 +71,7 @@ module.exports = {
   MAX_POINTS_PER_QUESTION,
   STREAK_MIN_FOR_BONUS,
   questionTimeOf,
+  pointsForElapsed,
   calculateQuestionScore,
   getSubmissionScoreRatio,
   streakBonus,

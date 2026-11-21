@@ -2,6 +2,7 @@ const createGameHelpers = require('./gameHelpers');
 const createCommonEvents = require('./common');
 const createHostEvents = require('./hostEvents');
 const createPlayerEvents = require('./playerEvents');
+const createSelfPacedEvents = require('./selfPacedEvents');
 
 // Registre de tots els handlers de Socket.IO. Mou el contingut de
 // io.on('connection', ...) de server.js, repartit en tres grups
@@ -37,7 +38,9 @@ module.exports = function registerSocketHandlers(io, deps) {
   const helpers = createGameHelpers({ io, games, players, cleanImportedText });
 
   const registerCommonEvents = createCommonEvents({ io, games, players, helpers, selectQuizzesForUser });
+  const selfPaced = createSelfPacedEvents({ io, games, players, helpers, cacheFinishedSessionReport, incrementQuizStats, commons });
   const registerHostEvents = createHostEvents({
+    selfPaced,
     io,
     games,
     players,
@@ -57,6 +60,7 @@ module.exports = function registerSocketHandlers(io, deps) {
     GLOBAL_OWNER_EMAIL
   });
   const registerPlayerEvents = createPlayerEvents({
+    selfPaced,
     io,
     games,
     players,
@@ -77,6 +81,7 @@ module.exports = function registerSocketHandlers(io, deps) {
 
     registerHostEvents(socket);
     registerPlayerEvents(socket);
+    selfPaced.register(socket);
     registerCommonEvents(socket);
   });
 };

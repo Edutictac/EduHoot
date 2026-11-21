@@ -1,0 +1,196 @@
+// Modo autoritme (feature 3): eventos de socket. Cada alumno pide su pregunta y la contesta
+// con su propio reloj; el servidor valida y puntúa (services/selfPaced.js).
+//
+// Alumno → servidor: spNext, spAnswer(valor), spTimeUp
+// Servidor → alumno: spQuestion, spResult, spAnswered, spFinished (y GameOver al cerrar)
+// Anfitrión → servidor: spProgressRequest, spEnd
+// Servidor → anfitrión: spProgress
+const sp = require('../services/selfPaced');
+const { getQuestionMeta, normalizeSubmission } = require('../questionUtils');
+const { studentMetaOf } = require('../services/showAnswers');
+const { questionTimeOf } = require('../services/scoring');
+const { logger } = require('../logger');
+
+module.exports = function createSelfPacedEvents({
+  io,
+  games,
+  players,
+  helpers,
+  cacheFinishedSessionReport,
+  incrementQuizStats,
+  commons
+}) {
+  const { allowAnswer, buildStudentPlayerPayload, scheduleGameCleanup, timingsFor } = helpers;
+
+  function contextOf(socket) {
+    const player = players.getPlayer(socket.id);
+    const game = player ? games.getGame(player.hostId) : null;
+    if (!game || !game.gameData || !sp.isSelfPaced(game)) return null;
+    return { player, game };
+  }
+
+  // Lo que ve el anfitrión: avance por alumno, sin puntos (no hay ranking en vivo).
+  function progressList(game) {
+    return players.getPlayers(game.hostId).map((p) => Object.assign({ name: p.name, icon: p.icon || '' }, sp.progressOf(game, p)));
+  }
+  function emitProgress(game) {
+    io.to(game.hostId).emit('spProgress', progressList(game));
+  }
+
+  function questionPayload(game, player, now) {
+    const q = sp.currentQuestion(game, player);
+    const state = sp.ensureState(player);
+    const meta = getQuestionMeta(q);
+    const full = {
+      question: q.question,
+      answers: [0, 1, 2, 3].map((i) => (Array.isArray(q.answers) ? q.answers[i] : undefined)),
+      type: meta.type,
+      image: q.image || '',
+      video: q.video || '',
+      pointsMultiplier: Number(q.pointsMultiplier) > 1 ? 2 : 1,
+      time: Math.ceil(sp.remainingMs(game, player, now) / 1000),
+      ...(meta.type === 'matching' ? { matchLeft: meta.matchLeft, matchRight: meta.matchRight } : {})
+    };
+    return {
+      ...buildStudentPlayerPayload(full, game.gameData.options),
+      questionNumber: state.index,
+      totalQuestions: sp.progressOf(game, player).total,
+      timeTotal: questionTimeOf(game.gameData, q)
+    };
+  }
+
+  function finishedPayload(game, player) {
+    const ranking = players.getPlayers(game.hostId).slice().sort((a, b) => b.gameData.score - a.gameData.score);
+    const rank = ranking.findIndex((p) => p === player) + 1;
+    const showScores = game.gameData.options ? game.gameData.options.showScoresBetween !== false : true;
+    return {
+      score: player.gameData.score,
+      correctCount: player.gameData.correctCount || 0,
+      wrongCount: player.gameData.wrongCount || 0,
+      bestStreak: player.gameData.bestStreak || 0,
+      total: game.gameData.scoredQuestionsCount || 0,
+      // Ranking solo al final y solo si el anfitrión muestra puntuaciones.
+      ...(showScores ? { rank, players: ranking.length } : {})
+    };
+  }
+
+  function sendQuestion(socket, game, player, now) {
+    socket.emit('spQuestion', questionPayload(game, player, now));
+    const q = sp.currentQuestion(game, player);
+    socket.emit('questionMedia', { image: q.image || '', video: q.video || '' });
+  }
+
+  // Estado actual del alumno (primera carga o reconexión).
+  function resume(socket, game, player) {
+    const now = Date.now();
+    const state = sp.ensureState(player);
+    if (state.finished) { socket.emit('spFinished', finishedPayload(game, player)); return; }
+    if (state.index === 0) return; // aún no ha pedido la primera pregunta
+    if (!state.answered && sp.remainingMs(game, player, now) === 0 && sp.expireQuestion(game, player, now)) {
+      emitProgress(game);
+    }
+    if (state.answered) { socket.emit('spAnswered', { questionNumber: state.index, totalQuestions: sp.progressOf(game, player).total }); return; }
+    sendQuestion(socket, game, player, now);
+  }
+
+  function resultPayload(game, player, res) {
+    const q = sp.currentQuestion(game, player);
+    const meta = getQuestionMeta(q);
+    const state = sp.ensureState(player);
+    return {
+      outcome: res.outcome,
+      ratio: res.scoreRatio,
+      points: res.points,
+      bonus: res.bonus,
+      streak: Number(player.gameData.streak) || 0,
+      score: player.gameData.score,
+      questionNumber: state.index,
+      totalQuestions: sp.progressOf(game, player).total,
+      // Respuesta correcta solo si «Mostrar respuestas» está activado.
+      meta: studentMetaOf(game, meta)
+    };
+  }
+
+  async function finishGame(game) {
+    if (game.gameOver) return;
+    const playersInGame = players.getPlayers(game.hostId);
+    playersInGame.forEach((p) => sp.finishPlayer(p));
+    const top = playersInGame.slice().sort((a, b) => b.gameData.score - a.gameData.score).slice(0, 5);
+    const name = (i) => (top[i] && top[i].gameData.score > 0 ? top[i].name : '');
+    game.gameLive = false;
+    game.gameOver = true;
+    // Cada alumno recibe su resumen; después, el cierre general (podio) para quien lo muestra.
+    playersInGame.forEach((p) => io.to(p.playerId).emit('spFinished', finishedPayload(game, p)));
+    io.to(game.pin).emit('GameOver', {
+      num1: name(0), num2: name(1), num3: name(2), num4: name(3), num5: name(4),
+      showPodium: game.gameData.options ? game.gameData.options.showScoresBetween !== false : true
+    });
+    emitProgress(game);
+    logger.info('Partida autoritme finalitzada', { tag: 'game-end', pin: game.pin, hostId: game.hostId, playersCount: playersInGame.length });
+    cacheFinishedSessionReport(game, playersInGame);
+    await incrementQuizStats(game.gameData.gameid, playersInGame.length);
+    await commons.reportCommonsScores(game, playersInGame);
+    scheduleGameCleanup(game.hostId);
+  }
+
+  function register(socket) {
+    socket.on('spNext', () => {
+      const ctx = contextOf(socket);
+      if (!ctx || ctx.game.gameOver || !ctx.game.gameLive) return;
+      const { game, player } = ctx;
+      const now = Date.now();
+      const state = sp.ensureState(player);
+      if (state.finished) { socket.emit('spFinished', finishedPayload(game, player)); return; }
+      // No se salta una pregunta en curso: si aún hay tiempo, se reenvía la actual.
+      if (state.index > 0 && !state.answered && !sp.expireQuestion(game, player, now)) {
+        sendQuestion(socket, game, player, now);
+        return;
+      }
+      if (!sp.beginNext(game, player, now)) {
+        socket.emit('spFinished', finishedPayload(game, player));
+      } else {
+        sendQuestion(socket, game, player, now);
+      }
+      emitProgress(game);
+      scheduleGameCleanup(game.hostId, timingsFor(game.hostId).inactivityMs);
+    });
+
+    socket.on('spAnswer', (value) => {
+      const ctx = contextOf(socket);
+      if (!ctx) { socket.emit('noGameFound'); return; }
+      const { game, player } = ctx;
+      if (!allowAnswer(socket, game.hostId)) { socket.emit('tooManyAnswers'); return; }
+      if (game.gameOver) { socket.emit('answerRejected', { reason: 'game-over' }); return; }
+      const q = sp.currentQuestion(game, player);
+      if (!q) { socket.emit('answerRejected', { reason: 'no-question' }); return; }
+      const submission = normalizeSubmission(getQuestionMeta(q), value);
+      const res = sp.submitAnswer(game, player, submission, Date.now());
+      if (!res.ok) { socket.emit('answerRejected', { reason: res.reason }); return; }
+      socket.emit('spResult', resultPayload(game, player, res));
+      emitProgress(game);
+    });
+
+    // El cliente avisa de que se acabó el tiempo; el servidor lo comprueba con su reloj.
+    socket.on('spTimeUp', () => {
+      const ctx = contextOf(socket);
+      if (!ctx) return;
+      const { game, player } = ctx;
+      if (!sp.expireQuestion(game, player, Date.now())) return;
+      socket.emit('spResult', resultPayload(game, player, { outcome: 'timeout', scoreRatio: 0, points: 0, bonus: 0 }));
+      emitProgress(game);
+    });
+
+    socket.on('spProgressRequest', () => {
+      const game = games.getGame(socket.id);
+      if (game && sp.isSelfPaced(game)) emitProgress(game);
+    });
+
+    socket.on('spEnd', () => {
+      const game = games.getGame(socket.id);
+      if (!game || !sp.isSelfPaced(game)) return;
+      finishGame(game).catch((err) => logger.error('spEnd error', { tag: 'spEnd', error: err && err.message ? err.message : String(err) }));
+    });
+  }
+
+  return { register, resume, emitProgress, startPlayers: (game) => players.getPlayers(game.hostId).forEach((p) => { delete p.gameData.sp; }) };
+};

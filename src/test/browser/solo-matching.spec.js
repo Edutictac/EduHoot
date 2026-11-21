@@ -156,3 +156,20 @@ test('Solo: opciones de la partida (barajar preguntas, mostrar respuestas) y rac
     await expect(page.locator('#feedback-body')).not.toContainText('→');
     await expect(page.locator('#feedback-body')).toHaveText('');
 });
+
+test('Solo con /solo/?id=…: el catálogo no se ve mientras carga el quiz; si falla, vuelve', async ({ page }) => {
+    await mockBackend(page);
+    let release;
+    const gate = new Promise((r) => { release = r; });
+    await page.route('**/api/quizzes/m1', async (route) => { await gate; await route.fulfill({ json: quiz }); });
+    await page.goto('/solo/?id=m1&lang=es');
+    await expect(page.locator('#catalog-panel')).toBeHidden();
+    release();
+    await expect(page.locator('#start-form')).toBeVisible();
+    await expect(page.locator('#catalog-panel')).toBeHidden();
+
+    await page.unroute('**/api/quizzes/m1');
+    await page.route('**/api/quizzes/m1', (route) => route.fulfill({ status: 404, json: { error: 'x' } }));
+    await page.goto('/solo/?id=m1&lang=es');
+    await expect(page.locator('#catalog-panel')).toBeVisible();
+});

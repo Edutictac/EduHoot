@@ -451,7 +451,26 @@ function hasMatchingQuestion(questions) {
     .some((q) => q && normalizeQuestionMeta(q).type === 'matching');
 }
 
+// Respuesta recibida del alumno, normalizada según el tipo de pregunta (compartida por la
+// partida en vivo y el modo autoritme).
+function normalizeSubmission(meta, num) {
+  if (meta.type === 'multiple') return normalizeCorrectAnswers(num, false);
+  if (meta.type === 'short-answer') {
+    return (num && typeof num === 'object' && num.text !== undefined)
+      ? { text: String(num.text || '') }
+      : { text: String(num || '') };
+  }
+  if (meta.type === 'matching') {
+    return normalizeMatchingSubmission(num, (meta.matchSolution || []).length, (meta.matchRight || []).length);
+  }
+  if (meta.type === 'numeric') {
+    return (num && typeof num === 'object' && num.number !== undefined) ? { number: num.number } : { number: num };
+  }
+  return Number(num);
+}
+
 module.exports = {
+  normalizeSubmission,
   normalizeQuestionType,
   normalizeCorrectAnswers,
   normalizeQuestionMeta,

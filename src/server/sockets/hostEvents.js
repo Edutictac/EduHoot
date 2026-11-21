@@ -5,6 +5,7 @@ const { hasMatchingQuestion, normalizeMatchingBlindStyle, normalizeMatchingExtra
 
 // host-join, host-join-game, startGame, nextQuestion, skipQuestion, newQuiz.
 module.exports = function createHostEvents({
+  selfPaced,
   io,
   games,
   players,
@@ -433,6 +434,8 @@ module.exports = function createHostEvents({
       options.matchingBlindStyle = normalizeMatchingBlindStyle(options.matchingBlindStyle);
       // Más tiempo en las correspondencias: 25, 50, 75 o 100 % (50 % por defecto).
       options.matchingExtraTime = normalizeMatchingExtraTime(options.matchingExtraTime);
+      // Modo de la partida: en vivo (por defecto) o autoritme (cada alumno a su ritmo).
+      options.mode = options.mode === 'selfPaced' ? 'selfPaced' : 'live';
       if (options.timePerQuestion !== undefined && options.timePerQuestion !== null && String(options.timePerQuestion).trim() !== '') {
         const parsedTime = parseInt(options.timePerQuestion, 10);
         if (Number.isNaN(parsedTime)) {
@@ -473,6 +476,12 @@ module.exports = function createHostEvents({
       scheduleGameCleanup(socket.id, timingsFor(socket.id).inactivityMs);
       io.to(game.pin).emit('gameStartedPlayer');
       socket.emit('gameStarted', game.hostId);
+      // Autoritme: no hay pregunta común; cada alumno pide la suya.
+      if (options.mode === 'selfPaced') {
+        selfPaced.startPlayers(game);
+        game.gameData.questionPending = false;
+        return;
+      }
       scheduleQuestionCountdown(game);
     });
 

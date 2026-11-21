@@ -371,6 +371,8 @@ function renderSelectedMeta(){
             .then(function(res){ return res.json().then(function(body){ return { ok: res.ok, body: body }; }); })
             .then(function(payload){
                 if(!payload.ok){
+                    // Si no carga, se vuelve a enseñar el catálogo.
+                    document.body.classList.remove('playing');
                     state.title = { key: 'startError' };
                     return;
                 }
@@ -384,6 +386,7 @@ function renderSelectedMeta(){
                 state.view = 'start';
             })
             .catch(function(){
+                document.body.classList.remove('playing');
                 state.title = { key: 'startError' };
             });
     }

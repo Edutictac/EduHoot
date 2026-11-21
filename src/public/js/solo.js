@@ -189,6 +189,9 @@ function setLang(newLang){
         var deepParams = new URLSearchParams(window.location.search || '');
         if(deepParams.get('id') && deepParams.get('mode') === 'cards'){
             deepLink = deepParams.get('id');
+        }
+        // Con un quiz elegido en la URL (/solo/?id=…) tampoco se enseña el catálogo mientras carga.
+        if(deepParams.get('id')){
             document.body.classList.add('playing');
         }
     }catch(e){}

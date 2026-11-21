@@ -1,5 +1,5 @@
 const { studentMetaOf } = require('../services/showAnswers');
-const { getQuestionMeta, normalizeCorrectAnswers, normalizeMatchingSubmission } = require('../questionUtils');
+const { getQuestionMeta, normalizeSubmission } = require('../questionUtils');
 const { logger } = require('../logger');
 
 // player-join, player-join-game, playerAnswer.
@@ -10,6 +10,7 @@ const { isRandomName } = require('../services/randomNames');
 const { isValidTypedName } = require('../services/nameRules');
 
 module.exports = function createPlayerEvents({
+  selfPaced,
   io,
   games,
   players,
@@ -207,6 +208,11 @@ module.exports = function createPlayerEvents({
         const playerData = players.getPlayers(game.hostId);
         socket.emit('playerGameData', playerData);
         socket.emit('quizInfo', { quizName: quizNameOf(game) });
+        // Autoritme: cada alumno retoma su pregunta, con el tiempo que le quedaba.
+        if (game.gameData.options && game.gameData.options.mode === 'selfPaced') {
+          selfPaced.resume(socket, game, player);
+          return;
+        }
         const questions = game.gameData.questions || [];
         const current = questions[game.gameData.question - 1];
         if (current) {
@@ -325,30 +331,7 @@ module.exports = function createPlayerEvents({
           }
 
           const meta = getQuestionMeta(current);
-            let normalizedSubmission;
-            if (meta.type === 'multiple') {
-              normalizedSubmission = normalizeCorrectAnswers(num, false);
-            } else if (meta.type === 'short-answer') {
-              if (num && typeof num === 'object' && num.text !== undefined) {
-                normalizedSubmission = { text: String(num.text || '') };
-              } else {
-                normalizedSubmission = { text: String(num || '') };
-              }
-            } else if (meta.type === 'matching') {
-              normalizedSubmission = normalizeMatchingSubmission(
-                num,
-                (meta.matchSolution || []).length,
-                (meta.matchRight || []).length
-              );
-            } else if (meta.type === 'numeric') {
-              if (num && typeof num === 'object' && num.number !== undefined) {
-                normalizedSubmission = { number: num.number };
-              } else {
-                normalizedSubmission = { number: num };
-              }
-            } else {
-              normalizedSubmission = Number(num);
-            }
+            const normalizedSubmission = normalizeSubmission(meta, num);
             player.gameData.answer = normalizedSubmission;
             player.gameData.answeredQuestion = game.gameData.question;
             emitAnswerStatus(hostId, game);
