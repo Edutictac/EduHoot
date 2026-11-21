@@ -81,7 +81,9 @@ const ev = (events, name) => (events.find((e) => e.name === name) || {}).data;
 test('el docente crea el deber: validaciones y permisos', async () => {
   assert.equal((await call('POST', '/api/homeworks', { quizId, deadline: inDays(1) })).status, 401);
   assert.equal((await call('POST', '/api/homeworks', { quizId, deadline: Date.now() + 1000 }, TEACHER)).body.error, 'deadline-too-soon');
-  assert.equal((await call('POST', '/api/homeworks', { quizId, deadline: inDays(400) }, TEACHER)).body.error, 'deadline-too-far');
+  // Máximo 30 días: 31 se rechaza y 29 se acepta.
+  assert.equal((await call('POST', '/api/homeworks', { quizId, deadline: inDays(31) }, TEACHER)).body.error, 'deadline-too-far');
+  assert.equal((await call('POST', '/api/homeworks', { quizId, deadline: inDays(29) }, TEACHER)).status, 200);
   assert.equal((await call('POST', '/api/homeworks', { quizId, deadline: inDays(1), maxAttempts: 99 }, TEACHER)).body.error, 'bad-attempts');
   assert.equal((await call('POST', '/api/homeworks', { quizId: 'no-existe', deadline: inDays(1) }, TEACHER)).status, 404);
   const hw = await createHomework({ maxAttempts: 3 });

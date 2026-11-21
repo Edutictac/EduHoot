@@ -72,7 +72,7 @@ tu estigues present. No necessiten compte.
    Cal haver iniciat sessió.
 2. Omple el formulari:
    - **Títol**: el que veurà l'alumnat (per defecte, el nom del quiz).
-   - **Data límit**: entre 1 minut i 180 dies a partir d'ara.
+   - **Data límit**: entre 1 minut i 30 dies a partir d'ara.
    - **Intents per alumne**: 1, 2, 3, 5 o il·limitats. Compta el **millor**.
    - **Temps per pregunta**: el de cada pregunta o un valor fix (de 10 a 120 s).
    - **Mostrar la resposta correcta després de contestar**.
@@ -138,7 +138,7 @@ sempre el servidor, no el dispositiu de l'alumne.
 ### Límits
 
 - Màxim **500 alumnes** per deure i **20 intents** per alumne.
-- Data límit: d'1 minut a 180 dies.
+- Data límit: d'1 minut a 30 dies.
 - Un nom no es pot repetir dins del mateix deure (no distingix majúscules).
 
 ---

@@ -15,7 +15,7 @@ const RECOVERY_LENGTH = 6;
 const MAX_STUDENTS = 500;
 const MAX_ATTEMPTS_LIMIT = 20;
 const MIN_LEAD_MS = 60 * 1000;
-const MAX_LEAD_MS = 180 * 24 * 60 * 60 * 1000;
+const MAX_LEAD_MS = 30 * 24 * 60 * 60 * 1000;
 // Una resposta enviada just abans de la data límit s'accepta (retard de la xarxa).
 const DEADLINE_GRACE_MS = sp.SELF_PACED_GRACE_MS;
 
