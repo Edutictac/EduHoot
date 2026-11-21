@@ -31,11 +31,15 @@
                 <button type="button" id="spDownloadBtn" class="sp-btn sp-btn--report" v-if="ended" @click="downloadReport">{{ t('downloadReport') }}</button>
                 <button type="button" id="spBackBtn" class="sp-btn" v-if="ended" @click="goBack">{{ t('backToLibrary') }}</button>
             </div>
+            <section id="spRanking" class="sp-ranking" v-if="top.length">
+                <h3>{{ t('topPlayers') }}</h3>
+                <ol><li v-for="p in top" :key="p.playerId">{{ (p.icon ? p.icon + ' ' : '') + p.name + ' - ' + p.score }}</li></ol>
+            </section>
             <p v-if="!ended && !list.length" id="spEmpty" class="sp-empty">{{ t('noStudents') }}</p>
             <ul id="spList" class="sp-list" v-if="list.length">
                 <li v-for="p in list" :key="p.playerId" class="sp-row" :class="{ 'is-finished': p.finished }">
                     <span class="sp-row__icon">{{ p.icon }}</span>
-                    <span class="sp-row__name">{{ p.name }}</span>
+                    <span class="sp-row__name"><span v-if="p.hand" class="sp-row__hand" role="img" :aria-label="t('handRaised')" :title="t('handRaised')">✋</span>{{ p.name }}</span>
                     <span class="sp-row__bar" role="progressbar" :aria-valuenow="p.answered" aria-valuemin="0" :aria-valuemax="p.total"><span class="sp-row__fill" :style="{ width: pct(p) + '%' }"></span></span>
                     <span class="sp-row__count">{{ p.finished ? t('finished') : (p.answered + ' / ' + p.total) }}</span>
                     <template v-if="!ended">

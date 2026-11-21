@@ -135,3 +135,53 @@ test('lobby: «gameStartedPlayer» con modo autoritme lleva a la pantalla nueva'
         page.evaluate(() => window.__serverEmit('gameStartedPlayer', [{ mode: 'selfPaced' }]))
     ]);
 });
+
+test('autoritme: mano alzada y lectura en voz alta de la pregunta', async ({ page }) => {
+    await page.addInitScript(() => {
+        window.__spoken = [];
+        window.SpeechSynthesisUtterance = function(text){ this.text = text; };
+        Object.defineProperty(window, 'speechSynthesis', { configurable: true, value: {
+            getVoices: function(){ return [{ lang: 'es-ES', name: 'Voz de prueba' }]; },
+            speak: function(u){ window.__spoken.push(u.text); },
+            cancel: function(){},
+            addEventListener: function(){}
+        } });
+    });
+    await open(page);
+    await serverEmit(page, 'spQuestion', Q1);
+
+    await page.locator('#ttsButton').click();
+    await expect(page.locator('#ttsButton')).toHaveAttribute('aria-pressed', 'true');
+    expect(await page.evaluate(() => window.__spoken)).toEqual(['¿Capital de Francia?', 'París', 'Londres', 'Roma', 'Berlín']);
+
+    await page.locator('#raiseHandBtn').click();
+    await expect(page.locator('#raiseHandBtn')).toHaveAttribute('aria-pressed', 'true');
+    await page.locator('#raiseHandBtn').click();
+    expect(await emitsNamed(page, 'spHand')).toEqual([{ raised: true }, { raised: false }]);
+
+    // Al contestar desaparecen la mano y la lectura.
+    await serverEmit(page, 'spResult', { outcome: 'correct', score: 900, points: 900, bonus: 0, streak: 1, questionNumber: 1, totalQuestions: 2, meta: { type: 'quiz', correctAnswers: [1] } });
+    await expect(page.locator('#raiseHandRow')).toHaveCount(0);
+    await expect(page.locator('#ttsButton')).toHaveCount(0);
+});
+
+test('autoritme: sin speechSynthesis no hay botón de lectura', async ({ page }) => {
+    await page.addInitScript(() => { Object.defineProperty(window, 'speechSynthesis', { value: undefined, configurable: true }); });
+    await open(page);
+    await serverEmit(page, 'spQuestion', Q1);
+    await expect(page.locator('#questionText')).toBeVisible();
+    await expect(page.locator('#ttsButton')).toHaveCount(0);
+});
+
+test('autoritme: Top 10 tras el resultado solo si el servidor lo envía (casilla de puntuaciones)', async ({ page }) => {
+    await open(page);
+    await serverEmit(page, 'spQuestion', Q1);
+    const base = { outcome: 'correct', score: 900, points: 900, bonus: 0, streak: 1, questionNumber: 1, totalQuestions: 2, meta: { type: 'quiz', correctAnswers: [1] } };
+    await serverEmit(page, 'spResult', { ...base, ranking: [{ name: 'Bruno', icon: '', score: 1200, me: false }, { name: 'Ana', icon: '', score: 900, me: true }], rank: 2, players: 2 });
+    await expect(page.locator('#spRanking li')).toHaveCount(2);
+    await expect(page.locator('#spRanking li.is-me')).toContainText('Ana - 900');
+
+    await serverEmit(page, 'spQuestion', { ...Q1, questionNumber: 2 });
+    await serverEmit(page, 'spResult', base);
+    await expect(page.locator('#spRanking')).toHaveCount(0);
+});

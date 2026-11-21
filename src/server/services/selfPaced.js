@@ -22,7 +22,7 @@ function questionsOf(game) {
 // si ya contestó y si ha terminado. Quien entra tarde empieza en la primera pregunta.
 function ensureState(player) {
   if (!player.gameData.sp) {
-    player.gameData.sp = { index: 0, startedAt: 0, answered: false, finished: false, answeredCount: 0 };
+    player.gameData.sp = { index: 0, startedAt: 0, answered: false, finished: false, answeredCount: 0, hand: false };
   }
   return player.gameData.sp;
 }
@@ -40,11 +40,13 @@ function beginNext(game, player, now) {
   if (next > questionsOf(game).length) {
     sp.finished = true;
     sp.startedAt = 0;
+    sp.hand = false;
     return null;
   }
   sp.index = next;
   sp.startedAt = now;
   sp.answered = false;
+  sp.hand = false; // la mano alzada es de una pregunta
   return questionsOf(game)[next - 1];
 }
 
@@ -120,12 +122,13 @@ function finishPlayer(player) {
   const sp = ensureState(player);
   sp.finished = true;
   sp.startedAt = 0;
+  sp.hand = false;
 }
 
 // Progreso para la vista del anfitrión: avance, sin puntos (decisión 2: no hay ranking en vivo).
 function progressOf(game, player) {
   const sp = ensureState(player);
-  return { question: sp.index, total: questionsOf(game).length, answered: sp.answeredCount, finished: sp.finished };
+  return { question: sp.index, total: questionsOf(game).length, answered: sp.answeredCount, finished: sp.finished, hand: !!sp.hand };
 }
 
 module.exports = {

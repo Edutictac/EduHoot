@@ -121,3 +121,32 @@ test('pantalla del anfitrión en autoritme: sin podio si no se muestran puntuaci
     await expect(page.locator('#spPodium')).toHaveCount(0);
     await expect(page.locator('#spDownloadBtn')).toBeVisible();
 });
+
+test('pantalla del anfitrión en autoritme: muestra la mano levantada junto al nombre', async ({ page }) => {
+    await setup(page);
+    await page.goto('/host/self-paced/?id=h0&pin=12345&lang=es');
+    await page.waitForLoadState('load');
+    await page.evaluate(() => window.__serverEmit('connect'));
+    await serverEmit(page, 'spProgress', [
+        { playerId: 'a', name: 'Ana', icon: '🦊', question: 1, total: 4, answered: 0, finished: false, hand: true },
+        { playerId: 'b', name: 'Bruno', icon: '🐶', question: 1, total: 4, answered: 0, finished: false, hand: false }
+    ]);
+    await expect(page.locator('.sp-row__hand')).toHaveCount(1);
+    await expect(page.locator('.sp-row').first().locator('.sp-row__hand')).toHaveAttribute('title', 'Mano levantada');
+});
+
+test('pantalla del anfitrión en autoritme: Top 10 ordenado solo si llegan puntos', async ({ page }) => {
+    await setup(page);
+    await page.goto('/host/self-paced/?id=h0&pin=12345&lang=es');
+    await page.waitForLoadState('load');
+    await page.evaluate(() => window.__serverEmit('connect'));
+    await serverEmit(page, 'spProgress', [
+        { playerId: 'a', name: 'Ana', icon: '', question: 1, total: 4, answered: 1, finished: false, score: 500 },
+        { playerId: 'b', name: 'Bruno', icon: '', question: 1, total: 4, answered: 1, finished: false, score: 900 }
+    ]);
+    await expect(page.locator('#spRanking li')).toHaveText(['Bruno - 900', 'Ana - 500']);
+    await serverEmit(page, 'spProgress', [
+        { playerId: 'a', name: 'Ana', icon: '', question: 1, total: 4, answered: 1, finished: false }
+    ]);
+    await expect(page.locator('#spRanking')).toHaveCount(0);
+});

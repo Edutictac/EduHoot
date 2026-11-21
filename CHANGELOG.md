@@ -25,8 +25,10 @@ fitxers corresponents, i els originals es van eliminar.
   puntuació de cada alumne (`services/selfPaced.js`,
   `sockets/selfPacedEvents.js`). Pantalles pròpies: `/player/self-paced/`
   (alumnat) i `/host/self-paced/` (progrés per alumne, expulsar i «Acabar
-  partida» amb podi i informe CSV). Sense rànquing en viu; qui entra tard
-  comença en la primera pregunta. Peces comunes de l'alumnat en
+  partida» amb podi i informe CSV). El Top 10 (amfitrió en viu, alumne
+  després de cada resultat) depén de la casella de puntuacions, com en el mode
+  en directe. Lectura en veu alta i mà alçada en la pantalla de l'alumne. Qui
+  entra tard comença en la primera pregunta. Peces comunes de l'alumnat en
   `js/playerCommon.js`. Per defecte continua el mode en directe.
 - Nou tipus de pregunta **correspondència** (`matching`, feature 7,
   «emparellar»): fins a 8 elements entre parelles i impostores (només a la

@@ -22,6 +22,16 @@ function fmtPlayer(key, vars){
 
 var app = Vue.createApp({
     template: '#player-sp-tpl',
+    mounted: function(){
+        var self = this;
+        EduhootTTS.watchAvailability(document.documentElement.lang, function(ok){ self.ttsReady = ok; });
+    },
+    watch: {
+        // Al desaparecer el botón (respuesta o resultado) se para la lectura.
+        ttsAvailable: function(ok){
+            if(!ok){ EduhootTTS.cancel(); this.ttsSpeaking = false; }
+        }
+    },
     data: function(){
         return {
             // 'idle' | 'question' | 'result' | 'answered'
@@ -48,11 +58,14 @@ var app = Vue.createApp({
             timerLeft: 20,
             timerTotal: 20,
             message: '',
-            result: { kind: 'info', message: '', detailHtml: '', points: 0, bonus: 0 },
+            result: { kind: 'info', message: '', detailHtml: '', points: 0, bonus: 0, ranking: null, rank: 0, players: 0 },
             done: false,
             closed: false,
             summary: { score: 0, correctCount: 0, total: 0, bestStreak: 0, rank: 0, players: 0 },
-            leaveConfirming: false
+            leaveConfirming: false,
+            ttsReady: false,
+            ttsSpeaking: false,
+            handRaised: false
         };
     },
     computed: {
@@ -72,6 +85,7 @@ var app = Vue.createApp({
             if(pct < 60) return 'linear-gradient(135deg, #facc15, #f97316)';
             return 'linear-gradient(135deg, #22c55e, #16a34a)';
         },
+        ttsAvailable: function(){ return !this.blind && !!this.questionText && this.ttsReady && this.state === 'question'; },
         timerText: function(){ return Math.max(0, Math.ceil(this.timerLeft)) + 's'; }
     },
     methods: {
@@ -104,6 +118,19 @@ var app = Vue.createApp({
             socket.emit('spAnswer', payload);
         },
         next: function(){ socket.emit('spNext'); },
+        toggleHand: function(){
+            this.handRaised = !this.handRaised;
+            socket.emit('spHand', { raised: this.handRaised });
+        },
+        toggleSpeech: function(){
+            var self = this;
+            if(this.ttsSpeaking){ EduhootTTS.cancel(); this.ttsSpeaking = false; return; }
+            this.ttsSpeaking = true;
+            var started = EduhootTTS.speakParts([this.questionText].concat(this.answers || []), document.documentElement.lang, function(){
+                self.ttsSpeaking = false;
+            });
+            if(!started) this.ttsSpeaking = false;
+        },
         askLeave: function(){
             var self = this;
             if(!this.leaveConfirming){
@@ -219,6 +246,7 @@ socket.on('spQuestion', function(d){
     app.questionText = d.blind ? tPlayer('blind_hint') : (d.question || '');
     app.multiSelections = [];
     app.freeAnswerValue = '';
+    app.handRaised = !!d.hand;
     lastMatchAnswers = null;
     if(d.type === 'matching'){
         app.matchLeft = d.blind ? null : (d.matchLeft || []).slice();
@@ -282,6 +310,7 @@ function matchingReviewHtml(meta){
 
 socket.on('spResult', function(d){
     stopTick();
+    EduhootTTS.cancel();
     setMedia(null, null);
     var kind = 'incorrect';
     var message = tPlayer('incorrect');
@@ -296,7 +325,8 @@ socket.on('spResult', function(d){
         detail = '<span class="matching-pairs">' + escapeHtml(detail) + '</span>';
     }
     document.body.style.backgroundColor = color;
-    app.result = { kind: kind, message: message, detailHtml: detail, points: Number(d.points) || 0, bonus: Number(d.bonus) || 0 };
+    app.result = { kind: kind, message: message, detailHtml: detail, points: Number(d.points) || 0, bonus: Number(d.bonus) || 0,
+        ranking: Array.isArray(d.ranking) ? d.ranking : null, rank: Number(d.rank) || 0, players: Number(d.players) || 0 };
     app.playerScore = d.score;
     app.streak = Number(d.streak) || 0;
     app.questionNumber = d.questionNumber;

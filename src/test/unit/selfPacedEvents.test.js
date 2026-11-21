@@ -41,7 +41,7 @@ function setup(options = {}) {
     const socket = new EventEmitter();
     socket.id = id;
     socket.emitted = [];
-    socket.emit = function (event, ...args) { if (event === 'spNext' || event === 'spAnswer' || event === 'spTimeUp' || event === 'spEnd' || event === 'spProgressRequest') return EventEmitter.prototype.emit.call(this, event, ...args); this.emitted.push({ event, args }); return true; };
+    socket.emit = function (event, ...args) { if (event === 'spNext' || event === 'spAnswer' || event === 'spTimeUp' || event === 'spEnd' || event === 'spProgressRequest' || event === 'spHand') return EventEmitter.prototype.emit.call(this, event, ...args); this.emitted.push({ event, args }); return true; };
     ev.register(socket);
     if (name) players.addPlayer('host', id, name, { score: 0, answer: 0, correctCount: 0, wrongCount: 0, streak: 0, bestStreak: 0, answerHistory: [] }, '', '');
     return socket;
@@ -88,7 +88,8 @@ test('doble respuesta rechazada; el anfitrión recibe progreso sin puntos', () =
   t.send(a, 'spAnswer', 2);
   assert.equal(last(a, 'answerRejected').args[0].reason, 'already-answered');
   const prog = t.log.filter((l) => l.ev === 'spProgress' && l.room === 'host').pop().a[0];
-  assert.deepEqual(prog[0], { playerId: 'a', name: 'Ana', icon: '', question: 1, total: 2, answered: 1, finished: false });
+  assert.deepEqual(prog[0], { playerId: 'a', name: 'Ana', icon: '', question: 1, total: 2, answered: 1, finished: false, hand: false, score: prog[0].score });
+  assert.ok(prog[0].score > 0);
   function last(s, e) { return t.last(s, e); }
 });
 
@@ -149,4 +150,50 @@ test('reconexión: se retoma la pregunta en curso, la respondida o el final', ()
   t.send(a, 'spAnswer', 2);
   t.ev.resume(a, t.game, player);
   assert.equal(t.last(a, 'spAnswered').args[0].questionNumber, 1);
+});
+
+test('mano alzada: solo con pregunta en curso, visible al anfitrión y se baja al contestar', () => {
+  const t = setup();
+  const a = t.connect('a', 'Ana');
+  const handsOf = () => t.log.filter((l) => l.ev === 'spProgress').pop().a[0].find((p) => p.name === 'Ana').hand;
+  t.send(a, 'spHand', { raised: true });
+  assert.equal(t.log.filter((l) => l.ev === 'spProgress').length, 0);
+  t.send(a, 'spNext');
+  t.send(a, 'spHand', { raised: true });
+  assert.equal(handsOf(), true);
+  t.send(a, 'spHand', { raised: false });
+  assert.equal(handsOf(), false);
+  t.send(a, 'spHand', { raised: true });
+  t.send(a, 'spAnswer', 2);
+  assert.equal(handsOf(), false);
+  // Reconexión: el reenvío de la pregunta indica si la mano sigue alzada.
+  t.send(a, 'spNext');
+  t.send(a, 'spHand', { raised: true });
+  t.send(a, 'spNext');
+  assert.equal(t.last(a, 'spQuestion').args[0].hand, true);
+});
+
+test('puntuaciones desactivadas: ni el anfitrión ni el alumno reciben puntos ni ranking', () => {
+  const t = setup({ showScoresBetween: false });
+  const a = t.connect('a', 'Ana');
+  t.send(a, 'spNext');
+  t.send(a, 'spAnswer', 2);
+  const prog = t.log.filter((l) => l.ev === 'spProgress').pop().a[0];
+  assert.equal('score' in prog[0], false);
+  const res = t.last(a, 'spResult').args[0];
+  assert.equal('ranking' in res, false);
+});
+
+test('puntuaciones activadas: el alumno recibe el Top 10 con su posición marcada', () => {
+  const t = setup();
+  const a = t.connect('a', 'Ana');
+  const b = t.connect('b', 'Bruno');
+  t.send(a, 'spNext');
+  t.send(b, 'spNext');
+  t.send(a, 'spAnswer', 2);
+  t.send(b, 'spAnswer', 1);
+  const res = t.last(b, 'spResult').args[0];
+  assert.deepEqual(res.ranking.map((r) => [r.name, r.me]), [['Ana', false], ['Bruno', true]]);
+  assert.equal(res.rank, 2);
+  assert.equal(res.players, 2);
 });

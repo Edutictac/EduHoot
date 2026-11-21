@@ -39,11 +39,12 @@
             <template v-else>
                 <h3 id="questionText" v-html="questionHtml"></h3>
                 <div id="playerStatusRow" v-show="state === 'question'">
-                    <div class="tts-timer-wrap">
+                    <div class="tts-timer-wrap" :class="{ 'has-tts': ttsAvailable }">
                         <div id="playerTimer" class="game-timer">
                             <div id="playerTimerFill" class="game-timer__fill" :style="{ width: timerPct + '%', background: timerColor }"></div>
                             <span id="playerTimerText" class="game-timer__text">{{ timerText }}</span>
                         </div>
+                        <button v-if="ttsAvailable" id="ttsButton" type="button" class="tts-btn" :aria-pressed="ttsSpeaking ? 'true' : 'false'" :aria-label="ttsSpeaking ? t('tts_stop') : t('tts_listen')" :title="ttsSpeaking ? t('tts_stop') : t('tts_listen')" @click="toggleSpeech"><span aria-hidden="true">{{ ttsSpeaking ? '⏹' : '🔊' }}</span></button>
                     </div>
                 </div>
                 <div id="playerImageWrap">
@@ -56,6 +57,13 @@
                 <div id="spResult" class="sp-result" v-if="state === 'result'">
                     <h2 id="message" :class="'message--' + result.kind">{{ result.message }}<span v-if="result.detailHtml" class="player-correct-answer" v-html="result.detailHtml"></span></h2>
                     <p id="spPoints" class="sp-result__points" v-if="result.points > 0">{{ fmt('sp_points_gained', { n: result.points + result.bonus }) }}</p>
+                    <div id="spRanking" class="sp-ranking" v-if="result.ranking && result.ranking.length">
+                        <h3>{{ t('player_ranking_title') }}</h3>
+                        <ol>
+                            <li v-for="(r, i) in result.ranking" :key="i" :class="{ 'is-me': r.me }">{{ (r.icon ? r.icon + ' ' : '') + r.name + ' - ' + r.score }}<span v-if="r.me"> ({{ t('player_ranking_you') }})</span></li>
+                        </ol>
+                        <p v-if="result.rank > result.ranking.length" class="sp-ranking__me">{{ fmt('sp_done_rank', { r: result.rank, p: result.players }) }}</p>
+                    </div>
                     <button type="button" id="spNextBtn" class="button sp-next" @click="next">{{ isLast ? t('sp_finish') : t('sp_next') }}</button>
                 </div>
                 <h2 id="message" v-else-if="message" class="message--info">{{ message }}</h2>
@@ -79,6 +87,9 @@
                     <button type="button" id="spNextBtn" class="button sp-next" @click="next">{{ isLast ? t('sp_finish') : t('sp_next') }}</button>
                 </div>
             </template>
+            <div id="raiseHandRow" v-if="state === 'question' && !done">
+                <button type="button" id="raiseHandBtn" class="raise-hand-btn" :aria-pressed="handRaised ? 'true' : 'false'" @click="toggleHand">✋ {{ handRaised ? t('handLower') : t('handRaise') }}</button>
+            </div>
             <button type="button" id="leaveGameBtn" class="leave-game-btn" :class="{ 'is-confirming': leaveConfirming }" @click="askLeave">{{ leaveConfirming ? t('lobby_leave_confirm') : t('lobby_leave') }}</button>
         </template>
         <div id="lang-switcher" data-lang-buttons></div>
@@ -91,6 +102,7 @@
         <script src="../../js/libs/deparam.js"></script>
         <script src="../../js/libs/vue.global.prod.js"></script>
         <script src="../../js/matchingBoard.js"></script>
+        <script src="../../js/tts.js"></script>
         <script src="../../js/playerCommon.js"></script>
         <script src="../../js/playerSelfPaced.js"></script>
     </body>

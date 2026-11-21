@@ -1,7 +1,7 @@
 // Modo autoritme (feature 3): eventos de socket. Cada alumno pide su pregunta y la contesta
 // con su propio reloj; el servidor valida y puntúa (services/selfPaced.js).
 //
-// Alumno → servidor: spNext, spAnswer(valor), spTimeUp
+// Alumno → servidor: spNext, spAnswer(valor), spTimeUp, spHand({raised})
 // Servidor → alumno: spQuestion, spResult, spAnswered, spFinished (y GameOver al cerrar)
 // Anfitrión → servidor: spProgressRequest, spEnd
 // Servidor → anfitrión: spProgress
@@ -29,9 +29,29 @@ module.exports = function createSelfPacedEvents({
     return { player, game };
   }
 
-  // Lo que ve el anfitrión: avance por alumno, sin puntos (no hay ranking en vivo).
+  // Como en el modo en vivo, el ranking depende de la casilla «Mostrar puntuaciones y ranking».
+  function showScoresOf(game) {
+    return game.gameData.options ? game.gameData.options.showScoresBetween !== false : true;
+  }
+
+  // Lo que ve el anfitrión: avance por alumno; con puntuaciones activadas, también los puntos (Top 10 en su pantalla).
   function progressList(game) {
-    return players.getPlayers(game.hostId).map((p) => Object.assign({ playerId: p.playerId, name: p.name, icon: p.icon || '' }, sp.progressOf(game, p)));
+    const showScores = showScoresOf(game);
+    return players.getPlayers(game.hostId).map((p) => Object.assign(
+      { playerId: p.playerId, name: p.name, icon: p.icon || '' },
+      sp.progressOf(game, p),
+      showScores ? { score: p.gameData.score || 0 } : {}
+    ));
+  }
+
+  // Top 10 para el alumno tras cada resultado (solo con puntuaciones activadas).
+  function rankingFor(game, player) {
+    const sorted = players.getPlayers(game.hostId).slice().sort((a, b) => b.gameData.score - a.gameData.score);
+    return {
+      ranking: sorted.slice(0, 10).map((p) => ({ name: p.name, icon: p.icon || '', score: p.gameData.score || 0, me: p === player })),
+      rank: sorted.indexOf(player) + 1,
+      players: sorted.length
+    };
   }
   function emitProgress(game) {
     io.to(game.hostId).emit('spProgress', progressList(game));
@@ -55,14 +75,15 @@ module.exports = function createSelfPacedEvents({
       ...buildStudentPlayerPayload(full, game.gameData.options),
       questionNumber: state.index,
       totalQuestions: sp.progressOf(game, player).total,
-      timeTotal: questionTimeOf(game.gameData, q)
+      timeTotal: questionTimeOf(game.gameData, q),
+      hand: !!state.hand
     };
   }
 
   function finishedPayload(game, player) {
     const ranking = players.getPlayers(game.hostId).slice().sort((a, b) => b.gameData.score - a.gameData.score);
     const rank = ranking.findIndex((p) => p === player) + 1;
-    const showScores = game.gameData.options ? game.gameData.options.showScoresBetween !== false : true;
+    const showScores = showScoresOf(game);
     return {
       score: player.gameData.score,
       correctCount: player.gameData.correctCount || 0,
@@ -107,7 +128,8 @@ module.exports = function createSelfPacedEvents({
       questionNumber: state.index,
       totalQuestions: sp.progressOf(game, player).total,
       // Respuesta correcta solo si «Mostrar respuestas» está activado.
-      meta: studentMetaOf(game, meta)
+      meta: studentMetaOf(game, meta),
+      ...(showScoresOf(game) ? rankingFor(game, player) : {})
     };
   }
 
@@ -117,7 +139,7 @@ module.exports = function createSelfPacedEvents({
     const name = (i) => (top[i] && top[i].gameData.score > 0 ? top[i].name : '');
     return {
       num1: name(0), num2: name(1), num3: name(2), num4: name(3), num5: name(4),
-      showPodium: game.gameData.options ? game.gameData.options.showScoresBetween !== false : true
+      showPodium: showScoresOf(game)
     };
   }
 
@@ -172,6 +194,7 @@ module.exports = function createSelfPacedEvents({
       const submission = normalizeSubmission(getQuestionMeta(q), value);
       const res = sp.submitAnswer(game, player, submission, Date.now());
       if (!res.ok) { socket.emit('answerRejected', { reason: res.reason }); return; }
+      player.gameData.sp.hand = false; // contestada: la mano ya no hace falta
       socket.emit('spResult', resultPayload(game, player, res));
       emitProgress(game);
     });
@@ -182,8 +205,19 @@ module.exports = function createSelfPacedEvents({
       if (!ctx) return;
       const { game, player } = ctx;
       if (!sp.expireQuestion(game, player, Date.now())) return;
+      player.gameData.sp.hand = false;
       socket.emit('spResult', resultPayload(game, player, { outcome: 'timeout', scoreRatio: 0, points: 0, bonus: 0 }));
       emitProgress(game);
+    });
+
+    // Mano alzada: solo con una pregunta en curso; el anfitrión la ve junto al nombre.
+    socket.on('spHand', (data) => {
+      const ctx = contextOf(socket);
+      if (!ctx || ctx.game.gameOver) return;
+      const state = sp.ensureState(ctx.player);
+      if (state.finished || state.index === 0) return;
+      state.hand = !!(data && data.raised);
+      emitProgress(ctx.game);
     });
 
     socket.on('spProgressRequest', () => {

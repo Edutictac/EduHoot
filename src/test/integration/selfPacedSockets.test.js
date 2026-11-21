@@ -136,7 +136,7 @@ test('partida completa a su ritmo: cada alumno con su reloj, resultado, cierre y
   const [b1] = await bruno.next('spQuestion');
   assert.equal(b1.question, 'P1');
 
-  // El anfitrión ve el avance de cada uno, sin puntos.
+  // El anfitrión ve el avance de cada uno y, con puntuaciones activadas, sus puntos (Top 10).
   const hostConn = await connect();
   hostConn.emit('host-join-game', { id: host.id, pin });
   const [prog] = await hostConn.next('spProgress');
@@ -145,7 +145,9 @@ test('partida completa a su ritmo: cada alumno con su reloj, resultado, cierre y
   assert.equal(byName.Ana.answered, 1);
   assert.equal(byName.Bruno.question, 1);
   assert.equal(byName.Bruno.answered, 0);
-  assert.equal(byName.Ana.score, undefined);
+  assert.equal(byName.Ana.score, 999);
+  assert.equal(byName.Bruno.score, 0);
+  assert.deepEqual(res1.ranking.map((r) => [r.name, r.score, r.me]), [['Ana', 999, true], ['Bruno', 0, false]]);
 
   // Ana acaba las preguntas (la 2 mal, la 3 bien); Bruno, sin acabar.
   ana.emit('spAnswer', 4);
@@ -262,4 +264,52 @@ test('el modo en directo sigue igual: redirección con modo live y cuenta atrás
   assert.equal(started.mode, 'live');
   await students[0].next('questionCountdown');
   await host.next('gameStarted');
+});
+
+test('mano alzada: el anfitrión la ve en el progreso y se baja al contestar', async () => {
+  const { host, pin, students } = await lobby(['Eva']);
+  host.emit('startGame', { ...START_OPTS, mode: 'selfPaced', pin });
+  await students[0].next('gameStartedPlayer');
+  await host.next('gameStarted');
+  const hostConn = await connect();
+  hostConn.emit('host-join-game', { id: host.id, pin });
+  await hostConn.next('spProgress');
+  const s = await enterGame(pin, students[0], 'Eva');
+  await s.next('spIdle');
+
+  // Sin pregunta en curso no se puede levantar la mano.
+  s.emit('spHand', { raised: true });
+  await new Promise((r) => setTimeout(r, 200));
+  assert.equal(hostConn.count('spProgress'), 1);
+
+  s.emit('spNext');
+  await s.next('spQuestion');
+  s.emit('spHand', { raised: true });
+  let [list] = await hostConn.next('spProgress');
+  while (!list.find((p) => p.name === 'Eva').hand) [list] = await hostConn.next('spProgress');
+  assert.equal(list.find((p) => p.name === 'Eva').hand, true);
+
+  s.emit('spAnswer', 2);
+  await s.next('spResult');
+  do { [list] = await hostConn.next('spProgress'); } while (list.find((p) => p.name === 'Eva').hand);
+  assert.equal(list.find((p) => p.name === 'Eva').hand, false);
+});
+
+test('puntuaciones desactivadas: el anfitrión no recibe puntos y el alumno no recibe ranking', async () => {
+  const { host, pin, students } = await lobby(['Rut']);
+  host.emit('startGame', { ...START_OPTS, showScoresBetween: false, mode: 'selfPaced', pin });
+  await students[0].next('gameStartedPlayer');
+  await host.next('gameStarted');
+  const hostConn = await connect();
+  hostConn.emit('host-join-game', { id: host.id, pin });
+  const s = await enterGame(pin, students[0], 'Rut');
+  await s.next('spIdle');
+  s.emit('spNext');
+  await s.next('spQuestion');
+  s.emit('spAnswer', 2);
+  const [res] = await s.next('spResult');
+  assert.equal(res.ranking, undefined);
+  let [list] = await hostConn.next('spProgress');
+  while (list[0].answered < 1) [list] = await hostConn.next('spProgress');
+  assert.equal('score' in list[0], false);
 });

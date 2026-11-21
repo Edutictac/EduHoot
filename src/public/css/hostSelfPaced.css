@@ -7,6 +7,7 @@
 .sp-row.is-finished{ background: rgba(34,197,94,0.22); }
 .sp-row__icon{ font-size: 22px; text-align: center; }
 .sp-row__name{ font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sp-row__hand{ margin-right: 6px; }
 .sp-row__bar{ height: 12px; border-radius: 999px; background: rgba(255,255,255,0.2); overflow: hidden; }
 .sp-row__fill{ display: block; height: 100%; background: linear-gradient(135deg, #22c55e, #16a34a); transition: width .3s; }
 .sp-row__count{ text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
@@ -23,3 +24,7 @@
 .sp-btn--end.is-confirming{ background: #da4453; border-color: #da4453; color: #fff; }
 .sp-btn--report{ background: rgba(16,185,129,0.22); }
 .sp-btn:hover{ filter: brightness(1.1); }
+
+.sp-ranking{ max-width: 960px; margin: 12px auto; padding: 8px 16px; border-radius: 12px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); }
+.sp-ranking h3{ margin: 4px 0; }
+.sp-ranking ol{ margin: 4px 0; padding-left: 28px; }
