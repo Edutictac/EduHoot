@@ -43,7 +43,7 @@
   deure en una sola fila, taula de resultats que s'ordena per columnes, i
   ara es veu bé tant en l'ordinador com en el mòbil. Als deures, el temps per
   pregunta pot arribar als 3 minuts i, si permets diversos intents, triues
-  si compta el millor o la mitjana.
+  si compta el millor, la mitjana, el primer o l'últim intent.
 
 ## Per a l'alumnat
 
@@ -200,7 +200,7 @@
   deber en una sola fila, tabla de resultados que se ordena por columnas, y
   ahora se ve bien tanto en el ordenador como en el móvil. En los deberes, el
   tiempo por pregunta puede llegar a 3 minutos y, si permites varios
-  intentos, eliges si cuenta el mejor o la media.
+  intentos, eliges si cuenta el mejor, la media, el primero o el último.
 
 ## Para el alumnado
 
@@ -324,7 +324,7 @@
   one row, a results table you can sort by column, and it now looks right on
   both computers and phones. In homework, the time per question can go up to
   3 minutes and, if you allow several attempts, you choose whether the best
-  one or the average counts.
+  one, the average, the first or the last attempt counts.
 
 ## For students
 

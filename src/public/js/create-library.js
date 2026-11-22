@@ -516,12 +516,15 @@ var libraryApp = {
             }
             draft.saving = true;
             draft.done = false;
+            clearTimeout(draft.doneTimer);
             var ok = await updateSharing(quiz.id, draft.visibility, draft.allowClone);
             draft.saving = false;
             if(ok){
                 draft.saved = { visibility: draft.visibility, allowClone: draft.allowClone };
                 draft.done = true;
-                setTimeout(function(){ draft.done = false; }, 2000);
+                // El check se ve 3 segundos; si se guarda otra vez antes, el plazo empieza de nuevo.
+                clearTimeout(draft.doneTimer);
+                draft.doneTimer = setTimeout(function(){ draft.done = false; }, 3000);
             }else{
                 draft.visibility = draft.saved.visibility;
                 draft.allowClone = draft.saved.allowClone;

@@ -369,6 +369,20 @@ test('permisos: se guardan al cambiar (visibilidad y copia) y migra el id anóni
     await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('localQuizzes')))).toEqual(['q2b']);
 });
 
+test('permisos: el check de guardado se ve 3 segundos', async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem('localQuizzes', JSON.stringify(['q2'])));
+    await mockBackend(page, {});
+    await openCreate(page);
+    const saved = card(page, 'Àlgebra').locator('.share-saved');
+    await card(page, 'Àlgebra').locator('.share-controls select').selectOption('unlisted');
+    await expect(saved).toHaveText('✓');
+    const shown = Date.now();
+    await page.waitForTimeout(2500);
+    await expect(saved).toHaveText('✓');
+    await expect(saved).toHaveText('', { timeout: 2000 });
+    expect(Date.now() - shown).toBeGreaterThanOrEqual(2900);
+});
+
 test('permisos: si falla el guardado, el control vuelve al valor anterior', async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem('localQuizzes', JSON.stringify(['q2'])));
     const { calls } = await mockBackend(page, { sharingResult: { error: 'Sin permiso' }, sharingStatus: 403 });

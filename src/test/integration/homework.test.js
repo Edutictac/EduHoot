@@ -225,6 +225,34 @@ test('varios intentos con media: el resumen, los resultados y el CSV cuentan la 
   assert.equal(results.questionStats[0].correct, 1);
 });
 
+for (const mode of ['first', 'last']) {
+  test(`varios intentos con «${mode}»: cuenta el ${mode === 'first' ? 'primer' : 'último'} intento aunque el otro sea mejor`, async () => {
+    const hw = await createHomework({ maxAttempts: 2, options: { attemptScoring: mode } });
+    assert.equal(hw.scoring, mode);
+    const me = (await join(hw.code, 'Mia')).body.student;
+    async function play(answers) {
+      await act(hw.code, me, 'next');
+      for (let i = 0; i < answers.length; i += 1) {
+        await act(hw.code, me, 'answer', answers[i]);
+        const e = await act(hw.code, me, 'next');
+        if (i === answers.length - 1) return ev(e, 'spFinished');
+      }
+      return null;
+    }
+    // Primer intento perfecto; segundo, todo mal (0). Con «first» cuenta el perfecto; con «last», el 0.
+    const first = await play([2, 2, 1]);
+    assert.ok(first.score > 0);
+    await act(hw.code, me, 'newAttempt');
+    const second = await play([4, 4, 4]);
+    assert.equal(second.score, 0);
+    assert.equal(second.scoring, mode);
+    assert.equal(second.countedScore, mode === 'first' ? first.score : 0);
+    const results = (await call('GET', `/api/homeworks/${hw.code}/results`, undefined, TEACHER)).body;
+    assert.equal(results.homework.scoring, mode);
+    assert.equal(results.rows[0].bestScore, mode === 'first' ? first.score : 0);
+  });
+}
+
 test('por defecto cuenta el mejor intento, y el tiempo por pregunta admite hasta 180 s', async () => {
   const hw = await createHomework({ maxAttempts: 2, options: { timePerQuestion: 200 } });
   assert.equal(hw.scoring, 'best');

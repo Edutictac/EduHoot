@@ -216,6 +216,9 @@ test('nuevo deber: tarjeta centrada, «Biblioteca», enlace a «Mis deberes», 1
     await expect(page.locator('#hwFScoring')).toHaveCount(0);
     await page.locator('#hwFAttempts').selectOption('3');
     await expect(page.locator('#hwFScoring')).toBeVisible();
+    // Mejor, media, primero o último intento.
+    await expect(page.locator('#hwFScoring option')).toHaveText(['Cuenta el mejor intento', 'Cuenta la media de los intentos', 'Cuenta el primer intento', 'Cuenta el último intento']);
+    await page.locator('#hwFScoring').selectOption('last');
     await page.locator('#hwFScoring').selectOption('average');
     await page.locator('#hwFTime').selectOption('180');
     await page.locator('#hwCreateBtn').click();

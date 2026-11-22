@@ -57,7 +57,7 @@ function normalizeOptions(raw) {
   const time = parseInt(o.timePerQuestion, 10);
   if (Number.isFinite(time) && time > 0) out.timePerQuestion = Math.max(5, Math.min(MAX_TIME_PER_QUESTION, time));
   // Con varios intentos: cuenta el mejor (por defecto) o la media.
-  out.attemptScoring = o.attemptScoring === 'average' ? 'average' : 'best';
+  out.attemptScoring = ['average', 'first', 'last'].includes(o.attemptScoring) ? o.attemptScoring : 'best';
   if (o.matchingExtraTime !== undefined) out.matchingExtraTime = o.matchingExtraTime;
   return out;
 }
@@ -156,15 +156,20 @@ module.exports = function createHomeworkService({ getHomeworksCollection, getHom
   }
 
   function scoringOf(hw) {
-    return hw && hw.options && hw.options.attemptScoring === 'average' ? 'average' : 'best';
+    const mode = hw && hw.options && hw.options.attemptScoring;
+    return ['average', 'first', 'last'].includes(mode) ? mode : 'best';
   }
 
-  // Puntuación que cuenta del alumno: el mejor intento o la media de los intentos contados
-  // (los acabados; si el deber está cerrado, también los que quedaron a medias).
+  // Puntuación que cuenta del alumno según la opción del deber: el mejor intento, la media de los
+  // intentos contados (los acabados; si el deber está cerrado, también los que quedaron a medias),
+  // el primero o el último. `scores` va en orden de intento.
   function countedScore(hw, scores) {
     if (!scores.length) return 0;
-    if (scoringOf(hw) !== 'average') return Math.max(...scores);
-    return Math.round(scores.reduce((sum, s) => sum + s, 0) / scores.length);
+    const mode = scoringOf(hw);
+    if (mode === 'first') return scores[0];
+    if (mode === 'last') return scores[scores.length - 1];
+    if (mode === 'average') return Math.round(scores.reduce((sum, s) => sum + s, 0) / scores.length);
+    return Math.max(...scores);
   }
 
   function publicInfo(hw, now = Date.now()) {
@@ -256,6 +261,8 @@ module.exports = function createHomeworkService({ getHomeworksCollection, getHom
         bestScore: best,
         scoring: scoringOf(hw),
         averageScore: countedScore({ options: { attemptScoring: 'average' } }, counted.map(scoreOf)),
+        // La puntuación que cuenta con la opción del deber (mejor, media, primero o último intento).
+        countedScore: countedScore(hw, scoringOf(hw) === 'first' ? all.map(scoreOf) : counted.map(scoreOf)),
         canRetry: false,
         ...extra
       }
@@ -388,10 +395,13 @@ module.exports = function createHomeworkService({ getHomeworksCollection, getHom
       const scored = list.map((a) => ({ a, score: Number(a.gameData && a.gameData.score) || 0 }));
       const best = scored.reduce((m, s) => (s.score > m.score ? s : m), scored[0]);
       // Intentos que cuentan para la media: los acabados (o todos, si el deber ya está cerrado).
-      const average = scoringOf(hw) === 'average';
+      const mode = scoringOf(hw);
+      const average = mode === 'average';
       const countedAll = scored.filter((s) => s.a.finished || closed);
       const counted = countedAll.length ? countedAll : [best];
-      const finalScore = average ? countedScore(hw, counted.map((s) => s.score)) : best.score;
+      // Intento que representa al alumno: el mejor, el primero o el último contado (la media no tiene uno solo).
+      const pick = mode === 'first' ? scored[0] : (mode === 'last' ? (countedAll.length ? countedAll[countedAll.length - 1] : scored[scored.length - 1]) : best);
+      const finalScore = average ? countedScore(hw, counted.map((s) => s.score)) : pick.score;
       const mean = (key) => Math.round(counted.reduce((sum, s) => sum + (Number(s.a.gameData && s.a.gameData[key]) || 0), 0) / counted.length);
       const last = list[list.length - 1];
       const state = last.finished ? 'finished' : (closed ? 'expired' : (sp.ensureState({ gameData: last.gameData }).index > 0 ? 'in-progress' : 'not-started'));
@@ -401,14 +411,14 @@ module.exports = function createHomeworkService({ getHomeworksCollection, getHom
         state,
         attempts: list.length,
         bestScore: finalScore,
-        correctCount: average ? mean('correctCount') : (best.a.gameData.correctCount || 0),
-        wrongCount: average ? mean('wrongCount') : (best.a.gameData.wrongCount || 0),
-        answered: (best.a.gameData.answerHistory || []).length,
-        finishedAt: best.a.finishedAt || null
+        correctCount: average ? mean('correctCount') : (pick.a.gameData.correctCount || 0),
+        wrongCount: average ? mean('wrongCount') : (pick.a.gameData.wrongCount || 0),
+        answered: (pick.a.gameData.answerHistory || []).length,
+        finishedAt: pick.a.finishedAt || null
       });
-      bestPlayers.push({ name: list[0].name, icon: list[0].icon || '', gameData: { ...best.a.gameData, score: finalScore } });
+      bestPlayers.push({ name: list[0].name, icon: list[0].icon || '', gameData: { ...pick.a.gameData, score: finalScore } });
       // Fuente de la estadística por pregunta: el mejor intento, o todos los que cuentan si se hace la media.
-      statSources.push(...(average ? counted.map((s) => s.a.gameData) : [best.a.gameData]));
+      statSources.push(...(average ? counted.map((s) => s.a.gameData) : [pick.a.gameData]));
     });
     rows.sort((x, y) => y.bestScore - x.bestScore || x.name.localeCompare(y.name, 'es'));
     // Estadística por pregunta, sobre el mejor intento de cada alumno (o sobre todos, con la media).

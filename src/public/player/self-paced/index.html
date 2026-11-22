@@ -69,7 +69,7 @@
                 <p class="sp-done__line" v-if="summary.bestStreak > 1">{{ fmt('sp_done_streak', { n: summary.bestStreak }) }}</p>
                 <p class="sp-done__line" v-if="summary.rank">{{ fmt('sp_done_rank', { r: summary.rank, p: summary.players }) }}</p>
                 <template v-if="summary.homework">
-                    <p class="sp-done__line" v-if="summary.maxAttempts !== 1">{{ summary.scoring === 'average' ? fmt('hw_average', { n: summary.averageScore }) : fmt('hw_best', { n: summary.bestScore }) }}</p>
+                    <p class="sp-done__line" v-if="summary.maxAttempts !== 1">{{ summary.scoring === 'average' ? fmt('hw_average', { n: summary.averageScore }) : (summary.scoring === 'first' || summary.scoring === 'last' ? fmt('hw_' + summary.scoring, { n: summary.countedScore }) : fmt('hw_best', { n: summary.bestScore })) }}</p>
                     <p class="sp-done__hint">{{ summary.closed ? t('hw_done_closed') : t('hw_done_saved') }}</p>
                     <p class="sp-done__hint" v-if="hwRecovery()">{{ fmt('hw_your_code', { n: playerName, c: hwRecovery() }) }}</p>
                     <button type="button" id="hwRetryBtn" class="button sp-next" v-if="summary.canRetry" @click="newAttempt">{{ t('hw_retry') }}</button>
