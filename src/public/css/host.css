@@ -88,7 +88,8 @@ body{
     letter-spacing: 0.06em;
 }
 .pin-value{
-    font-size: 42px;
+    font-size: 64px;
+    line-height: 1.1;
     font-weight: 800;
     letter-spacing: 0.08em;
 }
@@ -340,7 +341,7 @@ body{
 @media (max-width: 600px){
     body{ padding: 12px; }
     #title{ font-size: 24px; margin-bottom: 8px; }
-    .pin-value{ font-size: 34px; }
+    .pin-value{ font-size: 48px; }
     .join-cta{ gap: 12px; }
     .qr-card{ width: 100%; min-width: 0; }
     .qr-img{ width: 132px; height: 132px; }

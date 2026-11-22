@@ -116,6 +116,19 @@ body{
     opacity: 0.9;
 }
 
+/* Aviso de que la partida empezará en breve. */
+.lobby-start-note{
+    margin: 0 0 16px;
+    padding: 10px 16px;
+    border-radius: 14px;
+    background: rgba(255, 238, 112, 0.14);
+    border: 1px solid rgba(255, 238, 112, 0.4);
+    color: #ffee70;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
 /* Contador de alumnos en la sala (solo el número, sin nombres). */
 .lobby-count{
     margin: 14px 0 0;

@@ -64,6 +64,9 @@ var lobby = Vue.createApp({
             if(this.count === null) return '';
             return tLobby('lobby_count').replace('{n}', String(this.count));
         },
+        startNote: function(){
+            return tLobby('lobby_start_note');
+        },
         pinText: function(){
             return tLobby('lobby_pin') + ' ' + this.pin;
         },

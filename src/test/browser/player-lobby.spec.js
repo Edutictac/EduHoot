@@ -202,3 +202,22 @@ test('muestra el código de la partida mientras espera', async ({ page }) => {
     await openLobby(page);
     await expect(page.locator('#lobby-pin')).toHaveText('Código de partida: 12345');
 });
+
+// Aviso de que la partida empezará en breve (en todos los idiomas).
+const START_NOTES = {
+    es: 'La partida empezará en breve, ¡permanece atento/a!',
+    ca: 'La partida començarà aviat, mantén-te atent/a!',
+    va: 'La partida començarà aviat, mantín-te atent/a!',
+    en: 'The game will start shortly, stay alert!'
+};
+for (const [lang, text] of Object.entries(START_NOTES)) {
+    test(`sala de espera: aviso de que la partida va a empezar (${lang})`, async ({ page }) => {
+        await openLobby(page, `?pin=12345&icon=%F0%9F%90%BC&name=Ana&studentJoinToken=&token=tok1&lang=${lang}`);
+        await page.evaluate((l) => localStorage.setItem('lang', l), lang);
+        await page.reload();
+        await page.waitForLoadState('load');
+        await expect(page.locator('#lobby-start-note')).toHaveText(text);
+        await serverEmit(page, 'playerJoinAck');
+        await expect(page.locator('#lobby-start-note')).toHaveText(text);
+    });
+}
