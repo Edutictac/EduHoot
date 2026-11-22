@@ -119,7 +119,8 @@ problemes d'estil, variables sense usar, etc.
   `/create/quiz-creator/`, amb la REST i Socket.IO simulats) i
   `solo.spec.js` (catàleg, partida, rànquing i entrada des de Commons
   de `/solo/`, amb el rellotge de Playwright controlat),
-  `create.spec.js` (biblioteca, generador IA, importació i compte de
+  `create.spec.js` (biblioteca, generador IA, importació, compte i permisos
+  amb autodesat i reversió si el servidor els rebutja, de
   `/create/`, amb la REST i Socket.IO simulats) i `join.spec.js` (PIN,
   icona, nom i identitat d'alumne en `/join.html`),
   `player-lobby.spec.js` (sala d'espera `/player/` amb Socket.IO fals),
@@ -166,7 +167,7 @@ el recorregut complet de baix:
 
 - **Crear/editar un qüestionari**: `http://localhost:3000/create/`
 - **Jugar a l'aula** (amfitrió + diversos dispositius/pestanyes com a
-  jugador, el mode real de classe): botó "Jugar a l'aula" des de la
+  jugador, el mode real de classe): botó "Jugar" des de la
   biblioteca → `/host/`, i unir-se des de `/join` amb el PIN. Vore el
   detall d'este i la resta de modes en
   [ARCHITECTURE.md → Modes de joc](ARCHITECTURE.md#modes-de-joc).

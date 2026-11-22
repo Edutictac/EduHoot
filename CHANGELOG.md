@@ -191,6 +191,24 @@ fitxers corresponents, i els originals es van eliminar.
 
 ### Canviat
 
+- Biblioteca (`/create/`) redissenyada: els botons de cada quiz van en l'orde
+  Jugar, Solo, Flashcards, Multijugador, Deures, CSV, Moodle, Editar, Clonar i
+  Eliminar; el botó «Jugar a l'aula» passa a dir-se **«Jugar»** (també en
+  els botons que apareixen en importar o generar un quiz). Els recuadres
+  tenen el mateix marge lateral que la portada (10 % de l'ample) i mostren
+  els quizzes en 1, 2 o 3 columnes segons l'ample; targetes amb vora blanca i
+  títols en el groc del logo, títols de secció en groc suau i controls
+  (filtres, ordre, etiquetes, formularis) amb l'estil de píndola fosca.
+- Els permisos d'un quiz (visibilitat i clonació) es **guarden sols** en
+  canviar-los: desapareix el botó «Desar permisos». Si el servidor els
+  rebutja, es torna al valor anterior.
+- El xip de compte, «Tornar» i el distintiu DEV/STAGE s'alineen amb el
+  recuadre inferior en la portada, `/create/` i `/solo/`; el distintiu ja no
+  tapa cap text en carregar la pàgina.
+- `/solo/` redissenyada sense canviar els colors: logo d'EduHoot sota el
+  títol del quiz amb la seua imatge representativa, controls i botons amb la
+  seua amplada natural, i panell del 70 % de l'ample de la finestra en
+  pantalles grans que s'eixampla fins al 90 % en el mòbil.
 - L'encert parcial es mostra en taronja (abans àmbar o verd) en tots els
   modes i tipus de pregunta.
 - Els textos d'importació de cuestionaris ja no parlen només de CSV: diuen

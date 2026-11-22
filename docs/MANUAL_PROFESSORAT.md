@@ -17,7 +17,7 @@ L'alumnat sempre juga des del seu mòbil, tauleta o ordinador.
 
 ### Preparar la partida
 
-1. A la biblioteca, prem **Jugar a l'aula** en el quiz que vulgues.
+1. A la biblioteca, prem **Jugar** en el quiz que vulgues.
 2. Al lobby, en **Mode de partida**, tria **Al seu ritme (cada alumne avança
    sol)**.
 3. Ajusta, si vols, el **Temps per pregunta**, **Mostrar respostes**,

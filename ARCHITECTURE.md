@@ -527,7 +527,10 @@ commit cada un.
   la URL, paginació i targetes amb permisos (`quizPermissions()`),
   edició d'etiquetes, permisos de compartir i exportació. Els esborranys
   d'etiqueta i de permisos es reinicien cada vegada que arriba la
-  biblioteca, com quan abans es repintava tot.
+  biblioteca, com quan abans es repintava tot. Els permisos es **guarden
+  sols** en canviar-los (`saveSharing()`: marca `saving`, espera
+  `updateSharing()` i, si va bé, mostra ✓ dos segons — `done` —; si falla,
+  torna al valor guardat, `saved`); no hi ha botó de desar.
 - **Bloc 2** (`create-ia.js` i `create.js`): generador IA (prompt,
   modes, vista prèvia, descàrrega i importació) i importació de CSV i de
   Kahoot.
@@ -608,6 +611,15 @@ principals (`index`, `join`, `create`, `create/quiz-creator`, `host`,
   lloc, el nom apareix encara que la pàgina actual no siga `/create/`
   (p. ex. a `/solo/` o `/host/`). Si no hi ha sessió, no es mostra eixa
   segona línia (igual que en stage sense tag).
+- El distintiu publica la seua alçada en la variable CSS
+  `--env-badge-space` (en `<html>`), perquè la pàgina deixe eixe espai a
+  dalt i el distintiu no tape cap text en carregar; en fer scroll sí que
+  passa per damunt. `js/chip-align.js` (carregat abans d'`env-badge.js`)
+  publica `--chip-right` i `--back-left`, els marges que alineen el xip de
+  compte i el botó «Tornar» amb el recuadre principal de cada pantalla;
+  `--page-gutter` és el marge lateral del recuadre (10 vw en `/create/` i
+  la portada; en `/solo/`, 5 vw que creix fins al 15 vw en pantalles grans,
+  perquè el panell ocupe el 70 % de l'ample).
 - Vore `docs/STAGE-AUTOMATIC.md` per a com es configura `NODE_ENV` i
   `AUTO_SEED_STAGE` al VPS de stage.
 

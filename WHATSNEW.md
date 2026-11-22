@@ -29,6 +29,16 @@
   alçat la mà i si és fora de la pestanya.
 - **Partida sense rànquing**: la casella «Puntuacions entre preguntes i
   ranking» també amaga el Top 10 de l'alumnat i el podi final.
+- **Biblioteca més neta i ordenada**: els quizzes es mostren en 1, 2 o 3
+  columnes segons l'ample de la pantalla, amb el mateix marge que la
+  portada, i els botons de cada quiz van en un orde més lògic. El botó
+  «Jugar a l'aula» passa a dir-se simplement **«Jugar»**.
+- **Permisos que es guarden sols**: en canviar la visibilitat o si es pot
+  clonar un quiz, el canvi es guarda al moment; ja no cal premer «Desar
+  permisos».
+- **Mode individual més bonic**: el logo d'EduHoot i la imatge del quiz
+  davall del títol, botons sense estirar i un panell que s'adapta a l'ample
+  de la pantalla.
 
 ## Per a l'alumnat
 
@@ -168,6 +178,16 @@
   pasado y resolverlo más rápido.
 - **Exportaciones que no se confunden**: el CSV de preguntas de un
   cuestionario se descarga con la fecha y la hora en el nombre.
+- **Biblioteca más ordenada**: los cuestionarios se muestran en 1, 2 o 3
+  columnas según el ancho de la pantalla, con el mismo margen que la
+  portada, y los botones de cada cuestionario siguen un orden más lógico. El
+  botón «Jugar en el aula» pasa a llamarse simplemente **«Jugar»**.
+- **Permisos que se guardan solos**: al cambiar la visibilidad o si se puede
+  clonar un cuestionario, el cambio se guarda al instante; ya no hace falta
+  pulsar «Guardar permisos».
+- **Modo individual más bonito**: el logo de EduHoot y la imagen del
+  cuestionario bajo el título, botones sin estirar y un panel que se adapta
+  al ancho de la pantalla.
 
 ## Para el alumnado
 
@@ -274,6 +294,16 @@
   happened and fix it faster.
 - **Exports you won't mix up**: a quiz's questions CSV now downloads with
   the date and time in its name.
+- **A tidier library**: quizzes show in 1, 2 or 3 columns depending on the
+  screen width, with the same side margin as the home page, and each quiz's
+  buttons follow a more logical order. The "Play in class" button is now
+  simply **"Play"**.
+- **Permissions that save themselves**: when you change a quiz's visibility
+  or whether it can be cloned, the change is saved at once; there is no
+  "Save permissions" button any more.
+- **A nicer individual mode**: the EduHoot logo and the quiz's image below
+  the title, buttons that no longer stretch, and a panel that adapts to the
+  screen width.
 
 ## For students
 

@@ -94,9 +94,9 @@ decisió de producte.
 
 | # | Proposta | Origen | Dificultat | 📚 Aprenentatge | 🙂 Clima | 🤝 Inclusió | ✅ Context | Itinerari |
 |---|---|---|---|---|---|---|---|---|
-| 1 | Deures asíncrons amb data límit | 🟩 | 🔴 | 📚 Alt | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 3 |
+| 1 | ✅ Deures asíncrons amb data límit (◐ sense Commons) | 🟩 | 🔴 | 📚 Alt | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 3 |
 | 2 | Podi final amb confeti | 🟨 | 🟡 | ✖️ Cap | 🙂 Segur | ➖ Neutra | ✅ Encaixa | 📦 Aparcada |
-| 3 | Mode autoritme (self-paced) | 🟦 | 🔴 | 📚 Alt | 🙂 Segur | 🤝 Alta | ✅ Encaixa | Fase 3 |
+| 3 | ✅ Mode autoritme (self-paced) | 🟦 | 🔴 | 📚 Alt | 🙂 Segur | 🤝 Alta | ✅ Encaixa | Fase 3 |
 | 4 | Power-ups (doble puntuació, 50/50, congelar ratxa) | 🟩 | 🔴 | ➖ Neutre | 🙂 Segur¹ | ➖ Neutra | ✅ Encaixa | Fase 2 |
 | 5 | Avatars de personatge personalitzables | 🟩 | 🟡 | ✖️ Cap | 🙂 Segur | ➖ Neutra | ✅ Encaixa | 📦 Aparcada |
 | 6 | Mode equips, amb variant "relay" | 🟩 | 🔴 | 📚 Alt | ⚠️ Risc lleu² | 🤝 Alta | ✅ Encaixa | Fase 2 |
@@ -108,7 +108,7 @@ decisió de producte.
 | 12 | ✅ Generador de sobrenoms aleatoris | 🟨 | 🟢 | ✖️ Cap⁴ | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1a |
 | 13 | ✅ Lectura en veu alta (TTS) | 🟩 | 🟢 | ➖ Neutre | 🙂 Segur | 🤝 Alta | ✅ Encaixa | Fase 1a |
 | 14 | So de feedback individual | 🟨 | 🟢 | ✖️ Cap | 🙂 Segur | ➖ Neutra | ✅ Encaixa | 📦 Aparcada |
-| 15 | Ampliar la importació: GIFT, XML de Moodle i la resta de formats de Moodle/AULES⁵ | 🟦 | 🟡 | ➖ Neutre | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1a |
+| 15 | ✅ Ampliar la importació: GIFT, XML de Moodle i la resta de formats de Moodle/AULES⁵ (◐ GIFT i XML fets) | 🟦 | 🟡 | ➖ Neutre | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1a |
 | 16 | Reaccions en directe (emoji) | 🟨 | 🟡 | ✖️ Cap | ⚠️ Risc | ➖ Neutra | ✅ Encaixa | 📦 Aparcada |
 | 17 | Tipus de pregunta addicionals | 🟦 | 🔴 | 📚 Alt | 🙂 Segur | 🤝 Alta | ✅ Encaixa | Fase 2 |
 | 18 | Informe de progrés històric | 🟩 | 🔴 | 📚 Alt⁶ | 🙂 Segur | ➖ Neutra | ✅ Encaixa | ❌ Descartada |
@@ -177,7 +177,7 @@ itinerari i context inclosos; ací va l'explicació completa de cada
 proposta i el seu criteri pedagògic raonat (sense repetir l'itinerari ni
 el context, que ja estan en la taula).
 
-1. 🟩 **Ambdues** — Mode "tasca"/deures asíncrons amb data límit — 🔴 Alta
+1. ✅ 🟩 **Ambdues** — Mode "tasca"/deures asíncrons amb data límit — 🔴 Alta
    El cas d'ús més valorat pel professorat en les dos plataformes; en
    Wayground és a més el seu mode fundacional.
    → **Criteri pedagògic:** 📚 Aprenentatge: Alt · 🙂 Clima: Segur ·
@@ -193,7 +193,7 @@ el context, que ja estan en la taula).
    → **Criteri pedagògic:** ✖️ Aprenentatge: Cap · 🙂 Clima: Segur ·
    ➖ Inclusió: Neutra → **Aparcada.**
 
-3. 🟦 **Wayground** — Mode autoritme (self-paced) — 🔴 Alta
+3. ✅ 🟦 **Wayground** — Mode autoritme (self-paced) — 🔴 Alta
    El tret que més caracteritza Wayground entre les plataformes
    educatives de referència.
    → **Criteri pedagògic:** 📚 Aprenentatge: Alt (permet un ritme
@@ -293,7 +293,7 @@ el context, que ja estan en la taula).
     → **Criteri pedagògic:** ✖️ Aprenentatge: Cap · 🙂 Clima: Segur ·
     ➖ Inclusió: Neutra → **Aparcada.**
 
-15. 🟦 **Wayground** — Ampliar la importació de preguntes: GIFT,
+15. ✅ 🟦 **Wayground** — Ampliar la importació de preguntes: GIFT,
     XML de Moodle i la resta de formats que accepta Moodle/AULES — 🟡 Mitjana
     Redefinida després de la revisió pedagògica d'este llistat. Abans
     era "Generador de preguntes amb IA natiu"; eixa part amb risc de
@@ -311,8 +311,11 @@ el context, que ja estan en la taula).
     GIFT i XML de Moodle, que són els formats de pregunta més
     estàndards, i afegir la resta de formats de Moodle/AULES de forma
     incremental sobre la mateixa base).
-    L'XML de Moodle i el GIFT ja importen també els emparellaments
-    (correspondència, feature 7).
+    **Implementat** per a l'XML de Moodle i el GIFT (fitxers `.xml` i
+    `.gift`, també `.txt` detectat pel contingut): opció múltiple,
+    verdader/fals, resposta curta, numèrica i correspondència; les preguntes
+    d'altres tipus s'ometen amb el motiu. **Pendent:** la resta de formats
+    de Moodle/AULES.
 
 16. 🟨 **Kahoot** — Reaccions en directe (emoji) enviades pel jugador —
     🟡 Mitjana
@@ -379,7 +382,7 @@ el context, que ja estan en la taula).
     instructiu) · 🙂 Clima: Segur · ➖ Inclusió: Neutra → **Prioritat
     alta.**
 
-25. 🟦 **Wayground** — Pràctica adaptativa (repetir automàticament les
+25. ✅ 🟦 **Wayground** — Pràctica adaptativa (repetir automàticament les
     preguntes fallades) — 🟡 Mitjana
     → **Criteri pedagògic:** 📚 Aprenentatge: Alt · 🙂 Clima: Segur ·
     ➖ Inclusió: Neutra → **Prioritat alta** (confirmat).
@@ -560,7 +563,12 @@ realista, no només una llista d'idees.
     gestiona diversos jugadors en un dispositiu i repartix preguntes per
     ronda — base de disseny a revisar abans d'especificar 6 i 31 des de
     zero.
-  - La resta de les 31 propostes (incloses les descartades/aparcades) no
+  - **1 (deures asíncrons) i 3 (mode autoritme)** — implementades el
+    2026-11-21 (vore les descripcions 1 i 3). Els deures reutilitzen el motor
+    d'autoritme i van per HTTP; falta l'entrada amb identitat de Commons.
+  - **15 (importació ampliada)** — l'XML de Moodle i el GIFT ja s'importen
+    (vore la descripció 15); falta la resta de formats de Moodle/AULES.
+  - La resta de les 32 propostes (incloses les descartades/aparcades) no
     té cap indici d'implementació en el codi actual.
 - **El token de restabliment en els logs ja no està vigent en
   producció/staging.** A diferència del que indicava `REVISION_MEJORAS.md`,
@@ -588,8 +596,8 @@ un suggeriment ajornable:
 
 ### Fase 1a — Millores cosmètiques/aïllades, sense tocar la lògica de joc
 
-12 (sobrenoms aleatoris), ✅ 13 (TTS), 15 (ampliar importació:
-GIFT/XML Moodle/AULES), ✅ 20 (flashcards), ✅ 23 (compte arrere 3-2-1).
+✅ 12 (sobrenoms aleatoris), ✅ 13 (TTS), ✅ 15 (ampliar importació:
+GIFT/XML fets; falta la resta de formats Moodle/AULES), ✅ 20 (flashcards), ✅ 23 (compte arrere 3-2-1).
 
 No canvien ni la puntuació ni la seqüència de preguntes: són canvis
 d'interfície, d'àudio, o d'importació de contingut, autocontinguts en un
@@ -598,7 +606,7 @@ confirmada.
 
 ### Fase 1b — Mecàniques de Solo/amfitrió, sense tocar l'arquitectura del cicle de partida
 
-11 (ratxa), 24 (vídeos "aprén i respon"), 25 (pràctica adaptativa), 26
+✅ 11 (ratxa), 24 (vídeos "aprén i respon"), ✅ 25 (pràctica adaptativa), 26
 (mode fantasma), 30 (Time Attack), 31 (mode paper).
 
 A diferència de la Fase 1a, estes sí que canvien la puntuació (11) o la
@@ -619,14 +627,14 @@ alta confirmada (6 amb una nota de disseny sobre el clima d'aula).
 
 ### Fase 3 — Canvi d'arquitectura del cicle de partida
 
-3 (mode autoritme, la peça base), 1 (deures asíncrons), 27 (mode
-presentació híbrid).
+✅ 3 (mode autoritme, la peça base), ✅ 1 (deures asíncrons; falta
+l'entrada amb Commons), 27 (mode presentació híbrid).
 
 Totes depenen de rompre l'assumpció actual de que tots els jugadors
 avancen al mateix ritme dirigits per l'amfitrió (confirmat en
-`ARCHITECTURE.md → Avanç de pregunta`). Convé construir primer el mode
-autoritme (3) com a primitiva reutilitzable, i recolzar-se en ell per a
-les altres dos. Les 3 tenen prioritat pedagògica alta confirmada.
+`ARCHITECTURE.md → Avanç de pregunta`). Es va construir primer el mode
+autoritme (3) com a primitiva reutilitzable, i els deures (1) es recolzen
+en ell; queda la 27. Les 3 tenen prioritat pedagògica alta confirmada.
 
 ### Fase 4 — Integracions externes o de baixa prioritat per escala
 
