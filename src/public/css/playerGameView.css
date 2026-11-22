@@ -176,7 +176,7 @@ body{
 }
 
 /* Arrel de Vue: centra el contingut com feia abans el body. */
-#player-game{
+#player-game, #player-sp{
     width: 100%;
     max-width: 720px;
     display: flex;
@@ -367,7 +367,7 @@ body{
     min-height: var(--app-vh);
     padding: var(--fit-margin);
 }
-#player-game{
+#player-game, #player-sp{
     flex: 1 1 auto;
     min-height: 0;
     display: flex;
@@ -438,4 +438,22 @@ body{
     max-width: 100%;
     overflow-wrap: anywhere;
     box-sizing: border-box;
+}
+
+/* Espacio reservado abajo para «Salir» y «Levantar la mano» (flotantes): las respuestas no quedan debajo. */
+body:has(#player-game), body:has(#player-sp){
+    padding-bottom: calc(var(--fit-margin, 16px) + 56px);
+}
+
+/* Pantallas intermedias (respuesta enviada, resultado, fin de partida): icono grande y una línea de detalle. */
+.result-icon{ font-size: 72px; line-height: 1; margin: 20px 0 4px; text-align: center; }
+.result-sub{ margin: 8px 0 0; font-size: 22px; font-weight: 700; text-align: center; overflow-wrap: anywhere; }
+
+/* Cabecera compacta en móvil: nombre y puntos en una línea, código de partida debajo, más pequeño. */
+@media (max-width: 600px){
+    #stats{ flex-wrap: wrap; justify-content: center; padding: 8px 12px; gap: 6px 14px; }
+    .game-pin{ padding: 2px 12px; }
+    .game-pin__code{ font-size: 20px; }
+    .game-pin__label{ display: none; }
+    .result-icon{ font-size: 60px; }
 }

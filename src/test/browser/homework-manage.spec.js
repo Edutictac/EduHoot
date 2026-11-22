@@ -152,3 +152,43 @@ test('resultados sin alumnado', async ({ page }) => {
     await page.goto('/create/homework/?code=ABCD2345&lang=ca');
     await expect(page.locator('#hwNoStudents')).toHaveText('Encara no ha entrat ningú.');
 });
+
+// Maquetación: el panel ocupa el ancho de la página (margen lateral como la biblioteca) y no se sale en móvil.
+test('maquetación: el panel ocupa el ancho de la página y no desborda', async ({ page }) => {
+    await setup(page, { routes: async (p) => { await p.route('**/api/homeworks', route => route.fulfill({ json: [HW()] })); } });
+    await page.goto('/create/homework/?lang=es');
+    await expect(page.locator('.hw-item')).toHaveCount(1);
+    const m = await page.evaluate(() => {
+        const shell = document.querySelector('.hw-shell').getBoundingClientRect();
+        return { left: shell.left, right: document.documentElement.clientWidth - shell.right, scroll: document.documentElement.scrollWidth - document.documentElement.clientWidth };
+    });
+    expect(m.scroll).toBeLessThanOrEqual(0);
+    expect(Math.abs(m.left - m.right)).toBeLessThan(2);
+    const w = await page.evaluate(() => window.innerWidth);
+    if (w >= 900) expect(m.left).toBeGreaterThan(w * 0.08);
+    else expect(m.left).toBeLessThan(20);
+});
+
+test('resultados: la tabla por alumno se ordena al pulsar el encabezado', async ({ page }) => {
+    await setup(page, {
+        routes: async (p) => {
+            await p.route('**/api/homeworks/ABCD2345/results', route => route.fulfill({
+                json: {
+                    homework: HW(), students: 2,
+                    rows: [
+                        { name: 'Ana', icon: '', state: 'finished', attempts: 1, bestScore: 900, correctCount: 1, wrongCount: 0, answered: 1 },
+                        { name: 'Bruno', icon: '', state: 'finished', attempts: 1, bestScore: 2500, correctCount: 3, wrongCount: 0, answered: 3 }
+                    ],
+                    questionStats: []
+                }
+            }));
+        }
+    });
+    await page.goto('/create/homework/?code=ABCD2345&lang=es');
+    const names = () => page.locator('#hwStudents tbody tr td:first-child').allTextContents();
+    expect(await names()).toEqual(['Ana', 'Bruno']);
+    await page.locator('#hwStudents .hw-sort', { hasText: 'Mejor puntuación' }).click();
+    expect(await names()).toEqual(['Ana', 'Bruno']);
+    await page.locator('#hwStudents .hw-sort', { hasText: 'Mejor puntuación' }).click();
+    expect(await names()).toEqual(['Bruno', 'Ana']);
+});

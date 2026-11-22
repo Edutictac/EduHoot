@@ -67,10 +67,33 @@ var app = Vue.createApp({
             leaveConfirming: false,
             ttsReady: false,
             ttsSpeaking: false,
-            handRaised: false
+            handRaised: false,
+            // Deures: intento en curso (n de m).
+            attemptNo: 0,
+            maxAttempts: 1
         };
     },
     computed: {
+        // «Intento 2 de 3», o «Último intento» cuando es el último; sin límite, solo el número; con un solo intento, nada.
+        attemptText: function(){
+            if(!isHomework || !this.attemptNo || this.maxAttempts === 1) return '';
+            if(this.maxAttempts === 0) return fmtPlayer('hw_attempt', { n: this.attemptNo });
+            var base = fmtPlayer('hw_attempt_of', { n: this.attemptNo, m: this.maxAttempts });
+            return this.attemptNo >= this.maxAttempts ? base + ' · ' + tPlayer('hw_attempt_last') : base;
+        },
+        resultIcon: function(){
+            var r = this.result;
+            if(r.timeout) return '⏰';
+            return { correct: '✅', partial: '👍', incorrect: '❌', poll: '🙏' }[r.kind] || '';
+        },
+        resultHint: function(){
+            var r = this.result;
+            return r.kind === 'incorrect' && !r.detailHtml && !r.timeout ? tPlayer('result_no_answer') : '';
+        },
+        donePct: function(){
+            var s = this.summary;
+            return s && s.total ? Math.round(100 * (Number(s.correctCount) || 0) / s.total) : 0;
+        },
         nameDisplay: function(){ return this.t('name') + ' ' + this.playerName; },
         scoreDisplay: function(){ return this.t('score') + ' ' + this.playerScore; },
         progressText: function(){ return fmtPlayer('sp_question_of', { n: this.questionNumber, t: this.totalQuestions }); },
@@ -229,7 +252,10 @@ socket.on('kicked', function(){
     app.message = tPlayer('reconnecting_kicked');
     setTimeout(function(){ window.location.href = '../../'; }, 2500);
 });
-socket.on('quizInfo', function(d){ app.quizName = (d && d.quizName) ? String(d.quizName) : ''; });
+socket.on('quizInfo', function(d){
+    app.quizName = (d && d.quizName) ? String(d.quizName) : '';
+    if(d && d.attemptNo){ app.attemptNo = Number(d.attemptNo) || 0; app.maxAttempts = d.maxAttempts === 0 ? 0 : (Number(d.maxAttempts) || 1); }
+});
 socket.on('playerGameData', function(data){
     for(var i = 0; i < data.length; i++){
         if(data[i].playerId === socket.id){
@@ -334,7 +360,7 @@ socket.on('spResult', function(d){
         detail = '<span class="matching-pairs">' + escapeHtml(detail) + '</span>';
     }
     document.body.style.backgroundColor = color;
-    app.result = { kind: kind, message: message, detailHtml: detail, points: Number(d.points) || 0, bonus: Number(d.bonus) || 0,
+    app.result = { kind: kind, timeout: d.outcome === 'timeout', message: message, detailHtml: detail, points: Number(d.points) || 0, bonus: Number(d.bonus) || 0,
         ranking: Array.isArray(d.ranking) ? d.ranking : null, rank: Number(d.rank) || 0, players: Number(d.players) || 0 };
     app.playerScore = d.score;
     app.streak = Number(d.streak) || 0;

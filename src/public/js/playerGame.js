@@ -101,6 +101,10 @@ var app = Vue.createApp({
             // Resultado de la pregunta: «correct» o «incorrect» (para su estilo). La barra de tiempo se oculta mientras se ve.
             messageKind: '',
             resultShown: false,
+            // Pantallas intermedias: puntos ganados en la última pregunta, y si la partida ha terminado.
+            scoreBefore: null,
+            gained: 0,
+            gameOver: false,
             rankingVisible: false,
             rankingList: []
         };
@@ -125,6 +129,31 @@ var app = Vue.createApp({
         autoNextText: function(){
             if(this.autoPaused) return this.t('auto_paused', 'Avance pausado');
             return this.t('auto_next_in', 'Siguiente pregunta en {s} s').replace('{s}', this.autoLeft);
+        },
+        // Icono grande de las pantallas intermedias (respuesta enviada, resultado, fin de partida).
+        resultIcon: function(){
+            if(this.gameOver) return '🏁';
+            if(!this.messageVisible || !this.message) return '';
+            var icons = { correct: '✅', partial: '👍', incorrect: '❌' };
+            if(this.messageKind && icons[this.messageKind]) return icons[this.messageKind];
+            if(this.resultShown) return '🙏';
+            if(this.answerStatusState === 'submitted') return '⏳';
+            return '';
+        },
+        // Línea de detalle bajo el mensaje: puntuación final, puntos ganados o aviso de que se comentará la respuesta.
+        resultSub: function(){
+            if(this.gameOver){
+                var line = this.playerScore !== null ? (this.scoreLabel + ' ' + this.playerScore) : '';
+                return this.rankText ? (line ? line + ' · ' : '') + this.rankText : line;
+            }
+            if(!this.resultShown) return '';
+            if((this.messageKind === 'correct' || this.messageKind === 'partial') && this.gained > 0){
+                return this.t('sp_points_gained', '+{n} puntos').replace('{n}', this.gained);
+            }
+            if(this.messageKind === 'incorrect' && !this.messageDetailHtml){
+                return this.t('result_no_answer', 'El profesorado comentará la respuesta correcta.');
+            }
+            return '';
         },
         streakText: function(){
             var txt = '🔥 ' + this.streak;
@@ -699,6 +728,7 @@ socket.on('questionOver', function(playerData, payload){
 });
 
 socket.on('newScore', function(data){
+    if(app.resultShown && app.scoreBefore !== null) app.gained = Math.max(0, Number(data) - Number(app.scoreBefore));
     app.playerScore = data;
 });
 
@@ -824,6 +854,8 @@ socket.on('questionCountdown', showQuestionCountdown);
 
 socket.on('playerQuestion', function(data){
     app.resultShown = false;
+    app.gained = 0;
+    app.scoreBefore = app.playerScore;
     EduhootTTS.cancel();
     clearQuestionCountdown();
     questionActive = true;
@@ -886,6 +918,7 @@ socket.on('GameOver', function(){
     releaseWakeLock();
     document.body.style.backgroundColor = "#FFFFFF";
     app.answersVisible = false;
+    app.gameOver = true;
     showMessage(window.i18nPlayer ? window.i18nPlayer.t('game_over') : "GAME OVER");
     app.pointsMultiplier = 1;
 });

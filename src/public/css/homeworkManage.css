@@ -1,23 +1,85 @@
-/* Deures (docente): crear, lista y resultados. Reutiliza create.css (botones, page-shell). */
-.hw-shell{ max-width: 960px; margin: 0 auto; }
-.hw-card{ background: rgba(255,255,255,0.92); color: #1f2937; border-radius: 16px; padding: 16px 20px; margin: 14px 0; box-sizing: border-box; }
-.hw-card h2, .hw-card h3{ margin: 4px 0 8px; }
-.hw-muted{ opacity: .8; margin: 4px 0; }
-.hw-notice, .hw-error{ margin: 12px 0; padding: 8px 12px; border-radius: 10px; background: rgba(0,0,0,.08); font-weight: 600; }
-.hw-error{ background: #fee2e2; color: #991b1b; }
-.hw-form{ display: grid; gap: 12px; max-width: 520px; }
-.hw-form label{ display: grid; gap: 4px; font-weight: 600; }
-.hw-form input[type="text"], .hw-form input[type="datetime-local"], .hw-form select{ min-height: 40px; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 10px; font: inherit; }
-.hw-form .hw-check{ display: flex; gap: 8px; align-items: center; font-weight: 500; }
-.hw-actions{ display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
-.hw-link{ font-family: monospace; word-break: break-all; background: #f1f5f9; padding: 6px 10px; border-radius: 8px; user-select: all; }
-.hw-item__head{ display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.hw-badge{ padding: 2px 10px; border-radius: 999px; font-size: .85em; font-weight: 700; background: #e2e8f0; white-space: nowrap; }
+/* Deures (docente): crear, lista y resultados. Reutiliza create.css (botones, page-shell con el margen del 10 %).
+   Se distingue de la biblioteca por el fondo azul; tarjetas azules oscuras y títulos en amarillo. */
+#hw-app{ display: contents; }
+body{ padding-top: var(--env-badge-space, 0px); }
+
+.hw-shell{ min-width: 0; }
+#hwPageTitle{ color: #ffc800; margin: 0; font-size: 40px; }
+.hw-shell .top-row{ margin-bottom: 18px; }
+
+.hw-card{
+    background: rgba(16, 30, 62, 0.92);
+    color: #e8eefc;
+    border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 16px;
+    padding: 16px 20px;
+    margin: 0;
+    box-sizing: border-box;
+    min-width: 0;
+    max-width: 100%;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+}
+.hw-card h2{ margin: 4px 0 8px; color: #fdbc4b; overflow-wrap: anywhere; }
+.hw-card h3{ margin: 16px 0 8px; color: #ffdb70; }
+.hw-muted{ opacity: .8; margin: 4px 0; overflow-wrap: anywhere; }
+.hw-notice, .hw-error{ margin: 12px 0; padding: 8px 14px; border-radius: 12px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.16); font-weight: 600; }
+.hw-notice a{ color: #ffdb70; }
+.hw-error{ background: rgba(255,80,80,0.16); border-color: rgba(255,80,80,0.4); color: #ffdede; }
+
+/* Lista: 1, 2 o 3 columnas según el ancho, como las tarjetas de la biblioteca. */
+.hw-list{ display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); align-items: start; }
+.hw-list > .hw-notice, .hw-list > .hw-error, .hw-list > .hw-muted{ grid-column: 1 / -1; }
+
+/* Formulario */
+#hwNew{ max-width: 640px; }
+.hw-form{ display: grid; gap: 14px; }
+.hw-form label{ display: grid; gap: 6px; font-weight: 700; }
+.hw-form input[type="text"], .hw-form input[type="datetime-local"], .hw-form select, .hw-new-deadline{
+    min-height: 42px; padding: 8px 14px; border-radius: 999px; box-sizing: border-box; width: 100%;
+    border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.08); color: #fff;
+    font: inherit; color-scheme: dark;
+}
+.hw-form select option{ color: #14101f; background: #fff; }
+.hw-form .hw-check{ display: flex; gap: 10px; align-items: center; font-weight: 500; }
+.hw-form .hw-check input{ width: 18px; height: 18px; flex: none; accent-color: #ffc800; }
+.hw-form .btn-primary{ justify-self: start; }
+
+/* Botones: todos en una fila (con ajuste en pantallas estrechas), «Eliminar» al final. */
+.hw-actions{ display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 4px; align-items: center; }
+.hw-actions .btn, .hw-form .btn, .hw-reopen-box .btn{
+    font: inherit; font-size: 14px; font-weight: 700; text-decoration: none;
+    padding: 8px 14px; border-radius: 999px; line-height: 1.2; min-height: 38px;
+    display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box;
+}
+.hw-actions .hw-delete{ margin-left: auto; }
+.btn.is-confirming{ outline: 2px solid #ff8a8a; }
+
+.hw-link{
+    font-family: monospace; font-size: 13px; word-break: break-all; user-select: all;
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+    padding: 8px 14px; border-radius: 14px; margin: 8px 0;
+}
+.hw-item__head{ display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.hw-badge{ padding: 2px 10px; border-radius: 999px; font-size: .85em; font-weight: 700; background: #e2e8f0; color: #1f2937; white-space: nowrap; }
 .hw-badge.is-open{ background: #bbf7d0; }
 .hw-badge.is-closed, .hw-badge.is-expired{ background: #fecaca; }
 .hw-reopen-box{ display: flex; flex-wrap: wrap; gap: 8px; align-items: end; margin-top: 8px; }
-.hw-table-wrap{ overflow-x: auto; }
+.hw-reopen-box label{ display: grid; gap: 4px; font-weight: 600; }
+
+/* Resultados */
+.hw-table-wrap{ overflow-x: auto; max-width: 100%; }
 .hw-table{ width: 100%; border-collapse: collapse; }
-.hw-table th, .hw-table td{ text-align: left; padding: 6px 10px; border-bottom: 1px solid #e2e8f0; }
+.hw-table th, .hw-table td{ text-align: left; padding: 8px 10px; border-bottom: 1px solid rgba(255,255,255,0.12); }
+.hw-table th{ color: #ffdb70; white-space: nowrap; }
 .hw-table .hw-q{ max-width: 380px; overflow-wrap: anywhere; }
-.btn.is-confirming{ outline: 2px solid #991b1b; }
+.hw-sort{ font: inherit; font-weight: 700; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+.hw-sort::after{ content: ' ↕'; opacity: .45; font-size: .85em; }
+.hw-sort.is-asc::after{ content: ' ↑'; opacity: 1; }
+.hw-sort.is-desc::after{ content: ' ↓'; opacity: 1; }
+#hwNoStudents{ padding: 14px; border-radius: 12px; background: rgba(255,255,255,0.06); text-align: center; }
+
+@media (max-width: 599px){
+    #hwPageTitle{ font-size: 30px; }
+    .hw-card{ padding: 14px; }
+    .hw-actions .hw-delete{ margin-left: 0; }
+}

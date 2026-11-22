@@ -423,3 +423,22 @@ test('modo Solo: un texto muy largo (sin espacios) no se sale de la ventana de c
     expect(box.y + box.height).toBeLessThanOrEqual(viewport.height);
     await expect(page.locator('#feedback-close')).toBeAttached();
 });
+
+test('anfitrión: con la pantalla estrecha, logo, PIN y QR quedan centrados en columna', async ({ page }) => {
+    await page.route(/^https:\/\//, route => route.abort());
+    await page.route('**/api/**', route => route.fulfill({ json: {} }));
+    await page.route('**/socket.io/socket.io.js', route => route.fulfill({ contentType: 'application/javascript', body: 'window.io = function(){ var s = { id: "h", connected: false, on: function(){ return s; }, emit: function(){ return s; }, connect: function(){ return s; }, disconnect: function(){ return s; } }; return s; };' }));
+    for (const width of [380, 500, 680]) {
+        await page.setViewportSize({ width, height: 800 });
+        await page.goto('/host/?lang=es');
+        await page.waitForLoadState('load');
+        const center = async (sel) => { const b = await page.locator(sel).boundingBox(); return b.x + b.width / 2; };
+        const mid = width / 2;
+        for (const sel of ['.host-logo', '.pin-badge', '.qr-card']) {
+            expect(Math.abs((await center(sel)) - mid), `${sel} a ${width}px`).toBeLessThanOrEqual(8);
+        }
+        const logo = await page.locator('.host-logo').boundingBox();
+        const qr = await page.locator('.qr-card').boundingBox();
+        expect(qr.y).toBeGreaterThanOrEqual(logo.y + logo.height);
+    }
+});

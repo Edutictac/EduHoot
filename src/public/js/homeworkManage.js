@@ -73,8 +73,24 @@ var app = Vue.createApp({
             quizId: quizId, quizName: '', code: code,
             form: { title: '', deadline: defaultDeadline(), maxAttempts: '1', timePerQuestion: '', showCorrectAnswers: true, randomAnswers: true },
             created: null, busy: false, error: '', copied: '',
-            list: [], results: null, deleting: '', reopening: '', newDeadline: ''
+            list: [], results: null, deleting: '', reopening: '', newDeadline: '',
+            sortKey: '', sortDir: 1,
+            sortCols: [{ key: 'name', label: 'colName' }, { key: 'state', label: 'colState' }, { key: 'attempts', label: 'colAttempts' }, { key: 'bestScore', label: 'colBest' }, { key: 'correctCount', label: 'colCorrect' }]
         };
+    },
+    computed: {
+        // Orden por columna al pulsar el encabezado (sin orden = el del servidor).
+        sortedRows: function(){
+            var rows = this.results ? this.results.rows.slice() : [];
+            var key = this.sortKey;
+            if(!key) return rows;
+            var dir = this.sortDir;
+            return rows.sort(function(a, b){
+                var x = a[key], y = b[key];
+                if(typeof x === 'string') return x.localeCompare(y, lang) * dir;
+                return ((x || 0) - (y || 0)) * dir;
+            });
+        }
     },
     mounted: function(){
         var self = this;
@@ -88,6 +104,10 @@ var app = Vue.createApp({
     methods: {
         t: function(key){ this.langTick; return t(key); },
         fmt: fmt,
+        sortBy: function(key){
+            if(this.sortKey === key) this.sortDir = -this.sortDir;
+            else { this.sortKey = key; this.sortDir = 1; }
+        },
         plain: function(html){ var d = document.createElement('div'); d.innerHTML = String(html || '').replace(/<br\s*\/?>/gi, ' '); return d.textContent || ''; },
         linkOf: function(h){ return window.location.origin + '/homework/?code=' + h.code; },
         stateOf: function(h){

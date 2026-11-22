@@ -10,7 +10,7 @@
     var API = '/api/homework/' + encodeURIComponent(code);
     var KEY = 'eduhootHomework:' + code;
     var ICONS = ['🦊', '🐼', '🦁', '🐸', '🐙', '🦉', '🐢', '🦄', '🐧', '🐳'];
-    var hw = window.EDUHOOT_HOMEWORK = { code: code, name: '', recovery: '' };
+    var hw = window.EDUHOOT_HOMEWORK = { code: code, name: '', recovery: '', attemptNo: 1, maxAttempts: 1 };
     document.body.classList.add('hw-mode', 'hw-entry-open');
 
     function t(key){ return window.i18nPlayer ? window.i18nPlayer.t(key) : key; }
@@ -78,7 +78,8 @@
 
     function deliver(body){
         if(retrying){ retrying = false; trigger('connect', []); }
-        trigger('quizInfo', [{ quizName: body.title || '' }]);
+        if(body.attemptNo) hw.attemptNo = body.attemptNo;
+        trigger('quizInfo', [{ quizName: body.title || '', attemptNo: hw.attemptNo, maxAttempts: hw.maxAttempts }]);
         trigger('playerGameData', [[{ playerId: socket.id, name: hw.name, gameData: { score: body.score || 0, streak: body.streak || 0 } }]]);
         (body.events || []).forEach(function(ev){ trigger(ev.name, ev.data === null || ev.data === undefined ? [] : [ev.data]); });
     }
@@ -98,112 +99,108 @@
         })();
     }
 
-    // ----- Entrada -----
-    var info = null;
-
-    function show(id, on){ var el = $(id); if(el) el.hidden = !on; }
-    function setError(key){
-        var el = $('hwError');
-        el.textContent = key ? t(key) : '';
-        el.hidden = !key;
-    }
+    // ----- Entrada (app de Vue: #hw-entry, plantilla #hw-entry-tpl) -----
     var ERRORS = {
         'bad-name': 'hw_err_bad_name', 'name-taken': 'hw_err_name_taken', 'bad-recovery': 'hw_err_bad_recovery',
         closed: 'hw_err_closed', full: 'hw_err_full', 'too-many-attempts': 'hw_err_too_many', 'not-found': 'hw_err_not_found'
     };
 
-    function startGame(){
+    function json(res){ return res.json().catch(function(){ return {}; }).then(function(body){ return { status: res.status, body: body }; }); }
+
+    function startGame(vm){
         document.body.classList.remove('hw-entry-open');
-        show('hwEntry', false);
+        vm.visible = false;
         socket.connected = true;
         trigger('connect', []);
     }
 
-    function fillInfo(){
-        $('hwTitle').textContent = info.title || info.quizName || t('hw_heading');
-        var d = new Date(info.deadline);
-        $('hwDeadline').textContent = fmt('hw_deadline', { d: d.toLocaleString(window.i18nPlayer ? window.i18nPlayer.lang : undefined, { dateStyle: 'medium', timeStyle: 'short' }) });
-        var attempts = info.maxAttempts === 1 ? t('hw_attempts_one') : (info.maxAttempts === 0 ? t('hw_attempts_unlimited') : fmt('hw_attempts_n', { n: info.maxAttempts }));
-        $('hwMeta').textContent = fmt('hw_questions', { n: info.totalQuestions }) + ' · ' + attempts;
-        $('hwClosed').hidden = info.open;
-        if(!info.open) $('hwClosed').textContent = t('hw_closed_info');
+    // Intento en curso (n de m) para la cabecera de la partida: lo da el servidor al entrar y al reintentar.
+    function setAttempt(n, max){
+        hw.attemptNo = n;
+        hw.maxAttempts = max;
     }
 
-    var returning = false; // «Ya he empezado»
-    function renderMode(){
-        show('hwForm', true);
-        show('hwRecoveryRow', returning);
-        $('hwModeToggle').textContent = returning ? t('hw_new_here') : t('hw_have_code');
-        $('hwSubmit').textContent = returning ? t('hw_enter') : t('hw_start');
-        $('hwSubmit').disabled = !returning && !info.open;
-        setError('');
-    }
-
-    function submit(ev){
-        ev.preventDefault();
-        setError('');
-        var name = $('hwName').value.trim();
-        var recovery = returning ? $('hwRecovery').value.trim() : '';
-        $('hwSubmit').disabled = true;
-        fetch(API + '/join', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: name, recovery: recovery || undefined, icon: ICONS[Math.floor(Math.random() * ICONS.length)] })
-        }).then(function(res){ return res.json().catch(function(){ return {}; }).then(function(body){ return { status: res.status, body: body }; }); })
-        .then(function(res){
-            $('hwSubmit').disabled = false;
-            if(res.status !== 200){ setError(ERRORS[res.body.error] || 'hw_err_generic'); return; }
-            hw.name = res.body.student.name;
-            hw.recovery = res.body.student.recovery;
-            save();
-            if(recovery){ startGame(); return; }
-            // Alta nueva: se enseña el código una vez.
-            show('hwForm', false);
-            $('hwCodeValue').textContent = hw.recovery;
-            show('hwCodeBox', true);
-        }).catch(function(){ $('hwSubmit').disabled = false; setError('hw_err_generic'); });
-    }
-
-    function init(){
-        $('hwHeading').textContent = t('hw_heading');
-        $('hwNameLabel').textContent = t('hw_name_label');
-        $('hwNameHint').textContent = t('hw_name_hint');
-        $('hwRecoveryLabel').textContent = t('hw_code_label');
-        $('hwCodeTitle').textContent = t('hw_code_title');
-        $('hwCodeText').textContent = t('hw_code_text');
-        $('hwCodeGo').textContent = t('hw_code_go');
-        show('hwEntry', true);
-        fetch(API).then(function(res){
-            if(res.status === 404){ setError('hw_err_not_found'); show('hwForm', false); return null; }
-            return res.json();
-        }).then(function(body){
-            if(!body) return;
-            info = body;
-            fillInfo();
-            var saved = loadSaved();
-            if(saved){
-                // Dispositivo conocido: se comprueba el código y se entra directamente.
-                fetch(API + '/join', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: saved.name, recovery: saved.recovery }) })
-                    .then(function(r){ return r.json().then(function(b){ return { status: r.status, body: b }; }); })
-                    .then(function(r){
-                        if(r.status === 200){ hw.name = r.body.student.name; hw.recovery = saved.recovery; startGame(); }
-                        else if(r.status === 401){ forget(); renderMode(); }
-                        else renderMode();
-                    }).catch(renderMode);
-            }else if(!info.open){
-                // Cerrado y sin código: solo pueden entrar quienes ya participaron.
-                returning = true;
-                renderMode();
-            }else{
-                renderMode();
-            }
-        }).catch(function(){ setError('hw_err_generic'); });
-    }
-
-    document.addEventListener('DOMContentLoaded', function(){
-        $('hwForm').addEventListener('submit', submit);
-        $('hwModeToggle').addEventListener('click', function(){ returning = !returning; renderMode(); });
-        $('hwCodeGo').addEventListener('click', startGame);
-        init();
+    var entry = Vue.createApp({
+        template: '#hw-entry-tpl',
+        data: function(){
+            return { visible: true, loading: true, info: null, notFound: false, returning: false, name: '', recovery: '', busy: false, errorKey: '', codeValue: '', showCode: false };
+        },
+        computed: {
+            title: function(){ return this.info ? (this.info.title || this.info.quizName || t('hw_heading')) : ''; },
+            deadlineText: function(){
+                if(!this.info) return '';
+                var d = new Date(this.info.deadline);
+                return fmt('hw_deadline', { d: d.toLocaleString(window.i18nPlayer ? window.i18nPlayer.lang : undefined, { dateStyle: 'medium', timeStyle: 'short' }) });
+            },
+            metaText: function(){
+                if(!this.info) return '';
+                var max = this.info.maxAttempts;
+                var attempts = max === 1 ? t('hw_attempts_one') : (max === 0 ? t('hw_attempts_unlimited') : fmt('hw_attempts_n', { n: max }));
+                return fmt('hw_questions', { n: this.info.totalQuestions }) + ' · ' + attempts;
+            },
+            formVisible: function(){ return !this.loading && !this.notFound && !this.showCode; },
+            submitDisabled: function(){ return this.busy || (!this.returning && !!this.info && !this.info.open); }
+        },
+        mounted: function(){ this.load(); },
+        methods: {
+            t: t,
+            toggleMode: function(){ this.returning = !this.returning; this.errorKey = ''; },
+            load: function(){
+                var vm = this;
+                fetch(API).then(function(res){
+                    if(res.status === 404){ vm.notFound = true; vm.errorKey = 'hw_err_not_found'; vm.loading = false; return null; }
+                    return res.json();
+                }).then(function(body){
+                    if(!body) return;
+                    vm.info = body;
+                    var saved = loadSaved();
+                    if(!saved){
+                        // Cerrado y sin código: solo pueden entrar quienes ya participaron.
+                        if(!body.open) vm.returning = true;
+                        vm.loading = false;
+                        return;
+                    }
+                    // Dispositivo conocido: se comprueba el código y se entra directamente.
+                    fetch(API + '/join', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: saved.name, recovery: saved.recovery }) })
+                        .then(json)
+                        .then(function(r){
+                            if(r.status === 200){
+                                hw.name = r.body.student.name; hw.recovery = saved.recovery;
+                                setAttempt((r.body.attempts || []).length || 1, r.body.maxAttempts);
+                                startGame(vm);
+                                return;
+                            }
+                            if(r.status === 401) forget();
+                            vm.loading = false;
+                        }).catch(function(){ vm.loading = false; });
+                }).catch(function(){ vm.errorKey = 'hw_err_generic'; vm.loading = false; });
+            },
+            submit: function(){
+                var vm = this;
+                var name = this.name.trim();
+                var recovery = this.returning ? this.recovery.trim() : '';
+                this.errorKey = '';
+                this.busy = true;
+                fetch(API + '/join', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: name, recovery: recovery || undefined, icon: ICONS[Math.floor(Math.random() * ICONS.length)] })
+                }).then(json).then(function(res){
+                    vm.busy = false;
+                    if(res.status !== 200){ vm.errorKey = ERRORS[res.body.error] || 'hw_err_generic'; return; }
+                    hw.name = res.body.student.name;
+                    hw.recovery = res.body.student.recovery;
+                    setAttempt((res.body.attempts || []).length || 1, res.body.maxAttempts);
+                    save();
+                    if(recovery){ startGame(vm); return; }
+                    // Alta nueva: se enseña el código una vez.
+                    vm.codeValue = hw.recovery;
+                    vm.showCode = true;
+                }).catch(function(){ vm.busy = false; vm.errorKey = 'hw_err_generic'; });
+            },
+            go: function(){ startGame(this); }
+        }
     });
+
+    document.addEventListener('DOMContentLoaded', function(){ entry.mount('#hw-entry'); });
 })();

@@ -17,34 +17,41 @@
              /player/game/ (partida en vivo); comparte con ella estilos, el tablero de correspondencia
              y las piezas de js/playerCommon.js. -->
         <!-- Deures asíncrons (?hw=CÓDIGO): entrada del alumnado; la pantalla de juego es la de abajo. -->
-        <section id="hwEntry" class="hw-entry" hidden>
-            <p id="hwHeading" class="hw-entry__kicker"></p>
-            <h1 id="hwTitle" class="hw-entry__title"></h1>
-            <p id="hwDeadline" class="hw-entry__line"></p>
-            <p id="hwMeta" class="hw-entry__line"></p>
-            <p id="hwClosed" class="hw-entry__closed" hidden></p>
-            <form id="hwForm" class="hw-entry__form" autocomplete="off" hidden>
-                <label id="hwNameLabel" for="hwName"></label>
-                <input id="hwName" type="text" maxlength="20" autocapitalize="words" autocorrect="off" spellcheck="false" required>
-                <p id="hwNameHint" class="hw-entry__hint"></p>
-                <div id="hwRecoveryRow" hidden>
-                    <label id="hwRecoveryLabel" for="hwRecovery"></label>
-                    <input id="hwRecovery" type="text" maxlength="12" autocapitalize="characters" autocorrect="off" spellcheck="false">
+        <div id="hw-entry"></div>
+        <template id="hw-entry-tpl">
+            <main id="hwEntry" class="hw-entry" v-if="visible">
+                <img class="hw-entry__logo" src="/icons/logo.svg" alt="EduHoot" width="64" height="64">
+                <div class="hw-entry__card">
+                    <p id="hwHeading" class="hw-entry__kicker">{{ t('hw_heading') }}</p>
+                    <h1 id="hwTitle" class="hw-entry__title">{{ title }}</h1>
+                    <p id="hwDeadline" class="hw-entry__line" v-if="info">{{ deadlineText }}</p>
+                    <p id="hwMeta" class="hw-entry__line" v-if="info">{{ metaText }}</p>
+                    <p id="hwClosed" class="hw-entry__closed" v-if="info && !info.open">{{ t('hw_closed_info') }}</p>
+                    <form id="hwForm" class="hw-entry__form" autocomplete="off" v-if="formVisible" @submit.prevent="submit">
+                        <label id="hwNameLabel" for="hwName">{{ t('hw_name_label') }}</label>
+                        <input id="hwName" type="text" maxlength="20" autocapitalize="words" autocorrect="off" spellcheck="false" required v-model="name">
+                        <p id="hwNameHint" class="hw-entry__hint">{{ t('hw_name_hint') }}</p>
+                        <div id="hwRecoveryRow" v-if="returning">
+                            <label id="hwRecoveryLabel" for="hwRecovery">{{ t('hw_code_label') }}</label>
+                            <input id="hwRecovery" type="text" maxlength="12" autocapitalize="characters" autocorrect="off" spellcheck="false" v-model="recovery">
+                        </div>
+                        <button id="hwSubmit" type="submit" class="button" :disabled="submitDisabled">{{ returning ? t('hw_enter') : t('hw_start') }}</button>
+                        <button id="hwModeToggle" type="button" class="hw-entry__link" @click="toggleMode">{{ returning ? t('hw_new_here') : t('hw_have_code') }}</button>
+                    </form>
+                    <p id="hwError" class="hw-entry__error" role="alert" v-if="errorKey">{{ t(errorKey) }}</p>
+                    <div id="hwCodeBox" class="hw-entry__code" v-if="showCode">
+                        <h2 id="hwCodeTitle">{{ t('hw_code_title') }}</h2>
+                        <p id="hwCodeValue" class="hw-entry__code-value">{{ codeValue }}</p>
+                        <p id="hwCodeText">{{ t('hw_code_text') }}</p>
+                        <button id="hwCodeGo" type="button" class="button" @click="go">{{ t('hw_code_go') }}</button>
+                    </div>
                 </div>
-                <button id="hwSubmit" type="submit" class="button"></button>
-                <button id="hwModeToggle" type="button" class="hw-entry__link"></button>
-            </form>
-            <p id="hwError" class="hw-entry__error" role="alert" hidden></p>
-            <div id="hwCodeBox" class="hw-entry__code" hidden>
-                <h2 id="hwCodeTitle"></h2>
-                <p id="hwCodeValue" class="hw-entry__code-value"></p>
-                <p id="hwCodeText"></p>
-                <button id="hwCodeGo" type="button" class="button"></button>
-            </div>
-        </section>
+            </main>
+        </template>
         <div id="player-sp"></div>
         <template id="player-sp-tpl">
             <p id="quizNameText" class="quiz-name-text" v-if="quizName">{{ quizName }}</p>
+            <p id="attemptText" class="sp-attempt" v-if="attemptText">{{ attemptText }}</p>
             <div id="stats">
                 <h4 id="nameText">{{ nameDisplay }}</h4>
                 <h4 id="scoreText">{{ scoreDisplay }}</h4>
@@ -54,9 +61,11 @@
 
             <!-- Resumen final -->
             <section id="spDone" class="sp-done" v-if="done">
+                <div class="result-icon" aria-hidden="true">{{ summary.rank === 1 ? '🏆' : '🎉' }}</div>
                 <h2>{{ t('sp_done_title') }}</h2>
-                <p class="sp-done__line">{{ fmt('sp_done_score', { n: summary.score }) }}</p>
+                <p class="sp-done__line sp-done__line--score">{{ fmt('sp_done_score', { n: summary.score }) }}</p>
                 <p class="sp-done__line">{{ fmt('sp_done_correct', { c: summary.correctCount, t: summary.total }) }}</p>
+                <div class="sp-done__bar" role="presentation"><span :style="{ width: donePct + '%' }"></span></div>
                 <p class="sp-done__line" v-if="summary.bestStreak > 1">{{ fmt('sp_done_streak', { n: summary.bestStreak }) }}</p>
                 <p class="sp-done__line" v-if="summary.rank">{{ fmt('sp_done_rank', { r: summary.rank, p: summary.players }) }}</p>
                 <template v-if="summary.homework">
@@ -87,8 +96,10 @@
 
                 <!-- Resultado de la pregunta -->
                 <div id="spResult" class="sp-result" v-if="state === 'result'">
+                    <div class="result-icon" v-if="resultIcon" aria-hidden="true">{{ resultIcon }}</div>
                     <h2 id="message" :class="'message--' + result.kind">{{ result.message }}<span v-if="result.detailHtml" class="player-correct-answer" v-html="result.detailHtml"></span></h2>
                     <p id="spPoints" class="sp-result__points" v-if="result.points > 0">{{ fmt('sp_points_gained', { n: result.points + result.bonus }) }}</p>
+                    <p id="spHint" class="result-sub" v-if="resultHint">{{ resultHint }}</p>
                     <div id="spRanking" class="sp-ranking" v-if="result.ranking && result.ranking.length">
                         <h3>{{ t('player_ranking_title') }}</h3>
                         <ol>

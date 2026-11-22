@@ -86,9 +86,11 @@
                 <p v-if="!results.rows.length" id="hwNoStudents" class="hw-muted">{{ t('noStudents') }}</p>
                 <div class="hw-table-wrap" v-else>
                     <table class="hw-table" id="hwStudents">
-                        <thead><tr><th>{{ t('colName') }}</th><th>{{ t('colState') }}</th><th>{{ t('colAttempts') }}</th><th>{{ t('colBest') }}</th><th>{{ t('colCorrect') }}</th></tr></thead>
+                        <thead><tr>
+                            <th v-for="c in sortCols" :key="c.key" :aria-sort="sortKey === c.key ? (sortDir === 1 ? 'ascending' : 'descending') : 'none'"><button type="button" class="hw-sort" :class="sortKey === c.key ? (sortDir === 1 ? 'is-asc' : 'is-desc') : ''" @click="sortBy(c.key)">{{ t(c.label) }}</button></th>
+                        </tr></thead>
                         <tbody>
-                            <tr v-for="r in results.rows" :key="r.name">
+                            <tr v-for="r in sortedRows" :key="r.name">
                                 <td>{{ (r.icon ? r.icon + ' ' : '') + r.name }}</td>
                                 <td>{{ t('state_' + r.state) }}</td>
                                 <td>{{ r.attempts }}</td>
@@ -114,7 +116,7 @@
             </section>
 
             <!-- Lista -->
-            <section v-else id="hwList">
+            <section v-else id="hwList" class="hw-list">
                 <p v-if="error" class="hw-error" role="alert">{{ t(error) }}</p>
                 <p v-if="!list.length" id="hwEmpty" class="hw-muted">{{ t('empty') }}</p>
                 <article v-for="h in list" :key="h.code" class="hw-card hw-item" :data-code="h.code">
@@ -141,6 +143,7 @@
         </template>
         <script src="/js/libs/vue.global.prod.js"></script>
         <script src="/js/languages.js"></script>
+        <script src="/js/chip-align.js"></script>
         <script src="/js/env-badge.js"></script>
         <script src="/js/homeworkManage.js"></script>
     </body>

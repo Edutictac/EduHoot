@@ -14,21 +14,42 @@
 .sp-ranking li.is-me{ font-weight: 800; }
 .sp-ranking__me{ margin: 4px 0; text-align: center; font-weight: 700; }
 
-/* Deures asíncrons (?hw=): entrada del alumnado. */
+/* Intento en curso (deures): «Intento 2 de 3». */
+.sp-attempt{ margin: 0 0 6px; text-align: center; font-weight: 700; opacity: .9; }
+
+/* Resumen final: icono, puntuación grande y barra de aciertos. */
+.sp-done__line--score{ font-size: 2.2em; font-weight: 800; margin: 4px 0 10px; }
+.sp-done__bar{ height: 12px; max-width: 360px; margin: 6px auto 12px; border-radius: 999px; background: rgba(0,0,0,.25); overflow: hidden; }
+.sp-done__bar > span{ display: block; height: 100%; border-radius: 999px; background: linear-gradient(135deg, #22c55e, #16a34a); }
+
+/* Deures asíncrons (?hw=): entrada del alumnado (app de Vue #hw-entry). */
 .hw-entry-open #player-sp, .hw-entry-open #leaveGameBtn{ display: none; }
-.hw-entry{ width: 100%; max-width: 480px; margin: 24px auto; text-align: center; box-sizing: border-box; }
-.hw-entry[hidden], .hw-entry [hidden]{ display: none; }
-.hw-entry__kicker{ margin: 0; text-transform: uppercase; letter-spacing: .08em; opacity: .8; font-weight: 700; }
-.hw-entry__title{ margin: 4px 0 8px; font-size: 1.8em; overflow-wrap: anywhere; }
-.hw-entry__line{ margin: 4px 0; opacity: .9; }
+.hw-entry{ width: 100%; max-width: 520px; margin: 56px auto 24px; text-align: center; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.hw-entry__logo{ width: 64px; height: 64px; border-radius: 14px; filter: drop-shadow(0 6px 14px rgba(0,0,0,.3)); }
+.hw-entry__card{
+    width: 100%; box-sizing: border-box; padding: 20px 22px; border-radius: 18px;
+    background: var(--card, rgba(255,255,255,0.14)); border: 1px solid var(--card-stroke, rgba(255,255,255,0.25));
+    box-shadow: var(--shadow, 0 10px 30px rgba(0,0,0,.25)); backdrop-filter: blur(12px);
+}
+.hw-entry__kicker{ margin: 0; text-transform: uppercase; letter-spacing: .08em; opacity: .85; font-weight: 700; }
+.hw-entry__title{ margin: 4px 0 10px; font-size: 1.8em; color: #fdbc4b; overflow-wrap: anywhere; }
+.hw-entry__line{ margin: 4px 0; opacity: .92; }
 .hw-entry__closed{ margin: 10px 0; padding: 8px 12px; border-radius: 10px; background: rgba(0,0,0,.35); font-weight: 700; }
 .hw-entry__form{ display: flex; flex-direction: column; gap: 8px; margin-top: 16px; text-align: left; }
 .hw-entry__form label{ font-weight: 700; }
-.hw-entry input{ min-height: 48px; padding: 8px 14px; border: 0; border-radius: 12px; font: inherit; font-size: 18px; color: #14101f; background: #fff; box-sizing: border-box; width: 100%; }
+.hw-entry input{
+    min-height: 48px; padding: 8px 16px; border: 1px solid rgba(255,255,255,0.25); border-radius: 999px;
+    font: inherit; font-size: 18px; color: #fff; background: rgba(0,0,0,0.28); box-sizing: border-box; width: 100%;
+}
+.hw-entry input:focus{ outline: 2px solid #fdbc4b; outline-offset: 2px; }
 .hw-entry__hint{ margin: 0; font-size: .9em; opacity: .85; }
-.hw-entry .button{ width: 100%; margin: 8px 0 0; background: #fff; color: #14101f; min-height: 54px; }
+.hw-entry .button{ width: 100%; margin: 8px 0 0; background: linear-gradient(135deg, #ffee70, #ffb347); color: #14101f; min-height: 54px; border-radius: 999px; }
 .hw-entry .button:disabled{ opacity: .6; cursor: default; }
 .hw-entry__link{ background: none; border: 0; color: inherit; text-decoration: underline; font: inherit; padding: 10px; cursor: pointer; min-height: 44px; }
 .hw-entry__error{ margin: 12px 0; padding: 8px 12px; border-radius: 10px; background: rgba(0,0,0,.4); font-weight: 700; }
 .hw-entry__code{ margin-top: 16px; }
 .hw-entry__code-value{ font-size: 2.4em; font-weight: 800; letter-spacing: .2em; margin: 8px 0; user-select: all; font-variant-numeric: tabular-nums; }
+@media (max-width: 600px){
+    .hw-entry{ margin-top: 64px; }
+    .hw-entry__card{ padding: 16px; }
+}

@@ -15,7 +15,8 @@ body{
 #host-lobby > *, #host-game > *, .host-shell,
 #lobby-app > *, .lobby-card,
 #join-app form,
-#player-game > *, #player-game #stats, #player-game #playerStatusRow {
+#player-game > *, #player-game #stats, #player-game #playerStatusRow,
+#player-sp > *, #player-sp #stats, #player-sp #playerStatusRow {
     box-sizing: border-box;
     max-width: none !important;
     width: 100%;
@@ -34,11 +35,12 @@ body > :not(script):not(link):not(style):not(edutictac-account):not(edutictac-fo
 }
 
 @media not all and (max-height: 500px) and (orientation: landscape){
-    #player-game{ max-width: none !important; }
+    #player-game, #player-sp{ max-width: none !important; }
 }
 
 /* La partida del alumnado en el móvil apaisado (poca altura) conserva su ancho máximo:
    más ancho haría las respuestas más altas y no cabrían en la pantalla. */
 @media (max-height: 500px) and (orientation: landscape){
-    #player-game, #player-game #stats, #player-game #playerStatusRow{ max-width: 720px !important; }
+    #player-game, #player-game #stats, #player-game #playerStatusRow,
+    #player-sp, #player-sp #stats, #player-sp #playerStatusRow{ max-width: 720px !important; }
 }
