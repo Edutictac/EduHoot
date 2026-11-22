@@ -191,6 +191,8 @@ fitxers corresponents, i els originals es van eliminar.
 
 ### Canviat
 
+- **Deures (docent)**: el requadre principal té l'ample de Solo i Flashcards (70 % en pantalles grans, més ample en estrényer-se, 5 % de marge en mòbil); el formulari de nou deure va en dos columnes en pantalles amples. «Biblioteca» i el títol queden al costat esquerre del requadre; el xip de compte i «Mis deberes», al dret.
+- **Solo i Flashcards**: el requadre principal baixa uns píxels perquè no s'arrime al xip de compte (amb els distintius DEV/STAGE ocults).
 - **Lobby de l'amfitrió**: per davall de 1200 px el logo, el PIN i el QR van centrats en una sola columna (abans, entre 720 i 1200 px, el QR quedava a l'esquerra).
 - **Solo**: la música de fons es pausa en pausar la partida (i torna en reprendre si sonava) i s'atura en cancel·lar-la. Amb els distintius DEV/STAGE ocults, la targeta de la portada deixa un xicotet buit sobre el peu comú.
 - Botons de tornada: ara diuen on porten. «Inici» (biblioteca, Solo,

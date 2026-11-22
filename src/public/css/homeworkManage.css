@@ -3,7 +3,19 @@
 #hw-app{ display: contents; }
 body{ padding-top: var(--env-badge-space, 0px); }
 
-.hw-shell{ min-width: 0; }
+/* Ancho del recuadro igual que en Solo y Flashcards: 70 % de la ventana en pantallas grandes (≥1400 px),
+   más ancho al estrecharse y solo 5 % de margen a cada lado en móvil (≤600 px). */
+.hw-shell, .page-shell.hw-shell{
+    --page-gutter: clamp(5vw, calc(5vw + (100vw - 600px) * 0.175), 15vw);
+    min-width: 0;
+}
+/* Arriba, sobre los bordes del recuadro: «Biblioteca» y el título a la izquierda; el chip de cuenta y «Mis deberes» a la derecha. */
+.hw-shell .top-row{ align-items: center; }
+.hw-shell .top-actions{ margin-left: auto; justify-content: flex-end; }
+@media (max-width: 600px){
+    .hw-shell .top-row{ flex-direction: row; align-items: center; justify-content: space-between; }
+    .hw-shell .top-actions{ width: auto; justify-content: flex-end; }
+}
 #hwPageTitle{ color: #ffc800; margin: 0; font-size: 40px; display: flex; align-items: center; gap: 0.28em; }
 #hwPageTitle span{ min-width: 0; }
 #hwPageTitle .title-logo{ height: 1.1em; width: auto; border-radius: 0.18em; flex: none; }
@@ -33,7 +45,7 @@ body{ padding-top: var(--env-badge-space, 0px); }
 .hw-list > .hw-notice, .hw-list > .hw-error, .hw-list > .hw-muted{ grid-column: 1 / -1; }
 
 /* Formulario */
-#hwNew{ max-width: 640px; }
+#hwNew{ max-width: none; }
 .hw-form{ display: grid; gap: 14px; }
 .hw-form label{ display: grid; gap: 6px; font-weight: 700; }
 .hw-form input[type="text"], .hw-form input[type="datetime-local"], .hw-form select, .hw-new-deadline{
@@ -86,6 +98,11 @@ body{ padding-top: var(--env-badge-space, 0px); }
     .hw-actions .hw-delete{ margin-left: 0; }
 }
 
-/* Pantalla de asignación (nuevo deber): la tarjeta va centrada en la página. */
+/* Pantalla de asignación (nuevo deber): la tarjeta ocupa el ancho del recuadro, igual que Solo; en pantallas anchas
+   el formulario va en dos columnas (casillas, avisos y botón ocupan todo el ancho). */
 #hwNew{ margin-left: auto; margin-right: auto; width: 100%; }
+@media (min-width: 900px){
+    #hwNew .hw-form{ grid-template-columns: 1fr 1fr; column-gap: 24px; }
+    #hwNew .hw-form .hw-check, #hwNew .hw-form .hw-error, #hwNew .hw-form .btn-primary{ grid-column: 1 / -1; }
+}
 .hw-shell .top-actions .btn{ text-decoration: none; border-radius: 999px; font-family: inherit; font-weight: 700; }

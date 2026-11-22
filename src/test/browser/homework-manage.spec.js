@@ -166,7 +166,7 @@ test('maquetación: el panel ocupa el ancho de la página y no desborda', async 
     expect(Math.abs(m.left - m.right)).toBeLessThan(2);
     const w = await page.evaluate(() => window.innerWidth);
     if (w >= 900) expect(m.left).toBeGreaterThan(w * 0.08);
-    else expect(m.left).toBeLessThan(20);
+    else expect(m.left).toBeLessThan(w * 0.06);
 });
 
 test('resultados: la tabla por alumno se ordena al pulsar el encabezado', async ({ page }) => {
@@ -206,9 +206,10 @@ test('nuevo deber: tarjeta centrada, «Biblioteca», enlace a «Mis deberes», 1
     await expect(page.locator('#back')).toHaveText('Biblioteca');
     await expect(page.locator('#hwMineLink')).toHaveText('Mis deberes');
     await expect(page.locator('#hwMineLink')).toHaveAttribute('href', '/create/homework/');
-    // Centrada: el margen izquierdo y el derecho de la tarjeta son iguales (si cabe en la página).
-    const m = await page.locator('#hwNew').evaluate((el) => { const r = el.getBoundingClientRect(); return { left: r.left, right: document.documentElement.clientWidth - r.right }; });
-    expect(Math.abs(m.left - m.right)).toBeLessThan(2);
+    // La tarjeta ocupa todo el ancho del recuadro (como en Solo): mismo borde izquierdo y derecho que la cabecera.
+    const m = await page.evaluate(() => { const c = document.querySelector('#hwNew').getBoundingClientRect(); const s = document.querySelector('.hw-shell').getBoundingClientRect(); return { left: c.left - s.left, right: s.right - c.right }; });
+    expect(Math.abs(m.left)).toBeLessThan(2);
+    expect(Math.abs(m.right)).toBeLessThan(2);
     // 180 s es la última opción de tiempo.
     await expect(page.locator('#hwFTime option').last()).toHaveText('180 s');
     // Con un solo intento no hay elección de puntuación; con varios, sí.
@@ -246,3 +247,38 @@ test('el logo de EduHoot va junto al título «Mis deberes»', async ({ page }) 
     expect(m.logoRight).toBeLessThanOrEqual(m.textLeft + 1);
     expect(m.dy).toBeLessThanOrEqual(6);
 });
+
+// Cabecera y ancho: el recuadro sigue la misma fórmula que Solo; «Biblioteca» y el título van al borde izquierdo
+// del recuadro; el chip de cuenta y «Mis deberes», al derecho.
+for (const width of [360, 700, 1000, 1400, 1920]) {
+    test(`cabecera alineada con el recuadro (${width} px)`, async ({ page }) => {
+        await setup(page, {
+            routes: async (p) => {
+                await p.route('https://commons.edutictac.es/assets/account-widget.js', route => route.fulfill({
+                    contentType: 'application/javascript',
+                    body: `customElements.define('edutictac-account', class extends HTMLElement { connectedCallback(){ this.innerHTML = '<nav style="background:#fff;padding:8px 14px;border-radius:999px">Docent</nav>'; } });`
+                }));
+                await p.route('**/api/homeworks', route => route.fulfill({ json: { homeworks: [HW()] } }));
+            }
+        });
+        await page.setViewportSize({ width, height: 800 });
+        await page.goto('/create/homework/?quiz=7&lang=es');
+        await expect(page.locator('#hwMineLink')).toBeVisible();
+        await expect(page.locator('edutictac-account nav')).toBeVisible();
+        // Con el chip de cuenta pintado, el selector de idioma propio se oculta (lo lleva el chip).
+        await page.evaluate(() => document.documentElement.classList.add('has-account-chip'));
+        const box = async (sel) => page.locator(sel).first().boundingBox();
+        const shell = await box('.hw-shell');
+        const gutter = Math.min(Math.max(0.05 * width, 0.05 * width + (width - 600) * 0.175), 0.15 * width);
+        expect(Math.abs(shell.x - gutter), 'ancho como en Solo').toBeLessThanOrEqual(2);
+        expect(Math.abs(shell.x + shell.width - (width - gutter))).toBeLessThanOrEqual(2);
+        const back = await box('#back');
+        const title = await box('#hwPageTitle');
+        const mine = await box('#hwMineLink');
+        const chip = await box('edutictac-account');
+        expect(Math.abs(back.x - shell.x), '«Biblioteca» al borde izquierdo').toBeLessThanOrEqual(2);
+        expect(Math.abs(title.x - shell.x), 'título al borde izquierdo').toBeLessThanOrEqual(2);
+        expect(Math.abs(mine.x + mine.width - (shell.x + shell.width)), '«Mis deberes» al borde derecho').toBeLessThanOrEqual(2);
+        expect(Math.abs(chip.x + chip.width - (shell.x + shell.width)), 'chip al borde derecho').toBeLessThanOrEqual(2);
+    });
+}

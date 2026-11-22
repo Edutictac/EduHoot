@@ -1323,6 +1323,8 @@ body.playing #game-panel{
 .back-link{
     border-radius: 999px;
     padding: 6px 14px;
+    /* El recuadro principal queda unos píxeles más abajo para no rozar el chip de cuenta (arriba a la derecha). */
+    margin-bottom: 18px;
 }
 
 /* Catálogo: como mucho 3 columnas; menos si no caben. */

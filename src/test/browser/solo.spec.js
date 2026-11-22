@@ -653,3 +653,26 @@ test('inicio: con imagen del quiz, el logo sale pequeño junto a ella; sin image
     expect(noImage.cover).toBe(false);
     expect(noImage.logoH).toBeGreaterThanOrEqual(120);
 });
+
+// El recuadro principal queda por debajo del chip de cuenta (que mide unos 44 px y está arriba a la derecha).
+for (const width of [360, 1000, 1400]) {
+    test(`el recuadro principal no se solapa con el chip de cuenta (${width} px)`, async ({ page }) => {
+        await mockBackend(page);
+        await page.route('https://commons.edutictac.es/assets/account-widget.js', route => route.fulfill({
+            contentType: 'application/javascript',
+            body: `customElements.define('edutictac-account', class extends HTMLElement { connectedCallback(){ this.innerHTML = '<nav style="padding:12px 14px;line-height:20px;border-radius:999px;background:#fff">Docent</nav>'; } });`
+        }));
+        await page.setViewportSize({ width, height: 800 });
+        for (const url of ['/solo/?lang=es', '/solo/?id=q1&lang=es']) {
+            await page.goto(url);
+            await expect(page.locator('edutictac-account nav')).toBeVisible();
+            const chip = await page.locator('edutictac-account').boundingBox();
+            const top = await page.evaluate(() => {
+                const tops = [...document.querySelectorAll('.hero, .panel, .quiz-banner, #start-form')]
+                    .map(e => e.getBoundingClientRect()).filter(r => r.height > 40).map(r => r.top);
+                return Math.min(...tops);
+            });
+            expect(top, `${url} a ${width}px`).toBeGreaterThanOrEqual(chip.y + chip.height + 4);
+        }
+    });
+}
