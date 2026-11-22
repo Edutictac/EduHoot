@@ -115,7 +115,9 @@ function fetchMe(){
             authState.checked = true;
             sessionBridge.clearAttempt();
             updateAuthUI();
-            currentFilters.mineOnly = true;
+            // Al entrar se marca «Sólo mis cuestionarios», salvo que la persona ya lo haya cambiado en esta sesión.
+            var savedMine = storedMineOnly();
+            currentFilters.mineOnly = savedMine === null ? true : savedMine;
             fetchWithFilters();
             claimPendingQuizAfterLogin();
         })
@@ -132,6 +134,7 @@ function logout(){
         .then(function(){
             authState.user = null;
             currentFilters.mineOnly = false;
+            storeMineOnly(null);
             updateAuthUI();
             closeAuthModal();
             reconnectSocket();

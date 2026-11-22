@@ -732,6 +732,28 @@ test('cuenta: el modal de preferencias es legible, accesible y no se solapa con 
     await expect(page.locator('#open-account')).toBeFocused();
 });
 
+test('«Sólo mis cuestionarios» se recuerda durante la sesión del navegador', async ({ page }) => {
+    const { calls } = await mockBackend(page, { user: TEACHER });
+    await openCreate(page);
+    // Por defecto, al entrar con sesión está marcado.
+    await expect(page.locator('#filter-mine')).toBeChecked();
+    await page.locator('#filter-mine').uncheck();
+    await expect.poll(() => calls.quizQueries[calls.quizQueries.length - 1].includes('mine=1')).toBe(false);
+
+    // Al volver a la biblioteca en la misma sesión sigue sin marcar y no pide mine=1.
+    calls.quizQueries.length = 0;
+    await page.reload();
+    await expect(page.locator('#filter-info')).toBeVisible();
+    await expect(page.locator('#filter-mine')).not.toBeChecked();
+    await expect.poll(() => calls.quizQueries.length).toBeGreaterThan(0);
+    expect(calls.quizQueries.some(q => q.includes('mine=1'))).toBe(false);
+
+    // Y si se marca, también se recuerda.
+    await page.locator('#filter-mine').check();
+    await page.reload();
+    await expect(page.locator('#filter-mine')).toBeChecked();
+});
+
 test('admin: panel visible, importar sin archivo, migrar imágenes, importar públicas y exportar', async ({ page }) => {
     const { calls } = await mockBackend(page, { user: ADMIN, importPublic: true });
     await openCreate(page);

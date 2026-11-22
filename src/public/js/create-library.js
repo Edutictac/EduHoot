@@ -126,6 +126,21 @@ function parseTagInput(raw){
     return normalizeInlineTags((raw || '').toString().split(/[,;]+/));
 }
 
+// «Sólo mis cuestionarios» se recuerda mientras dure la sesión del navegador (también al volver de editar o jugar).
+var MINE_ONLY_KEY = 'eduhoot-library-mine-only';
+function storedMineOnly(){
+    try{
+        var v = sessionStorage.getItem(MINE_ONLY_KEY);
+        return v === '1' ? true : (v === '0' ? false : null);
+    }catch(e){ return null; }
+}
+function storeMineOnly(value){
+    try{
+        if(value === null) sessionStorage.removeItem(MINE_ONLY_KEY);
+        else sessionStorage.setItem(MINE_ONLY_KEY, value ? '1' : '0');
+    }catch(e){}
+}
+
 function readFiltersFromUrl(){
     try{
         var params = new URLSearchParams(window.location.search || '');
@@ -222,6 +237,7 @@ function clearFilters(){
     }
     currentFilters.tags = [];
     currentFilters.mineOnly = false;
+    storeMineOnly(false);
     currentFilters.search = '';
     currentFilters.tagMode = 'all';
     fetchWithFilters();
@@ -455,7 +471,7 @@ var libraryApp = {
         },
         // Filtros y orden
         onSearch: function(){ fetchWithFilters(); },
-        onMine: function(){ fetchWithFilters(); },
+        onMine: function(){ storeMineOnly(!!currentFilters.mineOnly); fetchWithFilters(); },
         onSort: function(){ this.lib.page = 1; },
         clearFilters: function(){ clearFilters(); },
         toggleTagMode: function(){ toggleTagMode(); },
