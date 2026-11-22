@@ -150,3 +150,32 @@ test('pantalla del anfitrión en autoritme: Top 10 ordenado solo si llegan punto
     ]);
     await expect(page.locator('#spRanking')).toHaveCount(0);
 });
+
+// Al cerrar o acabar la partida a su ritmo (vista incrustada en el lobby), la música de la sala se para
+// y la salida se hace en la ventana principal.
+async function openEmbedded(page) {
+    await setup(page);
+    await page.route('**/create/**', route => route.fulfill({ contentType: 'text/html', body: '<p>biblioteca</p>' }));
+    await page.route('**/zz-wrapper', route => route.fulfill({ contentType: 'text/html', body: `<!doctype html><html><body><script>
+        window.__played = true;
+        window.eduhootHostAudio = { music: { pause: function(){ window.__played = false; } }, gong: null };
+    </script><iframe id="f" src="/host/self-paced/?id=h1&pin=12345&lang=es" style="width:900px;height:700px"></iframe></body></html>` }));
+    await page.goto('/zz-wrapper');
+    const frame = page.frame({ url: /host\/self-paced/ });
+    await frame.waitForLoadState('load');
+    await frame.evaluate(() => window.__serverEmit('connect'));
+    return frame;
+}
+
+test('a su ritmo incrustado: al cancelar la partida se sale en la ventana principal (no solo en el marco)', async ({ page }) => {
+    const frame = await openEmbedded(page);
+    await frame.evaluate(() => window.__serverEmit('gameCancelled'));
+    await page.waitForURL('**/create/**');
+});
+
+test('a su ritmo incrustado: al acabar la partida la música se para', async ({ page }) => {
+    const frame = await openEmbedded(page);
+    expect(await page.evaluate(() => window.__played)).toBe(true);
+    await frame.evaluate(() => window.__serverEmit('GameOver', [{ podium: [] }]));
+    await expect.poll(() => page.evaluate(() => window.__played)).toBe(false);
+});

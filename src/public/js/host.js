@@ -518,6 +518,8 @@ function askCancelLobbyStep(){
     socket.emit('cancelGame');
 }
 socket.on('gameCancelled', function(){
+    // Cerrar el lobby para la música.
+    if(hostLobbyMusicPlayerInstance && typeof hostLobbyMusicPlayerInstance.pause === 'function') hostLobbyMusicPlayerInstance.pause();
     window.location.href = "/";
 });
 

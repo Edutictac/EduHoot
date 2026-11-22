@@ -1183,7 +1183,7 @@ socket.on('gameQuestions', function(data){
 // Partida cancelada: el servidor confirma y volvemos a crear.
 socket.on('gameCancelled', function(){
     stopHostMusicOnCancel();
-    window.location.href = '/create/';
+    (window.top || window).location.href = '/create/';
 });
 
 // Cancelar la partida para la música: no vuelve a sonar sola al siguiente juego.

@@ -195,6 +195,7 @@ fitxers corresponents, i els originals es van eliminar.
 - **Solo i Flashcards**: el requadre principal baixa uns píxels perquè no s'arrime al xip de compte (amb els distintius DEV/STAGE ocults).
 - **Create**: en guardar els permisos automàticament, el check «✓» es veu 3 segons.
 - **Sala d'espera de l'alumne**: avís «La partida començarà aviat, mantín-te atent/a!» (en els quatre idiomes). **Lobby de l'amfitrió**: el PIN es dibuixa més gran.
+- **Música de l'amfitrió**: en acabar, cancel·lar o tancar una partida «Al seu ritme» (vista incrustada al lobby), la música de la sala s'atura i l'eixida es fa a la finestra principal; en cancel·lar des del lobby també s'atura.
 - **Lobby de l'amfitrió**: per davall de 1200 px el logo, el PIN i el QR van centrats en una sola columna (abans, entre 720 i 1200 px, el QR quedava a l'esquerra).
 - **Solo**: la música de fons es pausa en pausar la partida (i torna en reprendre si sonava) i s'atura en cancel·lar-la. Amb els distintius DEV/STAGE ocults, la targeta de la portada deixa un xicotet buit sobre el peu comú.
 - Botons de tornada: ara diuen on porten. «Inici» (biblioteca, Solo,

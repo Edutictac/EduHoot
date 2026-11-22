@@ -78,7 +78,7 @@ var app = Vue.createApp({
             this.pendingKickId = null;
             socket.emit('kick-player', { playerId: p.playerId });
         },
-        goBack: function(){ window.location.href = '/create/'; },
+        goBack: function(){ leaveToLibrary(); },
         downloadReport: function(){ downloadSessionReportCsv(); }
     }
 }).mount('#host-sp');
@@ -89,8 +89,22 @@ document.querySelectorAll('select[data-lang-options]').forEach(function(sel){
     sel.addEventListener('change', function(){ lang = sel.value; EduhootLang.persist(lang); app.langTick += 1; });
 });
 
+// La música de la sala (iniciada en el lobby) sigue sonando en la ventana principal cuando esta vista va incrustada
+// en ella: al acabar o cerrar la partida se para, y la salida se hace en la ventana principal.
+function stopSharedMusic(){
+    try{
+        var shared = window.parent && window.parent !== window && window.parent.eduhootHostAudio;
+        if(shared && shared.music) shared.music.pause();
+    }catch(e){}
+}
+function leaveToLibrary(){
+    stopSharedMusic();
+    (window.top || window).location.href = '/create/';
+}
+window.addEventListener('pagehide', stopSharedMusic);
+
 socket.on('connect', function(){ socket.emit('host-join-game', params); });
-socket.on('noGameFound', function(){ window.location.href = '/create/'; });
+socket.on('noGameFound', leaveToLibrary);
 socket.on('gamePin', function(d){ app.pin = d.pin || ''; app.quizName = d.quizName || ''; });
 socket.on('hostSession', function(d){
     // El anfitrión puede cambiar de conexión: se guarda el id nuevo para el informe.
@@ -104,9 +118,10 @@ socket.on('GameOver', function(data){
     app.podium = data || app.podium;
     app.ended = true;
     app.endConfirming = false;
+    stopSharedMusic();
     try{ localStorage.removeItem('lastHostId'); localStorage.removeItem('lastGamePin'); }catch(e){}
 });
-socket.on('gameCancelled', function(){ window.location.href = '/create/'; });
+socket.on('gameCancelled', leaveToLibrary);
 
 async function downloadSessionReportCsv(){
     if(!params.pin || !params.id){ alert(t('downloadReportError')); return; }
