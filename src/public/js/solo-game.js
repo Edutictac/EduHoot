@@ -546,6 +546,13 @@ var soloPlay = {
         showMatching: function(){
             return this.meta.type === 'matching' && !this.s.locked && !(this.s.countdown > 0);
         },
+        feedbackLeftSec: function(){
+            return Math.ceil((this.s.feedbackLeftMs || 0) / 1000);
+        },
+        feedbackBarWidth: function(){
+            var total = (this.s.feedbackSeconds || 5) * 1000;
+            return Math.max(0, Math.min(100, 100 * (this.s.feedbackLeftMs || 0) / total)) + '%';
+        },
         feedbackKind: function(){
             return this.s.lastResult ? this.s.lastResult.kind : 'wrong';
         },

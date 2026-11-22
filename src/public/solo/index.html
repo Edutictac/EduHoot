@@ -352,7 +352,8 @@
                 <h3 id="feedback-title">{{ feedbackTitle }}</h3>
                 <p id="feedback-body">{{ feedbackBody }}</p>
                 <button id="feedback-close" class="btn btn-feedback" @click="closeFeedback">OK</button>
-                <div class="solo-modal__bar" aria-hidden="true"><span :style="{ animationDuration: s.feedbackSeconds + 's' }"></span></div>
+                <div class="solo-modal__bar" aria-hidden="true"><span :style="{ width: feedbackBarWidth }"></span></div>
+                <p id="feedback-time" class="solo-modal__time">{{ format(t('feedbackClosesIn'), { seconds: feedbackLeftSec }) }}</p>
             </div>
         </div>
 

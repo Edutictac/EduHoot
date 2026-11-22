@@ -369,7 +369,17 @@ test('partida completa: tipos de pregunta, puntos, avisos y resultado', async ({
     await expect(modal1.locator('.solo-modal__icon')).toHaveText('✓');
     await expect(page.locator('#feedback-title')).toHaveText('¡Correcto!');
     expect(await page.locator('#feedback-close').evaluate(el => getComputedStyle(el).backgroundImage)).toContain('rgb(21, 128, 61)');
-    await page.clock.runFor(4900);
+    // Cuenta atrás visible: segundos restantes y barra que se vacía.
+    await expect(page.locator('#feedback-time')).toHaveText('Se cierra en 5 s');
+    // (se mira el ancho que fija la página: la transición CSS va con el tiempo real, no con el reloj simulado)
+    const barPct = () => page.locator('.solo-modal__bar span').evaluate(el => parseFloat(el.style.width));
+    expect(await barPct()).toBeGreaterThan(95);
+    await page.clock.runFor(2500);
+    await expect(page.locator('#feedback-time')).toHaveText('Se cierra en 3 s');
+    expect(await barPct()).toBeLessThan(55);
+    expect(await barPct()).toBeGreaterThan(45);
+    await page.clock.runFor(2400);
+    await expect(page.locator('#feedback-time')).toHaveText('Se cierra en 1 s');
     await expect(modal1).toHaveClass(/\bshow\b/);
     await page.clock.runFor(100 + 3000);
     await expect(modal1).not.toHaveClass(/\bshow\b/);

@@ -27,6 +27,8 @@ function readFeedbackSeconds(){
         // Segundos que se ve la ventana de resultado (acierto o fallo) antes de pasar a la siguiente pregunta.
         feedbackSeconds: readFeedbackSeconds(),
         feedbackSecondsInput: String(readFeedbackSeconds()),
+        // Milisegundos que le quedan a la ventana de resultado abierta.
+        feedbackLeftMs: 0,
         page: 0,
         pageSize: 12,
         sortOrder: 'plays',
@@ -148,18 +150,24 @@ function setLang(newLang){
     var feedbackTimer = null;
 
     function clearFeedbackTimer(){
-        if(feedbackTimer){ clearTimeout(feedbackTimer); feedbackTimer = null; }
+        if(feedbackTimer){ clearInterval(feedbackTimer); feedbackTimer = null; }
     }
 
     function showFeedbackModal(){
         if(!state.lastResult) return;
         state.feedbackModalOpen = true;
-        // Se cierra sola a los N segundos (configurable); también se puede cerrar antes con OK o pulsando fuera.
+        // Cuenta atrás visible (barra y segundos): se cierra sola a los N segundos (configurable);
+        // también se puede cerrar antes con OK o pulsando fuera.
         clearFeedbackTimer();
-        feedbackTimer = setTimeout(function(){
-            feedbackTimer = null;
-            if(state.feedbackModalOpen) hideFeedbackModal();
-        }, (state.feedbackSeconds || 5) * 1000);
+        var totalMs = (state.feedbackSeconds || 5) * 1000;
+        var endAt = Date.now() + totalMs;
+        state.feedbackLeftMs = totalMs;
+        feedbackTimer = setInterval(function(){
+            var left = Math.max(0, endAt - Date.now());
+            state.feedbackLeftMs = left;
+            if(left <= 0 && state.feedbackModalOpen) hideFeedbackModal();
+            else if(left <= 0) clearFeedbackTimer();
+        }, 100);
     }
 
     function hideFeedbackModal(){

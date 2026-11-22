@@ -191,7 +191,7 @@ fitxers corresponents, i els originals es van eliminar.
 
 ### Canviat
 
-- **Solo**: en acabar cada pregunta (encert, encert parcial o errada) s'obri una finestra al centre amb el resultat («✓», «◐» o «✕»; botó verd, taronja o roig). Es tanca sola als segons indicats (5 per defecte, configurable de 1 a 30 al formulari d'inici i recordat al navegador) o abans amb «OK»; les enquestes no la mostren.
+- **Solo**: en acabar cada pregunta (encert, encert parcial o errada) s'obri una finestra al centre amb el resultat («✓», «◐» o «✕»; botó verd, taronja o roig). Mostra una barra i els segons que queden, i es tanca sola als segons indicats (5 per defecte, configurable de 1 a 30 al formulari d'inici i recordat al navegador) o abans amb «OK»; les enquestes no la mostren.
 - **Solo**: si s'arriba des de la biblioteca (enllaç amb `from=library`), la part superior mostra els botons «Inici» i «Biblioteca»; si s'arriba des d'Inici, només «Inici».
 - **Solo i Flashcards (pantalla de joc)**: els botons i camps usen la mateixa tipografia (Inter) que la resta de la pantalla, en lloc de la per defecte del navegador.
 - **Flashcards**: botons de la targeta amb colors propis: «No la sé» en roig, «Anterior» i «Següent» en grocs corporatius, «Mostrar resposta» en blanc amb text rosa i «Ocultar resposta» al revés, en rosa amb text blanc (text amb contrast ≥ 4,5:1).

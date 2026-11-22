@@ -873,12 +873,11 @@ body.playing #game-panel{
 .solo-modal__content.is-partial .btn-feedback{ background: linear-gradient(135deg, #c2410c, #9a3412); }
 /* Barra que se vacía durante los segundos que se ve la ventana. */
 .solo-modal__bar{ margin-top: 14px; height: 6px; border-radius: 999px; background: rgba(255,255,255,0.15); overflow: hidden; }
-.solo-modal__bar span{ display: block; height: 100%; width: 100%; background: rgba(255,255,255,0.7); transform-origin: left; animation: solo-modal-bar linear forwards; }
+.solo-modal__bar span{ display: block; height: 100%; background: rgba(255,255,255,0.7); transition: width 0.1s linear; }
 .solo-modal__content.is-correct .solo-modal__bar span{ background: #4ade80; }
 .solo-modal__content.is-wrong .solo-modal__bar span{ background: #f87171; }
 .solo-modal__content.is-partial .solo-modal__bar span{ background: #fb923c; }
-@keyframes solo-modal-bar{ from{ transform: scaleX(1); } to{ transform: scaleX(0); } }
-@media (prefers-reduced-motion: reduce){ .solo-modal__bar span{ animation: none; } }
+.solo-modal__time{ margin: 8px 0 0; font-size: 14px; font-weight: 600; opacity: 0.85; font-variant-numeric: tabular-nums; }
 /* Botones y campos con la misma tipografía que el resto de la pantalla (por defecto el navegador usa Arial). */
 button, input, select, textarea{ font-family: inherit; }
 .cards-actions .btn, .cards-mark .btn{ font-size: 15px; }
