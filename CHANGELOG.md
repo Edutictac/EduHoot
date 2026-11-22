@@ -191,7 +191,7 @@ fitxers corresponents, i els originals es van eliminar.
 
 ### Canviat
 
-- **Lobby de l'amfitrió**: si la fila del logo, el PIN i el QR es parteix (amplades mitjanes), el QR queda centrat davall i no a l'esquerra.
+- **Lobby de l'amfitrió**: per davall de 1200 px el logo, el PIN i el QR van centrats en una sola columna (abans, entre 720 i 1200 px, el QR quedava a l'esquerra).
 - **Solo**: la música de fons es pausa en pausar la partida (i torna en reprendre si sonava) i s'atura en cancel·lar-la. Amb els distintius DEV/STAGE ocults, la targeta de la portada deixa un xicotet buit sobre el peu comú.
 - Botons de tornada: ara diuen on porten. «Inici» (biblioteca, Solo,
   Multijugador i entrada de l'alumnat) i «Biblioteca» (editor de

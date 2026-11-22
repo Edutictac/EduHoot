@@ -443,23 +443,25 @@ test('anfitrión: con la pantalla estrecha, logo, PIN y QR quedan centrados en c
     }
 });
 
-test('anfitrión: si la fila se parte (ancho medio), el QR queda centrado debajo, no a la izquierda', async ({ page }) => {
+test('anfitrión: por debajo de 1200 px logo, PIN y QR van centrados en columna; con más ancho, en fila', async ({ page }) => {
     await page.route(/^https:\/\//, route => route.abort());
     await page.route('**/api/**', route => route.fulfill({ json: {} }));
     await page.route('**/socket.io/socket.io.js', route => route.fulfill({ contentType: 'application/javascript', body: 'window.io = function(){ var s = { id: "h", connected: false, on: function(){ return s; }, emit: function(){ return s; }, connect: function(){ return s; }, disconnect: function(){ return s; } }; return s; };' }));
-    let wrapped = 0;
-    for (const width of [730, 800, 900, 1000, 1100, 1199, 1300]) {
+    for (const width of [730, 800, 900, 1000, 1100, 1199]) {
         await page.setViewportSize({ width, height: 800 });
         await page.goto('/host/?lang=es');
         await page.waitForLoadState('load');
-        // Un título largo hace que la fila se parta antes.
-        await page.evaluate(() => { const n = document.querySelector('.quiz-name'); if (n) { n.hidden = false; n.textContent = 'Un cuestionario con un título bastante largo para ocupar sitio'; } });
         const logo = await page.locator('.host-logo').boundingBox();
         const qr = await page.locator('.qr-card').boundingBox();
-        if (qr.y >= logo.y + logo.height) {
-            wrapped++;
-            expect(Math.abs(qr.x + qr.width / 2 - width / 2), `QR a ${width}px`).toBeLessThanOrEqual(8);
-        }
+        expect(Math.abs(logo.x + logo.width / 2 - width / 2), `logo a ${width}px`).toBeLessThanOrEqual(8);
+        expect(Math.abs(qr.x + qr.width / 2 - width / 2), `QR a ${width}px`).toBeLessThanOrEqual(8);
+        expect(qr.y).toBeGreaterThanOrEqual(logo.y + logo.height);
     }
-    expect(wrapped).toBeGreaterThan(0);
+    await page.setViewportSize({ width: 1300, height: 800 });
+    await page.goto('/host/?lang=es');
+    await page.waitForLoadState('load');
+    const logo = await page.locator('.host-logo').boundingBox();
+    const qr = await page.locator('.qr-card').boundingBox();
+    expect(logo.x).toBeLessThan(300);
+    expect(qr.x).toBeGreaterThan(800);
 });

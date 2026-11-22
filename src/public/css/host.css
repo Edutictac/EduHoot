@@ -437,9 +437,9 @@ body.host-game-embedded > *:not(#host-game-frame){
     cursor: pointer;
 }
 
-/* Pantalla estrecha: logo, título/PIN y QR en una sola columna, todo centrado
+/* Por debajo de 1200 px: logo, título/PIN y QR en una sola columna, todo centrado
    (antes, al romper la fila, el QR y el logo quedaban pegados a la izquierda). */
-@media (max-width: 720px){
+@media (max-width: 1200px){
     .join-cta{ flex-direction: column; align-items: center; justify-content: center; gap: 12px; }
     .join-text{ padding: 0; align-items: center; flex: 0 0 auto; width: 100%; }
     .qr-card{ width: min(100%, 260px); min-width: 0; align-self: center; box-sizing: border-box; }
