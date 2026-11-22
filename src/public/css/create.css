@@ -36,11 +36,16 @@ body {
 }
 
 .page-shell{
-    max-width: 1100px;
+    /* Mismo margen lateral que la portada (page-fit.css): 10 % de la ventana a cada lado, 12 px en móvil.
+       Con ese ancho caben 2 o 3 columnas de quizzes. */
+    --page-gutter: 12px;
+    width: calc(100% - 2 * var(--page-gutter));
     margin: 30px auto 70px auto;
-    padding: 0 20px 40px;
-    width: 100%;
+    padding: 0 0 40px;
     flex: 1;
+}
+@media (min-width: 600px) and (min-height: 500px){
+    .page-shell{ --page-gutter: 10vw; }
 }
 
 .hidden{
@@ -49,7 +54,7 @@ body {
 
 #back{
     display: inline-block;
-    margin: 16px 0 0 16px;
+    margin: 16px 0 0 var(--back-left, 16px);
     color: white;
     text-decoration: none;
     font-weight: 600;
@@ -64,7 +69,7 @@ body {
     transform: translateY(-1px);
 }
 #title{
-    color: white;
+    color: #ffc800; /* amarillo más intenso que el de los títulos de quiz (#fdbc4b) */
     text-align: center;
     font-size: 50px;
     margin-bottom: 6px;
@@ -85,6 +90,11 @@ body {
     padding: 8px 10px;
     font-size: 14px;
 }
+/* «Mis deberes» (enlace) y «Preferencias» (botón) con la misma tipografía y subrayado. */
+.top-actions .btn-small{
+    font-family: inherit;
+    text-decoration: underline;
+}
 .lang-switch{
     display: inline-flex;
     align-items: center;
@@ -95,10 +105,10 @@ body {
     border: 1px solid rgba(255,255,255,0.14);
 }
 .lang-switch select{
-    padding: 6px 8px;
-    border-radius: 8px;
-    border: 1px solid rgba(255,255,255,0.2);
-    background: rgba(255,255,255,0.1);
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.08);
     color: #fff;
 }
 #subtitle{
@@ -142,6 +152,12 @@ body {
 .panel-header h3{
     margin: 0;
 }
+/* Títulos de sección en amarillo suave (el del título de página es más intenso). */
+.panel-header h3,
+#kahoot-form-title,
+.signin-callout h2{
+    color: #ffdb70;
+}
 .auth-grid{
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -150,9 +166,9 @@ body {
 }
 .auth-grid input{
     width: 100%;
-    padding: 10px 12px;
-    border-radius: 10px;
-    border: 1px solid rgba(255,255,255,0.2);
+    padding: 10px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.15);
     background: rgba(255,255,255,0.08);
     color: #fff;
     box-sizing: border-box;
@@ -192,9 +208,9 @@ body {
     margin-top: 10px;
 }
 .share-controls select{
-    padding: 8px 10px;
-    border-radius: 8px;
-    border: 1px solid rgba(255,255,255,0.2);
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.15);
     background: rgba(255,255,255,0.08);
     color: #fff;
 }
@@ -281,7 +297,6 @@ body {
     margin: 0;
     font-size: 25px;
     line-height: 1.15;
-    color: #fff;
 }
 .signin-callout .subtext{
     max-width: 660px;
@@ -374,8 +389,8 @@ details.panel[open] .panel-toggle__chevron{
 #kahoot-form #kahoot-url{
     flex: 1 1 420px;
     min-width: 280px;
-    padding: 10px 12px;
-    border-radius: 10px;
+    padding: 10px 14px;
+    border-radius: 999px;
     border: 1px solid rgba(255,255,255,0.15);
     background: rgba(255,255,255,0.08);
     color: #fff;
@@ -385,11 +400,14 @@ details.panel[open] .panel-toggle__chevron{
     width: 100%;
     box-sizing: border-box;
     margin-top: 4px;
-    padding: 6px;
-    border-radius: 10px;
-    border: 1px solid rgba(255,255,255,0.2);
-    background: rgba(255,255,255,0.1);
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.08);
     color: #fff;
+}
+#ia-box textarea{
+    border-radius: 18px;
 }
 #ia-box button{
     margin: 6px 6px 6px 0;
@@ -475,8 +493,8 @@ details.panel[open] .panel-toggle__chevron{
     margin: 5px;
 }
 #csv-form input{
-    padding: 10px 12px;
-    border-radius: 10px;
+    padding: 10px 14px;
+    border-radius: 999px;
     border: 1px solid rgba(255,255,255,0.15);
     background: rgba(255,255,255,0.08);
     color: #fff;
@@ -516,6 +534,19 @@ details.panel[open] .panel-toggle__chevron{
     background: rgba(255,255,255,0.08);
     border: 1px solid rgba(255,255,255,0.15);
 }
+/* «Eliminar filtros» y «Todas las etiquetas» con el mismo aspecto que «Sin filtros». */
+#clear-filters, #tag-mode-toggle{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font: inherit;
+    font-weight: 700;
+    color: inherit;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+}
 .moodle-icon-img{
     width: 20px;
     height: 20px;
@@ -536,9 +567,11 @@ details.panel[open] .panel-toggle__chevron{
     gap: 14px;
 }
 .filter-bar input[type="search"]{
-    padding: 8px 10px;
-    border-radius: 10px;
-    border: 1px solid rgba(0,0,0,0.08);
+    padding: 6px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.08);
+    color: #fff;
     flex: 1;
     min-width: 220px;
 }
@@ -555,12 +588,14 @@ details.panel[open] .panel-toggle__chevron{
     text-transform: uppercase;
 }
 .sort-control select{
-    padding: 8px 10px;
-    border-radius: 8px;
-    border: 1px solid rgba(255,255,255,0.2);
-    background: rgba(255,255,255,0.1);
-    color: #fff;
-    font-weight: 600;
+    /* Mismo aspecto de píldora que «Sin filtros» y los botones de filtro. */
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.08);
+    color: inherit;
+    font: inherit;
+    font-weight: 700;
 }
 .filter-bar .checkbox-inline{
     margin: 0;
@@ -605,12 +640,13 @@ details.panel[open] .panel-toggle__chevron{
 
 .game-grid{
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    /* Como mucho 3 columnas; menos si no caben (mínimo 340 px). Una sola en pantallas estrechas. */
+    grid-template-columns: repeat(auto-fill, minmax(max(min(340px, 100%), calc((100% - 28px) / 3)), 1fr));
     gap: 14px;
 }
 .game-card{
     background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.12);
+    border: 1px solid #fff;
     border-radius: 14px;
     padding: 14px 14px 12px;
     box-shadow: 0 14px 30px rgba(0,0,0,0.22);
@@ -625,6 +661,7 @@ details.panel[open] .panel-toggle__chevron{
     gap: 10px;
 }
 .game-title{
+    color: #fdbc4b; /* amarillo del logo */
     font-size: 20px;
     font-weight: 800;
     margin: 0;
@@ -656,6 +693,16 @@ details.panel[open] .panel-toggle__chevron{
     flex:1;
     min-width: 180px;
     max-width: 100%;
+    /* Mismo aspecto de píldora oscura que «Ordenar por» y los botones de filtro. */
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.08);
+    color: inherit;
+    font-family: inherit;
+}
+.tag-editor input::placeholder{
+    color: rgba(255,255,255,0.55);
 }
 
 .tag.tag-editable{
@@ -756,9 +803,9 @@ details.panel[open] .panel-toggle__chevron{
     border-radius: 4px;
 }
 .export-select{
-    padding: 8px 10px;
-    border-radius: 10px;
-    border: 1px solid rgba(255,255,255,0.16);
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.15);
     background: rgba(255,255,255,0.08);
     color: #fff;
     font-weight: 600;
@@ -1041,13 +1088,18 @@ body.modal-open{
 }
 
 @media (max-width: 600px){
+    /* En dev/stage, el distintiu fix (dalt) no tapa el contingut en carregar. */
+    body{
+        padding-top: var(--env-badge-space, 0px);
+    }
+
     .page-shell{
         margin: 16px auto 46px auto;
-        padding: 0 14px 26px;
+        padding: 0 0 26px;
     }
 
     #back{
-        margin: 12px 0 0 12px;
+        margin: 12px 0 0 var(--back-left, 12px);
     }
 
     .top-row{
@@ -1141,3 +1193,37 @@ body.modal-open{
 #library-app{ display: contents; }
 #tools-app{ display: contents; }
 #account-app{ display: contents; }
+
+/* Controles de texto de la página con el mismo aspecto (el tamaño de letra no se toca). */
+.filter-bar input[type="search"]::placeholder,
+#ia-box input::placeholder,
+#ia-box textarea::placeholder,
+#csv-form input::placeholder,
+#kahoot-url::placeholder{
+    color: rgba(255,255,255,0.55);
+}
+.filter-bar input[type="search"],
+.lang-switch select, .share-controls select, .export-select,
+#ia-box input, #ia-box select, #ia-box textarea,
+#csv-form input, #kahoot-url, #kahoot-visibility, .auth-grid input{
+    font-family: inherit;
+}
+#kahoot-visibility{
+    padding: 10px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+}
+/* Confirmación breve tras guardar los permisos (reserva el hueco para que nada salte). */
+.share-saved{
+    display: inline-block;
+    min-width: 1.2em;
+    color: #7ee787;
+    font-weight: 800;
+}
+
+/* «Jugar en el aula»: misma tipografía que el resto de textos (el tamaño no se toca). */
+.game-actions .btn-primary{
+    font-family: inherit;
+}

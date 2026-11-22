@@ -75,6 +75,7 @@ const ASSETS = [
   '/homework/redirect.js',
   '/js/hostSelfPaced.js',
   '/js/host.js',
+  '/js/chip-align.js',
   '/js/env-badge.js',
   '/js/pwa-install.js',
   '/js/libs/jqueryLibrary.js',

@@ -1289,3 +1289,148 @@ body.playing #answers > .free-answer-row{ grid-column: 1 / -1; }
 /* Opciones de la partida en Solo: casillas a 20 px, como en la pantalla del anfitrión. */
 .solo-check{ display: flex; align-items: center; gap: 8px; margin: 8px 0; font-weight: 600; cursor: pointer; }
 .solo-check input{ width: 20px; height: 20px; flex: none; margin: 0; cursor: pointer; accent-color: #ffee70; }
+
+/* ── Diseño de la pantalla ────────────────────────────────────────────────
+   El recuadro ocupa el 70 % del ancho de la ventana en pantallas grandes (≥1400 px)
+   y se va ensanchando al estrecharse la ventana, hasta dejar solo un 5 % de
+   margen a cada lado en móvil (≤600 px). El xip de cuenta y «Volver» se alinean con
+   el borde del recuadro, y en dev/stage el distintivo deja su altura libre arriba.
+   Los colores no cambian. */
+:root{
+    --page-gutter: clamp(5vw, calc(5vw + (100vw - 600px) * 0.175), 15vw);
+    --chip-right: var(--page-gutter);
+}
+body{
+    padding: 18px var(--page-gutter);
+    padding-top: max(18px, var(--env-badge-space, 0px));
+}
+@media (max-width: 960px){
+    body{
+        padding: 14px var(--page-gutter);
+        padding-top: max(14px, var(--env-badge-space, 0px));
+    }
+}
+body.playing{
+    padding: var(--fit-margin) var(--page-gutter);
+    padding-top: max(var(--fit-margin), var(--env-badge-space, 0px));
+}
+.grid,
+.music-section,
+body.playing #game-panel{
+    max-width: none;
+}
+
+.back-link{
+    border-radius: 999px;
+    padding: 6px 14px;
+}
+
+/* Catálogo: como mucho 3 columnas; menos si no caben. */
+.cards{
+    grid-template-columns: repeat(auto-fill, minmax(max(min(300px, 100%), calc((100% - 28px) / 3)), 1fr));
+}
+
+/* Controles de texto y desplegables con forma de píldora (colores y tamaños de letra sin tocar). */
+.panel__actions input,
+.panel__actions select,
+.panel__filters input:not([type="checkbox"]),
+.start-form input:not([type="checkbox"]),
+.start-form select,
+.solo-modal input[type="text"]{
+    border-radius: 999px;
+    padding-left: 14px;
+    padding-right: 14px;
+}
+.panel__actions select#sort{ padding-right: 34px; }
+.pagination button{ border-radius: 999px; padding: 8px 14px; }
+
+/* Logo de EduHoot e imagen del quiz bajo el título. */
+.quiz-banner{
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 12px 0 6px;
+}
+.quiz-banner__logo{
+    flex: none;
+    width: 64px;
+    height: 64px;
+    padding: 8px;
+    border-radius: 18px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid var(--card-stroke);
+    object-fit: contain;
+}
+.quiz-banner__cover{
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 14px;
+    border: 1px solid var(--card-stroke);
+    box-shadow: var(--shadow);
+}
+/* Durante la partida, en pequeño para no quitar sitio a las respuestas. */
+.quiz-banner--compact{
+    margin: 8px 0 0;
+    gap: 10px;
+}
+.quiz-banner--compact .quiz-banner__logo{
+    width: 40px;
+    height: 40px;
+    padding: 5px;
+    border-radius: 12px;
+}
+.quiz-banner--compact .quiz-banner__cover{
+    flex: none;
+    width: 72px;
+    height: 40px;
+    border-radius: 10px;
+    box-shadow: none;
+}
+@media (max-height: 700px), (max-width: 600px){
+    .quiz-banner--compact{ display: none; }
+}
+@media (max-width: 600px){
+    .quiz-banner__cover{ height: 110px; }
+}
+
+/* Pantalla de inicio: controles, botón e imagen con su ancho natural (sin estirarse al recuadro). */
+.start-form{
+    align-items: flex-start;
+}
+.start-form input:not([type="checkbox"]),
+.start-form select{
+    width: 180px;
+    max-width: 100%;
+}
+.question-count-controls input{
+    flex: 0 0 auto;
+    width: 120px;
+    min-width: 0;
+}
+.start-form .btn{
+    width: auto;
+    padding-left: 28px;
+    padding-right: 28px;
+}
+.quiz-banner{
+    max-width: 100%;
+}
+.quiz-banner__cover{
+    flex: 0 1 auto;
+    width: auto;
+    max-width: 100%;
+}
+.quiz-banner--compact .quiz-banner__cover{
+    flex: none;
+    width: auto;
+    max-width: 96px;
+}
+
+/* Móviles estrechos: el margen lateral es del 5 %, así que el interior del recuadro se ajusta
+   un poco para que las cuatro respuestas sigan cabiendo en pantalla. */
+@media (max-width: 400px){
+    body.playing #game-panel{ padding: 8px; }
+    .game-area{ margin-top: 4px; }
+}

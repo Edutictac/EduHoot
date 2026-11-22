@@ -263,7 +263,7 @@
             <p id="csv-status">{{ imp.csvStatus.text }}<button v-if="imp.csvStatus.playId" @click="startGame(imp.csvStatus.playId)">{{ t('startNow') || t('play') }}</button></p>
             <div class="split-import">
                 <div>
-                    <h3>{{ t('kahootTitle') }}</h3>
+                    <h3 id="kahoot-form-title">{{ t('kahootTitle') }}</h3>
 
                     <p class="subtext">{{ t('kahootHelp') }}</p>
                     <p class="subtext warning-legal">{{ t('kahootWarning') }}</p>
@@ -354,25 +354,25 @@
                                 <div class="share-controls">
                                     <div class="share-row"><strong>{{ t('saveSharing') }}</strong></div>
                                     <div class="share-row">
-                                        <select v-model="share(quiz).visibility" :disabled="!perms(quiz).canEdit">
+                                        <select v-model="share(quiz).visibility" :disabled="!perms(quiz).canEdit || share(quiz).saving" @change="saveSharing(quiz)">
                                             <option value="private">{{ t('visibilityPrivate') }}</option>
                                             <option value="unlisted">{{ t('visibilityUnlisted') }}</option>
                                             <option value="public">{{ t('visibilityPublic') }}</option>
                                         </select>
-                                        <label class="checkbox-label"><input type="checkbox" v-model="share(quiz).allowClone" :disabled="!perms(quiz).canEdit">{{ t('allowClone') }}</label>
-                                        <button class="btn btn-ghost" :title="perms(quiz).canEdit ? null : t('cannotEditNotOwner')" :disabled="!perms(quiz).canEdit" @click="saveSharing(quiz)">{{ t('saveSharing') }}</button>
+                                        <label class="checkbox-label"><input type="checkbox" v-model="share(quiz).allowClone" :disabled="!perms(quiz).canEdit || share(quiz).saving" @change="saveSharing(quiz)">{{ t('allowClone') }}</label>
+                                        <span class="share-saved" role="status" :title="share(quiz).done ? t('sharingSaved') : null" :aria-label="share(quiz).done ? t('sharingSaved') : null">{{ share(quiz).done ? '✓' : '' }}</span>
                                     </div>
                                 </div>
                                 <div class="game-actions">
                                     <button v-if="perms(quiz).canSaveToAccount" class="btn btn-primary" @click="saveToAccount(quiz)">{{ t('saveToAccount') }}</button>
                                     <button class="btn btn-primary" :title="perms(quiz).canStart ? null : t('cannotStartPrivate')" :disabled="!perms(quiz).canStart" @click="launch(quiz, 'host')">{{ t('play') }}</button>
-                                    <button class="btn btn-ghost icon-only" :title="perms(quiz).canStart ? t('playMultiplayer') : t('cannotStartPrivate')" :aria-label="t('playMultiplayer')" :disabled="!perms(quiz).canStart" @click="launch(quiz, 'multiplayer')">👥</button>
                                     <button class="btn btn-ghost icon-only" :title="perms(quiz).canStart ? t('playSolo') : t('cannotStartPrivate')" :aria-label="t('playSolo')" :disabled="!perms(quiz).canStart" @click="launch(quiz, 'solo')">👤</button>
                                     <button class="btn btn-ghost icon-only" :title="perms(quiz).canStart ? t('reviewCards') : t('cannotStartPrivate')" :aria-label="t('reviewCards')" :disabled="!perms(quiz).canStart" @click="launch(quiz, 'cards')">🔁</button>
+                                    <button class="btn btn-ghost icon-only" :title="perms(quiz).canStart ? t('playMultiplayer') : t('cannotStartPrivate')" :aria-label="t('playMultiplayer')" :disabled="!perms(quiz).canStart" @click="launch(quiz, 'multiplayer')">👥</button>
                                     <button class="btn btn-ghost icon-only" :title="perms(quiz).canStart ? t('assignHomework') : t('cannotStartPrivate')" :aria-label="t('assignHomework')" :disabled="!perms(quiz).canStart" @click="launch(quiz, 'homework')">📚</button>
-                                    <button class="btn btn-ghost icon-only" :title="perms(quiz).canEdit ? t('edit') : t('cannotEditNotOwner')" :disabled="!perms(quiz).canEdit" @click="edit(quiz)">✏️</button>
                                     <button class="btn btn-ghost icon-only" :title="t('download')" @click="downloadCsv(quiz)">⬇️</button>
                                     <button class="btn btn-ghost icon-only" :title="t('exportMoodleXml')" @click="downloadMoodle(quiz)"><img src="/icons/moodle.png" alt="Moodle" class="moodle-icon-img"></button>
+                                    <button class="btn btn-ghost icon-only" :title="perms(quiz).canEdit ? t('edit') : t('cannotEditNotOwner')" :disabled="!perms(quiz).canEdit" @click="edit(quiz)">✏️</button>
                                     <button class="btn btn-ghost icon-only" :title="perms(quiz).canClone ? t('clone') : t('cannotCloneNotOwner')" :disabled="!perms(quiz).canClone" @click="clone(quiz)">📄</button>
                                     <button class="btn btn-danger icon-only" :title="perms(quiz).canEdit ? t('delete') : t('cannotDeleteNotOwner')" :disabled="!perms(quiz).canEdit" @click="remove(quiz)">🗑️</button>
                                     <select class="export-select" :aria-label="t('exportSelectLabel')" :title="t('exportSelectLabel')" @change="exportAs($event, quiz)">
@@ -416,6 +416,7 @@
         <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
         <script src="/js/libs/vue.global.prod.js"></script>
         <script src="/js/languages.js"></script>
+        <script src="/js/chip-align.js"></script>
         <script src="/js/env-badge.js"></script>
         <script src="../js/i18n-create.js"></script>
         <script src="../js/create-admin.js"></script>

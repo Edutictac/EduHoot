@@ -490,6 +490,21 @@ var soloPlay = {
         titleText: function(){
             return this.s.title.text || this.t(this.s.title.key);
         },
+        // Imagen representativa del quiz: la misma de su tarjeta; si no hay, la portada o la primera pregunta con imagen.
+        quizImage: function(){
+            var quiz = this.s.quizData;
+            if(!quiz) return '';
+            var th = this.s.thumbs[String(quiz.id)];
+            if(th && th.src && !th.fallback) return th.src;
+            var direct = mediaThumb(quiz.coverImage || quiz.coverVideo);
+            if(direct) return direct;
+            var questions = Array.isArray(quiz.questions) ? quiz.questions : [];
+            for(var i = 0; i < questions.length; i++){
+                var q = questions[i];
+                if(q && (q.image || q.video)) return mediaThumb(q.image || q.video);
+            }
+            return '';
+        },
         selectedMeta: function(){
             var quiz = this.s.quizData;
             if(!quiz) return this.t('startSelect');

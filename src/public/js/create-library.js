@@ -498,17 +498,34 @@ var libraryApp = {
         // Permisos de compartir
         share: function(quiz){
             if(!this.sharing[quiz.id]){
-                this.sharing[quiz.id] = { visibility: quiz.visibility || 'public', allowClone: !!quiz.allowClone };
+                var visibility = quiz.visibility || 'public';
+                var allowClone = !!quiz.allowClone;
+                // saved: último valor confirmado por el servidor (para volver atrás si falla el guardado).
+                this.sharing[quiz.id] = { visibility: visibility, allowClone: allowClone, saved: { visibility: visibility, allowClone: allowClone }, saving: false, done: false };
             }
             return this.sharing[quiz.id];
         },
-        saveSharing: function(quiz){
+        // Se guarda al cambiar el desplegable o la casilla; si falla, el control vuelve al valor anterior.
+        saveSharing: async function(quiz){
+            var draft = this.share(quiz);
             if(!this.perms(quiz).canEdit){
+                draft.visibility = draft.saved.visibility;
+                draft.allowClone = draft.saved.allowClone;
                 warnNoPermission(authState.user ? t('permissionDenied') : t('needLogin'));
                 return;
             }
-            var draft = this.share(quiz);
-            updateSharing(quiz.id, draft.visibility, draft.allowClone);
+            draft.saving = true;
+            draft.done = false;
+            var ok = await updateSharing(quiz.id, draft.visibility, draft.allowClone);
+            draft.saving = false;
+            if(ok){
+                draft.saved = { visibility: draft.visibility, allowClone: draft.allowClone };
+                draft.done = true;
+                setTimeout(function(){ draft.done = false; }, 2000);
+            }else{
+                draft.visibility = draft.saved.visibility;
+                draft.allowClone = draft.saved.allowClone;
+            }
         },
         // Acciones
         launch: function(quiz, mode){

@@ -127,6 +127,11 @@
                 </div>
 
                 <div id="start-form" class="start-form" :class="{ hidden: s.view !== 'start' }">
+                    <!-- Logo de EduHoot e imagen representativa del quiz, bajo el título. -->
+                    <div class="quiz-banner">
+                        <img class="quiz-banner__logo" src="/icons/logo.svg" alt="EduHoot">
+                        <img v-if="quizImage" class="quiz-banner__cover" :src="quizImage" alt="" @error="$event.target.style.display = 'none'">
+                    </div>
                     <p id="selected-meta" class="muted">{{ selectedMeta }}</p>
 
                     <label for="question-count" class="muted">{{ t('questionCountLabel') }}</label>
@@ -164,6 +169,10 @@
                             <span id="score-pill" class="pill pill-muted">{{ t('score') + ': ' + s.score }}</span>
                             <span id="streak-pill" class="pill pill-muted">🔥 {{ s.streak }}{{ s.streakBonus > 0 ? ' · +' + s.streakBonus : '' }}</span>
                         </span>
+                    </div>
+                    <div class="quiz-banner quiz-banner--compact">
+                        <img class="quiz-banner__logo" src="/icons/logo.svg" alt="EduHoot">
+                        <img v-if="quizImage" class="quiz-banner__cover" :src="quizImage" alt="" @error="$event.target.style.display = 'none'">
                     </div>
                     <!-- Barra de tiempo con los botones de pausa y cancelación a su derecha (sin quitar alto). -->
                     <div class="solo-timer-row">

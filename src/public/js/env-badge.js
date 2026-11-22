@@ -77,6 +77,13 @@
 
         document.body.appendChild(tint);
         document.body.appendChild(badge);
+        // Espai que ocupa el distintiu (fix a dalt): les pàgines que ho necessiten
+        // baixen el contingut perquè no el tape en carregar (--env-badge-space).
+        var space = function(){
+            document.documentElement.style.setProperty('--env-badge-space', Math.ceil(badge.getBoundingClientRect().bottom + 8) + 'px');
+        };
+        space();
+        window.addEventListener('resize', space);
 
         if(document.title.indexOf(cfg.titlePrefix) !== 0){
             document.title = cfg.titlePrefix + document.title;

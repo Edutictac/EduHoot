@@ -71,7 +71,7 @@ async function updateSharing(id, visibility, allowClone){
         var result = await res.json();
         if(!res.ok){
             alert(result.error || t('sharingError') || t('saveError'));
-            return;
+            return false;
         }
         if(result.migrated && result.id){
             try{
@@ -88,8 +88,10 @@ async function updateSharing(id, visibility, allowClone){
             }catch(e){}
         }
         socket.emit('requestDbNames');
+        return true;
     }catch(err){
         alert(t('sharingError') || t('saveError'));
+        return false;
     }
 }
 

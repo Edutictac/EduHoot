@@ -72,7 +72,7 @@ async function mockBackend(page, options = {}) {
         m = pathname.match(/^\/api\/quizzes\/([^/]+)\/sharing$/);
         if (m) {
             calls.sharing.push({ id: m[1], body: request.postDataJSON() });
-            return route.fulfill({ json: options.sharingResult || { ok: true } });
+            return route.fulfill({ status: options.sharingStatus || 200, json: options.sharingResult || { ok: true } });
         }
         m = pathname.match(/^\/api\/quizzes\/([^/]+)\/clone$/);
         if (m) { calls.cloned.push(m[1]); return route.fulfill({ json: { id: 'c1' } }); }
@@ -144,16 +144,16 @@ test('biblioteca sin sesión: tarjetas, recuento, metadatos y permisos', async (
     await expect(geo.locator('button', { hasText: '📄' })).toHaveAttribute('title', 'No puedes clonar este quiz.');
     await expect(geo.locator('.share-controls select')).toBeDisabled();
     await expect(geo.locator('.share-controls select')).toHaveValue('public');
-    await expect(geo.locator('.share-controls button')).toBeDisabled();
+    await expect(geo.locator('.share-controls input[type="checkbox"]')).toBeDisabled();
     await expect(geo.locator('.tag-editor')).toHaveCount(0);
     await expect(geo.locator('.tag-remove')).toHaveCount(0);
     await expect(geo.locator('button', { hasText: 'Guardar en mi cuenta' })).toHaveCount(0);
-    await expect(geo.locator('.game-actions > button.btn-primary')).toHaveText('Jugar en el aula');
-    await expect(geo.locator('.game-actions > button')).toHaveText(['Jugar en el aula', '👥', '👤', '🔁', '📚', '✏️', '⬇️', '', '📄', '🗑️']);
+    await expect(geo.locator('.game-actions > button.btn-primary')).toHaveText('Jugar');
+    await expect(geo.locator('.game-actions > button')).toHaveText(['Jugar', '👤', '🔁', '👥', '📚', '⬇️', '', '✏️', '📄', '🗑️']);
 
     // Privado de otro: no se puede lanzar.
     const bio = card(page, 'Biologia');
-    for (const label of ['Jugar en el aula', '👥', '👤', '🔁']) {
+    for (const label of ['Jugar', '👥', '👤', '🔁']) {
         await expect(bio.locator('.game-actions > button', { hasText: label })).toBeDisabled();
         await expect(bio.locator('.game-actions > button', { hasText: label })).toHaveAttribute('title', 'Solo el propietario puede usar un quiz privado.');
     }
@@ -355,18 +355,30 @@ test('una etiqueta sola no se puede quitar', async ({ page }) => {
     await expect.poll(() => dialogs).toEqual(['Debe quedar al menos una etiqueta.']);
 });
 
-test('guardar permisos: visibilidad y copia, y migración del id anónimo', async ({ page }) => {
+test('permisos: se guardan al cambiar (visibilidad y copia) y migra el id anónimo', async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem('localQuizzes', JSON.stringify(['q2'])));
     const { calls } = await mockBackend(page, { sharingResult: { migrated: true, id: 'q2b' } });
     await openCreate(page);
     const alg = card(page, 'Àlgebra');
-    await expect(alg.locator('.share-row strong')).toHaveText('Guardar permisos');
+    await expect(alg.locator('.share-row strong')).toHaveText('Permisos');
+    await expect(alg.locator('.share-controls button')).toHaveCount(0);
     await alg.locator('.share-controls select').selectOption('unlisted');
-    await alg.locator('.share-controls input[type="checkbox"]').check();
+    await expect.poll(() => calls.sharing).toEqual([{ id: 'q2', body: { visibility: 'unlisted', allowClone: false } }]);
+    await expect(alg.locator('.share-saved')).toHaveText('✓');
     await expect(alg.locator('.share-controls label')).toHaveText('Permitir copia');
-    await alg.locator('.share-controls button').click();
-    await expect.poll(() => calls.sharing).toEqual([{ id: 'q2', body: { visibility: 'unlisted', allowClone: true } }]);
     await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('localQuizzes')))).toEqual(['q2b']);
+});
+
+test('permisos: si falla el guardado, el control vuelve al valor anterior', async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem('localQuizzes', JSON.stringify(['q2'])));
+    const { calls } = await mockBackend(page, { sharingResult: { error: 'Sin permiso' }, sharingStatus: 403 });
+    const dialogs = collectDialogs(page);
+    await openCreate(page);
+    const alg = card(page, 'Àlgebra');
+    await alg.locator('.share-controls input[type="checkbox"]').check();
+    await expect.poll(() => dialogs).toEqual(['Sin permiso']);
+    await expect(alg.locator('.share-controls input[type="checkbox"]')).not.toBeChecked();
+    expect(calls.sharing).toEqual([{ id: 'q2', body: { visibility: 'public', allowClone: true } }]);
 });
 
 test('clonar con sesión y borrar con confirmación', async ({ page }) => {
@@ -395,7 +407,7 @@ test('rechazar el borrado no borra', async ({ page }) => {
 test('botones de jugar y editar llevan a su pantalla', async ({ page }) => {
     await mockBackend(page, { user: TEACHER });
     await openCreate(page);
-    for (const [label, re] of [['Jugar en el aula', /\/host\/\?id=q1$/], ['👥', /\/multiplayer\/\?id=q1$/], ['👤', /\/solo\/\?id=q1$/], ['🔁', /\/solo\/\?id=q1&mode=cards$/], ['✏️', /\/create\/quiz-creator\/\?id=q1$/]]) {
+    for (const [label, re] of [['Jugar', /\/host\/\?id=q1$/], ['👥', /\/multiplayer\/\?id=q1$/], ['👤', /\/solo\/\?id=q1$/], ['🔁', /\/solo\/\?id=q1&mode=cards$/], ['✏️', /\/create\/quiz-creator\/\?id=q1$/]]) {
         await card(page, 'Geografia').locator('.game-actions > button', { hasText: label }).click();
         await expect(page).toHaveURL(re);
         await openCreate(page);
@@ -447,7 +459,7 @@ test('cambiar de idioma traduce las tarjetas y las carpetas', async ({ page }) =
     // Las tarjetas se repintan cuando el servidor responde a requestDbNames.
     expect(await page.evaluate(() => window.__emits.filter(n => n === 'requestDbNames').length)).toBeGreaterThan(0);
     await page.evaluate(() => window.__serverEmit('gameNamesData', []));
-    await expect(card(page, 'Geografia').locator('.game-actions > button.btn-primary')).toHaveText('Play in the classroom');
+    await expect(card(page, 'Geografia').locator('.game-actions > button.btn-primary')).toHaveText('Play');
     await expect(page.locator('#title')).toHaveText('Create and launch your EduHoot');
     await expect(page.locator('#tag-mode-toggle')).toHaveText('Match all tags');
     await expect(page.locator('#game-count')).toHaveText(/^3 /);
@@ -467,7 +479,7 @@ test('subir CSV: sin archivo avisa; con archivo envía nombre y token y ofrece j
     await page.locator('#csv-file').setInputFiles({ name: 'q.csv', mimeType: 'text/csv', buffer: Buffer.from('tipo;pregunta\n') });
     await page.locator('#csv-name').fill('  Nou  ');
     await page.locator('#csv-form button[type="submit"]').click();
-    await expect(page.locator('#csv-status')).toHaveText('Importado: Nou (3) Jugar en el aula');
+    await expect(page.locator('#csv-status')).toHaveText('Importado: Nou (3) Jugar');
     expect(calls.uploads[0]).toContain('name="name"\r\n\r\nNou');
     expect(calls.uploads[0]).toContain('name="ownerToken"\r\n\r\ntok1');
     await expect(page.locator('#csv-name')).toHaveValue('');
@@ -492,7 +504,7 @@ test('importar Kahoot: URL o ID, visibilidad y botones de jugar/editar', async (
     await page.locator('#kahoot-url').fill('https://create.kahoot.it/details/abc');
     await page.locator('#kahoot-visibility').selectOption('unlisted');
     await page.locator('#kahoot-form button[type="submit"]').click();
-    await expect(page.locator('#kahoot-status')).toHaveText('Importado: Kahoot (4) Jugar en el aulaEditar cuestionario');
+    await expect(page.locator('#kahoot-status')).toHaveText('Importado: Kahoot (4) JugarEditar cuestionario');
     expect(calls.kahoot[0]).toMatchObject({ url: 'https://create.kahoot.it/details/abc', visibility: 'unlisted' });
     expect(calls.kahoot[0].ownerToken).toMatch(/^[0-9a-f]{32}$/);
     await expect(page.locator('#kahoot-form button[type="submit"]')).toBeEnabled();
@@ -638,7 +650,7 @@ test('IA: importar el CSV con etiquetas de nivel, tema e idioma, y editar en el 
     await page.locator('#ia-tema').fill('Energia; Calor');
     await page.locator('#ia-csv').fill(IA_CSV);
     await page.locator('#ia-upload').click();
-    await expect(page.locator('#ia-status')).toHaveText('Importado: Nou (3)Jugar en el aula');
+    await expect(page.locator('#ia-status')).toHaveText('Importado: Nou (3)Jugar');
     const body = calls.uploads[0];
     expect(body).toContain('name="name"\r\n\r\nEnergia IA');
     const tags = [...body.matchAll(/name="tags"\r\n\r\n([^\r]*)/g)].map(m => m[1]);
