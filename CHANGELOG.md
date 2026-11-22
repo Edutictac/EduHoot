@@ -191,7 +191,10 @@ fitxers corresponents, i els originals es van eliminar.
 
 ### Canviat
 
-- **Flashcards**: botons de la targeta amb colors propis: «No la sé» en roig, «Anterior» i «Següent» en grocs corporatius, «Mostrar resposta» en verd i «Ocultar resposta» en rosa (text amb contrast ≥ 4,5:1).
+- **Solo**: en acabar cada pregunta (encert, encert parcial o errada) s'obri una finestra al centre amb el resultat («✓», «◐» o «✕»; botó verd, taronja o roig). Es tanca sola als segons indicats (5 per defecte, configurable de 1 a 30 al formulari d'inici i recordat al navegador) o abans amb «OK»; les enquestes no la mostren.
+- **Solo**: si s'arriba des de la biblioteca (enllaç amb `from=library`), la part superior mostra els botons «Inici» i «Biblioteca»; si s'arriba des d'Inici, només «Inici».
+- **Solo i Flashcards (pantalla de joc)**: els botons i camps usen la mateixa tipografia (Inter) que la resta de la pantalla, en lloc de la per defecte del navegador.
+- **Flashcards**: botons de la targeta amb colors propis: «No la sé» en roig, «Anterior» i «Següent» en grocs corporatius, «Mostrar resposta» en blanc amb text rosa i «Ocultar resposta» al revés, en rosa amb text blanc (text amb contrast ≥ 4,5:1).
 - **Biblioteca**: la casella «Només els meus qüestionaris» es recorda durant la sessió del navegador (en recarregar o tornar d'editar o jugar); en iniciar sessió continua marcada per defecte, i en tancar-la s'oblida.
 - **Accessibilitat (respostes)**: el text blanc dels botons de resposta (alumnat, anfitrió i Solo) i de les barres de resultats té un contrast de com a mínim 4,5:1 (colors més foscos). En Solo, la resposta encertada i la fallada es marquen també amb «✓» i «✕», no només amb el color de la vora.
 - **Preferències (biblioteca)**: el quadre té fons opac, nom accessible, espai per al botó «Tancar», la casella «Reemplaçar tot» alineada amb el text, i queda per baix del distintiu DEV/STAGE; en tancar, el focus torna al botó «Preferències».

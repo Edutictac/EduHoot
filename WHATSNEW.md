@@ -46,6 +46,11 @@
   si compta el millor, la mitjana, el primer o l'últim intent.
 - **La biblioteca recorda el teu filtre**: si desmarques «Només els meus qüestionaris»,
   es manté així mentre no tanques el navegador, també en tornar d'editar o jugar.
+- **Resultat de cada pregunta en el mode individual**: després de respondre
+  apareix una finestra al centre que mostra si l'has encertat o fallat, amb
+  icona i color, i es tanca sola als segons que triïs (5 per defecte).
+- **Tornar a la biblioteca des del mode individual**: si hi entres des de la
+  biblioteca, a dalt trobaràs «Inici» i «Biblioteca».
 - **Respostes més accessibles**: el text dels botons de resposta es llig millor
   (més contrast) i, en el mode individual, les respostes encertades i fallades
   porten també «✓» i «✕», de manera que no depenen només del color.

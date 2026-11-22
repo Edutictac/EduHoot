@@ -39,6 +39,9 @@ for (const choice of [0, 1, 2, 3]) {
         await expect(page.locator('#feedback-modal')).not.toHaveClass(/show/);
         await expect(page.locator('#question-text')).toHaveText(quiz.question);
         await page.locator('#answers button.answer').nth(0).click();
+        // El acierto también abre la ventana de resultado; se cierra con OK.
+        await expect(page.locator('#feedback-modal')).toHaveClass(/show/);
+        await page.locator('#feedback-close').click();
         await expect(page.locator('#result-area')).toBeVisible();
         await expect(page.locator('#result-summary')).toContainText('Encerts 1/1');
         await expect(page.locator('#result-summary')).toContainText('Enquestes: 1 · sense puntuació');

@@ -1,7 +1,14 @@
 // Modo individual: listado de quizzes públicos + juego auto-dirigido con ranking global
 // El estado es reactivo: la plantilla de Vue (#solo-tpl) lo lee directamente
 // (Subfase B); el resto de funciones solo lo modifican.
-var state = Vue.reactive({
+function readFeedbackSeconds(){
+        try{
+            var v = parseInt(localStorage.getItem('eduhoot-solo-feedback-seconds'), 10);
+            if(v >= 1 && v <= 30) return v;
+        }catch(e){}
+        return 5;
+    }
+    var state = Vue.reactive({
         quizzes: [],
         currentQuiz: null,
         ttsSpeaking: false,
@@ -17,6 +24,9 @@ var state = Vue.reactive({
         // Opciones de la partida: orden de preguntas barajado (no por defecto) y mostrar la respuesta correcta.
         shuffleQuestions: false,
         showAnswers: true,
+        // Segundos que se ve la ventana de resultado (acierto o fallo) antes de pasar a la siguiente pregunta.
+        feedbackSeconds: readFeedbackSeconds(),
+        feedbackSecondsInput: String(readFeedbackSeconds()),
         page: 0,
         pageSize: 12,
         sortOrder: 'plays',
@@ -44,7 +54,7 @@ var state = Vue.reactive({
         studentJoinToken: '',
         commonsPublicCode: '',
         awaitingConfirm: false,
-        lastWrong: null,
+        lastResult: null,
         multiSelections: [],
         favoriteIds: new Set(),
         // Catálogo (bloque 1)
@@ -135,12 +145,25 @@ function setLang(newLang){
             });
     }
 
+    var feedbackTimer = null;
+
+    function clearFeedbackTimer(){
+        if(feedbackTimer){ clearTimeout(feedbackTimer); feedbackTimer = null; }
+    }
+
     function showFeedbackModal(){
-        if(!state.lastWrong) return;
+        if(!state.lastResult) return;
         state.feedbackModalOpen = true;
+        // Se cierra sola a los N segundos (configurable); también se puede cerrar antes con OK o pulsando fuera.
+        clearFeedbackTimer();
+        feedbackTimer = setTimeout(function(){
+            feedbackTimer = null;
+            if(state.feedbackModalOpen) hideFeedbackModal();
+        }, (state.feedbackSeconds || 5) * 1000);
     }
 
     function hideFeedbackModal(){
+        clearFeedbackTimer();
         state.feedbackModalOpen = false;
         if(state.awaitingConfirm){
             state.awaitingConfirm = false;
@@ -155,6 +178,8 @@ function setLang(newLang){
         state.quizData = null;
         state.currentQuiz = null;
         state.desiredQuestionCount = null;
+        clearFeedbackTimer();
+        state.feedbackModalOpen = false;
         state.view = 'none';
         state.title = { key: 'soloTitle' };
         syncQuestionCountControls();
@@ -162,18 +187,25 @@ function setLang(newLang){
         stopCountdown();
         pauseSoloMusic();
         state.awaitingConfirm = false;
-        state.lastWrong = null;
+        state.lastResult = null;
         state.multiSelections = [];
         state.questions = [];
     }
 
     function bindEvents(){
-        var backLink = document.querySelector('a.back-link');
-        if(backLink){
+        // Al salir (a Inicio o a la biblioteca) la música se para.
+        document.querySelectorAll('a.back-link').forEach(function(backLink){
             backLink.addEventListener('click', function(){
                 pauseSoloMusic();
             });
-        }
+        });
+        // Se llegó desde la biblioteca (?from=library): se ofrece también volver a ella.
+        try{
+            if(new URLSearchParams(window.location.search || '').get('from') === 'library'){
+                var libraryLink = document.getElementById('back-library');
+                if(libraryLink) libraryLink.classList.remove('hidden');
+            }
+        }catch(e){}
         var langSelect = document.getElementById('lang-select');
         if(langSelect){
             langSelect.addEventListener('change', function(){

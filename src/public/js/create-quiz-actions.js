@@ -4,11 +4,11 @@ function startGame(data){
 }
 
 function startSolo(data){
-    window.location.href = "/solo/" + "?id=" + encodeURIComponent(data);
+    window.location.href = "/solo/" + "?id=" + encodeURIComponent(data) + "&from=library";
 }
 
 function startSoloCards(data){
-    window.location.href = "/solo/" + "?id=" + encodeURIComponent(data) + "&mode=cards";
+    window.location.href = "/solo/" + "?id=" + encodeURIComponent(data) + "&mode=cards&from=library";
 }
 
 function startMultiplayer(data){

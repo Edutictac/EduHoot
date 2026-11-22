@@ -111,6 +111,46 @@ async function start(page) {
     await countdown(page);
 }
 
+test('volver: desde Inicio solo «Inicio»; desde la biblioteca (?from=library) también «Biblioteca»', async ({ page }) => {
+    await mockBackend(page);
+    await page.goto('/solo/?lang=es');
+    await expect(page.locator('a.back-link').first()).toHaveText('Inicio');
+    await expect(page.locator('a.back-link').first()).toHaveAttribute('href', '/');
+    await expect(page.locator('#back-library')).toBeHidden();
+
+    await page.goto('/solo/?id=q1&from=library&lang=es');
+    await expect(page.locator('#start-form')).toBeVisible();
+    await expect(page.locator('#back-library')).toBeVisible();
+    await expect(page.locator('#back-library')).toHaveText('Biblioteca');
+    await expect(page.locator('#back-library')).toHaveAttribute('href', '/create/');
+    await expect(page.locator('a.back-link').first()).toHaveText('Inicio');
+    // Los dos botones quedan en la misma fila, a la izquierda.
+    const a = await page.locator('a.back-link').first().boundingBox();
+    const b = await page.locator('#back-library').boundingBox();
+    expect(Math.abs(a.y - b.y)).toBeLessThanOrEqual(2);
+    expect(b.x).toBeGreaterThan(a.x + a.width);
+    // En el catálogo (sin quiz elegido) también aparece, traducido.
+    await page.goto('/solo/?from=library&lang=en');
+    await expect(page.locator('#back-library')).toHaveText('Library');
+});
+
+test('la ventana de resultado dura los segundos configurados y se puede cerrar antes con OK', async ({ page }) => {
+    await mockBackend(page);
+    await openQuizDirect(page, 'q1');
+    await expect(page.locator('#feedback-seconds')).toHaveValue('5');
+    await page.locator('#feedback-seconds').fill('2');
+    expect(await page.evaluate(() => localStorage.getItem('eduhoot-solo-feedback-seconds'))).toBe('2');
+    await start(page);
+    await answerButtons(page).nth(0).click();
+    const modal = page.locator('#feedback-modal');
+    await expect(modal).toHaveClass(/\bshow\b/);
+    await page.clock.runFor(1900);
+    await expect(modal).toHaveClass(/\bshow\b/);
+    await page.clock.runFor(200);
+    await expect(modal).not.toHaveClass(/\bshow\b/);
+    await expect(page.locator('#question-progress')).toHaveText('Pregunta 2 de 5');
+});
+
 test('catálogo: tarjetas ordenadas por partidas, con datos, sin paginación', async ({ page }) => {
     await mockBackend(page);
     await openCatalog(page);
@@ -322,8 +362,17 @@ test('partida completa: tipos de pregunta, puntos, avisos y resultado', async ({
     // Accesibilidad (WCAG 1.4.1): el acierto se marca también con ✓, no solo con el color.
     expect(await answerButtons(page).nth(0).evaluate(el => getComputedStyle(el, '::after').content)).toBe('"✓"');
     await expect(page.locator('#score-pill')).toHaveText('Puntos: 1000');
-    // 1200 justos: la siguiente pregunta arranca su temporizador sin consumir nada.
-    await page.clock.runFor(1200 + 3000);
+    // El acierto abre la ventana de resultado (✓, verde) y se cierra sola a los 5 s por defecto.
+    const modal1 = page.locator('#feedback-modal');
+    await expect(modal1).toHaveClass(/\bshow\b/);
+    await expect(modal1.locator('.solo-modal__content')).toHaveClass(/is-correct/);
+    await expect(modal1.locator('.solo-modal__icon')).toHaveText('✓');
+    await expect(page.locator('#feedback-title')).toHaveText('¡Correcto!');
+    expect(await page.locator('#feedback-close').evaluate(el => getComputedStyle(el).backgroundImage)).toContain('rgb(21, 128, 61)');
+    await page.clock.runFor(4900);
+    await expect(modal1).toHaveClass(/\bshow\b/);
+    await page.clock.runFor(100 + 3000);
+    await expect(modal1).not.toHaveClass(/\bshow\b/);
 
     // 2. Múltiple, acierto parcial (2 y 4 → solo 2 es correcta): 1 acierto − 1 fallo = 0.
     // Se prueba primero marcar/desmarcar.
@@ -365,6 +414,10 @@ test('partida completa: tipos de pregunta, puntos, avisos y resultado', async ({
     expect(await answerButtons(page).nth(1).evaluate(el => getComputedStyle(el, '::after').content)).toBe('"✕"');
     expect(await answerButtons(page).nth(0).evaluate(el => getComputedStyle(el, '::after').content)).toBe('"✓"');
     await expect(modal).toHaveClass(/\bshow\b/);
+    // Al fallar: icono ✕ y botón en rojo (no el verde de siempre).
+    await expect(modal.locator('.solo-modal__content')).toHaveClass(/is-wrong/);
+    await expect(modal.locator('.solo-modal__icon')).toHaveText('✕');
+    expect(await page.locator('#feedback-close').evaluate(el => getComputedStyle(el).backgroundImage)).toContain('rgb(220, 38, 38)');
     await modal.click({ position: { x: 5, y: 5 } });
     await countdown(page);
 
@@ -379,7 +432,7 @@ test('partida completa: tipos de pregunta, puntos, avisos y resultado', async ({
     await expect(input).toBeDisabled();
     await expect(page.locator('#solo-free-submit')).toBeDisabled();
     await expect(page.locator('#score-pill')).toHaveText('Puntos: 2425');
-    await page.clock.runFor(1300 + 3000);
+    await page.clock.runFor(5000 + 3000);
 
     // 5. Numérica con coma decimal y botón.
     await expect(page.locator('#question-progress')).toHaveText('Pregunta 5 de 5');
@@ -420,7 +473,7 @@ test('elegir cuántas preguntas: juega solo esas y «Volver a jugar» las mantie
     await start(page);
     await expect(page.locator('#question-progress')).toHaveText('Pregunta 1 de 1');
     await answerButtons(page).nth(0).click();
-    await page.clock.runFor(1300 + 3000);
+    await page.clock.runFor(5000 + 3000);
     await expect(page.locator('#result-area')).toBeVisible();
     await expect(page.locator('#result-summary')).toHaveText('Acertadas 1/1 · 1000 pts');
 
@@ -437,7 +490,7 @@ test('final: pide el nombre, lo normaliza y guarda la puntuación en el ranking'
     await openQuizDirect(page, 'q2');
     await start(page);
     await answerButtons(page).nth(0).click();
-    await page.clock.runFor(1300 + 3000);
+    await page.clock.runFor(5000 + 3000);
 
     const nameModal = page.locator('#name-modal');
     await expect(nameModal).toHaveClass(/\bshow\b/);
@@ -458,7 +511,7 @@ test('final: «Omitir» guarda como AAA y con el top lleno y peor nota no pregun
     await openQuizDirect(page, 'q2');
     await start(page);
     await answerButtons(page).nth(0).click();
-    await page.clock.runFor(1300 + 3000);
+    await page.clock.runFor(5000 + 3000);
     await page.locator('#name-cancel').click();
     await expect.poll(() => calls.soloRuns.length).toBe(1);
     expect(calls.soloRuns[0].body.name).toBe('AAA');
@@ -469,7 +522,7 @@ test('final: «Omitir» guarda como AAA y con el top lleno y peor nota no pregun
     await openQuizDirect(page2, 'q2');
     await start(page2);
     await answerButtons(page2).nth(0).click();
-    await page2.clock.runFor(1300 + 3000);
+    await page2.clock.runFor(5000 + 3000);
     await expect.poll(() => calls2.soloRuns.length).toBe(1);
     await expect(page2.locator('#name-modal')).not.toHaveClass(/\bshow\b/);
 });
@@ -480,7 +533,7 @@ test('error al guardar la puntuación se muestra en el ranking', async ({ page }
     await openQuizDirect(page, 'q2');
     await start(page);
     await answerButtons(page).nth(0).click();
-    await page.clock.runFor(1300 + 3000);
+    await page.clock.runFor(5000 + 3000);
     await page.locator('#name-save').click();
     await expect(page.locator('#ranking-list li')).toHaveText(['Massa intents']);
     await expect(page.locator('#ranking')).toBeVisible();
@@ -491,7 +544,7 @@ test('«Elegir otro quiz» vuelve al estado inicial del panel', async ({ page })
     await openQuizDirect(page, 'q2');
     await start(page);
     await answerButtons(page).nth(0).click();
-    await page.clock.runFor(1300 + 3000);
+    await page.clock.runFor(5000 + 3000);
     await page.locator('#name-cancel').click();
     await page.locator('#pick-another').click();
     await expect(page.locator('#result-area')).toBeHidden();
@@ -520,7 +573,7 @@ test('imagen y vídeo de YouTube de la pregunta', async ({ page }) => {
     // Respuestas vacías se pintan como «Respuesta N».
     await expect(answerButtons(page)).toHaveText(['a', 'b', 'Respuesta 3', 'Respuesta 4']);
     await answerButtons(page).nth(0).click();
-    await page.clock.runFor(1300 + 3000);
+    await page.clock.runFor(5000 + 3000);
     await expect(page.locator('#question-image')).toBeHidden();
     await expect(page.locator('#question-iframe')).toBeVisible();
     await expect(page.locator('#question-iframe')).toHaveAttribute('src', 'https://www.youtube-nocookie.com/embed/abc123');
@@ -537,7 +590,7 @@ test('entrada desde Commons: canjea el token, lo quita de la URL y no pide nombr
     expect(calls.launch).toEqual([{ launch_token: 'tok-9' }]);
     await start(page);
     await answerButtons(page).nth(0).click();
-    await page.clock.runFor(1300 + 3000);
+    await page.clock.runFor(5000 + 3000);
     await expect.poll(() => calls.soloRuns.length).toBe(1);
     // public_code normalizado como un nombre de 3 caracteres.
     expect(calls.soloRuns[0].body).toMatchObject({ name: 'XE9', studentJoinToken: 'join-1' });

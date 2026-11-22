@@ -18,7 +18,11 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
     </head>
     <body>
-        <a class="back-link" href="/" data-i18n="back">← Inicio</a>
+        <!-- «Biblioteca» solo aparece si se llegó desde la biblioteca (?from=library). -->
+        <nav class="back-links">
+            <a class="back-link" href="/" data-i18n="back">← Inicio</a>
+            <a id="back-library" class="back-link hidden" href="/create/" data-i18n="backLibrary">Biblioteca</a>
+        </nav>
         <edutictac-account class="site-account site-account--fixed" data-base="https://commons.edutictac.es"></edutictac-account>
         <header class="hero">
             <img class="hero__logo" src="/icons/logo.svg" alt="EduHoot logo">
@@ -145,6 +149,10 @@
                     <label for="question-time" class="muted">{{ t('questionTimeLabel') }}</label>
                     <div class="question-count-controls">
                         <input id="question-time" type="number" min="5" max="120" step="1" inputmode="numeric" autocomplete="off" :placeholder="t('questionTimePlaceholder')" :value="s.timeInput" @input="onTimeInput">
+                    </div>
+                    <label for="feedback-seconds" class="muted">{{ t('feedbackSecondsLabel') }}</label>
+                    <div class="question-count-controls">
+                        <input id="feedback-seconds" type="number" min="1" max="30" step="1" inputmode="numeric" autocomplete="off" :value="s.feedbackSecondsInput" @input="onFeedbackSecondsInput">
                     </div>
                     <template v-if="hasMatching">
                         <label for="matching-extra" class="muted">{{ t('matchingExtraLabel') }}</label>
@@ -339,10 +347,12 @@
             </template>
         </div>
         <div id="feedback-modal" class="solo-modal" :class="{ show: s.feedbackModalOpen }" @click.self="closeFeedback">
-            <div class="solo-modal__content">
+            <div class="solo-modal__content" :class="'is-' + feedbackKind">
+                <div class="solo-modal__icon" aria-hidden="true">{{ feedbackIcon }}</div>
                 <h3 id="feedback-title">{{ feedbackTitle }}</h3>
                 <p id="feedback-body">{{ feedbackBody }}</p>
-                <button id="feedback-close" class="btn btn-primary" @click="closeFeedback">OK</button>
+                <button id="feedback-close" class="btn btn-feedback" @click="closeFeedback">OK</button>
+                <div class="solo-modal__bar" aria-hidden="true"><span :style="{ animationDuration: s.feedbackSeconds + 's' }"></span></div>
             </div>
         </div>
 

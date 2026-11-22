@@ -422,7 +422,7 @@ test('rechazar el borrado no borra', async ({ page }) => {
 test('botones de jugar y editar llevan a su pantalla', async ({ page }) => {
     await mockBackend(page, { user: TEACHER });
     await openCreate(page);
-    for (const [label, re] of [['Jugar', /\/host\/\?id=q1$/], ['👥', /\/multiplayer\/\?id=q1$/], ['👤', /\/solo\/\?id=q1$/], ['🔁', /\/solo\/\?id=q1&mode=cards$/], ['✏️', /\/create\/quiz-creator\/\?id=q1$/]]) {
+    for (const [label, re] of [['Jugar', /\/host\/\?id=q1$/], ['👥', /\/multiplayer\/\?id=q1$/], ['👤', /\/solo\/\?id=q1&from=library$/], ['🔁', /\/solo\/\?id=q1&mode=cards&from=library$/], ['✏️', /\/create\/quiz-creator\/\?id=q1$/]]) {
         await card(page, 'Geografia').locator('.game-actions > button', { hasText: label }).click();
         await expect(page).toHaveURL(re);
         await openCreate(page);

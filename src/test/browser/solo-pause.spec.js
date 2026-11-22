@@ -88,7 +88,6 @@ test('tras responder no se puede pausar (no corre el tiempo)', async ({ page }) 
 
 test('cancelar pide confirmación y vuelve al formulario del quiz sin seguir la partida', async ({ page }) => {
     await start(page);
-    await page.locator('#answers button.answer').first().click();
     await page.locator('#solo-cancel').click();
     await expect(page.locator('#solo-cancel')).toHaveAccessibleName('Confirmar cancelación');
     await expect(page.locator('#solo-cancel .solo-control__text')).toBeVisible();
@@ -96,7 +95,7 @@ test('cancelar pide confirmación y vuelve al formulario del quiz sin seguir la 
     await page.locator('#solo-cancel').click();
     await expect(page.locator('#start-form')).toBeVisible();
     await expect(page.locator('#game-area')).toBeHidden();
-    // El salto a la siguiente pregunta (1,2 s tras el acierto) ya no ocurre.
+    // Tras cancelar, la partida no sigue sola.
     await page.clock.runFor(5000);
     await expect(page.locator('#game-area')).toBeHidden();
 
@@ -116,7 +115,7 @@ test('si no se confirma, la cancelación se olvida a los 4 s', async ({ page }) 
 
 test('«Volver» queda arriba, alineado con el borde izquierdo del recuadro y con su ancho, también durante la partida', async ({ page }) => {
     await start(page);
-    const back = await page.locator('.back-link').boundingBox();
+    const back = await page.locator('.back-link').first().boundingBox();
     const viewport = page.viewportSize();
     expect(back.width).toBeLessThan(viewport.width / 2);
     const panel = await page.locator('#game-panel').boundingBox();

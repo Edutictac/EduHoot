@@ -310,9 +310,10 @@ function startQuiz(){
         stopCountdown();
         EduhootTTS.cancel();
         state.ttsSpeaking = false;
+        clearFeedbackTimer();
         state.feedbackModalOpen = false;
         state.awaitingConfirm = false;
-        state.lastWrong = null;
+        state.lastResult = null;
         state.locked = false;
         state.multiSelections = [];
         state.feedback = { text: '', kind: '' };
@@ -452,8 +453,8 @@ function startQuiz(){
             correctAnswerText = '';
         }
         state.multiSelections = [];
-        state.lastWrong = null;
-        if(isCorrect || meta.type === 'poll'){
+        state.lastResult = null;
+        if(meta.type === 'poll'){
             var runAt = state.questions;
             setTimeout(function(){
                 // Si se ha cancelado la partida mientras tanto, no se sigue.
@@ -463,9 +464,11 @@ function startQuiz(){
             }, 1200);
             return;
         }
+        // Acierto, acierto parcial o fallo: ventana de resultado en el centro; al cerrarse (sola o con OK) sigue la partida.
         state.awaitingConfirm = true;
-        state.lastWrong = {
-            partial: scoreRatio > 0,
+        state.lastResult = {
+            kind: isCorrect ? 'correct' : (scoreRatio > 0 ? 'partial' : 'wrong'),
+            partial: !isCorrect && scoreRatio > 0,
             correct: Array.isArray(meta.correctAnswers) ? meta.correctAnswers : [1],
             correctText: correctAnswerText,
             question: q.question || ''
@@ -543,8 +546,15 @@ var soloPlay = {
         showMatching: function(){
             return this.meta.type === 'matching' && !this.s.locked && !(this.s.countdown > 0);
         },
+        feedbackKind: function(){
+            return this.s.lastResult ? this.s.lastResult.kind : 'wrong';
+        },
+        feedbackIcon: function(){
+            return { correct: '✓', partial: '◐', wrong: '✕' }[this.feedbackKind] || '✕';
+        },
         feedbackTitle: function(){
-            return this.s.lastWrong && this.s.lastWrong.partial ? this.t('partialTitle') : this.t('wrongText');
+            if(this.feedbackKind === 'correct') return this.t('correctText');
+            return this.feedbackKind === 'partial' ? this.t('partialTitle') : this.t('wrongText');
         },
         answers: function(){
             return this.question && !this.isFree ? getVisibleAnswers(this.question, this.meta.type) : [];
@@ -590,7 +600,7 @@ var soloPlay = {
         },
         feedbackBody: function(){
             var label = this.t('correctLabel');
-            var text = this.s.lastWrong ? (this.s.lastWrong.correctText || '') : '';
+            var text = this.s.lastResult ? (this.s.lastResult.correctText || '') : '';
             // Sin respuesta que mostrar («Mostrar respuestas» desmarcado), tampoco la etiqueta.
             if(!text) return '';
             return (label === 'correctLabel' ? '' : label + ' ') + text;
@@ -645,6 +655,13 @@ var soloPlay = {
             if(v == null) return;
             this.s.timeInput = ev.target.value = String(v);
             this.s.desiredQuestionTime = v;
+        },
+        onFeedbackSecondsInput: function(ev){
+            var v = clampInt(ev.target.value, 1, 30);
+            if(v == null) return;
+            this.s.feedbackSecondsInput = ev.target.value = String(v);
+            this.s.feedbackSeconds = v;
+            try{ localStorage.setItem('eduhoot-solo-feedback-seconds', String(v)); }catch(e){}
         },
         onMatchingExtra: function(ev){
             this.s.matchingExtraTime = parseInt(ev.target.value, 10) || 50;

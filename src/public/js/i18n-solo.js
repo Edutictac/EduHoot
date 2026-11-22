@@ -4,6 +4,7 @@
     var i18n = {
         es: {
             back: 'Inicio',
+            backLibrary: 'Biblioteca',
             eyebrow: 'Modo individual',
             title: 'EduHoot',
             subtitle: 'Elige un quiz público, responde las preguntas y entra en el ranking global.',
@@ -50,6 +51,7 @@
             optShowAnswers: 'Mostrar respuestas',
             questionTimeLabel: 'Tiempo por pregunta (segundos)',
             questionTimePlaceholder: 'Auto',
+            feedbackSecondsLabel: 'Segundos que se ve el resultado (acierto o fallo)',
             startButton: 'Jugar en solitario',
         startHint: 'El tiempo por pregunta se respeta si el quiz lo define.',
         questionOf: 'Pregunta {current} de {total}',
@@ -140,6 +142,7 @@
     },
         en: {
             back: 'Home',
+            backLibrary: 'Library',
             eyebrow: 'Solo mode',
             title: 'EduHoot',
             subtitle: 'Pick a public quiz, answer, and try to get into the global ranking.',
@@ -186,6 +189,7 @@
             optShowAnswers: 'Show answers',
             questionTimeLabel: 'Time per question (seconds)',
             questionTimePlaceholder: 'Auto',
+            feedbackSecondsLabel: 'Seconds the result (right or wrong) stays on screen',
             startButton: 'Play solo',
             startHint: 'Per-question timers are respected if set on the quiz.',
             questionOf: 'Question {current} of {total}',
@@ -276,6 +280,7 @@
     },
         ca: {
             back: "Inici",
+            backLibrary: "Biblioteca",
             eyebrow: 'Mode individual',
             title: 'EduHoot',
             subtitle: 'Tria un quiz públic, respon i entra al rànquing global.',
@@ -322,6 +327,7 @@
             optShowAnswers: 'Mostrar respostes',
             questionTimeLabel: 'Temps per pregunta (segons)',
             questionTimePlaceholder: 'Auto',
+            feedbackSecondsLabel: 'Segons que es veu el resultat (encert o errada)',
             startButton: 'Jugar en solitari',
             startHint: 'El temps per pregunta es respecta si el quiz el defineix.',
             questionOf: 'Pregunta {current} de {total}',

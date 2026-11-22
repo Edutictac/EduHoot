@@ -23,7 +23,7 @@ body{
 }
 
 /* El body puede ser flex: sin esto, el contenido se encoge al texto en vez de ocupar el ancho disponible. */
-body > :not(script):not(link):not(style):not(edutictac-account):not(edutictac-footer):not(.site-account):not(.site-footer):not(.env-badge):not(.env-badge-tint):not(#lang-switcher):not(.back-link){
+body > :not(script):not(link):not(style):not(edutictac-account):not(edutictac-footer):not(.site-account):not(.site-footer):not(.env-badge):not(.env-badge-tint):not(#lang-switcher):not(.back-link):not(.back-links){
     width: 100%;
     max-width: none;
     box-sizing: border-box;

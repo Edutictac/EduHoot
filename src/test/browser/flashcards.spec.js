@@ -31,7 +31,7 @@ async function mockBackend(page) {
     });
 }
 
-test('botones de la tarjeta: «No la sé» en rojos, anterior/siguiente en amarillos, mostrar en verdes y ocultar en rosas', async ({ page }) => {
+test('botones de la tarjeta: «No la sé» en rojos, anterior/siguiente en amarillos, mostrar en blanco con texto rosa y ocultar al revés', async ({ page }) => {
     await mockBackend(page);
     await page.goto('/solo/?lang=es');
     await page.locator('.card-actions .btn', { hasText: 'Repasar' }).click();
@@ -39,12 +39,14 @@ test('botones de la tarjeta: «No la sé» en rojos, anterior/siguiente en amari
     const bg = sel => page.locator(sel).evaluate(el => getComputedStyle(el).backgroundImage);
     // Primera color de cada degradado.
     await expect(page.locator('#cards-flip')).toHaveClass(/btn-cards-show/);
-    expect(await bg('#cards-flip')).toContain('rgb(21, 128, 61)');
+    await expect(page.locator('#cards-flip')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+    await expect(page.locator('#cards-flip')).toHaveCSS('color', 'rgb(190, 24, 93)');
     expect(await bg('#cards-next')).toContain('rgb(255, 200, 0)');
     expect(await bg('#cards-prev')).toContain('rgb(255, 200, 0)');
     await page.locator('#cards-flip').click();
     await expect(page.locator('#cards-flip')).toHaveClass(/btn-cards-hide/);
     expect(await bg('#cards-flip')).toContain('rgb(190, 24, 93)');
+    await expect(page.locator('#cards-flip')).toHaveCSS('color', 'rgb(255, 255, 255)');
     expect(await bg('#cards-dont-know')).toContain('rgb(220, 38, 38)');
 });
 
