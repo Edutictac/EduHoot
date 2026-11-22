@@ -35,7 +35,8 @@ body{
 .join-cta{
     display: flex;
     align-items: stretch;
-    justify-content: space-between;
+    /* En una sola fila, el texto se estira y el QR queda a la derecha; si la fila se parte, el QR queda centrado debajo. */
+    justify-content: center;
     gap: 18px;
     flex-wrap: wrap;
     width: 100%;

@@ -102,3 +102,12 @@ test.describe('xip de compte', () => {
         await expect(page.locator('.hero__lang .lang-switch')).toBeHidden();
     });
 });
+
+test('portada: la tarjeta deja un pequeño hueco sobre el pie común', async ({ page }) => {
+    await page.route(/^https:\/\//, route => route.abort());
+    await stubBase(page);
+    await page.goto('/?lang=es');
+    const gap = await page.evaluate(() => document.querySelector('footer.ett-footer').getBoundingClientRect().top - document.querySelector('.landing-shell').getBoundingClientRect().bottom);
+    expect(gap).toBeGreaterThanOrEqual(10);
+    expect(gap).toBeLessThanOrEqual(24);
+});

@@ -123,3 +123,44 @@ test('«Volver» queda arriba, alineado con el borde izquierdo del recuadro y co
     expect(Math.abs(back.x - panel.x)).toBeLessThan(2);
     expect(back.y).toBeLessThan(40);
 });
+
+// La música de fondo se pausa al pausar la partida (y vuelve al reanudar si sonaba) y se para al cancelarla.
+async function fakeMusic(page) {
+    await page.evaluate(async () => {
+        const audio = window.soloMusicPlayerInstance.audio;
+        let paused = true;
+        Object.defineProperty(audio, 'paused', { get: () => paused });
+        audio.play = () => { paused = false; return Promise.resolve(); };
+        audio.pause = () => { paused = true; };
+        await window.soloMusicPlayerInstance.play();
+    });
+}
+const musicPaused = page => page.evaluate(() => window.soloMusicPlayerInstance.audio.paused);
+
+test('pausar la partida pausa la música y reanudar la reanuda', async ({ page }) => {
+    await fakeMusic(page);
+    expect(await musicPaused(page)).toBe(false);
+    await start(page);
+    await page.locator('#solo-pause').click();
+    expect(await musicPaused(page)).toBe(true);
+    await page.locator('#solo-pause').click();
+    expect(await musicPaused(page)).toBe(false);
+});
+
+test('si la música no sonaba, reanudar no la arranca', async ({ page }) => {
+    await fakeMusic(page);
+    await start(page);
+    await page.evaluate(() => window.soloMusicPlayerInstance.pause());
+    await page.locator('#solo-pause').click();
+    await page.locator('#solo-pause').click();
+    expect(await musicPaused(page)).toBe(true);
+});
+
+test('cancelar la partida para la música', async ({ page }) => {
+    await fakeMusic(page);
+    await start(page);
+    await page.locator('#solo-cancel').click();
+    await page.locator('#solo-cancel').click();
+    await expect(page.locator('#start-form')).toBeVisible();
+    expect(await musicPaused(page)).toBe(true);
+});

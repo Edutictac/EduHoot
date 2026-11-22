@@ -249,8 +249,12 @@ function startQuiz(){
     }
 
     var pausedCountdown = 0;
+    var musicWasPlaying = false;
     function pauseSolo(){
         if(!canPauseSolo()) return;
+        // La música de fondo también se pausa; al reanudar vuelve solo si sonaba.
+        musicWasPlaying = !!(soloMusicPlayerInstance && soloMusicPlayerInstance.audio && !soloMusicPlayerInstance.audio.paused);
+        pauseSoloMusic();
         EduhootTTS.cancel();
         state.ttsSpeaking = false;
         if(state.countdown > 0){
@@ -269,6 +273,10 @@ function startQuiz(){
     function resumeSolo(){
         if(!state.paused) return;
         state.paused = false;
+        if(musicWasPlaying){
+            musicWasPlaying = false;
+            ensureSoloMusicPlaying();
+        }
         if(pausedCountdown > 0){
             var seconds = pausedCountdown;
             pausedCountdown = 0;
@@ -296,6 +304,8 @@ function startQuiz(){
         state.cancelConfirming = false;
         state.paused = false;
         pausedCountdown = 0;
+        musicWasPlaying = false;
+        pauseSoloMusic();
         stopTimer();
         stopCountdown();
         EduhootTTS.cancel();

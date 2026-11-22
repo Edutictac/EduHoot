@@ -442,3 +442,24 @@ test('anfitrión: con la pantalla estrecha, logo, PIN y QR quedan centrados en c
         expect(qr.y).toBeGreaterThanOrEqual(logo.y + logo.height);
     }
 });
+
+test('anfitrión: si la fila se parte (ancho medio), el QR queda centrado debajo, no a la izquierda', async ({ page }) => {
+    await page.route(/^https:\/\//, route => route.abort());
+    await page.route('**/api/**', route => route.fulfill({ json: {} }));
+    await page.route('**/socket.io/socket.io.js', route => route.fulfill({ contentType: 'application/javascript', body: 'window.io = function(){ var s = { id: "h", connected: false, on: function(){ return s; }, emit: function(){ return s; }, connect: function(){ return s; }, disconnect: function(){ return s; } }; return s; };' }));
+    let wrapped = 0;
+    for (const width of [730, 800, 900, 1000, 1100, 1199, 1300]) {
+        await page.setViewportSize({ width, height: 800 });
+        await page.goto('/host/?lang=es');
+        await page.waitForLoadState('load');
+        // Un título largo hace que la fila se parta antes.
+        await page.evaluate(() => { const n = document.querySelector('.quiz-name'); if (n) { n.hidden = false; n.textContent = 'Un cuestionario con un título bastante largo para ocupar sitio'; } });
+        const logo = await page.locator('.host-logo').boundingBox();
+        const qr = await page.locator('.qr-card').boundingBox();
+        if (qr.y >= logo.y + logo.height) {
+            wrapped++;
+            expect(Math.abs(qr.x + qr.width / 2 - width / 2), `QR a ${width}px`).toBeLessThanOrEqual(8);
+        }
+    }
+    expect(wrapped).toBeGreaterThan(0);
+});
