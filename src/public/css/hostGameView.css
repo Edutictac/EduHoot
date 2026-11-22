@@ -424,10 +424,10 @@ h3[id^="answer"]{
     display: block;
     text-align: center;
 }
-#answer1{ background: linear-gradient(135deg, #22c55e, #16a34a); }
-#answer2{ background: linear-gradient(135deg, #f97316, #ea580c); }
-#answer3{ background: linear-gradient(135deg, #3b82f6, #2563eb); }
-#answer4{ background: linear-gradient(135deg, #f43f5e, #e11d48); }
+#answer1{ background: linear-gradient(135deg, #15803d, #166534); }
+#answer2{ background: linear-gradient(135deg, #c2410c, #9a3412); }
+#answer3{ background: linear-gradient(135deg, #2563eb, #1d4ed8); }
+#answer4{ background: linear-gradient(135deg, #e11d48, #be123c); }
 
 /* Icono de forma junto al color: igual que en el mando del alumno, para que
    el color no sea la única pista (accesibilidad para daltonismo y para
@@ -458,10 +458,10 @@ h3[id^="answer"]::before{
     box-shadow: var(--shadow);
     margin-right: 12px;
 }
-#square1{ background: linear-gradient(135deg, #22c55e, #16a34a); }
-#square2{ background: linear-gradient(135deg, #f97316, #ea580c); }
-#square3{ background: linear-gradient(135deg, #3b82f6, #2563eb); }
-#square4{ background: linear-gradient(135deg, #f43f5e, #e11d48); }
+#square1{ background: linear-gradient(135deg, #15803d, #166534); }
+#square2{ background: linear-gradient(135deg, #c2410c, #9a3412); }
+#square3{ background: linear-gradient(135deg, #2563eb, #1d4ed8); }
+#square4{ background: linear-gradient(135deg, #e11d48, #be123c); }
 
 .control-row{
     display: flex;
@@ -741,15 +741,15 @@ h3[id^="answer"]::before{
     font-weight: 700;
 }
 
-.results-bar--1 .results-bar-fill{ background: linear-gradient(135deg, #22c55e, #16a34a); }
-.results-bar--2 .results-bar-fill{ background: linear-gradient(135deg, #f97316, #ea580c); }
-.results-bar--3 .results-bar-fill{ background: linear-gradient(135deg, #3b82f6, #2563eb); }
-.results-bar--4 .results-bar-fill{ background: linear-gradient(135deg, #f43f5e, #e11d48); }
+.results-bar--1 .results-bar-fill{ background: linear-gradient(135deg, #15803d, #166534); }
+.results-bar--2 .results-bar-fill{ background: linear-gradient(135deg, #c2410c, #9a3412); }
+.results-bar--3 .results-bar-fill{ background: linear-gradient(135deg, #2563eb, #1d4ed8); }
+.results-bar--4 .results-bar-fill{ background: linear-gradient(135deg, #e11d48, #be123c); }
 
-.results-bar--1 .results-bar-key{ background: linear-gradient(135deg, #22c55e, #16a34a); }
-.results-bar--2 .results-bar-key{ background: linear-gradient(135deg, #f97316, #ea580c); }
-.results-bar--3 .results-bar-key{ background: linear-gradient(135deg, #3b82f6, #2563eb); }
-.results-bar--4 .results-bar-key{ background: linear-gradient(135deg, #f43f5e, #e11d48); }
+.results-bar--1 .results-bar-key{ background: linear-gradient(135deg, #15803d, #166534); }
+.results-bar--2 .results-bar-key{ background: linear-gradient(135deg, #c2410c, #9a3412); }
+.results-bar--3 .results-bar-key{ background: linear-gradient(135deg, #2563eb, #1d4ed8); }
+.results-bar--4 .results-bar-key{ background: linear-gradient(135deg, #e11d48, #be123c); }
 
 .results-bar--correct .results-bar-track{
     box-shadow: 0 0 0 2px rgba(16,185,129,0.55), var(--shadow);

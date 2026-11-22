@@ -191,6 +191,8 @@ fitxers corresponents, i els originals es van eliminar.
 
 ### Canviat
 
+- **Accessibilitat (respostes)**: el text blanc dels botons de resposta (alumnat, anfitrió i Solo) i de les barres de resultats té un contrast de com a mínim 4,5:1 (colors més foscos). En Solo, la resposta encertada i la fallada es marquen també amb «✓» i «✕», no només amb el color de la vora.
+- **Preferències (biblioteca)**: el quadre té fons opac, nom accessible, espai per al botó «Tancar», la casella «Reemplaçar tot» alineada amb el text, i queda per baix del distintiu DEV/STAGE; en tancar, el focus torna al botó «Preferències».
 - **Deures (docent)**: el requadre principal té l'ample de Solo i Flashcards (70 % en pantalles grans, més ample en estrényer-se, 5 % de marge en mòbil); el formulari de nou deure va en dos columnes en pantalles amples. «Biblioteca» i el títol queden al costat esquerre del requadre; el xip de compte i «Mis deberes», al dret.
 - **Solo i Flashcards**: el requadre principal baixa uns píxels perquè no s'arrime al xip de compte (amb els distintius DEV/STAGE ocults).
 - **Create**: en guardar els permisos automàticament, el check «✓» es veu 3 segons.

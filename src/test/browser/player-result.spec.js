@@ -59,7 +59,7 @@ test('alumnado: «Correcto» en amarillo del logo sobre recuadro verde, 40 % má
     await page.evaluate(() => window.__serverEmit('questionOver', [[], { type: 'quiz' }]));
     const msg = page.locator('#message');
     await expect(msg).toHaveCSS('color', 'rgb(253, 188, 75)');
-    await expect(msg).toHaveCSS('background-color', 'rgb(21, 128, 61)');
+    await expect(msg).toHaveCSS('background-color', 'rgb(22, 101, 52)');
     await expect(msg).toHaveCSS('font-size', page.viewportSize().width <= 600 ? '30.8px' : '39.2px');
 });
 

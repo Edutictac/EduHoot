@@ -295,7 +295,7 @@ body{
 }
 #cancel{
     max-width: 260px;
-    background: linear-gradient(135deg, #f43f5e, #e11d48);
+    background: linear-gradient(135deg, #e11d48, #be123c);
     border: none;
 }
 
@@ -391,7 +391,7 @@ body.host-game-embedded > *:not(#host-game-frame){
     padding: 14px 24px;
 }
 #start{
-    background: #16a34a;
+    background: #15803d;
     border-color: #15803d;
     color: #fff;
 }

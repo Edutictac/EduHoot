@@ -49,6 +49,8 @@ function openAuthModal(){
 function closeAuthModal(){
     accountState.modalOpen = false;
     document.body.classList.remove('modal-open');
+    // Devuelve el foco al botón que abrió el cuadro (teclado y lector de pantalla).
+    try{ var opener = document.getElementById('open-account'); if(opener && !opener.classList.contains('hidden')) opener.focus(); }catch(e){}
 }
 
 function openCentralAccountMenu(){

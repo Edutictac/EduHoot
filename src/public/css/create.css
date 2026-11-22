@@ -803,6 +803,7 @@ details.panel[open] .panel-toggle__chevron{
 .btn.btn-with-icon{
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
 }
 .btn-icon{
@@ -915,7 +916,8 @@ body.modal-open{
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 20px;
+    /* Por debajo del distintivo DEV/STAGE (si está visible) para que no tape «Cerrar». */
+    padding: max(20px, var(--env-badge-space, 0px)) 20px 20px;
 }
 .modal__backdrop{
     position: absolute;
@@ -925,13 +927,22 @@ body.modal-open{
 .modal__content{
     position: relative;
     width: min(920px, 100%);
-    max-height: 90vh;
+    max-height: 100%;
     overflow: auto;
 }
+/* Fondo opaco: con el 92 % se leía el título de la página a través del cuadro. */
 .modal .panel{
-    background: rgba(15,22,42,0.92);
+    background: #0f162a;
     border: 1px solid rgba(255,255,255,0.18);
+    margin-bottom: 0;
 }
+/* Hueco para el botón «Cerrar» (sin pisar el título en ningún idioma). */
+.modal .panel-header{ padding-right: 96px; }
+.modal #auth-status{ background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #fff; max-width: 100%; overflow-wrap: anywhere; }
+/* Casillas y archivos dentro de la rejilla: la casilla conserva su tamaño y va con su texto. */
+.auth-grid input[type="checkbox"]{ width: 18px; height: 18px; flex: none; accent-color: #ffc800; }
+.auth-grid input[type="file"]{ border-radius: 14px; }
+.auth-grid label:not(.checkbox-inline){ display: grid; gap: 6px; }
 .modal__close{
     position: absolute;
     top: 10px;

@@ -51,7 +51,7 @@ test('lobby: cancelar está junto a iniciar, y iniciar es verde', async ({ page 
     if (page.viewportSize().width >= 600) {
         expect(Math.abs(cancel.y - start.y)).toBeLessThanOrEqual(2);
     }
-    await expect(page.locator('#start')).toHaveCSS('background-color', 'rgb(22, 163, 74)');
+    await expect(page.locator('#start')).toHaveCSS('background-color', 'rgb(21, 128, 61)');
 });
 
 test('lobby: cancelar pide confirmación y luego cierra la partida', async ({ page }) => {

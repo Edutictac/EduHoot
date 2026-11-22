@@ -702,6 +702,36 @@ test('cuenta: modal de preferencias, estado, nombre visible y cerrar', async ({ 
     await expect(page.locator('#auth-modal')).toBeHidden();
 });
 
+test('cuenta: el modal de preferencias es legible, accesible y no se solapa con el distintivo', async ({ page }) => {
+    await mockBackend(page, { user: ADMIN });
+    await openCreate(page);
+    await page.locator('#open-account').click();
+    const modal = page.locator('#auth-modal');
+    await expect(modal).toBeVisible();
+    // Accesible: el cuadro se nombra con su título.
+    await expect(modal).toHaveAttribute('aria-labelledby', 'auth-modal-title');
+    await expect(page.locator('#auth-modal-title')).toHaveText('Preferencias');
+    // Fondo opaco (no se ve la página a través del cuadro).
+    const bg = await page.locator('#auth-panel').evaluate(el => getComputedStyle(el).backgroundColor);
+    expect(bg).toMatch(/^rgb\(/);
+    // La casilla conserva su tamaño y va pegada a su texto; los botones llevan el texto centrado.
+    const box = await page.locator('#admin-import-quizzes-replace').boundingBox();
+    expect(box.width).toBeLessThanOrEqual(24);
+    const labelText = await page.locator('#admin-import-quizzes-replace + span').boundingBox();
+    expect(labelText.x - (box.x + box.width)).toBeLessThanOrEqual(16);
+    await expect(page.locator('#admin-export-quizzes')).toHaveCSS('justify-content', 'center');
+    // «Cerrar» no queda tapado por el título y todo cabe dentro de la ventana.
+    const close = await page.locator('#auth-modal-close').boundingBox();
+    const title = await page.locator('#auth-modal-title').boundingBox();
+    expect(title.x + title.width).toBeLessThanOrEqual(close.x);
+    const content = await page.locator('#auth-modal .modal__content').boundingBox();
+    expect(content.y).toBeGreaterThanOrEqual(0);
+    expect(content.y + content.height).toBeLessThanOrEqual(page.viewportSize().height);
+    // Al cerrar, el foco vuelve al botón «Preferencias».
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#open-account')).toBeFocused();
+});
+
 test('admin: panel visible, importar sin archivo, migrar imágenes, importar públicas y exportar', async ({ page }) => {
     const { calls } = await mockBackend(page, { user: ADMIN, importPublic: true });
     await openCreate(page);

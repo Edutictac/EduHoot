@@ -44,6 +44,9 @@
   ara es veu bé tant en l'ordinador com en el mòbil. Als deures, el temps per
   pregunta pot arribar als 3 minuts i, si permets diversos intents, triues
   si compta el millor, la mitjana, el primer o l'últim intent.
+- **Respostes més accessibles**: el text dels botons de resposta es llig millor
+  (més contrast) i, en el mode individual, les respostes encertades i fallades
+  porten també «✓» i «✕», de manera que no depenen només del color.
 
 ## Per a l'alumnat
 

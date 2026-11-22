@@ -522,7 +522,7 @@ body.playing #public-pagination{
     transition: transform 0.14s ease, box-shadow 0.14s ease, opacity 0.14s ease;
 }
 .btn-primary{
-    background: linear-gradient(135deg, #22c55e, #16a34a);
+    background: linear-gradient(135deg, #15803d, #166534);
     color: #fff;
     box-shadow: var(--shadow);
 }
@@ -691,6 +691,20 @@ body.playing #game-panel{
     border: 2px solid #fecaca;
     box-shadow: 0 12px 24px rgba(239,68,68,0.4);
 }
+/* Acierto o fallo también con símbolo (✓ / ✕), no solo con el color del borde. */
+.answer.correct::after,
+.answer.wrong::after{
+    flex: none;
+    margin-left: auto;
+    width: 28px; height: 28px;
+    border-radius: 999px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 17px; font-weight: 900; line-height: 1;
+    color: #fff;
+    border: 2px solid #fff;
+}
+.answer.correct::after{ content: '✓'; background: #14532d; }
+.answer.wrong::after{ content: '✕'; background: #7f1d1d; }
 
 .feedback{
     margin-top: 10px;
@@ -715,7 +729,7 @@ body.playing #game-panel{
     will-change: transform;
 }
 .feedback--success{
-    background: linear-gradient(135deg, #22c55e, #16a34a);
+    background: linear-gradient(135deg, #15803d, #166534);
     color: #fff;
     box-shadow: 0 12px 28px rgba(34,197,94,0.4);
     border-color: rgba(255,255,255,0.35);
@@ -796,7 +810,7 @@ body.playing #game-panel{
     text-transform: uppercase;
 }
 .btn.multi-submit.has-selection{
-    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
 }
 .btn.multi-submit:disabled{
     opacity: 0.6;

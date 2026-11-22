@@ -26,7 +26,7 @@
     position: absolute;
     left: 0; top: 0; bottom: 0;
     width: 100%;
-    background: linear-gradient(135deg, #22c55e, #16a34a);
+    background: linear-gradient(135deg, #15803d, #166534);
     transition: width 0.2s linear;
 }
 .game-timer__text{
@@ -81,10 +81,10 @@
 /* Dins de la quadrícula, sense l'amplària ni el marge que cada pantalla
    posa als seus botons en general. */
 .answer-grid > .answer-shape{ width: auto; margin: 0; }
-.answer-shape--1{ background: linear-gradient(135deg, #22c55e, #16a34a); }
-.answer-shape--2{ background: linear-gradient(135deg, #f97316, #ea580c); }
-.answer-shape--3{ background: linear-gradient(135deg, #3b82f6, #2563eb); }
-.answer-shape--4{ background: linear-gradient(135deg, #f43f5e, #e11d48); }
+.answer-shape--1{ background: linear-gradient(135deg, #15803d, #166534); }
+.answer-shape--2{ background: linear-gradient(135deg, #c2410c, #9a3412); }
+.answer-shape--3{ background: linear-gradient(135deg, #2563eb, #1d4ed8); }
+.answer-shape--4{ background: linear-gradient(135deg, #e11d48, #be123c); }
 .answer-shape--1::before{ clip-path: polygon(50% 0%, 0% 100%, 100% 100%); }
 .answer-shape--2::before{ clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); }
 .answer-shape--3::before{ border-radius: 50%; }

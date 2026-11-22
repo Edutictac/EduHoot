@@ -331,7 +331,7 @@ body{
     padding: 12px 14px;
     border: none;
     border-radius: 12px;
-    background: linear-gradient(135deg, #22c55e, #16a34a);
+    background: linear-gradient(135deg, #15803d, #166534);
     color: #fff;
     font-weight: 700;
     cursor: pointer;
@@ -398,7 +398,7 @@ body{
 /* Correcto: texto amarillo del logo (#fdbc4b) sobre recuadro verde. */
 #message.message--correct{
     color: #fdbc4b;
-    background: #15803d;
+    background: #166534;
 }
 /* Incorrecto: texto blanco sobre recuadro rojo vivo. */
 #message.message--incorrect{

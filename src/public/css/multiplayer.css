@@ -540,7 +540,7 @@ input[type="search"]::placeholder{ color: #9fb1d9; }
 }
 
 .btn-primary{
-  background: linear-gradient(135deg, #22c55e, #16a34a);
+  background: linear-gradient(135deg, #15803d, #166534);
   color: #fff;
   box-shadow: var(--shadow);
 }
@@ -562,7 +562,7 @@ input[type="search"]::placeholder{ color: #9fb1d9; }
 }
 
 .btn.multi-submit.has-selection{
-  background: linear-gradient(135deg, #22c55e, #16a34a);
+  background: linear-gradient(135deg, #15803d, #166534);
 }
 
 .btn.multi-submit:disabled{
@@ -930,10 +930,10 @@ body.mode-per-player .question-card{
   user-select: none;
 }
 
-.answer:nth-child(1){ background: linear-gradient(135deg, #22c55e, #16a34a); }
-.answer:nth-child(2){ background: linear-gradient(135deg, #f97316, #ea580c); }
-.answer:nth-child(3){ background: linear-gradient(135deg, #3b82f6, #2563eb); }
-.answer:nth-child(4){ background: linear-gradient(135deg, #f43f5e, #e11d48); }
+.answer:nth-child(1){ background: linear-gradient(135deg, #15803d, #166534); }
+.answer:nth-child(2){ background: linear-gradient(135deg, #c2410c, #9a3412); }
+.answer:nth-child(3){ background: linear-gradient(135deg, #2563eb, #1d4ed8); }
+.answer:nth-child(4){ background: linear-gradient(135deg, #e11d48, #be123c); }
 
 .answer:active{ transform: translateY(0); filter: brightness(0.95); }
 

@@ -319,6 +319,8 @@ test('partida completa: tipos de pregunta, puntos, avisos y resultado', async ({
     await expect(page.locator('#feedback')).toHaveClass(/feedback--success/);
     await expect(answerButtons(page).nth(0)).toHaveClass(/\bcorrect\b/);
     await expect(answerButtons(page).nth(1)).toBeDisabled();
+    // Accesibilidad (WCAG 1.4.1): el acierto se marca también con ✓, no solo con el color.
+    expect(await answerButtons(page).nth(0).evaluate(el => getComputedStyle(el, '::after').content)).toBe('"✓"');
     await expect(page.locator('#score-pill')).toHaveText('Puntos: 1000');
     // 1200 justos: la siguiente pregunta arranca su temporizador sin consumir nada.
     await page.clock.runFor(1200 + 3000);
@@ -360,6 +362,8 @@ test('partida completa: tipos de pregunta, puntos, avisos y resultado', async ({
     await expect(page.locator('#feedback')).toHaveText('Respuesta incorrecta · Respuesta correcta: Cert');
     await expect(page.locator('#feedback')).toHaveClass(/feedback--error/);
     await expect(answerButtons(page).nth(1)).toHaveClass(/\bwrong\b/);
+    expect(await answerButtons(page).nth(1).evaluate(el => getComputedStyle(el, '::after').content)).toBe('"✕"');
+    expect(await answerButtons(page).nth(0).evaluate(el => getComputedStyle(el, '::after').content)).toBe('"✓"');
     await expect(modal).toHaveClass(/\bshow\b/);
     await modal.click({ position: { x: 5, y: 5 } });
     await countdown(page);
