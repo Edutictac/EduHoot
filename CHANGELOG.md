@@ -191,6 +191,26 @@ fitxers corresponents, i els originals es van eliminar.
 
 ### Canviat
 
+- Botons de tornada: ara diuen on porten. «Tornar a l'inici» (biblioteca,
+  Solo, Multijugador i entrada de l'alumnat) i «Tornar a la biblioteca»
+  (editor de qüestionaris, deures del docent i final de la partida de
+  l'amfitrió), en lloc de «Tornar» a seques.
+- Distintius DEV i STAGE: mostren l'ample × alt de la finestra (es
+  actualitza només en redimensionar) i es poden ocultar i mostrar amb **F9**
+  (o **Alt+B**) per a veure com queda tot en producció; l'elecció es recorda
+  entre pantalles.
+- Biblioteca (`/create/`): el logo d'EduHoot va davant del títol «Crea i llança
+  el teu EduHoot».
+- Deures: el temps per pregunta pot arribar als **180 s** (3 minuts); amb
+  diversos intents, el docent tria si compta el **millor intent** (per defecte)
+  o la **mitjana** (`options.attemptScoring`); l'alumnat veu «Mitjana dels teus
+  intents» i els resultats parlen de «Puntuació mitjana». La pantalla
+  d'assignació queda centrada, el botó «Tornar a la biblioteca» passa a dir-se
+  «Tornar» i hi ha un enllaç a «Els meus deures».
+- Flashcards: la pantalla d'entrada s'assembla a la d'inici de Solo (dues
+  columnes, logo i imatge del quiz) amb tons rosats foscos.
+- `/solo/`: el compte arrere 3-2-1 de la partida queda centrat en vertical en
+  l'espai lliure.
 - Panell de deures del docent (`/create/homework/`): corregida la maquetació
   (en l'ordinador el panell s'encongia al seu contingut i el text eixia del
   recuadre; en el mòbil els resultats es tallaven pels costats). Ara té el

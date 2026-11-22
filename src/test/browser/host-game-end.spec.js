@@ -34,17 +34,17 @@ test.beforeEach(async ({ page }) => {
 
 // Issue #17: al acabar la partida hay forma de volver a la biblioteca.
 // «Cancelar partida» pasa a «Volver» (valenciano: «Tornar») y lleva a /create/.
-test('al acabar la partida, «Cancelar partida» pasa a «Volver», traducido', async ({ page }) => {
+test('al acabar la partida, «Cancelar partida» pasa a «Volver a la biblioteca», traducido', async ({ page }) => {
     await page.goto('/host/game/?id=test&pin=12345&lang=es');
     const btn = page.locator('#cancelGameBtn');
     await expect(btn).toHaveText('Cancelar partida');
     await expect(page.locator('#backToLibraryBtn')).toHaveCount(0);
 
     await page.evaluate(data => window.__serverEmit('GameOver', data), GAME_OVER);
-    await expect(btn).toHaveText('Volver');
+    await expect(btn).toHaveText('Volver a la biblioteca');
 
     await page.locator('#lang-select').selectOption('en');
-    await expect(btn).toHaveText('Back');
+    await expect(btn).toHaveText('Back to library');
 });
 
 test('dentro del iframe del lobby, el enlace saca de la partida a /create/', async ({ page }) => {

@@ -2,7 +2,7 @@
 (function () {
   const translations = {
     es: {
-      back: 'Volver',
+      back: 'Volver al inicio',
       join_title: 'Únete a una partida',
       join_name: 'Nombre a mostrar',
       join_pin: 'PIN de la partida',
@@ -116,6 +116,9 @@
       hw_attempts_one: 'Un solo intento',
       hw_attempts_n: 'Hasta {n} intentos (cuenta el mejor)',
       hw_attempts_unlimited: 'Intentos ilimitados (cuenta el mejor)',
+      hw_attempts_n_avg: 'Hasta {n} intentos (cuenta la media)',
+      hw_attempts_unlimited_avg: 'Intentos ilimitados (cuenta la media)',
+      hw_average: 'Media de tus intentos: {n}',
       hw_name_label: 'Tu nombre',
       hw_name_hint: 'De 3 a 20 letras o números, sin espacios.',
       hw_start: 'Empezar',
@@ -157,7 +160,7 @@
       footerContactLabel: 'Incidencias'
     },
     ca: {
-      back: 'Tornar',
+      back: "Tornar a l'inici",
       join_title: 'Uneix-te a una partida',
       join_name: 'Nom a mostrar',
       join_pin: 'PIN de la partida',
@@ -271,6 +274,9 @@
       hw_attempts_one: 'Un sol intent',
       hw_attempts_n: 'Fins a {n} intents (compta el millor)',
       hw_attempts_unlimited: 'Intents il·limitats (compta el millor)',
+      hw_attempts_n_avg: 'Fins a {n} intents (compta la mitjana)',
+      hw_attempts_unlimited_avg: 'Intents il·limitats (compta la mitjana)',
+      hw_average: 'Mitjana dels teus intents: {n}',
       hw_name_label: 'El teu nom',
       hw_name_hint: 'De 3 a 20 lletres o números, sense espais.',
       hw_start: 'Començar',
@@ -321,7 +327,7 @@
       join_name_taken: 'Eixe nom ja està en ús en esta partida. Tria\'n un altre.'
     },
     en: {
-      back: 'Back',
+      back: 'Back to home',
       join_title: 'Join a Game',
       join_name: 'Display Name',
       join_pin: 'Game Pin',
@@ -435,6 +441,9 @@
       hw_attempts_one: 'One attempt only',
       hw_attempts_n: 'Up to {n} attempts (best one counts)',
       hw_attempts_unlimited: 'Unlimited attempts (best one counts)',
+      hw_attempts_n_avg: 'Up to {n} attempts (the average counts)',
+      hw_attempts_unlimited_avg: 'Unlimited attempts (the average counts)',
+      hw_average: 'Average of your attempts: {n}',
       hw_name_label: 'Your name',
       hw_name_hint: '3 to 20 letters or numbers, no spaces.',
       hw_start: 'Start',

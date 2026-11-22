@@ -118,7 +118,7 @@ test('«Volver» queda arriba, alineado con el borde izquierdo del recuadro y co
     await start(page);
     const back = await page.locator('.back-link').boundingBox();
     const viewport = page.viewportSize();
-    expect(back.width).toBeLessThan(viewport.width / 3);
+    expect(back.width).toBeLessThan(viewport.width / 2);
     const panel = await page.locator('#game-panel').boundingBox();
     expect(Math.abs(back.x - panel.x)).toBeLessThan(2);
     expect(back.y).toBeLessThan(40);

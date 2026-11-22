@@ -41,7 +41,9 @@
   de la pantalla.
 - **Panell de deures més clar**: targetes blaves amb els botons de cada
   deure en una sola fila, taula de resultats que s'ordena per columnes, i
-  ara es veu bé tant en l'ordinador com en el mòbil.
+  ara es veu bé tant en l'ordinador com en el mòbil. Als deures, el temps per
+  pregunta pot arribar als 3 minuts i, si permets diversos intents, triues
+  si compta el millor o la mitjana.
 
 ## Per a l'alumnat
 
@@ -196,7 +198,9 @@
   al ancho de la pantalla.
 - **Panel de deberes más claro**: tarjetas azules con los botones de cada
   deber en una sola fila, tabla de resultados que se ordena por columnas, y
-  ahora se ve bien tanto en el ordenador como en el móvil.
+  ahora se ve bien tanto en el ordenador como en el móvil. En los deberes, el
+  tiempo por pregunta puede llegar a 3 minutos y, si permites varios
+  intentos, eliges si cuenta el mejor o la media.
 
 ## Para el alumnado
 
@@ -318,7 +322,9 @@
   screen width.
 - **A clearer homework panel**: blue cards with each assignment's buttons on
   one row, a results table you can sort by column, and it now looks right on
-  both computers and phones.
+  both computers and phones. In homework, the time per question can go up to
+  3 minutes and, if you allow several attempts, you choose whether the best
+  one or the average counts.
 
 ## For students
 

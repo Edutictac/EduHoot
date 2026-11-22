@@ -18,7 +18,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
     </head>
     <body>
-        <a class="back-link" href="/" data-i18n="back">← Volver</a>
+        <a class="back-link" href="/" data-i18n="back">← Volver al inicio</a>
         <edutictac-account class="site-account site-account--fixed" data-base="https://commons.edutictac.es"></edutictac-account>
         <header class="hero">
             <img class="hero__logo" src="/icons/logo.svg" alt="EduHoot logo">
@@ -118,7 +118,7 @@
                 <p id="public-empty" class="muted">{{ emptyText }}</p>
             </section>
 
-            <section id="game-panel" class="panel play-panel">
+            <section id="game-panel" class="panel play-panel" :class="{ 'is-cards-entry': s.view === 'cards' && s.cards && s.cards.phase !== 'card' }">
                 <div class="panel__header">
                     <div>
                         <p class="eyebrow">{{ t('soloEyebrow') }}</p>
@@ -246,8 +246,15 @@
                 <!-- Mode flashcards (proposta 20) amb la pràctica de les no sabudes (proposta 25). -->
                 <div id="cards-area" class="cards-area" v-if="s.cards" :class="{ hidden: s.view !== 'cards' }">
                     <div v-if="s.cards.phase !== 'card'" class="cards-start">
+                      <div class="cards-start__info">
                         <h3 v-if="s.cards.phase === 'done'">{{ t('flashcardsDoneTitle') }}</h3>
+                        <div class="quiz-banner">
+                            <img class="quiz-banner__logo" src="/icons/logo.svg" alt="EduHoot">
+                            <img v-if="quizImage" class="quiz-banner__cover" :src="quizImage" alt="" @error="$event.target.style.display = 'none'">
+                        </div>
                         <p class="muted">{{ cardsTotal ? cardsCountsText : t('flashcardsEmpty') }}</p>
+                      </div>
+                      <div class="cards-start__options">
                         <label v-if="cardsTotal" class="cards-shuffle">
                             <input id="cards-shuffle" type="checkbox" :checked="s.cards.shuffle" @change="cardsToggleShuffle">
                             {{ t('flashcardsShuffle') }}
@@ -268,6 +275,7 @@
                             <button id="cards-reset" class="card-link" :disabled="!cardsCounts.known && !cardsCounts.unknown" @click="cardsReset">{{ t('flashcardsReset') }}</button>
                             <button class="card-link" @click="pickAnother">{{ t('pickAnother') }}</button>
                         </div>
+                      </div>
                     </div>
 
                     <div v-else class="flashcard-wrap">

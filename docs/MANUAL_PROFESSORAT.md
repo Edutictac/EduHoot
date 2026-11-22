@@ -73,8 +73,11 @@ tu estigues present. No necessiten compte.
 2. Omple el formulari:
    - **Títol**: el que veurà l'alumnat (per defecte, el nom del quiz).
    - **Data límit**: entre 1 minut i 30 dies a partir d'ara.
-   - **Intents per alumne**: 1, 2, 3, 5 o il·limitats. Compta el **millor**.
-   - **Temps per pregunta**: el de cada pregunta o un valor fix (de 10 a 120 s).
+   - **Intents per alumne**: 1, 2, 3, 5 o il·limitats.
+   - **Puntuació amb diversos intents** (només si permets més d'un intent):
+     que conte el **millor intent** o la **mitjana** dels intents.
+   - **Temps per pregunta**: el de cada pregunta o un valor fix (de 10 a
+     180 s, és a dir, fins a 3 minuts).
    - **Mostrar la resposta correcta després de contestar**.
    - **Barrejar les respostes** (marcat per defecte).
 3. Prem **Crear deure**. Apareix un **enllaç** (`…/homework/?code=ABCD2345`) i
@@ -119,9 +122,11 @@ acabats. Per a cada deure:
 En **Resultats** veus:
 
 - Una taula per alumne: **Estat** (*Acabat*, *En curs*, *Sense començar* o
-  *Sense acabar (termini vençut)*), intents, millor puntuació i encerts.
+  *Sense acabar (termini vençut)*), intents, puntuació (la millor o la
+  mitjana, segons el que hages triat) i encerts. Pots ordenar la taula
+  prement l'encapçalament de cada columna.
 - Una taula **per pregunta** amb el percentatge d'encert (sobre el millor
-  intent de cada alumne). Les preguntes que fallen molts alumnes són les que
+  intent de cada alumne o, si compta la mitjana, sobre tots els intents). Les preguntes que fallen molts alumnes són les que
   convé repassar.
 - **Descarregar CSV**: el mateix informe que una partida en directe, amb la
   resposta de cada alumne a cada pregunta i el temps que va tardar.

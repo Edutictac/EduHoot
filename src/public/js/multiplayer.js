@@ -115,7 +115,7 @@
 
   var i18n = {
     es: {
-      back: 'Volver',
+      back: 'Volver al inicio',
       footerPrivacy: 'Privacidad',
       footerCookies: 'Cookies',
       footerSource: 'Código fuente',
@@ -193,7 +193,7 @@
       iconLabel: 'Icono'
     },
     en: {
-      back: 'Back',
+      back: 'Back to home',
       footerPrivacy: 'Privacy',
       footerCookies: 'Cookies',
       footerSource: 'Source code',
@@ -271,7 +271,7 @@
       iconLabel: 'Icon'
     },
     ca: {
-      back: 'Tornar',
+      back: "Tornar a l'inici",
       footerPrivacy: 'Privacitat',
       footerCookies: 'Galetes',
       footerSource: 'Codi font',

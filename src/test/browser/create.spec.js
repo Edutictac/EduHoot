@@ -375,7 +375,8 @@ test('permisos: si falla el guardado, el control vuelve al valor anterior', asyn
     const dialogs = collectDialogs(page);
     await openCreate(page);
     const alg = card(page, 'Àlgebra');
-    await alg.locator('.share-controls input[type="checkbox"]').check();
+    // click y no check(): el control vuelve solo al valor anterior, y check() comprobaría que se queda marcado.
+    await alg.locator('.share-controls input[type="checkbox"]').click();
     await expect.poll(() => dialogs).toEqual(['Sin permiso']);
     await expect(alg.locator('.share-controls input[type="checkbox"]')).not.toBeChecked();
     expect(calls.sharing).toEqual([{ id: 'q2', body: { visibility: 'public', allowClone: true } }]);
@@ -717,4 +718,19 @@ test('sin sesión y con Authentik: aviso «Nuevo en EduHoot» y error de login p
     await expect(page.locator('#auth-message')).toHaveText('Error al iniciar sesión.');
     await expect(page).toHaveURL(/\/create\/\?lang=es$/);
     await expect(page.locator('#auth-status')).toHaveText('No has iniciado sesión');
+});
+
+test('el logo de EduHoot va delante del título «Crea y lanza tu EduHoot»', async ({ page }) => {
+    await mockBackend(page);
+    await openCreate(page);
+    const logo = page.locator('#title .title-logo');
+    await expect(logo).toBeVisible();
+    await expect(logo).toHaveAttribute('src', '/icons/logo.svg');
+    const t = await page.evaluate(() => {
+        const l = document.querySelector('#title .title-logo').getBoundingClientRect();
+        const s = document.querySelector('#title span').getBoundingClientRect();
+        return { logoRight: l.right, textLeft: s.left, logoMid: l.top + l.height / 2, textMid: s.top + s.height / 2 };
+    });
+    expect(t.logoRight).toBeLessThanOrEqual(t.textLeft + 1);
+    expect(Math.abs(t.logoMid - t.textMid)).toBeLessThanOrEqual(6);
 });

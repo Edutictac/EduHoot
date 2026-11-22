@@ -5,7 +5,7 @@ var params = new URLSearchParams(window.location.search);
 
 var i18n = {
     es: { title: 'Mis deberes', langLabel: 'Idioma', back: 'Volver a la biblioteca', loading: 'Cargando…', needLogin: 'Inicia sesión para gestionar deberes.', goLogin: 'Ir a iniciar sesión',
-        newTitle: 'Nuevo deber', quizLabel: 'Quiz', fTitle: 'Título', fDeadline: 'Fecha límite', fAttempts: 'Intentos por alumno', attempts1: '1 (un solo intento)', attemptsUnlimited: 'Ilimitados (cuenta el mejor)',
+        newTitle: 'Nuevo deber', quizLabel: 'Quiz', fTitle: 'Título', fDeadline: 'Fecha límite', fAttempts: 'Intentos por alumno', attempts1: '1 (un solo intento)', attemptsUnlimited: 'Ilimitados', fScoring: 'Puntuación con varios intentos', scoringBest: 'Cuenta el mejor intento', scoringAverage: 'Cuenta la media de los intentos', colAvg: 'Puntuación media', myHomeworkLink: 'Mis deberes',
         fTime: 'Tiempo por pregunta', timeQuiz: 'El de cada pregunta', fShowAnswers: 'Mostrar la respuesta correcta tras contestar', fShuffle: 'Barajar las respuestas', create: 'Crear deber',
         createdTitle: 'Deber creado', createdText: 'Comparte este enlace con tu alumnado. Entran con un nombre y reciben un código para continuar desde otro dispositivo.', code: 'Código', copyLink: 'Copiar enlace', copied: '¡Copiado!',
         myHomework: 'Mis deberes', empty: 'Aún no has creado ningún deber. Crea uno desde la biblioteca con el botón 📚.', results: 'Resultados', close: 'Cerrar', reopen: 'Reabrir', reopenOk: 'Reabrir con esta fecha', newDeadline: 'Nueva fecha límite',
@@ -13,8 +13,8 @@ var i18n = {
         downloadCsv: 'Descargar CSV', refresh: 'Actualizar', noStudents: 'Todavía no ha entrado nadie.', colName: 'Alumno', colState: 'Estado', colAttempts: 'Intentos', colBest: 'Mejor puntuación', colCorrect: 'Aciertos', byQuestion: 'Por pregunta', colQuestion: 'Pregunta', colOk: 'Aciertos',
         state_finished: 'Terminado', 'state_in-progress': 'En curso', 'state_not-started': 'Sin empezar', state_expired: 'Sin terminar (plazo vencido)',
         err_deadline_too_soon: 'La fecha límite debe ser al menos 1 minuto posterior a ahora.', err_deadline_too_far: 'La fecha límite no puede superar los 30 días.', err_bad_attempts: 'Número de intentos no válido.', err_no_questions: 'Este quiz no tiene preguntas válidas.', err_quiz_not_found: 'No se encuentra el quiz.', err_generic: 'No se ha podido completar la acción.', err_bad_deadline: 'Fecha límite no válida.' },
-    ca: { title: 'Els meus deures', langLabel: 'Idioma', back: 'Tornar a la biblioteca', loading: 'Carregant…', needLogin: 'Inicia sessió per a gestionar deures.', goLogin: 'Anar a iniciar sessió',
-        newTitle: 'Nou deure', quizLabel: 'Quiz', fTitle: 'Títol', fDeadline: 'Data límit', fAttempts: 'Intents per alumne', attempts1: '1 (un sol intent)', attemptsUnlimited: 'Il·limitats (compta el millor)',
+    ca: { title: 'Els meus deures', langLabel: 'Idioma', back: "Tornar a la biblioteca", loading: 'Carregant…', needLogin: 'Inicia sessió per a gestionar deures.', goLogin: 'Anar a iniciar sessió',
+        newTitle: 'Nou deure', quizLabel: 'Quiz', fTitle: 'Títol', fDeadline: 'Data límit', fAttempts: 'Intents per alumne', attempts1: '1 (un sol intent)', attemptsUnlimited: 'Il·limitats', fScoring: 'Puntuació amb diversos intents', scoringBest: 'Compta el millor intent', scoringAverage: 'Compta la mitjana dels intents', colAvg: 'Puntuació mitjana', myHomeworkLink: 'Els meus deures',
         fTime: 'Temps per pregunta', timeQuiz: 'El de cada pregunta', fShowAnswers: 'Mostrar la resposta correcta després de contestar', fShuffle: 'Barrejar les respostes', create: 'Crear deure',
         createdTitle: 'Deure creat', createdText: 'Comparteix este enllaç amb el teu alumnat. Entren amb un nom i reben un codi per a continuar des d\'un altre dispositiu.', code: 'Codi', copyLink: 'Copiar enllaç', copied: 'Copiat!',
         myHomework: 'Els meus deures', empty: 'Encara no has creat cap deure. Crea\'n un des de la biblioteca amb el botó 📚.', results: 'Resultats', close: 'Tancar', reopen: 'Reobrir', reopenOk: 'Reobrir amb esta data', newDeadline: 'Nova data límit',
@@ -23,7 +23,7 @@ var i18n = {
         state_finished: 'Acabat', 'state_in-progress': 'En curs', 'state_not-started': 'Sense començar', state_expired: 'Sense acabar (termini vençut)',
         err_deadline_too_soon: 'La data límit ha de ser com a mínim 1 minut posterior a ara.', err_deadline_too_far: 'La data límit no pot superar els 30 dies.', err_bad_attempts: 'Nombre d\'intents no vàlid.', err_no_questions: 'Este quiz no té preguntes vàlides.', err_quiz_not_found: 'No es troba el quiz.', err_generic: 'No s\'ha pogut completar l\'acció.', err_bad_deadline: 'Data límit no vàlida.' },
     en: { title: 'My homework', langLabel: 'Language', back: 'Back to library', loading: 'Loading…', needLogin: 'Sign in to manage homework.', goLogin: 'Go to sign in',
-        newTitle: 'New homework', quizLabel: 'Quiz', fTitle: 'Title', fDeadline: 'Deadline', fAttempts: 'Attempts per student', attempts1: '1 (single attempt)', attemptsUnlimited: 'Unlimited (best one counts)',
+        newTitle: 'New homework', quizLabel: 'Quiz', fTitle: 'Title', fDeadline: 'Deadline', fAttempts: 'Attempts per student', attempts1: '1 (single attempt)', attemptsUnlimited: 'Unlimited', fScoring: 'Scoring with several attempts', scoringBest: 'Best attempt counts', scoringAverage: 'Average of the attempts counts', colAvg: 'Average score', myHomeworkLink: 'My homework',
         fTime: 'Time per question', timeQuiz: 'Each question\'s own', fShowAnswers: 'Show the correct answer after answering', fShuffle: 'Shuffle the answers', create: 'Create homework',
         createdTitle: 'Homework created', createdText: 'Share this link with your students. They join with a name and get a code to continue from another device.', code: 'Code', copyLink: 'Copy link', copied: 'Copied!',
         myHomework: 'My homework', empty: 'You have not created any homework yet. Create one from the library with the 📚 button.', results: 'Results', close: 'Close', reopen: 'Reopen', reopenOk: 'Reopen with this date', newDeadline: 'New deadline',
@@ -71,7 +71,7 @@ var app = Vue.createApp({
             loading: true, user: null, langTick: 0,
             view: quizId ? 'new' : (code ? 'results' : 'list'),
             quizId: quizId, quizName: '', code: code,
-            form: { title: '', deadline: defaultDeadline(), maxAttempts: '1', timePerQuestion: '', showCorrectAnswers: true, randomAnswers: true },
+            form: { title: '', deadline: defaultDeadline(), maxAttempts: '1', attemptScoring: 'best', timePerQuestion: '', showCorrectAnswers: true, randomAnswers: true },
             created: null, busy: false, error: '', copied: '',
             list: [], results: null, deleting: '', reopening: '', newDeadline: '',
             sortKey: '', sortDir: 1,
@@ -104,6 +104,10 @@ var app = Vue.createApp({
     methods: {
         t: function(key){ this.langTick; return t(key); },
         fmt: fmt,
+        // Con la media, la columna de puntuación pasa a llamarse «Puntuación media».
+        colLabel: function(c){
+            return c.key === 'bestScore' && this.results && this.results.homework.scoring === 'average' ? 'colAvg' : c.label;
+        },
         sortBy: function(key){
             if(this.sortKey === key) this.sortDir = -this.sortDir;
             else { this.sortKey = key; this.sortDir = 1; }
@@ -149,6 +153,7 @@ var app = Vue.createApp({
             this.busy = true;
             this.error = '';
             var options = { showCorrectAnswers: !!f.showCorrectAnswers, randomAnswers: !!f.randomAnswers };
+            if(Number(f.maxAttempts) !== 1) options.attemptScoring = f.attemptScoring === 'average' ? 'average' : 'best';
             if(f.timePerQuestion) options.timePerQuestion = Number(f.timePerQuestion);
             fetch('/api/homeworks', {
                 method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },

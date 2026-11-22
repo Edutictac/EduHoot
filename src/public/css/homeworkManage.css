@@ -83,3 +83,7 @@ body{ padding-top: var(--env-badge-space, 0px); }
     .hw-card{ padding: 14px; }
     .hw-actions .hw-delete{ margin-left: 0; }
 }
+
+/* Pantalla de asignación (nuevo deber): la tarjeta va centrada en la página. */
+#hwNew{ margin-left: auto; margin-right: auto; width: 100%; }
+.hw-shell .top-actions .btn{ text-decoration: none; border-radius: 999px; font-family: inherit; font-weight: 700; }

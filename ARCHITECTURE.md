@@ -611,6 +611,12 @@ principals (`index`, `join`, `create`, `create/quiz-creator`, `host`,
   lloc, el nom apareix encara que la pàgina actual no siga `/create/`
   (p. ex. a `/solo/` o `/host/`). Si no hi ha sessió, no es mostra eixa
   segona línia (igual que en stage sense tag).
+- El distintiu mostra, en una línia menuda, l'ample × alt de la finestra
+  (`.env-badge__size`, només canvia en l'esdeveniment `resize`). Amb **F9** o
+  **Alt+B** s'oculta i es mostra (distintiu, tint, classe `env-*` d'`<html>` i
+  `--env-badge-space`) per a vore la pantalla com en producció; l'elecció es
+  guarda en `localStorage` (`eduhoot-env-badge-hidden`) i val per a totes les
+  pantalles.
 - El distintiu publica la seua alçada en la variable CSS
   `--env-badge-space` (en `<html>`), perquè la pàgina deixe eixe espai a
   dalt i el distintiu no tape cap text en carregar; en fer scroll sí que

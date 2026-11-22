@@ -135,7 +135,8 @@
             metaText: function(){
                 if(!this.info) return '';
                 var max = this.info.maxAttempts;
-                var attempts = max === 1 ? t('hw_attempts_one') : (max === 0 ? t('hw_attempts_unlimited') : fmt('hw_attempts_n', { n: max }));
+                var avg = this.info.scoring === 'average';
+                var attempts = max === 1 ? t('hw_attempts_one') : (max === 0 ? t(avg ? 'hw_attempts_unlimited_avg' : 'hw_attempts_unlimited') : fmt(avg ? 'hw_attempts_n_avg' : 'hw_attempts_n', { n: max }));
                 return fmt('hw_questions', { n: this.info.totalQuestions }) + ' · ' + attempts;
             },
             formVisible: function(){ return !this.loading && !this.notFound && !this.showCode; },

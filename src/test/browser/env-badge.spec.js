@@ -46,3 +46,42 @@ test('desarrollo: fuera de las pantallas de partida el distintivo se ve completo
     await expect(badge(page)).toBeVisible();
     await expect(badge(page)).toHaveCSS('opacity', '1');
 });
+
+// El distintivo muestra el ancho × alto de la ventana y solo se actualiza al redimensionar.
+for (const env of ['development', 'staging']) {
+    test(`${env}: el distintivo muestra el tamaño de la ventana y lo actualiza al redimensionar`, async ({ page }) => {
+        await page.setViewportSize({ width: 900, height: 700 });
+        await openWithEnv(page, '/?lang=es', env);
+        const size = page.locator('.env-badge__size');
+        await expect(size).toHaveText('900 × 700');
+        await page.setViewportSize({ width: 640, height: 480 });
+        await expect(size).toHaveText('640 × 480');
+        // Sin redimensionar no cambia: el texto se mantiene.
+        await page.waitForTimeout(300);
+        await expect(size).toHaveText('640 × 480');
+    });
+}
+
+// F9 (o Alt+B) oculta y muestra el distintivo para ver la pantalla como en producción; se recuerda entre pantallas.
+for (const env of ['development', 'staging']) {
+    test(`${env}: F9 oculta y muestra el distintivo, sin tinte ni clase de entorno, y se recuerda`, async ({ page }) => {
+        await openWithEnv(page, '/?lang=es', env);
+        const badgeEl = page.locator('.env-badge');
+        await expect(badgeEl).toBeVisible();
+        const cls = env === 'development' ? 'env-development' : 'env-staging';
+        await expect(page.locator('html')).toHaveClass(new RegExp(cls));
+        await page.keyboard.press('F9');
+        await expect(badgeEl).toBeHidden();
+        await expect(page.locator('.env-badge-tint')).toBeHidden();
+        await expect(page.locator('html')).not.toHaveClass(new RegExp(cls));
+        expect(await page.evaluate(() => document.documentElement.style.getPropertyValue('--env-badge-space'))).toBe('0px');
+        // Se recuerda al cambiar de pantalla.
+        await page.goto('/create/?lang=es');
+        await page.waitForLoadState('load');
+        await expect(page.locator('.env-badge')).toBeHidden();
+        // Alt+B lo vuelve a mostrar.
+        await page.keyboard.press('Alt+KeyB');
+        await expect(page.locator('.env-badge')).toBeVisible();
+        await expect(page.locator('html')).toHaveClass(new RegExp(cls));
+    });
+}

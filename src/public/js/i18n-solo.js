@@ -3,7 +3,7 @@
 
     var i18n = {
         es: {
-            back: 'Volver',
+            back: 'Volver al inicio',
             eyebrow: 'Modo individual',
             title: 'EduHoot',
             subtitle: 'Elige un quiz público, responde las preguntas y entra en el ranking global.',
@@ -139,7 +139,7 @@
         footerContactLabel: 'Incidencias'
     },
         en: {
-            back: 'Back',
+            back: 'Back to home',
             eyebrow: 'Solo mode',
             title: 'EduHoot',
             subtitle: 'Pick a public quiz, answer, and try to get into the global ranking.',
@@ -275,7 +275,7 @@
             footerContactLabel: 'Issues'
     },
         ca: {
-            back: 'Tornar',
+            back: "Tornar a l'inici",
             eyebrow: 'Mode individual',
             title: 'EduHoot',
             subtitle: 'Tria un quiz públic, respon i entra al rànquing global.',

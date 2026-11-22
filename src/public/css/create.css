@@ -74,6 +74,15 @@ body {
     font-size: 50px;
     margin-bottom: 6px;
 }
+/* Logo de EduHoot delante del título (mismo alto que el texto). */
+#title{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.28em;
+}
+#title span{ min-width: 0; }
+#title .title-logo{ height: 1.1em; width: auto; border-radius: 0.18em; flex: none; }
 .top-row{
     display: flex;
     align-items: center;

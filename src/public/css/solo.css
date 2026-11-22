@@ -1482,3 +1482,52 @@ body.playing #game-panel{
     .game-progress__cover{ display: none; }
     .game-progress__logo{ width: 24px; height: 24px; }
 }
+
+/* Entrada de Flashcards: como el inicio de Solo (dos columnas, logo e imagen del quiz), pero en rosa oscuro. */
+.cards-start{
+    display: grid;
+    grid-template-columns: minmax(200px, 340px) minmax(0, 1fr);
+    gap: 10px 32px;
+    align-items: start;
+}
+.cards-start__info{ display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.cards-start__info .quiz-banner{ flex-wrap: wrap; margin-top: 0; }
+.cards-start__options{ display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; }
+.cards-start__options .cards-start__actions{ margin-top: 8px; }
+.cards-start .cards-shuffle{ font-size: 16px; font-weight: 600; margin: 4px 0; cursor: pointer; }
+.cards-start .cards-shuffle input{ width: 20px; height: 20px; flex: none; margin: 0; cursor: pointer; accent-color: #f472b6; }
+@media (max-width: 760px){
+    .cards-start{ display: flex; flex-direction: column; gap: 10px; }
+}
+
+/* Tonos rosados oscuros (solo en la pantalla de entrada, no en la tarjeta). */
+#game-panel.is-cards-entry{
+    background: linear-gradient(135deg, rgba(74, 14, 48, 0.96), rgba(112, 26, 74, 0.94));
+    border-color: rgba(244, 114, 182, 0.4);
+}
+#game-panel.is-cards-entry .eyebrow{ color: #f9a8d4; }
+#game-panel.is-cards-entry #selected-title{ color: #fbcfe8; }
+#game-panel.is-cards-entry .quiz-banner__logo{
+    background: rgba(244, 114, 182, 0.14);
+    border-color: rgba(244, 114, 182, 0.45);
+}
+#game-panel.is-cards-entry .quiz-banner__cover{ border-color: rgba(244, 114, 182, 0.45); }
+#game-panel.is-cards-entry .cards-start h3{ color: #fbcfe8; }
+#game-panel.is-cards-entry .btn-primary{
+    background: linear-gradient(135deg, #ec4899, #be185d);
+    color: #fff;
+    box-shadow: 0 8px 22px rgba(190, 24, 93, 0.35);
+}
+#game-panel.is-cards-entry .btn-ghost{
+    background: rgba(244, 114, 182, 0.12);
+    border: 1px solid rgba(244, 114, 182, 0.4);
+    color: #fce7f3;
+}
+#game-panel.is-cards-entry .btn:disabled{ opacity: 0.45; }
+#game-panel.is-cards-entry .card-link{ color: #f9a8d4; }
+
+/* Cuenta atrás 3-2-1 de Solo: centrada en vertical (y en horizontal) en el espacio libre bajo la barra de tiempo. */
+body.playing .game-area .question-card > #solo-countdown{
+    margin-top: auto;
+    margin-bottom: auto;
+}

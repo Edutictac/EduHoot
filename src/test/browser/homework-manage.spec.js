@@ -192,3 +192,44 @@ test('resultados: la tabla por alumno se ordena al pulsar el encabezado', async 
     await page.locator('#hwStudents .hw-sort', { hasText: 'Mejor puntuación' }).click();
     expect(await names()).toEqual(['Bruno', 'Ana']);
 });
+
+test('nuevo deber: tarjeta centrada, «Volver a la biblioteca», enlace a «Mis deberes», 180 s y puntuación con varios intentos', async ({ page }) => {
+    await setup(page, {
+        routes: async (p) => {
+            await p.route('**/api/homeworks', route => {
+                p.__calls.push(route.request().postDataJSON());
+                return route.fulfill({ json: { ok: true, homework: HW() } });
+            });
+        }
+    });
+    await page.goto('/create/homework/?quiz=7&lang=es');
+    await expect(page.locator('#back')).toHaveText('Volver a la biblioteca');
+    await expect(page.locator('#hwMineLink')).toHaveText('Mis deberes');
+    await expect(page.locator('#hwMineLink')).toHaveAttribute('href', '/create/homework/');
+    // Centrada: el margen izquierdo y el derecho de la tarjeta son iguales (si cabe en la página).
+    const m = await page.locator('#hwNew').evaluate((el) => { const r = el.getBoundingClientRect(); return { left: r.left, right: document.documentElement.clientWidth - r.right }; });
+    expect(Math.abs(m.left - m.right)).toBeLessThan(2);
+    // 180 s es la última opción de tiempo.
+    await expect(page.locator('#hwFTime option').last()).toHaveText('180 s');
+    // Con un solo intento no hay elección de puntuación; con varios, sí.
+    await expect(page.locator('#hwFScoring')).toHaveCount(0);
+    await page.locator('#hwFAttempts').selectOption('3');
+    await expect(page.locator('#hwFScoring')).toBeVisible();
+    await page.locator('#hwFScoring').selectOption('average');
+    await page.locator('#hwFTime').selectOption('180');
+    await page.locator('#hwCreateBtn').click();
+    await expect(page.locator('#hwLink')).toBeVisible();
+    expect(page.__calls[0].options).toMatchObject({ attemptScoring: 'average', timePerQuestion: 180 });
+});
+
+test('resultados con media: la columna se llama «Puntuación media»', async ({ page }) => {
+    await setup(page, {
+        routes: async (p) => {
+            await p.route('**/api/homeworks/ABCD2345/results', route => route.fulfill({
+                json: { homework: HW({ scoring: 'average' }), students: 1, rows: [{ name: 'Ana', icon: '', state: 'finished', attempts: 2, bestScore: 1200, correctCount: 2, wrongCount: 1, answered: 3 }], questionStats: [] }
+            }));
+        }
+    });
+    await page.goto('/create/homework/?code=ABCD2345&lang=es');
+    await expect(page.locator('#hwStudents .hw-sort', { hasText: 'Puntuación media' })).toBeVisible();
+});

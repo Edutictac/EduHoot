@@ -1,6 +1,7 @@
 (function(){
     var ENVS = {
         development: {
+            cls: 'env-development',
             label: '🛠️ Entorn: desenvolupament',
             titlePrefix: '🛠️ DEV — ',
             badgeBg: 'rgba(249,115,22,0.35)',
@@ -10,6 +11,7 @@
             linkTitle: 'Entrar amb un usuari de prova'
         },
         staging: {
+            cls: 'env-staging',
             label: '🧪 Entorn: stage',
             titlePrefix: '🧪 STAGE — ',
             badgeBg: 'rgba(22,163,74,0.35)',
@@ -37,6 +39,21 @@
             tagEl.style.marginTop = '2px';
             badge.appendChild(tagEl);
         }
+        // Ancho × alto de la ventana (en píxeles CSS), sin recargar: solo cambia al redimensionar.
+        var sizeEl = document.createElement('span');
+        sizeEl.className = 'env-badge__size';
+        sizeEl.style.display = 'block';
+        sizeEl.style.fontSize = '0.55em';
+        sizeEl.style.fontWeight = '400';
+        sizeEl.style.opacity = '0.85';
+        sizeEl.style.marginTop = '2px';
+        sizeEl.style.fontVariantNumeric = 'tabular-nums';
+        var updateSize = function(){
+            sizeEl.textContent = window.innerWidth + ' × ' + window.innerHeight;
+        };
+        updateSize();
+        badge.appendChild(sizeEl);
+        window.addEventListener('resize', updateSize);
         if(cfg.href){
             badge.href = cfg.href;
             badge.title = cfg.linkTitle || '';
@@ -88,6 +105,34 @@
         if(document.title.indexOf(cfg.titlePrefix) !== 0){
             document.title = cfg.titlePrefix + document.title;
         }
+
+        // Tecla rápida (F9 o Alt+B) para ocultar/mostrar el distintivo, el tinte y los ajustes de dev/stage
+        // y comprobar cómo se ve todo en producción. La elección se recuerda entre pantallas (localStorage).
+        var STORE = 'eduhoot-env-badge-hidden';
+        var applyHidden = function(hidden){
+            badge.style.display = hidden ? 'none' : '';
+            tint.style.display = hidden ? 'none' : '';
+            document.documentElement.classList.toggle(cfg.cls, !hidden);
+            document.documentElement.classList.toggle('env-badge-hidden', hidden);
+            if(hidden){
+                document.documentElement.style.setProperty('--env-badge-space', '0px');
+            }else{
+                space();
+            }
+        };
+        var isHidden = function(){
+            try{ return window.localStorage.getItem(STORE) === '1'; }catch(e){ return false; }
+        };
+        applyHidden(isHidden());
+        window.addEventListener('keydown', function(ev){
+            var isF9 = ev.key === 'F9' && !ev.ctrlKey && !ev.altKey && !ev.metaKey && !ev.shiftKey;
+            var isAltB = ev.code === 'KeyB' && ev.altKey && !ev.ctrlKey && !ev.metaKey && !ev.shiftKey;
+            if(!isF9 && !isAltB) return;
+            ev.preventDefault();
+            var hidden = !isHidden();
+            try{ window.localStorage.setItem(STORE, hidden ? '1' : '0'); }catch(e){}
+            applyHidden(hidden);
+        });
     }
 
     function init(){

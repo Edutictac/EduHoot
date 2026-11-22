@@ -85,7 +85,7 @@ form{
 }
 /* En dev/stage, el distintivo de entorno ocupa arriba: la fila baja su mismo alto (45 px) para no solaparse. */
 html.env-development .join-brand,
-html.env-staging .join-brand{ margin-top: 45px; }
+html.env-staging .join-brand{ margin-top: max(45px, calc(var(--env-badge-space, 0px) - 12px)); }
 #join-logo{
     display: block;
     margin: 0;

@@ -48,11 +48,16 @@ function emptyGameData() {
 }
 
 // Opcions del deure: només les que afecten el joc. El mode és sempre autoritme.
+// Tiempo máximo por pregunta en un deber: 3 minutos.
+const MAX_TIME_PER_QUESTION = 180;
+
 function normalizeOptions(raw) {
   const o = raw || {};
   const out = { mode: 'selfPaced', sendToStudents: true, streak: o.streak !== false, showCorrectAnswers: o.showCorrectAnswers !== false };
   const time = parseInt(o.timePerQuestion, 10);
-  if (Number.isFinite(time) && time > 0) out.timePerQuestion = Math.max(5, Math.min(120, time));
+  if (Number.isFinite(time) && time > 0) out.timePerQuestion = Math.max(5, Math.min(MAX_TIME_PER_QUESTION, time));
+  // Con varios intentos: cuenta el mejor (por defecto) o la media.
+  out.attemptScoring = o.attemptScoring === 'average' ? 'average' : 'best';
   if (o.matchingExtraTime !== undefined) out.matchingExtraTime = o.matchingExtraTime;
   return out;
 }
@@ -150,6 +155,18 @@ module.exports = function createHomeworkService({ getHomeworksCollection, getHom
     return hw.status === 'open' && now <= hw.deadline;
   }
 
+  function scoringOf(hw) {
+    return hw && hw.options && hw.options.attemptScoring === 'average' ? 'average' : 'best';
+  }
+
+  // Puntuación que cuenta del alumno: el mejor intento o la media de los intentos contados
+  // (los acabados; si el deber está cerrado, también los que quedaron a medias).
+  function countedScore(hw, scores) {
+    if (!scores.length) return 0;
+    if (scoringOf(hw) !== 'average') return Math.max(...scores);
+    return Math.round(scores.reduce((sum, s) => sum + s, 0) / scores.length);
+  }
+
   function publicInfo(hw, now = Date.now()) {
     return {
       code: hw.code,
@@ -157,6 +174,7 @@ module.exports = function createHomeworkService({ getHomeworksCollection, getHom
       quizName: hw.quizName,
       totalQuestions: hw.totalQuestions,
       maxAttempts: hw.maxAttempts,
+      scoring: scoringOf(hw),
       deadline: hw.deadline,
       open: isOpen(hw, now)
     };
@@ -225,7 +243,9 @@ module.exports = function createHomeworkService({ getHomeworksCollection, getHom
 
   function finishedEvent(hw, attempts, attempt, player, extra = {}) {
     const all = attempts.map((a) => (a._id === attempt._id ? { ...a, gameData: player.gameData, finished: true } : a));
-    const best = all.reduce((m, a) => Math.max(m, Number(a.gameData && a.gameData.score) || 0), 0);
+    const scoreOf = (a) => Number(a.gameData && a.gameData.score) || 0;
+    const best = all.reduce((m, a) => Math.max(m, scoreOf(a)), 0);
+    const counted = all.filter((a) => a.finished || a._id === attempt._id);
     return {
       name: 'spFinished',
       data: {
@@ -234,6 +254,8 @@ module.exports = function createHomeworkService({ getHomeworksCollection, getHom
         attemptNo: attempt.attemptNo,
         maxAttempts: hw.maxAttempts,
         bestScore: best,
+        scoring: scoringOf(hw),
+        averageScore: countedScore({ options: { attemptScoring: 'average' } }, counted.map(scoreOf)),
         canRetry: false,
         ...extra
       }
@@ -361,9 +383,16 @@ module.exports = function createHomeworkService({ getHomeworksCollection, getHom
     });
     const rows = [];
     const bestPlayers = [];
+    const statSources = [];
     byStudent.forEach((list) => {
       const scored = list.map((a) => ({ a, score: Number(a.gameData && a.gameData.score) || 0 }));
       const best = scored.reduce((m, s) => (s.score > m.score ? s : m), scored[0]);
+      // Intentos que cuentan para la media: los acabados (o todos, si el deber ya está cerrado).
+      const average = scoringOf(hw) === 'average';
+      const countedAll = scored.filter((s) => s.a.finished || closed);
+      const counted = countedAll.length ? countedAll : [best];
+      const finalScore = average ? countedScore(hw, counted.map((s) => s.score)) : best.score;
+      const mean = (key) => Math.round(counted.reduce((sum, s) => sum + (Number(s.a.gameData && s.a.gameData[key]) || 0), 0) / counted.length);
       const last = list[list.length - 1];
       const state = last.finished ? 'finished' : (closed ? 'expired' : (sp.ensureState({ gameData: last.gameData }).index > 0 ? 'in-progress' : 'not-started'));
       rows.push({
@@ -371,21 +400,23 @@ module.exports = function createHomeworkService({ getHomeworksCollection, getHom
         icon: list[0].icon || '',
         state,
         attempts: list.length,
-        bestScore: best.score,
-        correctCount: best.a.gameData.correctCount || 0,
-        wrongCount: best.a.gameData.wrongCount || 0,
+        bestScore: finalScore,
+        correctCount: average ? mean('correctCount') : (best.a.gameData.correctCount || 0),
+        wrongCount: average ? mean('wrongCount') : (best.a.gameData.wrongCount || 0),
         answered: (best.a.gameData.answerHistory || []).length,
         finishedAt: best.a.finishedAt || null
       });
-      bestPlayers.push({ name: list[0].name, icon: list[0].icon || '', gameData: best.a.gameData });
+      bestPlayers.push({ name: list[0].name, icon: list[0].icon || '', gameData: { ...best.a.gameData, score: finalScore } });
+      // Fuente de la estadística por pregunta: el mejor intento, o todos los que cuentan si se hace la media.
+      statSources.push(...(average ? counted.map((s) => s.a.gameData) : [best.a.gameData]));
     });
     rows.sort((x, y) => y.bestScore - x.bestScore || x.name.localeCompare(y.name, 'es'));
-    // Estadística por pregunta, sobre el mejor intento de cada alumno.
+    // Estadística por pregunta, sobre el mejor intento de cada alumno (o sobre todos, con la media).
     const questionStats = hw.questions.map((q, i) => {
       let answered = 0;
       let correct = 0;
-      bestPlayers.forEach((p) => {
-        const h = (p.gameData.answerHistory || []).find((x) => x.questionNumber === i + 1);
+      statSources.forEach((gd) => {
+        const h = (gd.answerHistory || []).find((x) => x.questionNumber === i + 1);
         if (h) { answered += 1; if (h.isCorrect) correct += 1; }
       });
       return { number: i + 1, question: q.question, type: q.type, answered, correct };

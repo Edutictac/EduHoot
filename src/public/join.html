@@ -24,7 +24,7 @@
         <div id="join-app"></div>
         <template id="join-tpl">
         <!-- Arriba a la izquierda: «Volver» hasta validar el PIN; después «Salir» (vuelve a pedir el PIN). -->
-        <a v-if="!pinValidated" class="back-link" href="/">{{ t('back', '← Volver') }}</a>
+        <a v-if="!pinValidated" class="back-link" href="/">{{ t('back', '← Volver al inicio') }}</a>
         <button v-else type="button" class="back-link back-link--leave" @click="leavePin">{{ t('lobby_leave', 'Salir') }}</button>
         <div id="pinModal" class="pin-modal" :class="{ hidden: !modalOpen }" role="dialog" aria-modal="true">
             <div class="pin-modal__card">

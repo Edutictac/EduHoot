@@ -551,6 +551,23 @@ test('cambiar de idioma traduce el catálogo y el panel', async ({ page }) => {
     await expect(page.locator('#search')).toHaveAttribute('placeholder', 'Search by name or tag');
 });
 
+test('compte arrere: queda centrat en vertical en l\'espai lliure sota la barra de temps', async ({ page }) => {
+    await mockBackend(page);
+    await openQuizDirect(page, 'q1');
+    await page.locator('#start-btn').click();
+    await expect(page.locator('#solo-countdown span')).toHaveText('3');
+    const m = await page.evaluate(() => {
+        const dial = document.querySelector('#solo-countdown').getBoundingClientRect();
+        const timer = document.querySelector('.solo-timer-row').getBoundingClientRect();
+        const panel = document.querySelector('#game-panel').getBoundingClientRect();
+        const style = getComputedStyle(document.querySelector('#game-panel'));
+        const free = { top: timer.bottom, bottom: panel.bottom - parseFloat(style.paddingBottom) };
+        return { above: dial.top - free.top, below: free.bottom - dial.bottom };
+    });
+    // L'espai de dalt i el de baix són (quasi) iguals.
+    expect(Math.abs(m.above - m.below)).toBeLessThan(6);
+});
+
 test('compte arrere 3-2-1 abans de cada pregunta: amaga la pregunta i no gasta temps', async ({ page }) => {
     await mockBackend(page);
     await openQuizDirect(page, 'q1');

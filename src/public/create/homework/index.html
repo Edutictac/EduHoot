@@ -24,6 +24,7 @@
             <div class="top-row">
                 <h1 id="hwPageTitle">{{ t('title') }}</h1>
                 <div class="top-actions">
+                    <a v-if="view !== 'list'" id="hwMineLink" class="btn btn-small btn-ghost" href="/create/homework/">{{ t('myHomeworkLink') }}</a>
                     <label class="lang-switch">
                         <span>{{ t('langLabel') }}</span>
                         <select id="lang-select" data-lang-options="name"></select>
@@ -49,11 +50,17 @@
                                 <option value="0">{{ t('attemptsUnlimited') }}</option>
                             </select>
                         </label>
+                        <label v-if="String(form.maxAttempts) !== '1'">{{ t('fScoring') }}
+                            <select id="hwFScoring" v-model="form.attemptScoring">
+                                <option value="best">{{ t('scoringBest') }}</option>
+                                <option value="average">{{ t('scoringAverage') }}</option>
+                            </select>
+                        </label>
                         <label>{{ t('fTime') }}
                             <select id="hwFTime" v-model="form.timePerQuestion">
                                 <option value="">{{ t('timeQuiz') }}</option>
                                 <option value="10">10 s</option><option value="20">20 s</option><option value="30">30 s</option>
-                                <option value="60">60 s</option><option value="120">120 s</option>
+                                <option value="60">60 s</option><option value="120">120 s</option><option value="180">180 s</option>
                             </select>
                         </label>
                         <label class="hw-check"><input id="hwFShow" type="checkbox" v-model="form.showCorrectAnswers"> {{ t('fShowAnswers') }}</label>
@@ -87,7 +94,7 @@
                 <div class="hw-table-wrap" v-else>
                     <table class="hw-table" id="hwStudents">
                         <thead><tr>
-                            <th v-for="c in sortCols" :key="c.key" :aria-sort="sortKey === c.key ? (sortDir === 1 ? 'ascending' : 'descending') : 'none'"><button type="button" class="hw-sort" :class="sortKey === c.key ? (sortDir === 1 ? 'is-asc' : 'is-desc') : ''" @click="sortBy(c.key)">{{ t(c.label) }}</button></th>
+                            <th v-for="c in sortCols" :key="c.key" :aria-sort="sortKey === c.key ? (sortDir === 1 ? 'ascending' : 'descending') : 'none'"><button type="button" class="hw-sort" :class="sortKey === c.key ? (sortDir === 1 ? 'is-asc' : 'is-desc') : ''" @click="sortBy(c.key)">{{ t(colLabel(c)) }}</button></th>
                         </tr></thead>
                         <tbody>
                             <tr v-for="r in sortedRows" :key="r.name">

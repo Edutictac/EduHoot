@@ -198,6 +198,49 @@ test('varios intentos: se cuenta el mejor y no se puede abrir otro con uno en cu
   assert.equal(second.canRetry, false);
 });
 
+test('varios intentos con media: el resumen, los resultados y el CSV cuentan la media de los intentos', async () => {
+  const hw = await createHomework({ maxAttempts: 2, options: { attemptScoring: 'average' } });
+  assert.equal(hw.scoring, 'average');
+  const me = (await join(hw.code, 'Mia')).body.student;
+  async function play(answers) {
+    await act(hw.code, me, 'next');
+    for (let i = 0; i < answers.length; i += 1) {
+      await act(hw.code, me, 'answer', answers[i]);
+      const e = await act(hw.code, me, 'next');
+      if (i === answers.length - 1) return ev(e, 'spFinished');
+    }
+    return null;
+  }
+  const first = await play([4, 4, 4]); // todo mal: 0 puntos
+  assert.equal(first.score, 0);
+  await act(hw.code, me, 'newAttempt');
+  const second = await play([2, 2, 1]);
+  assert.equal(second.scoring, 'average');
+  assert.equal(second.averageScore, Math.round((0 + second.score) / 2));
+  const results = (await call('GET', `/api/homeworks/${hw.code}/results`, undefined, TEACHER)).body;
+  assert.equal(results.homework.scoring, 'average');
+  assert.equal(results.rows[0].bestScore, Math.round(second.score / 2));
+  // La estadística por pregunta cuenta los dos intentos (la primera pregunta: 1 acierto de 2).
+  assert.equal(results.questionStats[0].answered, 2);
+  assert.equal(results.questionStats[0].correct, 1);
+});
+
+test('por defecto cuenta el mejor intento, y el tiempo por pregunta admite hasta 180 s', async () => {
+  const hw = await createHomework({ maxAttempts: 2, options: { timePerQuestion: 200 } });
+  assert.equal(hw.scoring, 'best');
+  const out = await call('GET', `/api/homeworks/${hw.code}/results`, undefined, TEACHER);
+  assert.equal(out.body.homework.scoring, 'best');
+  const me = (await join(hw.code, 'Tiempo')).body.student;
+  await act(hw.code, me, 'next');
+  const e = await act(hw.code, me, 'resume');
+  const q = ev(e, 'spQuestion');
+  assert.equal(q.timeTotal, 180);
+  const exact = await createHomework({ options: { timePerQuestion: 180 } });
+  const you = (await join(exact.code, 'Exacto')).body.student;
+  const e2 = await act(exact.code, you, 'next');
+  assert.equal(ev(e2, 'spQuestion').timeTotal, 180);
+});
+
 test('dos dispositivos a la vez: una sola respuesta puntúa', async () => {
   const hw = await createHomework();
   const me = (await join(hw.code, 'Fran')).body.student;
