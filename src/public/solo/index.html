@@ -128,12 +128,15 @@
 
                 <div id="start-form" class="start-form" :class="{ hidden: s.view !== 'start' }">
                     <!-- Logo de EduHoot e imagen representativa del quiz, bajo el título. -->
-                    <div class="quiz-banner">
-                        <img class="quiz-banner__logo" src="/icons/logo.svg" alt="EduHoot">
-                        <img v-if="quizImage" class="quiz-banner__cover" :src="quizImage" alt="" @error="$event.target.style.display = 'none'">
+                    <div class="start-form__info">
+                        <div class="quiz-banner">
+                            <img class="quiz-banner__logo" src="/icons/logo.svg" alt="EduHoot">
+                            <img v-if="quizImage" class="quiz-banner__cover" :src="quizImage" alt="" @error="$event.target.style.display = 'none'">
+                        </div>
+                        <p id="selected-meta" class="muted">{{ selectedMeta }}</p>
                     </div>
-                    <p id="selected-meta" class="muted">{{ selectedMeta }}</p>
 
+                    <div class="start-form__options">
                     <label for="question-count" class="muted">{{ t('questionCountLabel') }}</label>
                     <div class="question-count-controls">
                         <input id="question-count" type="number" min="1" step="1" inputmode="numeric" autocomplete="off" :max="quizTotal ? String(quizTotal) : ''" :disabled="!quizTotal" :value="s.countInput" @input="onCountInput">
@@ -157,22 +160,23 @@
 
                     <button id="start-btn" class="btn btn-primary" @click="start">{{ t('startButton') }}</button>
                     <p class="muted">{{ t('startHint') }}</p>
+                    </div>
                 </div>
 
                 <div id="game-area" class="game-area" :class="{ hidden: s.view !== 'game' }">
                     <!-- Mateixa estructura que «Jugar a l'aula»: franja amb el títol,
                          el progrés i els punts, i barra de temps davall. -->
                     <div class="game-progress">
-                        <span class="game-progress__title">{{ titleText }}</span>
+                        <span class="game-progress__brand">
+                            <img class="game-progress__logo" src="/icons/logo.svg" alt="EduHoot">
+                            <img v-if="quizImage" class="game-progress__cover" :src="quizImage" alt="" @error="$event.target.style.display = 'none'">
+                            <span class="game-progress__title">{{ titleText }}</span>
+                        </span>
                         <span class="game-progress__stats">
                             <span id="question-progress" class="pill" :aria-label="(s.idx + 1) + ' / ' + s.questions.length">{{ progressText }}</span>
                             <span id="score-pill" class="pill pill-muted">{{ t('score') + ': ' + s.score }}</span>
                             <span id="streak-pill" class="pill pill-muted">🔥 {{ s.streak }}{{ s.streakBonus > 0 ? ' · +' + s.streakBonus : '' }}</span>
                         </span>
-                    </div>
-                    <div class="quiz-banner quiz-banner--compact">
-                        <img class="quiz-banner__logo" src="/icons/logo.svg" alt="EduHoot">
-                        <img v-if="quizImage" class="quiz-banner__cover" :src="quizImage" alt="" @error="$event.target.style.display = 'none'">
                     </div>
                     <!-- Barra de tiempo con los botones de pausa y cancelación a su derecha (sin quitar alto). -->
                     <div class="solo-timer-row">

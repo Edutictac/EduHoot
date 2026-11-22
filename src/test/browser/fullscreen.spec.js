@@ -41,14 +41,15 @@ async function measure(page) {
     });
 }
 
-function expectFullScreen(m, vp) {
+// reserved: espacio de abajo reservado a «Salir» y «Levantar la mano» (solo en la partida del alumnado en el aula).
+function expectFullScreen(m, vp, reserved = 0) {
     const margin = vp.size.height - m.panelBottom;
     expect(m.scrollW).toBeLessThanOrEqual(vp.size.width);
     expect(m.innerH).toBe(vp.size.height);
     expect(m.vh).toBe(vp.size.height);
     // Marge petit i constant a baix (uns 12 px), i la partida no es queda amunt.
     expect(margin).toBeGreaterThanOrEqual(8);
-    expect(margin).toBeLessThanOrEqual(16);
+    expect(margin).toBeLessThanOrEqual(16 + reserved);
     expect(m.panelLeft).toBeGreaterThanOrEqual(0);
     expect(m.panelRight).toBeLessThanOrEqual(vp.size.width);
     // Les respostes també caben: no es desborden per baix.
@@ -88,6 +89,6 @@ for (const vp of VIEWPORTS) {
         await page.evaluate(() => window.__serverEmit('connect'));
         await page.evaluate(([q, a]) => window.__serverEmit('playerQuestion', [{ question: q, answers: a, type: 'quiz', time: 20 }]), [Q, ANS]);
         await expect(page.locator('#answerGrid .button').first()).toBeVisible();
-        expectFullScreen(await measure(page), vp);
+        expectFullScreen(await measure(page), vp, 60);
     });
 }

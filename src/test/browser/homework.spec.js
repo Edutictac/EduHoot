@@ -97,6 +97,26 @@ test('alumno nuevo: entra con su nombre, apunta el código, responde y ve su res
     await expect.poll(() => page.__acts.map((a) => a.op).slice(-2)).toEqual(['newAttempt', 'next']);
 });
 
+test('muestra el intento en curso (n de m) y lo actualiza al reintentar', async ({ page }) => {
+    await setup(page, {
+        actReply: (body) => {
+            if (body.op === 'newAttempt') return { ...events([{ name: 'spIdle', data: null }]), attemptNo: 2 };
+            if (body.op === 'next') return events([{ name: 'spQuestion', data: Q1 }]);
+            if (body.op === 'answer') return events([{ name: 'spFinished', data: { score: 950, correctCount: 1, wrongCount: 0, bestStreak: 1, total: 1, homework: true, attemptNo: 1, maxAttempts: 2, bestScore: 950, canRetry: true } }], { score: 950 });
+            return events([{ name: 'spIdle', data: null }]);
+        }
+    });
+    await page.goto(`/player/self-paced/?hw=${CODE}&lang=es`);
+    await page.locator('#hwName').fill('Marta');
+    await page.locator('#hwSubmit').click();
+    await page.locator('#hwCodeGo').click();
+    await expect(page.locator('#attemptText')).toHaveText('Intento 1 de 2');
+    await page.locator('#answer1').click();
+    await expect(page.locator('.sp-done')).toBeVisible();
+    await page.locator('#hwRetryBtn').click();
+    await expect(page.locator('#attemptText')).toHaveText('Intento 2 de 2 · Último intento');
+});
+
 test('dispositivo conocido: entra directamente con el código guardado', async ({ page }) => {
     await page.addInitScript((c) => localStorage.setItem('eduhootHomework:' + c, JSON.stringify({ name: 'Marta', recovery: 'K7M2QX' })), CODE);
     await setup(page, {

@@ -335,3 +335,34 @@ test('las respuestas están centradas y, con imagen, caben en pantalla', async (
         expect(boxes[2].y).toBeGreaterThan(boxes[0].y);
     }
 });
+
+// Pantallas intermedias: icono grande y una línea de detalle (puntos ganados, aviso o puntuación final).
+test('resultado correcto: icono y puntos ganados en la última pregunta', async ({ page }) => {
+    await openGame(page);
+    await serverEmit(page, 'playerGameData', [{ playerId: 'p1', name: 'Ana', gameData: { score: 100 } }]);
+    await serverEmit(page, 'playerQuestion', { question: 'Capital de Francia?', answers: ANSWERS, type: 'quiz', time: 15 });
+    await page.locator('#answer1').click();
+    await expect(page.locator('#resultIcon')).toHaveText('⏳');
+    await serverEmit(page, 'answerResult', { outcome: 'correct' });
+    await serverEmit(page, 'questionOver', [{ playerId: 'p1', name: 'Ana', gameData: { score: 100 } }]);
+    await serverEmit(page, 'newScore', 950);
+    await expect(page.locator('#resultIcon')).toHaveText('✅');
+    await expect(page.locator('#resultSub')).toHaveText('+850 puntos');
+});
+
+test('resultado incorrecto sin respuestas mostradas: icono y aviso de que el profesorado la comentará', async ({ page }) => {
+    await openGame(page);
+    await serverEmit(page, 'playerQuestion', { question: 'Capital de Francia?', answers: ANSWERS, type: 'quiz', time: 15 });
+    await page.locator('#answer2').click();
+    await serverEmit(page, 'questionOver', [{ playerId: 'p1', name: 'Ana', gameData: { score: 0 } }], { type: 'quiz' });
+    await expect(page.locator('#resultIcon')).toHaveText('❌');
+    await expect(page.locator('#resultSub')).toHaveText('El profesorado comentará la respuesta correcta.');
+});
+
+test('fin de partida: bandera y puntuación final', async ({ page }) => {
+    await openGame(page);
+    await serverEmit(page, 'playerGameData', [{ playerId: 'p1', name: 'Ana', gameData: { score: 700 } }]);
+    await serverEmit(page, 'GameOver');
+    await expect(page.locator('#resultIcon')).toHaveText('🏁');
+    await expect(page.locator('#resultSub')).toContainText('Puntuación: 700');
+});

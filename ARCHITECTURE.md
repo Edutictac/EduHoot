@@ -1124,8 +1124,12 @@ de recuperació; amb nom i codi es reprén des d'un altre dispositiu. Cada acci�
 (`resume`, `next`, `answer`, `timeUp`, `newAttempt`) és una petició a
 `POST /api/homework/:code/act`; la resposta duu els mateixos esdeveniments que
 el servidor en directe, i `js/homeworkTransport.js` els entrega a
-`playerSelfPaced.js` com si vingueren d'un socket. Detalls de seguretat i
-concurrència:
+`playerSelfPaced.js` com si vingueren d'un socket. L'entrada de l'alumnat
+(nom, codi de recuperació) és una app de Vue pròpia (`#hw-entry`, plantilla
+`#hw-entry-tpl` en `player/self-paced/index.html`), dins del mateix
+`homeworkTransport.js`; en entrar, el servidor dona els intents i es mostra
+«Intent n de m» (`quizInfo` duu `attemptNo` i `maxAttempts`). Detalls de
+seguretat i concurrència:
 
 - Cada intent té un camp `version`; si dos dispositius guarden alhora, un
   reintenta una vegada (control optimista).

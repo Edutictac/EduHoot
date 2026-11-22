@@ -39,6 +39,9 @@
 - **Mode individual més bonic**: el logo d'EduHoot i la imatge del quiz
   davall del títol, botons sense estirar i un panell que s'adapta a l'ample
   de la pantalla.
+- **Panell de deures més clar**: targetes blaves amb els botons de cada
+  deure en una sola fila, taula de resultats que s'ordena per columnes, i
+  ara es veu bé tant en l'ordinador com en el mòbil.
 
 ## Per a l'alumnat
 
@@ -78,6 +81,9 @@
   respostes. Només ho fas tu, quan vols.
 - **Pantalla completa**: la partida ocupa tota la pantalla, tant en
   l'ordinador com en el mòbil, sense quedar-se a dalt ni sortir-se'n.
+- **Resultats més clars**: després de cada pregunta es veu una icona gran i els
+  punts guanyats; en acabar, una targeta amb la puntuació i els encerts. Als
+  deures, l'alumnat veu en quin intent està.
 
 ## Pròximament
 
@@ -188,6 +194,9 @@
 - **Modo individual más bonito**: el logo de EduHoot y la imagen del
   cuestionario bajo el título, botones sin estirar y un panel que se adapta
   al ancho de la pantalla.
+- **Panel de deberes más claro**: tarjetas azules con los botones de cada
+  deber en una sola fila, tabla de resultados que se ordena por columnas, y
+  ahora se ve bien tanto en el ordenador como en el móvil.
 
 ## Para el alumnado
 
@@ -207,6 +216,9 @@
   respuestas. Solo lo activas tú, cuando quieres.
 - **Pantalla completa**: la partida ocupa toda la pantalla, tanto en el
   ordenador como en el móvil, sin quedarse arriba ni salirse.
+- **Resultados más claros**: tras cada pregunta ves un icono grande y los
+  puntos ganados; al terminar, una tarjeta con tu puntuación y tus aciertos.
+  En los deberes, ves en qué intento estás.
 - **Cuenta atrás también cuando practicas solo**: el modo individual
   muestra el mismo 3-2-1 antes de cada pregunta.
 - **Cada nombre, una sola vez**: dos alumnos no pueden entrar con el mismo
@@ -304,6 +316,9 @@
 - **A nicer individual mode**: the EduHoot logo and the quiz's image below
   the title, buttons that no longer stretch, and a panel that adapts to the
   screen width.
+- **A clearer homework panel**: blue cards with each assignment's buttons on
+  one row, a results table you can sort by column, and it now looks right on
+  both computers and phones.
 
 ## For students
 
@@ -322,6 +337,9 @@
   aloud, with the answers. You choose when to use it.
 - **Full screen**: the game fills the whole screen, on a computer or a
   phone, without staying at the top or running off the edge.
+- **Clearer results**: after each question you see a big icon and the points
+  you earned; at the end, a card with your score and correct answers. In
+  homework, you can see which attempt you're on.
 - **Countdown when practising alone too**: solo mode shows the same
   3-2-1 before each question.
 - **Every name, only once**: two students can't join a game with the same

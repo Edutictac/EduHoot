@@ -191,6 +191,30 @@ fitxers corresponents, i els originals es van eliminar.
 
 ### Canviat
 
+- Panell de deures del docent (`/create/homework/`): corregida la maquetació
+  (en l'ordinador el panell s'encongia al seu contingut i el text eixia del
+  recuadre; en el mòbil els resultats es tallaven pels costats). Ara té el
+  fons blau, targetes blaves fosques, títols en groc, controls en píndola,
+  els botons de cada deure en una sola fila i el mateix marge lateral que la
+  biblioteca. La taula d'alumnes s'ordena en prémer l'encapçalament.
+- L'entrada de l'alumnat als deures és ara una app de Vue (abans, HTML estàtic
+  i DOM a mà) amb el logo, una targeta amb el títol, la data límit i els
+  intents, i el camp del nom en píndola. Durant el deure es veu «Intent 2 de
+  3» (i «Últim intent»).
+- Alumnat «Al seu ritme» i deures: les respostes tornen a ser blocs grans (eren
+  tires primes), la capçalera i les respostes tenen el mateix ample, i el
+  resum final és una targeta amb la puntuació en gran i la barra d'encerts.
+- Alumnat en l'aula: les pantalles intermèdies («Resposta enviada», resultat,
+  «Partida acabada») duen una icona gran i una línia de detall (punts guanyats
+  en la pregunta, puntuació final, o l'avís que el professorat comentarà la
+  resposta quan no es mostra). La capçalera és més compacta en el mòbil, i
+  «Eixir» i «Alçar la mà» reserven el seu espai a baix: ja no tapen la
+  quarta resposta.
+- Sala d'espera de l'amfitrió: en una finestra estreta, el logo, el PIN i el
+  QR es mostren en una columna centrada (abans, el QR quedava a l'esquerra).
+- `/solo/`: l'inici té dos columnes (imatge i dades a l'esquerra, opcions a la
+  dreta), les imatges del catàleg són més baixes i, en la partida, el logo
+  va dins de la franja del títol en lloc d'una fila pròpia.
 - Biblioteca (`/create/`) redissenyada: els botons de cada quiz van en l'orde
   Jugar, Solo, Flashcards, Multijugador, Deures, CSV, Moodle, Editar, Clonar i
   Eliminar; el botó «Jugar a l'aula» passa a dir-se **«Jugar»** (també en
