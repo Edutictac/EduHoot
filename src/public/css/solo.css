@@ -1542,6 +1542,29 @@ body.playing #game-panel{
 #game-panel.is-cards-entry .btn:disabled{ opacity: 0.45; }
 #game-panel.is-cards-entry .card-link{ color: #f9a8d4; }
 
+/* Botones de la tarjeta de Flashcards, cada uno con su color (texto con contraste ≥ 4,5:1):
+   «No la sé» en rojos; «Anterior» y «Siguiente» en amarillos corporativos; «Mostrar» en verdes y «Ocultar» en rosas. */
+.btn-cards-unknown{
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    color: #fff;
+    box-shadow: 0 8px 22px rgba(185, 28, 28, 0.35);
+}
+.btn-cards-nav{
+    background: linear-gradient(135deg, #ffc800, #fdbc4b);
+    color: #2b1d00;
+    box-shadow: 0 8px 22px rgba(253, 188, 75, 0.3);
+}
+.btn-cards-show{
+    background: linear-gradient(135deg, #15803d, #166534);
+    color: #fff;
+    box-shadow: 0 8px 22px rgba(21, 128, 61, 0.35);
+}
+.btn-cards-hide{
+    background: linear-gradient(135deg, #be185d, #9d174d);
+    color: #fff;
+    box-shadow: 0 8px 22px rgba(190, 24, 93, 0.35);
+}
+
 /* Cuenta atrás 3-2-1 de Solo: centrada en vertical (y en horizontal) en el espacio libre bajo la barra de tiempo. */
 body.playing .game-area .question-card > #solo-countdown{
     margin-top: auto;

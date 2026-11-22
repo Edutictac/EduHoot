@@ -313,12 +313,12 @@
                             </div>
                         </div>
                         <div class="cards-actions">
-                            <button id="cards-prev" class="btn btn-ghost" :disabled="s.cards.pos === 0" @click="cardsPrev">{{ t('flashcardsPrev') }}</button>
-                            <button id="cards-flip" class="btn btn-primary" @click="cardsFlip">{{ s.cards.flipped ? t('flashcardsHideAnswer') : t('flashcardsShowAnswer') }}</button>
-                            <button id="cards-next" class="btn btn-ghost" @click="cardsNext">{{ t('flashcardsNext') }}</button>
+                            <button id="cards-prev" class="btn btn-cards-nav" :disabled="s.cards.pos === 0" @click="cardsPrev">{{ t('flashcardsPrev') }}</button>
+                            <button id="cards-flip" class="btn" :class="s.cards.flipped ? 'btn-cards-hide' : 'btn-cards-show'" @click="cardsFlip">{{ s.cards.flipped ? t('flashcardsHideAnswer') : t('flashcardsShowAnswer') }}</button>
+                            <button id="cards-next" class="btn btn-cards-nav" @click="cardsNext">{{ t('flashcardsNext') }}</button>
                         </div>
                         <div v-if="s.cards.flipped" class="cards-mark">
-                            <button id="cards-dont-know" class="btn btn-ghost" @click="cardsMarkUnknown">{{ t('flashcardsDontKnow') }}</button>
+                            <button id="cards-dont-know" class="btn btn-cards-unknown" @click="cardsMarkUnknown">{{ t('flashcardsDontKnow') }}</button>
                             <button id="cards-know" class="btn btn-primary" @click="cardsMarkKnown">{{ t('flashcardsKnow') }}</button>
                         </div>
                         <div class="cards-tools">

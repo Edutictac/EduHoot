@@ -191,6 +191,7 @@ fitxers corresponents, i els originals es van eliminar.
 
 ### Canviat
 
+- **Flashcards**: botons de la targeta amb colors propis: «No la sé» en roig, «Anterior» i «Següent» en grocs corporatius, «Mostrar resposta» en verd i «Ocultar resposta» en rosa (text amb contrast ≥ 4,5:1).
 - **Biblioteca**: la casella «Només els meus qüestionaris» es recorda durant la sessió del navegador (en recarregar o tornar d'editar o jugar); en iniciar sessió continua marcada per defecte, i en tancar-la s'oblida.
 - **Accessibilitat (respostes)**: el text blanc dels botons de resposta (alumnat, anfitrió i Solo) i de les barres de resultats té un contrast de com a mínim 4,5:1 (colors més foscos). En Solo, la resposta encertada i la fallada es marquen també amb «✓» i «✕», no només amb el color de la vora.
 - **Preferències (biblioteca)**: el quadre té fons opac, nom accessible, espai per al botó «Tancar», la casella «Reemplaçar tot» alineada amb el text, i queda per baix del distintiu DEV/STAGE; en tancar, el focus torna al botó «Preferències».
