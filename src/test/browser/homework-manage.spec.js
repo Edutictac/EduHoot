@@ -193,7 +193,7 @@ test('resultados: la tabla por alumno se ordena al pulsar el encabezado', async 
     expect(await names()).toEqual(['Bruno', 'Ana']);
 });
 
-test('nuevo deber: tarjeta centrada, «Volver a la biblioteca», enlace a «Mis deberes», 180 s y puntuación con varios intentos', async ({ page }) => {
+test('nuevo deber: tarjeta centrada, «Biblioteca», enlace a «Mis deberes», 180 s y puntuación con varios intentos', async ({ page }) => {
     await setup(page, {
         routes: async (p) => {
             await p.route('**/api/homeworks', route => {
@@ -203,7 +203,7 @@ test('nuevo deber: tarjeta centrada, «Volver a la biblioteca», enlace a «Mis 
         }
     });
     await page.goto('/create/homework/?quiz=7&lang=es');
-    await expect(page.locator('#back')).toHaveText('Volver a la biblioteca');
+    await expect(page.locator('#back')).toHaveText('Biblioteca');
     await expect(page.locator('#hwMineLink')).toHaveText('Mis deberes');
     await expect(page.locator('#hwMineLink')).toHaveAttribute('href', '/create/homework/');
     // Centrada: el margen izquierdo y el derecho de la tarjeta son iguales (si cabe en la página).
@@ -232,4 +232,17 @@ test('resultados con media: la columna se llama «Puntuación media»', async ({
     });
     await page.goto('/create/homework/?code=ABCD2345&lang=es');
     await expect(page.locator('#hwStudents .hw-sort', { hasText: 'Puntuación media' })).toBeVisible();
+});
+
+test('el logo de EduHoot va junto al título «Mis deberes»', async ({ page }) => {
+    await setup(page, { routes: async (p) => { await p.route('**/api/homeworks', route => route.fulfill({ json: [] })); } });
+    await page.goto('/create/homework/?lang=es');
+    await expect(page.locator('#hwPageTitle')).toHaveText('Mis deberes');
+    const m = await page.evaluate(() => {
+        const l = document.querySelector('#hwPageTitle .title-logo').getBoundingClientRect();
+        const s = document.querySelector('#hwPageTitle span').getBoundingClientRect();
+        return { logoRight: l.right, textLeft: s.left, dy: Math.abs((l.top + l.height / 2) - (s.top + s.height / 2)) };
+    });
+    expect(m.logoRight).toBeLessThanOrEqual(m.textLeft + 1);
+    expect(m.dy).toBeLessThanOrEqual(6);
 });

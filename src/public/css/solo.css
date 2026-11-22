@@ -1531,3 +1531,30 @@ body.playing .game-area .question-card > #solo-countdown{
     margin-top: auto;
     margin-bottom: auto;
 }
+
+/* Logo e imagen del quiz (inicio de Solo y entrada de Flashcards):
+   con imagen, el logo sale pequeño junto a ella; sin imagen, el logo sale grande,
+   como en el listado de quizzes de Solo. */
+.quiz-banner:not(.quiz-banner--logo-only) .quiz-banner__logo{
+    width: 44px;
+    height: 44px;
+    padding: 6px;
+    border-radius: 12px;
+}
+.quiz-banner--logo-only .quiz-banner__logo{
+    width: min(100%, 300px);
+    height: 150px;
+    padding: 14px;
+    border-radius: 14px;
+    border: 1px solid var(--card-stroke);
+    background: linear-gradient(135deg, #6c2bd9, #b83280);
+    box-shadow: var(--shadow);
+    object-fit: contain;
+}
+#game-panel.is-cards-entry .quiz-banner--logo-only .quiz-banner__logo{
+    background: linear-gradient(135deg, #831843, #be185d);
+    border-color: rgba(244, 114, 182, 0.45);
+}
+@media (max-width: 600px){
+    .quiz-banner--logo-only .quiz-banner__logo{ height: 130px; }
+}

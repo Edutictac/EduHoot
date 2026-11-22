@@ -7,13 +7,13 @@ var params = jQuery.deparam(window.location.search);
 
 var i18n = {
     es: { endGame: 'Acabar partida', endConfirm: 'Confirmar: acabar', downloadReport: 'Descargar informe (CSV)', downloadReportError: 'No se ha podido descargar el informe de la sesión.',
-        backToLibrary: 'Volver a la biblioteca', noStudents: 'Esperando alumnado…', finished: 'Terminado', handRaised: 'Mano levantada', kickBtn: 'Expulsar', kickConfirm: '¿Seguro?',
+        backToLibrary: 'Biblioteca', noStudents: 'Esperando alumnado…', finished: 'Terminado', handRaised: 'Mano levantada', kickBtn: 'Expulsar', kickConfirm: '¿Seguro?',
         topPlayers: 'Mejores jugadores', summary: '{n} alumnos · {f} han terminado', summaryEnded: 'Partida terminada · {n} alumnos' },
     en: { endGame: 'End game', endConfirm: 'Confirm: end it', downloadReport: 'Download report (CSV)', downloadReportError: 'Could not download the session report.',
-        backToLibrary: 'Back to library', noStudents: 'Waiting for students…', finished: 'Finished', handRaised: 'Hand raised', kickBtn: 'Kick', kickConfirm: 'Sure?',
+        backToLibrary: 'Library', noStudents: 'Waiting for students…', finished: 'Finished', handRaised: 'Hand raised', kickBtn: 'Kick', kickConfirm: 'Sure?',
         topPlayers: 'Top players', summary: '{n} students · {f} finished', summaryEnded: 'Game over · {n} students' },
     ca: { endGame: 'Acabar partida', endConfirm: 'Confirma: acabar', downloadReport: 'Descarregar informe (CSV)', downloadReportError: 'No s\'ha pogut descarregar l\'informe de la sessió.',
-        backToLibrary: 'Tornar a la biblioteca', noStudents: 'Esperant alumnat…', finished: 'Acabat', handRaised: 'Mà alçada', kickBtn: 'Expulsar', kickConfirm: 'Segur?',
+        backToLibrary: 'Biblioteca', noStudents: 'Esperant alumnat…', finished: 'Acabat', handRaised: 'Mà alçada', kickBtn: 'Expulsar', kickConfirm: 'Segur?',
         topPlayers: 'Millors jugadors', summary: '{n} alumnes · {f} han acabat', summaryEnded: 'Partida acabada · {n} alumnes' }
 };
 function t(key){

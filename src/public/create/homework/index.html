@@ -22,7 +22,7 @@
         <template id="hw-tpl">
         <div class="page-shell hw-shell">
             <div class="top-row">
-                <h1 id="hwPageTitle">{{ t('title') }}</h1>
+                <h1 id="hwPageTitle"><img class="title-logo" src="/icons/logo.svg" alt="" width="44" height="44"><span>{{ t('title') }}</span></h1>
                 <div class="top-actions">
                     <a v-if="view !== 'list'" id="hwMineLink" class="btn btn-small btn-ghost" href="/create/homework/">{{ t('myHomeworkLink') }}</a>
                     <label class="lang-switch">

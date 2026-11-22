@@ -191,14 +191,18 @@ fitxers corresponents, i els originals es van eliminar.
 
 ### Canviat
 
-- Botons de tornada: ara diuen on porten. «Tornar a l'inici» (biblioteca,
-  Solo, Multijugador i entrada de l'alumnat) i «Tornar a la biblioteca»
-  (editor de qüestionaris, deures del docent i final de la partida de
-  l'amfitrió), en lloc de «Tornar» a seques.
-- Distintius DEV i STAGE: mostren l'ample × alt de la finestra (es
-  actualitza només en redimensionar) i es poden ocultar i mostrar amb **F9**
+- Botons de tornada: ara diuen on porten. «Inici» (biblioteca, Solo,
+  Multijugador i entrada de l'alumnat) i «Biblioteca» (editor de
+  qüestionaris, deures del docent i final de la partida de l'amfitrió), en
+  lloc de «Tornar» a seques.
+- Distintius DEV i STAGE: en la segona línia, l'usuari actual a l'esquerra
+  (en tots dos entorns) i l'ample × alt de la finestra a la dreta (s'actualitza
+  només en redimensionar; en stage, l'etiqueta de la imatge va davall) i es poden ocultar i mostrar amb **F9**
   (o **Alt+B**) per a veure com queda tot en producció; l'elecció es recorda
   entre pantalles.
+- Solo i Flashcards (inici): si el quiz té imatge, el logo ix xicotet al seu
+  costat; si no, ix gran, com en el llistat de quizzes. Deures del docent: el
+  logo va junt al títol «Els meus deures».
 - Biblioteca (`/create/`): el logo d'EduHoot va davant del títol «Crea i llança
   el teu EduHoot».
 - Deures: el temps per pregunta pot arribar als **180 s** (3 minuts); amb

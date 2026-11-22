@@ -22,16 +22,49 @@
         }
     };
 
-    function applyBadge(cfg, tag){
+    // info: { user: usuario actual (si lo hay), tag: etiqueta de la imagen (solo en stage) }.
+    function applyBadge(cfg, info){
+        info = info || {};
         // En dev el distintiu porta a /dev/login (accés amb usuaris de prova).
         var badge = document.createElement(cfg.href ? 'a' : 'div');
         badge.className = 'env-badge';
         var labelEl = document.createElement('span');
         labelEl.textContent = cfg.label;
         badge.appendChild(labelEl);
-        if(tag){
+        // Segunda línea: usuario actual a la izquierda y tamaño de la ventana a la derecha (dev y stage).
+        var infoRow = document.createElement('span');
+        infoRow.className = 'env-badge__info';
+        infoRow.style.display = 'flex';
+        infoRow.style.justifyContent = 'space-between';
+        infoRow.style.alignItems = 'baseline';
+        infoRow.style.gap = '16px';
+        infoRow.style.marginTop = '2px';
+        infoRow.style.fontSize = '0.55em';
+        infoRow.style.fontWeight = '400';
+        infoRow.style.opacity = '0.85';
+        infoRow.style.whiteSpace = 'nowrap';
+        var userEl = document.createElement('span');
+        userEl.className = 'env-badge__user';
+        userEl.textContent = info.user || '';
+        userEl.style.textAlign = 'left';
+        infoRow.appendChild(userEl);
+        // Ancho × alto de la ventana (en píxeles CSS), sin recargar: solo cambia al redimensionar.
+        var sizeEl = document.createElement('span');
+        sizeEl.className = 'env-badge__size';
+        sizeEl.style.textAlign = 'right';
+        sizeEl.style.marginLeft = 'auto';
+        sizeEl.style.fontVariantNumeric = 'tabular-nums';
+        var updateSize = function(){
+            sizeEl.textContent = window.innerWidth + ' × ' + window.innerHeight;
+        };
+        updateSize();
+        infoRow.appendChild(sizeEl);
+        badge.appendChild(infoRow);
+        // En stage, además, la etiqueta con la que se publicó la imagen, en una línea aparte.
+        if(info.tag){
             var tagEl = document.createElement('span');
-            tagEl.textContent = tag;
+            tagEl.className = 'env-badge__tag';
+            tagEl.textContent = info.tag;
             tagEl.style.display = 'block';
             tagEl.style.fontSize = '0.55em';
             tagEl.style.fontWeight = '400';
@@ -39,20 +72,6 @@
             tagEl.style.marginTop = '2px';
             badge.appendChild(tagEl);
         }
-        // Ancho × alto de la ventana (en píxeles CSS), sin recargar: solo cambia al redimensionar.
-        var sizeEl = document.createElement('span');
-        sizeEl.className = 'env-badge__size';
-        sizeEl.style.display = 'block';
-        sizeEl.style.fontSize = '0.55em';
-        sizeEl.style.fontWeight = '400';
-        sizeEl.style.opacity = '0.85';
-        sizeEl.style.marginTop = '2px';
-        sizeEl.style.fontVariantNumeric = 'tabular-nums';
-        var updateSize = function(){
-            sizeEl.textContent = window.innerWidth + ' × ' + window.innerHeight;
-        };
-        updateSize();
-        badge.appendChild(sizeEl);
         window.addEventListener('resize', updateSize);
         if(cfg.href){
             badge.href = cfg.href;
@@ -155,30 +174,18 @@
             var cfg = data && ENVS[data.env];
             if(!cfg) return;
             document.documentElement.classList.add('env-' + data.env);
-            if(data.env === 'development'){
-                // Sota el distintiu, mostra el professorat loguejat (si en té),
-                // el mateix nom que ja ix entre claudàtors al títol de la pestanya
-                // (create-auth.js/quizCreator.js, updateTitleUserId()).
-                fetch('/api/auth/me', { credentials: 'include' }).then(function(res){
-                    return res.ok ? res.json() : null;
-                }).then(function(user){
-                    applyBadge(cfg, user ? (user.nickname || user.email) : '');
-                }).catch(function(){
-                    applyBadge(cfg);
-                });
-                return;
-            }
-            if(data.env !== 'staging'){
-                applyBadge(cfg);
-                return;
-            }
-            // En stage, afig la tag amb què es va publicar la imatge (si en té).
-            fetch('/api/version').then(function(res){
+            // Usuario actual (nickname o, si no tiene, el correo) en dev y en stage; en stage, además, la etiqueta de la imagen.
+            var getUser = fetch('/api/auth/me', { credentials: 'include' }).then(function(res){
                 return res.ok ? res.json() : null;
-            }).then(function(v){
-                applyBadge(cfg, v && v.tag ? v.tag : '');
-            }).catch(function(){
-                applyBadge(cfg);
+            }).then(function(user){
+                return user ? (user.nickname || user.email || '') : '';
+            }).catch(function(){ return ''; });
+            var getTag = data.env === 'staging'
+                ? fetch('/api/version').then(function(res){ return res.ok ? res.json() : null; })
+                    .then(function(v){ return v && v.tag ? v.tag : ''; }).catch(function(){ return ''; })
+                : Promise.resolve('');
+            Promise.all([getUser, getTag]).then(function(parts){
+                applyBadge(cfg, { user: parts[0], tag: parts[1] });
             });
         }).catch(function(){
             // Sense distintiu si falla la petició; mai bloquejar la pàgina.

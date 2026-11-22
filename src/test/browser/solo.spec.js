@@ -627,3 +627,29 @@ test('partida: misma estructura que en el aula y, con imagen, cabe en pantalla',
         expect(boxes[2].y).toBeGreaterThan(boxes[0].y);
     }
 });
+
+test('inicio: con imagen del quiz, el logo sale pequeño junto a ella; sin imagen, el logo sale grande', async ({ page }) => {
+    await mockBackend(page, { quizzes: { qc: { id: 'qc', name: 'Con imagen', tags: [], coverImage: '/icons/logo.svg', questions: [geoQuestions[0]] }, qn: { id: 'qn', name: 'Sin imagen', tags: [], questions: [geoQuestions[0]] } } });
+    await page.goto('/solo/?id=qc&lang=es');
+    await expect(page.locator('#start-form')).toBeVisible();
+    const withImage = await page.evaluate(() => {
+        const b = document.querySelector('#start-form .quiz-banner');
+        const logo = b.querySelector('.quiz-banner__logo').getBoundingClientRect();
+        const cover = b.querySelector('.quiz-banner__cover');
+        return { logoOnly: b.classList.contains('quiz-banner--logo-only'), logoH: logo.height, cover: !!cover, coverLeft: cover ? cover.getBoundingClientRect().left : 0, logoRight: logo.right };
+    });
+    expect(withImage.logoOnly).toBe(false);
+    expect(withImage.cover).toBe(true);
+    expect(withImage.logoH).toBeLessThan(60);
+    expect(withImage.coverLeft).toBeGreaterThanOrEqual(withImage.logoRight);
+
+    await page.goto('/solo/?id=qn&lang=es');
+    await expect(page.locator('#start-form')).toBeVisible();
+    const noImage = await page.evaluate(() => {
+        const b = document.querySelector('#start-form .quiz-banner');
+        return { logoOnly: b.classList.contains('quiz-banner--logo-only'), logoH: b.querySelector('.quiz-banner__logo').getBoundingClientRect().height, cover: !!b.querySelector('.quiz-banner__cover') };
+    });
+    expect(noImage.logoOnly).toBe(true);
+    expect(noImage.cover).toBe(false);
+    expect(noImage.logoH).toBeGreaterThanOrEqual(120);
+});

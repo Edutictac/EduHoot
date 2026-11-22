@@ -18,7 +18,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
     </head>
     <body>
-        <a class="back-link" href="/" data-i18n="back">← Volver al inicio</a>
+        <a class="back-link" href="/" data-i18n="back">← Inicio</a>
         <edutictac-account class="site-account site-account--fixed" data-base="https://commons.edutictac.es"></edutictac-account>
         <header class="hero">
             <img class="hero__logo" src="/icons/logo.svg" alt="EduHoot logo">
@@ -129,9 +129,9 @@
                 <div id="start-form" class="start-form" :class="{ hidden: s.view !== 'start' }">
                     <!-- Logo de EduHoot e imagen representativa del quiz, bajo el título. -->
                     <div class="start-form__info">
-                        <div class="quiz-banner">
+                        <div class="quiz-banner" :class="{ 'quiz-banner--logo-only': !quizImage }">
                             <img class="quiz-banner__logo" src="/icons/logo.svg" alt="EduHoot">
-                            <img v-if="quizImage" class="quiz-banner__cover" :src="quizImage" alt="" @error="$event.target.style.display = 'none'">
+                            <img v-if="quizImage" class="quiz-banner__cover" :src="quizImage" alt="" @error="$event.target.style.display = 'none'; $event.target.parentNode.classList.add('quiz-banner--logo-only')">
                         </div>
                         <p id="selected-meta" class="muted">{{ selectedMeta }}</p>
                     </div>
@@ -248,9 +248,9 @@
                     <div v-if="s.cards.phase !== 'card'" class="cards-start">
                       <div class="cards-start__info">
                         <h3 v-if="s.cards.phase === 'done'">{{ t('flashcardsDoneTitle') }}</h3>
-                        <div class="quiz-banner">
+                        <div class="quiz-banner" :class="{ 'quiz-banner--logo-only': !quizImage }">
                             <img class="quiz-banner__logo" src="/icons/logo.svg" alt="EduHoot">
-                            <img v-if="quizImage" class="quiz-banner__cover" :src="quizImage" alt="" @error="$event.target.style.display = 'none'">
+                            <img v-if="quizImage" class="quiz-banner__cover" :src="quizImage" alt="" @error="$event.target.style.display = 'none'; $event.target.parentNode.classList.add('quiz-banner--logo-only')">
                         </div>
                         <p class="muted">{{ cardsTotal ? cardsCountsText : t('flashcardsEmpty') }}</p>
                       </div>

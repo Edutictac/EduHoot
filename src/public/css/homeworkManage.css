@@ -4,7 +4,9 @@
 body{ padding-top: var(--env-badge-space, 0px); }
 
 .hw-shell{ min-width: 0; }
-#hwPageTitle{ color: #ffc800; margin: 0; font-size: 40px; }
+#hwPageTitle{ color: #ffc800; margin: 0; font-size: 40px; display: flex; align-items: center; gap: 0.28em; }
+#hwPageTitle span{ min-width: 0; }
+#hwPageTitle .title-logo{ height: 1.1em; width: auto; border-radius: 0.18em; flex: none; }
 .hw-shell .top-row{ margin-bottom: 18px; }
 
 .hw-card{

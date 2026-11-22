@@ -41,7 +41,7 @@ function rememberClaimableQuizId(id){
 
 var i18n = {
     es: {
-        back: 'Volver a la biblioteca',
+        back: 'Biblioteca',
         title: 'Creador de quizzes',
         subtitle: 'Diseña las preguntas y guarda tu juego para lanzarlo cuando quieras.',
         langLabel: 'Idioma',
@@ -113,7 +113,7 @@ var i18n = {
         confirmCancel: '¿Seguro que quieres salir? Se perderán los cambios.',
     },
     en: {
-        back: 'Back to library',
+        back: 'Library',
         title: 'Quiz builder',
         subtitle: 'Design questions and save your game to launch whenever you want.',
         langLabel: 'Language',
@@ -185,7 +185,7 @@ var i18n = {
         confirmCancel: 'Are you sure? Changes will be lost.',
     },
     ca: {
-        back: "Tornar a la biblioteca",
+        back: "Biblioteca",
         title: 'Creador de quizzes',
         subtitle: 'Dissenya les preguntes i desa el joc per llançar-lo quan vulguis.',
         langLabel: 'Idioma',

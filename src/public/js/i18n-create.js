@@ -2,7 +2,7 @@
 var lang = EduhootLang.init();
 var i18n = {
     es: {
-        back: 'Volver al inicio',
+        back: 'Inicio',
         title: 'Crea y lanza tu EduHoot',
         subtitle: 'Genera con IA, importa (archivo o Kahoot) o <a id="link" href="quiz-creator/">crea un cuestionario desde cero</a>.',
         langLabel: 'Idioma',
@@ -240,7 +240,7 @@ var i18n = {
         optOther: 'Otro'
     },
     en: {
-        back: 'Back to home',
+        back: 'Home',
         title: 'Create and launch your EduHoot',
         subtitle: 'Generate with AI, import (file or Kahoot), or <a id="link" href="quiz-creator/">create a quiz from scratch</a>.',
         langLabel: 'Language',
@@ -478,7 +478,7 @@ var i18n = {
         optOther: 'Other'
     },
     ca: {
-        back: "Tornar a l'inici",
+        back: "Inici",
         title: 'Crea i llança el teu EduHoot',
         subtitle: 'Genera amb IA, importa (fitxer o Kahoot) o <a id="link" href="quiz-creator/">crea un qüestionari de zero</a>.',
         langLabel: 'Idioma',

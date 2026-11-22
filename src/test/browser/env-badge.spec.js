@@ -85,3 +85,30 @@ for (const env of ['development', 'staging']) {
         await expect(page.locator('html')).toHaveClass(new RegExp(cls));
     });
 }
+
+// Segunda línea del distintivo: usuario actual a la izquierda y tamaño de la ventana a la derecha, en dev y en stage.
+for (const env of ['development', 'staging']) {
+    test(`${env}: usuario a la izquierda y tamaño de la ventana a la derecha, en la misma línea`, async ({ page }) => {
+        await page.setViewportSize({ width: 1000, height: 650 });
+        await page.route(/^https:\/\//, route => route.abort());
+        await page.route('**/api/**', route => route.fulfill({ json: {} }));
+        await page.route('**/api/env', route => route.fulfill({ json: { env } }));
+        await page.route('**/api/version', route => route.fulfill({ json: { tag: 'stage-2026.11.22-1' } }));
+        await page.route('**/api/auth/me', route => route.fulfill({ json: { id: 't1', nickname: 'Docent', email: 'd@example.org', role: 'editor' } }));
+        await page.goto('/?lang=es');
+        const user = page.locator('.env-badge__user');
+        const size = page.locator('.env-badge__size');
+        await expect(user).toHaveText('Docent');
+        await expect(size).toHaveText('1000 × 650');
+        const u = await user.boundingBox();
+        const s = await size.boundingBox();
+        expect(Math.abs((u.y + u.height / 2) - (s.y + s.height / 2))).toBeLessThanOrEqual(3);
+        expect(s.x).toBeGreaterThan(u.x + u.width);
+        // En stage, la etiqueta de la imagen va en una línea aparte, debajo.
+        if (env === 'staging') {
+            await expect(page.locator('.env-badge__tag')).toHaveText('stage-2026.11.22-1');
+            const t = await page.locator('.env-badge__tag').boundingBox();
+            expect(t.y).toBeGreaterThanOrEqual(u.y + u.height - 1);
+        }
+    });
+}
