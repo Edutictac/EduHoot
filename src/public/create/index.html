@@ -237,7 +237,7 @@
                     <button id="ia-upload" type="button" @click="uploadIa">{{ t('btnImportIa') }}</button>
                     <button id="ia-edit" class="btn btn-ghost" type="button" :disabled="!ia.lastUploadedId" @click="editIaQuiz">{{ t('btnEditCreator') }}</button>
                 </div>
-                <p id="ia-status">{{ ia.status.text }}<button v-if="ia.status.playId" class="btn btn-primary" style="margin-left: 8px" @click="startGame(ia.status.playId)">{{ t('play') }}</button></p>
+                <p id="ia-status">{{ ia.status.text }}<span v-if="ia.status.playId" class="status-actions"><button type="button" class="btn btn-primary btn-small" @click="startGame(ia.status.playId)">{{ t('play') }}</button></span></p>
             </details>
 
             <details id="csv-import" class="panel">
@@ -260,7 +260,7 @@
                 <input id="csv-name" type="text" :placeholder="t('namePlaceholder')" v-model="imp.csvName">
                 <button type="submit">{{ t('btnUploadCsv') }}</button>
             </form>
-            <p id="csv-status">{{ imp.csvStatus.text }}<button v-if="imp.csvStatus.playId" @click="startGame(imp.csvStatus.playId)">{{ t('startNow') || t('play') }}</button></p>
+            <p id="csv-status">{{ imp.csvStatus.text }}<span v-if="imp.csvStatus.playId" class="status-actions"><button type="button" class="btn btn-primary btn-small" @click="startGame(imp.csvStatus.playId)">{{ t('play') }}</button><button type="button" class="btn btn-ghost btn-small" @click="editQuiz(imp.csvStatus.playId)">{{ t('editQuiz') }}</button></span></p>
             <div class="split-import">
                 <div>
                     <h3 id="kahoot-form-title">{{ t('kahootTitle') }}</h3>
@@ -277,7 +277,7 @@
                         </select>
                         <button type="submit" :disabled="imp.kahootBusy">{{ t('btnImportKahoot') }}</button>
                     </form>
-                    <p id="kahoot-status" class="subtext">{{ imp.kahootStatus.text }}<button v-if="imp.kahootStatus.playId" class="btn btn-primary btn-small" @click="startGame(imp.kahootStatus.playId)">{{ t('play') }}</button><button v-if="imp.kahootStatus.editId" class="btn btn-ghost btn-small" @click="editQuiz(imp.kahootStatus.editId)">{{ t('editQuiz') }}</button></p>
+                    <p id="kahoot-status" class="subtext">{{ imp.kahootStatus.text }}<span v-if="imp.kahootStatus.playId || imp.kahootStatus.editId" class="status-actions"><button v-if="imp.kahootStatus.playId" type="button" class="btn btn-primary btn-small" @click="startGame(imp.kahootStatus.playId)">{{ t('play') }}</button><button v-if="imp.kahootStatus.editId" type="button" class="btn btn-ghost btn-small" @click="editQuiz(imp.kahootStatus.editId)">{{ t('editQuiz') }}</button></span></p>
                 </div>
             </div>
             </details>

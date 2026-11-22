@@ -16,7 +16,7 @@ Les versions 1.0.2 i 1.0.5 van tindre en el seu moment una nota de versió
 pròpia (`RELEASE-X.Y.Z.md`); el seu contingut ja està integrat ací i als
 fitxers corresponents, i els originals es van eliminar.
 
-## [Sense publicar]
+## [1.2.0] - 2026-11-23
 
 ### Afegit
 - **Deures asíncrons** (feature 1): el docent crea un deure des d'un quiz (botó 📚
@@ -191,6 +191,7 @@ fitxers corresponents, i els originals es van eliminar.
 
 ### Canviat
 
+- **Biblioteca**: en importar un qüestionari des d'un fitxer, a més de «Jugar» s'ofereix «Editar qüestionari», amb la tipografia de la pàgina (també en els botons d'IA i Kahoot).
 - **Solo**: en acabar cada pregunta (encert, encert parcial o errada) s'obri una finestra al centre amb el resultat («✓», «◐» o «✕»; botó verd, taronja o roig). Mostra una barra i els segons que queden, i es tanca sola als segons indicats (5 per defecte, configurable de 1 a 30 al formulari d'inici i recordat al navegador) o abans amb «OK»; les enquestes no la mostren.
 - **Solo**: si s'arriba des de la biblioteca (enllaç amb `from=library`), la part superior mostra els botons «Inici» i «Biblioteca»; si s'arriba des d'Inici, només «Inici».
 - **Solo i Flashcards (pantalla de joc)**: els botons i camps usen la mateixa tipografia (Inter) que la resta de la pantalla, en lloc de la per defecte del navegador.
@@ -708,6 +709,7 @@ migrar la base `kahootDB`.
   d'imatge/vídeo en preguntes.
 - Estadístiques bàsiques de partides i modes de joc preferits.
 
+[1.2.0]: https://github.com/Edutictac/EduHoot/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/Edutictac/EduHoot/compare/v1.0.13...v1.1.0
 [1.0.7]: https://github.com/Edutictac/EduHoot/compare/v1.0.5...v1.0.7
 [1.0.2]: https://github.com/Edutictac/EduHoot/releases/tag/v1.0.2

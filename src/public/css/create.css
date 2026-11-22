@@ -1247,3 +1247,7 @@ body.modal-open{
 .game-actions .btn-primary{
     font-family: inherit;
 }
+
+/* Botones «Jugar» y «Editar» bajo una importación correcta (IA, archivo o Kahoot): misma tipografía que el resto. */
+.status-actions{ display: inline-flex; flex-wrap: wrap; gap: 8px; margin-left: 10px; vertical-align: middle; }
+.status-actions .btn{ font-family: inherit; font-size: 14px; font-weight: 700; line-height: 1.2; min-height: 36px; padding: 6px 14px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; }

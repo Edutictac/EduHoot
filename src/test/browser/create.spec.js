@@ -494,12 +494,25 @@ test('subir CSV: sin archivo avisa; con archivo envía nombre y token y ofrece j
     await page.locator('#csv-file').setInputFiles({ name: 'q.csv', mimeType: 'text/csv', buffer: Buffer.from('tipo;pregunta\n') });
     await page.locator('#csv-name').fill('  Nou  ');
     await page.locator('#csv-form button[type="submit"]').click();
-    await expect(page.locator('#csv-status')).toHaveText('Importado: Nou (3) Jugar');
+    await expect(page.locator('#csv-status')).toHaveText('Importado: Nou (3) JugarEditar cuestionario');
     expect(calls.uploads[0]).toContain('name="name"\r\n\r\nNou');
     expect(calls.uploads[0]).toContain('name="ownerToken"\r\n\r\ntok1');
     await expect(page.locator('#csv-name')).toHaveValue('');
     expect(await page.evaluate(() => JSON.parse(localStorage.getItem('localQuizzes')))).toEqual(['n1']);
-    await page.locator('#csv-status button').click();
+    // Opciones tras importar: jugar y editar, con la tipografía de la página (no la del navegador).
+    await expect(page.locator('#csv-status button')).toHaveText(['Jugar', 'Editar cuestionario']);
+    expect(await page.locator('#csv-status button').first().evaluate(el => getComputedStyle(el).fontFamily)).toContain('Raleway');
+    await page.locator('#csv-status button', { hasText: 'Editar cuestionario' }).click();
+    await expect(page).toHaveURL(/\/create\/quiz-creator\/\?id=n1$/);
+});
+
+test('subir CSV: el botón «Jugar» abre la partida', async ({ page }) => {
+    await mockBackend(page, { user: TEACHER });
+    await openCreate(page);
+    await page.locator('#csv-import summary').click();
+    await page.locator('#csv-file').setInputFiles({ name: 'q.csv', mimeType: 'text/csv', buffer: Buffer.from('tipo;pregunta\n') });
+    await page.locator('#csv-form button[type="submit"]').click();
+    await page.locator('#csv-status button', { hasText: 'Jugar' }).click();
     await expect(page).toHaveURL(/\/host\/\?id=n1$/);
 });
 
