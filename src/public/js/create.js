@@ -17,7 +17,6 @@ var currentFilters = Vue.reactive({
     tagMode: 'all'
 });
 var TAG_SUGGESTIONS_LIMIT = 12;
-var LIBRARY_PAGE_SIZE = 12;
 var PENDING_ACCOUNT_SAVE_KEY = 'eduhoot-pending-account-save';
 
 readFiltersFromUrl();

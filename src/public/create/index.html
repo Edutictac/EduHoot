@@ -328,6 +328,16 @@
                     <div class="library-main">
                         <!-- visibilityHelp es texto propio del diccionario i18n (con <strong> y <br>). -->
                         <p class="subtext" v-html="t('visibilityHelp')"></p>
+                        <div id="library-pagination-top" class="pagination" :class="{ hidden: !showPager }">
+                            <button id="library-pagination-prev-top" v-show="totalPages > 1" class="btn btn-ghost" :disabled="currentPage <= 1" @click="prevPage">{{ t('paginationPrev') }}</button>
+                            <span id="library-pagination-info-top" v-show="totalPages > 1">{{ paginationInfo }}</span>
+                            <button id="library-pagination-next-top" v-show="totalPages > 1" class="btn btn-ghost" :disabled="currentPage >= totalPages" @click="nextPage">{{ t('paginationNext') }}</button>
+                            <label class="page-size"><span>{{ t('pageSizeLabel') }}</span>
+                                <select id="library-page-size-top" :value="lib.pageSize" @change="onPageSize">
+                                    <option v-for="n in pageSizes" :key="n" :value="n">{{ n }}</option>
+                                </select>
+                            </label>
+                        </div>
                         <div id="game-list" class="game-grid">
                             <div v-if="!sortedQuizzes.length" class="empty-state"><p>{{ t('noGames') }}</p><p>{{ t('noGamesHint') }}</p></div>
                             <div v-for="quiz in pageQuizzes" :key="quiz.id" class="game-card">
@@ -384,10 +394,15 @@
                                 </div>
                             </div>
                         </div>
-                        <div id="library-pagination" class="pagination" :class="{ hidden: !sortedQuizzes.length || totalPages <= 1 }">
-                            <button id="library-pagination-prev" class="btn btn-ghost" :disabled="currentPage <= 1" @click="prevPage">{{ t('paginationPrev') }}</button>
-                            <span id="library-pagination-info">{{ paginationInfo }}</span>
-                            <button id="library-pagination-next" class="btn btn-ghost" :disabled="currentPage >= totalPages" @click="nextPage">{{ t('paginationNext') }}</button>
+                        <div id="library-pagination" class="pagination" :class="{ hidden: !showPager }">
+                            <button id="library-pagination-prev" v-show="totalPages > 1" class="btn btn-ghost" :disabled="currentPage <= 1" @click="prevPage">{{ t('paginationPrev') }}</button>
+                            <span id="library-pagination-info" v-show="totalPages > 1">{{ paginationInfo }}</span>
+                            <button id="library-pagination-next" v-show="totalPages > 1" class="btn btn-ghost" :disabled="currentPage >= totalPages" @click="nextPage">{{ t('paginationNext') }}</button>
+                            <label class="page-size"><span>{{ t('pageSizeLabel') }}</span>
+                                <select id="library-page-size" :value="lib.pageSize" @change="onPageSize">
+                                    <option v-for="n in pageSizes" :key="n" :value="n">{{ n }}</option>
+                                </select>
+                            </label>
                         </div>
                     </div>
                 </div>

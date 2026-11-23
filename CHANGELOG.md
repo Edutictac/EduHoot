@@ -191,6 +191,7 @@ fitxers corresponents, i els originals es van eliminar.
 
 ### Canviat
 
+- **Biblioteca**: el paginador també apareix damunt de les targetes, i hi ha un selector de qüestionaris per pàgina (10, 20, 30, 50 o 100; 10 per defecte) que es recorda al navegador. Els botons de pàgina s'amaguen si hi ha una sola pàgina, però el selector continua.
 - **Solo**: nou botó «Passar» (entre «Pausar» i «Cancel·lar la partida») per a saltar a la pregunta següent sense respondre: no suma punts ni encerts, talla la ratxa i no mostra la finestra de resultat. Es pot usar mentre corre el temps o el compte enrere, no en pausa.
 - **Quiz-creator**: una barra fixa a la part inferior amb només els botons (Guardar, Jugar sense guardar, Cancel·lar) apareix quan no es veu ni el bloc de dalt ni el de baix; s'amaga mentre s'escriu amb teclat virtual (pantalles tàctils) i en mòbil els botons són compactes, només amb icona.
 - **Quiz-creator**: l'avís de connexió en temps real i l'error en carregar un quiz per a editar-lo es mostren traduïts (es, en, ca, va); s'han eliminat estils CSS sense ús d'una finestra antiga d'importació.

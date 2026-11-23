@@ -306,22 +306,50 @@ test('«Ver más» muestra el resto de carpetas y «Ver menos» las recoge', asy
     await expect(tagButtons(page)).toHaveCount(14);
 });
 
-test('paginación de 12 en 12', async ({ page }) => {
+test('paginación de 10 en 10, también arriba, con selector de cuestionarios por página', async ({ page }) => {
     const many = Array.from({ length: 13 }, (_, i) => quiz('p' + i, 'Quiz ' + String(i).padStart(2, '0'), { createdAt: '2026-01-' + String(i + 1).padStart(2, '0') + 'T00:00:00Z' }));
     await mockBackend(page, { quizzes: many });
     await openCreate(page);
-    await expect(cards(page)).toHaveCount(12);
+    await expect(cards(page)).toHaveCount(10);
     await expect(page.locator('#library-pagination')).toBeVisible();
+    await expect(page.locator('#library-pagination-top')).toBeVisible();
+    // La barra de arriba queda antes de las tarjetas y la de abajo después.
+    const topBar = await page.locator('#library-pagination-top').boundingBox();
+    const firstCard = await cards(page).first().boundingBox();
+    const bottomBar = await page.locator('#library-pagination').boundingBox();
+    expect(topBar.y + topBar.height).toBeLessThanOrEqual(firstCard.y);
+    expect(bottomBar.y).toBeGreaterThan(firstCard.y);
     await expect(page.locator('#library-pagination-info')).toHaveText('Página 1 de 2');
+    await expect(page.locator('#library-pagination-info-top')).toHaveText('Página 1 de 2');
     await expect(page.locator('#library-pagination-prev')).toBeDisabled();
-    await page.locator('#library-pagination-next').click();
-    await expect(titles(page)).toHaveText(['Quiz 00']);
+    await expect(page.locator('#library-pagination-prev-top')).toBeDisabled();
+    // El paginador de arriba también pasa de página.
+    await page.locator('#library-pagination-next-top').click();
+    await expect(cards(page)).toHaveCount(3);
     await expect(page.locator('#library-pagination-info')).toHaveText('Página 2 de 2');
     await expect(page.locator('#library-pagination-next')).toBeDisabled();
+    await expect(page.locator('#library-pagination-next-top')).toBeDisabled();
     // Cambiar el orden vuelve a la primera página.
     await page.locator('#library-sort').selectOption('oldest');
     await expect(page.locator('#library-pagination-info')).toHaveText('Página 1 de 2');
     await expect(titles(page).first()).toHaveText('Quiz 00');
+
+    // Selector: 10, 20, 30, 50 y 100 (en las dos barras); al cambiarlo vuelve a la primera página.
+    await expect(page.locator('#library-page-size-top option')).toHaveText(['10', '20', '30', '50', '100']);
+    await expect(page.locator('#library-page-size option')).toHaveText(['10', '20', '30', '50', '100']);
+    await expect(page.locator('#library-page-size')).toHaveValue('10');
+    await page.locator('#library-page-size').selectOption('20');
+    await expect(cards(page)).toHaveCount(13);
+    await expect(page.locator('#library-page-size-top')).toHaveValue('20');
+    // Con una sola página no se ven los botones de página, pero sí el selector para volver atrás.
+    await expect(page.locator('#library-pagination-next')).toBeHidden();
+    await expect(page.locator('#library-page-size-top')).toBeVisible();
+    // Se recuerda en el navegador.
+    await page.reload();
+    await expect(page.locator('#library-page-size-top')).toHaveValue('20');
+    await expect(cards(page)).toHaveCount(13);
+    await page.locator('#library-page-size-top').selectOption('10');
+    await expect(cards(page)).toHaveCount(10);
 });
 
 test('editar etiquetas de un quiz propio: añadir, quitar y mínimo una', async ({ page }) => {

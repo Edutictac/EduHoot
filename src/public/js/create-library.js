@@ -1,3 +1,8 @@
+// Cuestionarios por página de la biblioteca (el elegido se recuerda en el navegador).
+var LIBRARY_PAGE_SIZES = [10, 20, 30, 50, 100];
+var LIBRARY_PAGE_SIZE = 10;
+var LIBRARY_PAGE_SIZE_KEY = 'eduhoot-library-page-size';
+
 // Biblioteca de /create/: etiquetas, filtros (también en la URL), listado y paginación, extraído de create.js
 function getTagsFromLibraryData(data){
     var tags = new Set();
@@ -174,9 +179,18 @@ function syncFiltersToUrl(){
 
 // Estado reactivo de la biblioteca (Subfase B, bloque 1). La plantilla
 // #library-tpl lo lee; las funciones de abajo solo lo modifican.
+function readLibraryPageSize(){
+    try{
+        var v = parseInt(localStorage.getItem(LIBRARY_PAGE_SIZE_KEY), 10);
+        if(LIBRARY_PAGE_SIZES.indexOf(v) !== -1) return v;
+    }catch(e){}
+    return LIBRARY_PAGE_SIZE;
+}
+
 var libState = Vue.reactive({
     data: [],
     page: 1,
+    pageSize: readLibraryPageSize(),
     sort: 'newest',
     knownTags: [],
     tagsExpanded: false,
@@ -354,14 +368,21 @@ var libraryApp = {
             return sortLibraryQuizzes(this.searchedQuizzes);
         },
         totalPages: function(){
-            return Math.max(1, Math.ceil(this.sortedQuizzes.length / LIBRARY_PAGE_SIZE));
+            return Math.max(1, Math.ceil(this.sortedQuizzes.length / this.lib.pageSize));
         },
         currentPage: function(){
             return Math.max(1, Math.min(this.lib.page, this.totalPages));
         },
         pageQuizzes: function(){
-            var start = (this.currentPage - 1) * LIBRARY_PAGE_SIZE;
-            return this.sortedQuizzes.slice(start, start + LIBRARY_PAGE_SIZE);
+            var start = (this.currentPage - 1) * this.lib.pageSize;
+            return this.sortedQuizzes.slice(start, start + this.lib.pageSize);
+        },
+        pageSizes: function(){
+            return LIBRARY_PAGE_SIZES;
+        },
+        // La barra de paginación (con el selector) se ve cuando hay más cuestionarios que la página más pequeña.
+        showPager: function(){
+            return this.sortedQuizzes.length > LIBRARY_PAGE_SIZES[0];
         },
         countText: function(){
             var n = this.sortedQuizzes.length;
@@ -473,6 +494,13 @@ var libraryApp = {
         onSearch: function(){ fetchWithFilters(); },
         onMine: function(){ storeMineOnly(!!currentFilters.mineOnly); fetchWithFilters(); },
         onSort: function(){ this.lib.page = 1; },
+        onPageSize: function(ev){
+            var v = parseInt(ev.target.value, 10);
+            if(LIBRARY_PAGE_SIZES.indexOf(v) === -1) return;
+            this.lib.pageSize = v;
+            this.lib.page = 1;
+            try{ localStorage.setItem(LIBRARY_PAGE_SIZE_KEY, String(v)); }catch(e){}
+        },
         clearFilters: function(){ clearFilters(); },
         toggleTagMode: function(){ toggleTagMode(); },
         toggleTag: function(tag){ toggleTagFilter(tag); },
