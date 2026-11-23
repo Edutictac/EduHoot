@@ -51,6 +51,8 @@
   icona i color, i es tanca sola als segons que triïs (5 per defecte).
 - **Tornar a la biblioteca des del mode individual**: si hi entres des de la
   biblioteca, a dalt trobaràs «Inici» i «Biblioteca».
+- **Passar pregunta en el mode individual**: pots saltar a la pregunta següent
+  sense respondre; no suma punts i talla la ratxa.
 - **Respostes més accessibles**: el text dels botons de resposta es llig millor
   (més contrast) i, en el mode individual, les respostes encertades i fallades
   porten també «✓» i «✕», de manera que no depenen només del color.

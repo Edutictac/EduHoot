@@ -151,6 +151,40 @@ test('la ventana de resultado dura los segundos configurados y se puede cerrar a
     await expect(page.locator('#question-progress')).toHaveText('Pregunta 2 de 5');
 });
 
+test('«Pasar» salta a la siguiente pregunta sin puntos ni aciertos y corta la racha', async ({ page }) => {
+    await mockBackend(page);
+    await openQuizDirect(page, 'q1');
+    await start(page);
+    const skip = page.locator('#solo-skip');
+    await expect(skip).toHaveAccessibleName('Pasar');
+    await expect(skip).toBeEnabled();
+    // Se salta la primera pregunta (no suma) y arranca la cuenta atrás de la segunda.
+    await skip.click();
+    await expect(page.locator('#question-progress')).toHaveText('Pregunta 2 de 5');
+    await expect(page.locator('#score-pill')).toHaveText('Puntos: 0');
+    await expect(page.locator('#solo-countdown')).toBeVisible();
+    // También se puede pasar durante la cuenta atrás.
+    await skip.click();
+    await expect(page.locator('#question-progress')).toHaveText('Pregunta 3 de 5');
+    await countdown(page);
+    // En pausa no se puede pasar.
+    await page.locator('#solo-pause').click();
+    await expect(skip).toBeDisabled();
+    await page.locator('#solo-pause').click();
+    await expect(skip).toBeEnabled();
+    // Sin ventana de resultado: pasar no es acertar ni fallar.
+    await expect(page.locator('#feedback-modal')).not.toHaveClass(/\bshow\b/);
+});
+
+test('«Pasar» en todas las preguntas termina la partida con 0 aciertos', async ({ page }) => {
+    await mockBackend(page);
+    await openQuizDirect(page, 'q2');
+    await start(page);
+    await page.locator('#solo-skip').click();
+    await expect(page.locator('#result-area')).toBeVisible();
+    await expect(page.locator('#result-summary')).toHaveText('Acertadas 0/1 · 0 pts');
+});
+
 test('catálogo: tarjetas ordenadas por partidas, con datos, sin paginación', async ({ page }) => {
     await mockBackend(page);
     await openCatalog(page);

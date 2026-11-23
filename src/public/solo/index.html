@@ -197,6 +197,7 @@
                         </div>
                         <span class="solo-controls">
                             <button id="solo-pause" type="button" class="pill solo-control" :disabled="!canPause" :aria-pressed="s.paused ? 'true' : 'false'" :aria-label="s.paused ? t('resumeGame') : t('pauseGame')" :title="s.paused ? t('resumeGame') : t('pauseGame')" @click="togglePause"><span aria-hidden="true">{{ s.paused ? '▶\uFE0E' : '❚❚' }}</span><span class="solo-control__text">{{ s.paused ? t('resumeGame') : t('pauseGame') }}</span></button>
+                            <button id="solo-skip" type="button" class="pill solo-control" :disabled="!canSkip" :aria-label="t('skipQuestion')" :title="t('skipQuestion')" @click="skip"><span aria-hidden="true">{{ '⏭\uFE0E' }}</span><span class="solo-control__text">{{ t('skipQuestion') }}</span></button>
                             <button id="solo-cancel" type="button" class="pill solo-control solo-cancel" :class="{ 'is-confirming': s.cancelConfirming }" :aria-label="s.cancelConfirming ? t('cancelGameConfirm') : t('cancelGame')" :title="s.cancelConfirming ? t('cancelGameConfirm') : t('cancelGame')" @click="askCancel"><span aria-hidden="true">✕</span><span class="solo-control__text">{{ s.cancelConfirming ? t('cancelGameConfirm') : t('cancelGame') }}</span></button>
                         </span>
                     </div>

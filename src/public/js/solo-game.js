@@ -248,6 +248,24 @@ function startQuiz(){
         return state.view === 'game' && !state.paused && (!!state.timer || state.countdown > 0);
     }
 
+    // «Pasar»: salta a la siguiente pregunta sin responder (no suma puntos ni aciertos y corta la racha).
+    // Se puede mientras corre el tiempo o la cuenta atrás; no con la partida en pausa.
+    function canSkipSolo(){
+        return state.view === 'game' && !state.paused && !state.feedbackModalOpen && (!!state.timer || state.countdown > 0);
+    }
+
+    function skipQuestion(){
+        if(!canSkipSolo()) return;
+        stopTimer();
+        stopCountdown();
+        var q = getQuestions()[state.idx];
+        if(normalizeQuestionMeta(q).type !== 'poll') state.streak = 0;
+        state.streakBonus = 0;
+        state.locked = true;
+        state.idx += 1;
+        renderQuestion();
+    }
+
     var pausedCountdown = 0;
     var musicWasPlaying = false;
     function pauseSolo(){
@@ -596,6 +614,9 @@ var soloPlay = {
         canPause: function(){
             return this.s.paused || canPauseSolo();
         },
+        canSkip: function(){
+            return canSkipSolo();
+        },
         showMultiSubmit: function(){
             return this.meta.type === 'multiple' && !this.s.locked;
         },
@@ -690,6 +711,7 @@ var soloPlay = {
             var map = { matching_hint: 'matchingHint', matching_count: 'matchingCount', submit_free: 'submitFreeAnswer' };
             return t(map[key] || key);
         },
+        skip: function(){ skipQuestion(); },
         closeFeedback: function(){ hideFeedbackModal(); },
         closeRanking: function(){ hideRankingModal(); },
         saveName: function(){ saveNameAndSubmit(); },
