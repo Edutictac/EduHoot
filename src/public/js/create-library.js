@@ -1,5 +1,5 @@
 // Cuestionarios por página de la biblioteca (el elegido se recuerda en el navegador).
-var LIBRARY_PAGE_SIZES = [10, 20, 30, 50, 100];
+var LIBRARY_PAGE_SIZES = [5, 10, 20, 30, 50, 100];
 var LIBRARY_PAGE_SIZE = 10;
 var LIBRARY_PAGE_SIZE_KEY = 'eduhoot-library-page-size';
 

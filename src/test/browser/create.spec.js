@@ -306,7 +306,7 @@ test('«Ver más» muestra el resto de carpetas y «Ver menos» las recoge', asy
     await expect(tagButtons(page)).toHaveCount(14);
 });
 
-test('paginación de 10 en 10, también arriba, con selector de cuestionarios por página', async ({ page }) => {
+test('paginación de 10 en 10 por defecto, también arriba, con selector (5, 10, 20, 30, 50, 100)', async ({ page }) => {
     const many = Array.from({ length: 13 }, (_, i) => quiz('p' + i, 'Quiz ' + String(i).padStart(2, '0'), { createdAt: '2026-01-' + String(i + 1).padStart(2, '0') + 'T00:00:00Z' }));
     await mockBackend(page, { quizzes: many });
     await openCreate(page);
@@ -335,8 +335,8 @@ test('paginación de 10 en 10, también arriba, con selector de cuestionarios po
     await expect(titles(page).first()).toHaveText('Quiz 00');
 
     // Selector: 10, 20, 30, 50 y 100 (en las dos barras); al cambiarlo vuelve a la primera página.
-    await expect(page.locator('#library-page-size-top option')).toHaveText(['10', '20', '30', '50', '100']);
-    await expect(page.locator('#library-page-size option')).toHaveText(['10', '20', '30', '50', '100']);
+    await expect(page.locator('#library-page-size-top option')).toHaveText(['5', '10', '20', '30', '50', '100']);
+    await expect(page.locator('#library-page-size option')).toHaveText(['5', '10', '20', '30', '50', '100']);
     await expect(page.locator('#library-page-size')).toHaveValue('10');
     await page.locator('#library-page-size').selectOption('20');
     await expect(cards(page)).toHaveCount(13);
@@ -350,6 +350,11 @@ test('paginación de 10 en 10, también arriba, con selector de cuestionarios po
     await expect(cards(page)).toHaveCount(13);
     await page.locator('#library-page-size-top').selectOption('10');
     await expect(cards(page)).toHaveCount(10);
+    // 5 por página (útil en móvil): 13 cuestionarios → 3 páginas.
+    await page.locator('#library-page-size').selectOption('5');
+    await expect(cards(page)).toHaveCount(5);
+    await expect(page.locator('#library-pagination-info')).toHaveText('Página 1 de 3');
+    await expect(page.locator('#library-pagination-info-top')).toHaveText('Página 1 de 3');
 });
 
 test('editar etiquetas de un quiz propio: añadir, quitar y mínimo una', async ({ page }) => {
