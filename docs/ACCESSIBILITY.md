@@ -47,6 +47,21 @@ Ja implementat, no cal tornar a proposar-ho:
 - **Cronòmetre amb doble canal** (barra visual + text numèric) al
   jugador i a l'amfitrió.
 - El viewport no bloqueja el zoom (no hi ha `user-scalable=no`).
+- **Contrast del text dels botons de resposta** de com a mínim 4,5:1
+  (WCAG 1.4.3) a l'alumnat, l'amfitrió, Solo i les barres de resultats;
+  `test/unit/a11yContrast.test.js` ho comprova als CSS.
+- **L'encert i la errada no depenen només del color** (WCAG 1.4.1): a Solo,
+  la resposta correcta i la fallada porten «✓» i «✕» al botó, i la finestra
+  de resultat mostra una icona («✓», «◐», «✕») amb el text; a l'alumnat i a
+  l'amfitrió, el resultat ja du text i icona.
+- **Finestra de resultat de Solo** amb comptador visible (barra i segons) que
+  no depén de cap animació CSS, per a funcionar també amb
+  `prefers-reduced-motion`.
+- **Preferències (biblioteca)**: el modal té nom accessible
+  (`aria-labelledby`), fons opac i torna el focus al botó que l'obri.
+- **Barra fixa del creador de quizzes**: amagada amb `inert` quan no es veu,
+  perquè els botons no es duplicaren per al lector de pantalla; els botons
+  compactes de mòbil conserven el nom complet en `aria-label`.
 - **Correspondència** (`matchingBoard.js`): cada parella no depén només
   del color; cada element porta el seu codi (número o lletra) i el de la
   seua parella, i els botons tenen `aria-pressed`. Els colors de parella

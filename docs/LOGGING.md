@@ -63,7 +63,16 @@ dispersos pel logger nou, es registren explícitament:
 
 Cada entrada guarda camps de correlació (`pin`, `hostId`, `playerId`,
 `tag`) per a compatibilitat amb entrades anteriors; el visor busca a
-`message`, `tag` i `meta`.
+`message`, `tag`, `meta` i el nom del quiz.
+
+Els logs relacionats amb un quiz (creació, inici, fi, cancel·lació, entrada,
+eixida i expulsió en partides; pujades de fitxers) guarden també `quizId` i
+`quizName`: el nom del moment del log, que continua valent encara que el quiz
+es canvie de nom o s'esborre. El botó **Ver** del visor mostra
+«Cuestionario: Nom (id)». Als logs anteriors que només duen l'identificador
+(`quizId` o `meta.newId`/`meta.id`), el servidor consulta el nom actual si el
+quiz encara existix; si no, el visor mostra «id N (nombre no disponible)».
+L'exportació CSV afig les columnes `quizId` i `quizName` al final.
 
 ## Configuració
 

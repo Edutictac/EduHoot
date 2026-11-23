@@ -78,7 +78,8 @@ problemes d'estil, variables sense usar, etc.
   repartiment de preguntes per mode (`gameHelpers.test.js`), puntuació
   (`scoring.test.js`), exportació a Moodle (`moodleExport.test.js`), la
   llista d'ús sense connexió de `sw.js` (`swAssets.test.js`), la CSP
-  (`csp.test.js`), els noms únics en `player-join` (`playerJoinNames.test.js`)
+  (`csp.test.js`), el contrast del text dels botons de resposta
+  (`a11yContrast.test.js`), els noms únics en `player-join` (`playerJoinNames.test.js`)
   i la pregunta de correspondència (`matching.test.js`: model, puntuació,
   partida, CSV, Moodle XML, GIFT i informe).
 - **`test/integration/`** — alça el servidor Express real (amb Mongo en
@@ -90,9 +91,9 @@ problemes d'estil, variables sense usar, etc.
   fora d'ell), `devPages.test.js` / `devPagesOff.test.js` (el mateix per a
   tot `/dev/`), i `devOidc.test.js` (flux d'Authentik complet contra l'OIDC
   simulat de dev: rol del seed, rebuig sense rol docent i PKCE), i
-  `adminLogs.test.js` (visor de logs, «Cargar más» amb `before`/`beforeId`
-  i configuració de nivell/mida de la col·lecció capped, tot protegit per
-  rol admin), `selfPacedSockets.test.js` (autoritme amb sockets reals de xarxa
+  `adminLogs.test.js` (visor de logs, «Cargar más» amb `before`/`beforeId`,
+  configuració de nivell/mida de la col·lecció capped i nom del quiz als
+  logs, tot protegit per rol admin), `selfPacedSockets.test.js` (autoritme amb sockets reals de xarxa
   amb `socket.io-client`: partida completa, entrada tard, reconnexió, rellotge
   del servidor, respostes ocultes i mode en directe intacte) i
   `homework.test.js` (deures per HTTP: creació i permisos, codi de

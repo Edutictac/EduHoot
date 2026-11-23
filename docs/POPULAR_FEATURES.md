@@ -737,6 +737,29 @@ la numeració 1-32 de dalt.
   casella «Puntuacions entre preguntes i ranking» de l'amfitrió controla
   també el Top 10 de l'alumnat després de cada pregunta i el podi
   final: desmarcada, cada alumne només veu la seua puntuació.
+- **W10 — Fins a 6 opcions de resposta en les preguntes d'opció múltiple.**
+  Ara les preguntes de resposta única, múltiple i enquesta tenen com a
+  màxim 4 opcions. La proposta és admetre-n'hi fins a 6, sense canviar el
+  punt de partida: al creador de quizzes (`/create/quiz-creator/`) les
+  preguntes continuen amb 4 opcions per defecte i un botó **«+2»** afig
+  les dos opcions addicionals (5 i 6) a eixa pregunta, i es poden tornar a
+  llevar. Coses que cal tindre en compte en implementar-ho:
+  - **Formes i colors**: hui hi ha 4 parelles forma+color (triangle, romb,
+    cercle, quadrat). Calen dos parelles noves, també distingibles amb
+    daltonisme i amb el text blanc a 4,5:1 o més (WCAG), i el mateix a les
+    barres de resultat de l'amfitrió.
+  - **Pantalles**: la quadrícula de respostes passa de 2×2 a 2×3 (una
+    columna en mòbil), a alumnat, amfitrió, Solo, «Al seu ritme», deures i
+    Flashcards.
+  - **Dades i validació**: les respostes correctes són índexs de l'1 al 4
+    (`correctAnswers`, `correct`); els comptadors de l'amfitrió tenen 4
+    cubs; la puntuació parcial de la resposta múltiple ha de tindre en
+    compte les 6.
+  - **Importació i exportació**: el CSV d'EduHoot, Moodle XML, GIFT i
+    Kahoot tenen 4 columnes de resposta; cal decidir com es llig i s'escriu
+    quan n'hi ha 5 o 6 (i els PDF/DOCX/ODT).
+  - **Compatibilitat**: els quizzes existents no canvien; una pregunta amb
+    només 4 opcions es comporta exactament com ara.
 
 ## Nota sobre drets d'autor
 

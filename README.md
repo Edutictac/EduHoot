@@ -72,6 +72,7 @@ Per als canvis recents, consulta el [CHANGELOG](CHANGELOG.md).
 - Una etiqueta: `/solo/?tag=musica`
 - Diverses etiquetes amb coincidència de qualsevol: `/solo/?tags=musica,primaria`
 - Diverses etiquetes exigint totes: `/solo/?tags=musica,primaria&tagMode=all`
+- `&from=library` (opcional): si s'arriba des de la biblioteca, es mostren els botons «Inici» i «Biblioteca» a dalt; sense ell, només «Inici».
 
 ## Castellano
 
@@ -164,6 +165,7 @@ Para los cambios recientes, consulta el [CHANGELOG](CHANGELOG.md).
 - Una etiqueta: `/solo/?tag=musica`
 - Varias etiquetas con coincidencia de cualquiera: `/solo/?tags=musica,primaria`
 - Varias etiquetas exigiendo todas: `/solo/?tags=musica,primaria&tagMode=all`
+- `&from=library` (opcional): si se llega desde la biblioteca, se muestran los botones «Inicio» y «Biblioteca» arriba; sin él, solo «Inicio».
 
 ## English
 
@@ -241,3 +243,4 @@ For recent changes, see the [CHANGELOG](CHANGELOG.md).
 - One tag: `/solo/?tag=music`
 - Multiple tags matching any: `/solo/?tags=music,primary`
 - Multiple tags requiring all: `/solo/?tags=music,primary&tagMode=all`
+- `&from=library` (optional): when arriving from the library, the “Home” and “Library” buttons are shown at the top; without it, only “Home”.

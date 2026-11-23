@@ -56,6 +56,18 @@
 - **Respostes més accessibles**: el text dels botons de resposta es llig millor
   (més contrast) i, en el mode individual, les respostes encertades i fallades
   porten també «✓» i «✕», de manera que no depenen només del color.
+- **Biblioteca amb paginador a dalt i a baix**: pots triar quants qüestionaris
+  vols vore per pàgina (5, 10, 20, 30, 50 o 100; el 5 va bé en el mòbil) i
+  es recorda.
+- **Després d'importar un fitxer**: pots **jugar** o **editar** el qüestionari
+  directament.
+- **Editor de qüestionaris**: els botons de «Guardar», «Jugar sense guardar» i
+  «Cancel·lar» també apareixen damunt de les preguntes i, mentre baixes per
+  elles, en una barra fixa a baix que s'amaga quan escrius amb el teclat del
+  mòbil.
+- **Flashcards amb els botons més clars**: «No la sé» en roig, «Anterior» i
+  «Següent» en groc, i «Mostrar resposta» i «Ocultar resposta» amb els colors
+  invertits.
 
 ## Per a l'alumnat
 
@@ -213,6 +225,31 @@
   ahora se ve bien tanto en el ordenador como en el móvil. En los deberes, el
   tiempo por pregunta puede llegar a 3 minutos y, si permites varios
   intentos, eliges si cuenta el mejor, la media, el primero o el último.
+- **La biblioteca recuerda tu filtro**: si desmarcas «Sólo mis cuestionarios»,
+  se mantiene así mientras no cierres el navegador, también al volver de
+  editar o jugar.
+- **Resultado de cada pregunta en el modo individual**: después de responder
+  aparece una ventana en el centro que muestra si has acertado o fallado, con
+  icono y color, y se cierra sola a los segundos que elijas (5 por defecto).
+- **Volver a la biblioteca desde el modo individual**: si entras desde la
+  biblioteca, arriba encontrarás «Inicio» y «Biblioteca».
+- **Pasar pregunta en el modo individual**: puedes saltar a la pregunta
+  siguiente sin responder; no suma puntos y corta la racha.
+- **Respuestas más accesibles**: el texto de los botones de respuesta se lee
+  mejor (más contraste) y, en el modo individual, las respuestas acertadas y
+  falladas llevan también «✓» y «✕», de modo que no dependen solo del color.
+- **Biblioteca con paginador arriba y abajo**: puedes elegir cuántos
+  cuestionarios ver por página (5, 10, 20, 30, 50 o 100; el 5 va bien en el
+  móvil) y se recuerda.
+- **Después de importar un fichero**: puedes **jugar** o **editar** el
+  cuestionario directamente.
+- **Editor de cuestionarios**: los botones de «Guardar», «Jugar sin guardar» y
+  «Cancelar» también aparecen encima de las preguntas y, mientras bajas por
+  ellas, en una barra fija abajo que se oculta cuando escribes con el teclado
+  del móvil.
+- **Flashcards con los botones más claros**: «No la sé» en rojo, «Anterior» y
+  «Siguiente» en amarillo, y «Mostrar respuesta» y «Ocultar respuesta» con
+  los colores invertidos.
 
 ## Para el alumnado
 
