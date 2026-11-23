@@ -191,6 +191,7 @@ fitxers corresponents, i els originals es van eliminar.
 
 ### Canviat
 
+- **Quiz-creator**: l'avís de connexió en temps real i l'error en carregar un quiz per a editar-lo es mostren traduïts (es, en, ca, va); s'han eliminat estils CSS sense ús d'una finestra antiga d'importació.
 - **Registre (admin)**: els logs relacionats amb un quiz guarden ara el seu nom i identificador; el botó «Ver» els mostra («Nom (id)»). Els logs antics amb identificador resolen el nom actual si el quiz encara existeix, i si no, mostren només l'id. També es pot cercar per nom i l'exportació inclou les columnes `quizId` i `quizName`.
 - **Quiz-creator**: els botons «Guardar», «Jugar sin guardar» i «Cancelar» també apareixen a dalt.
 - **Biblioteca**: en importar un qüestionari des d'un fitxer, a més de «Jugar» s'ofereix «Editar qüestionari», amb la tipografia de la pàgina (també en els botons d'IA i Kahoot).

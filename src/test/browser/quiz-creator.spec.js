@@ -364,6 +364,28 @@ test('los botones Guardar / Jugar / Cancelar están también arriba y funcionan 
     expect(calls.local).toHaveLength(1);
 });
 
+const REALTIME_ERROR = {
+    es: 'No se pudo conectar con el servidor en tiempo real. Recarga la página e inténtalo de nuevo.',
+    en: 'Could not connect to the real-time server. Reload the page and try again.',
+    ca: 'No s\'ha pogut connectar amb el servidor en temps real. Recarrega la pàgina i torna-ho a provar.',
+    va: 'No s\'ha pogut connectar amb el servidor en temps real. Recarrega la pàgina i torna-ho a intentar.'
+};
+
+for (const lang of ['es', 'en', 'ca', 'va']) {
+    test(`sin conexión en tiempo real, el aviso de «Guardar» sale traducido (${lang})`, async ({ page }) => {
+        await mockBackend(page, { user: { nickname: 'profe' } });
+        // Sin socket.io no hay conexión en tiempo real.
+        await page.route('**/socket.io/socket.io.js', route => route.fulfill({ contentType: 'application/javascript', body: '' }));
+        const dialogs = collectDialogs(page);
+        await openCreator(page, '?lang=' + lang);
+        await fillBasics(page, { name: 'Sense connexió', tags: 'x' });
+        await page.locator('#q1').fill('P');
+        await page.locator('.actions-top button').first().click();
+        await expect.poll(() => dialogs.length).toBe(1);
+        expect(dialogs[0].message).toBe(REALTIME_ERROR[lang]);
+    });
+}
+
 test('«Guardar» con sesión emite newQuiz y va a /host/ al recibir startGameFromCreator', async ({ page }) => {
     const calls = await mockBackend(page, { user: { nickname: 'profe' } });
     await openCreator(page);

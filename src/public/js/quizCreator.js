@@ -111,6 +111,7 @@ var i18n = {
         saveError: 'No se pudo guardar el quiz.',
         saveOk: 'Quiz actualizado',
         confirmCancel: '¿Seguro que quieres salir? Se perderán los cambios.',
+        realtimeError: 'No se pudo conectar con el servidor en tiempo real. Recarga la página e inténtalo de nuevo.',
     },
     en: {
         back: 'Library',
@@ -183,6 +184,7 @@ var i18n = {
         saveError: 'Could not save quiz.',
         saveOk: 'Quiz updated',
         confirmCancel: 'Are you sure? Changes will be lost.',
+        realtimeError: 'Could not connect to the real-time server. Reload the page and try again.',
     },
     ca: {
         back: "Biblioteca",
@@ -255,6 +257,7 @@ var i18n = {
         saveError: 'No s\'ha pogut desar el quiz.',
         saveOk: 'Quiz actualitzat',
         confirmCancel: 'Segur que vols sortir? Es perdran els canvis.',
+        realtimeError: 'No s\'ha pogut connectar amb el servidor en temps real. Recarrega la pàgina i torna-ho a provar.',
     },
     va: {
         subtitle: 'Dissenya les preguntes i guarda el joc per llançar-lo quan vulgues.',
@@ -262,6 +265,7 @@ var i18n = {
         btnPlayLocal: 'Jugar sense guardar',
         localInfo: 'Sense sessió: “Guardar” o “Jugar sense guardar” creen un quiz anònim. "Només jo" caduca en 24h; "Per enllaç/Públic" es guarda globalment. Amb sessió, queda al teu usuari.',
         confirmCancel: 'Segur que vols eixir? Es perdran els canvis.',
+        realtimeError: 'No s\'ha pogut connectar amb el servidor en temps real. Recarrega la pàgina i torna-ho a intentar.',
     }
 };
 
@@ -333,7 +337,7 @@ function updateDatabase(){
             if(socket){
                 socket.emit('newQuiz', quiz);
             }else{
-                alert('No se pudo conectar con el servidor en tiempo real. Recarga la página e inténtalo de nuevo.');
+                alert(t('realtimeError'));
             }
         })
         .catch(function(){
@@ -835,7 +839,7 @@ async function loadQuiz(id){
             subtitle.textContent = 'Editando quiz ID ' + id;
         }
     }catch(err){
-        alert('No se pudo cargar el quiz.');
+        alert(t('loadError'));
     }
 }
 

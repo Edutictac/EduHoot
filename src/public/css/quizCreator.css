@@ -385,52 +385,6 @@ label{
     text-align: center;
 }
 
-.moodle-modal{
-    position: fixed;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    background: rgba(7, 10, 25, 0.85);
-    backdrop-filter: blur(12px);
-    z-index: 40;
-}
-.moodle-modal.hidden{
-    display: none;
-}
-.moodle-modal__content{
-    width: 100%;
-    max-width: 520px;
-    background: rgba(22,32,68,0.95);
-    border-radius: 20px;
-    border: 1px solid rgba(255,255,255,0.12);
-    padding: 26px;
-    box-shadow: 0 25px 60px rgba(3,5,16,0.6);
-}
-.moodle-modal__content h3{
-    margin: 0 0 10px;
-    font-size: 22px;
-}
-.moodle-modal__content p{
-    margin: 0 0 14px;
-    opacity: 0.85;
-    line-height: 1.5;
-}
-.moodle-modal__content ol{
-    margin: 0 0 16px;
-    padding-left: 20px;
-    line-height: 1.6;
-}
-.moodle-modal__content li{
-    margin-bottom: 8px;
-}
-.moodle-modal__actions{
-    display: flex;
-    gap: 10px;
-    justify-content: flex-end;
-}
-
 @media (max-width: 600px){
     .page-shell{ margin: 16px auto 46px auto; padding: 0 14px 26px; }
     #back{ margin: 12px 0 0 12px; }
@@ -443,5 +397,4 @@ label{
     .question-grid{ grid-template-columns: 1fr; }
     .answers{ grid-template-columns: 1fr; }
     .actions{ text-align: left; }
-    .moodle-modal__actions{ flex-direction: column; align-items: stretch; }
 }
