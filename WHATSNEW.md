@@ -78,6 +78,46 @@
   comparteixes un enllaç. L'alumnat entra només amb un nom i rep un codi
   per a continuar des d'un altre dispositiu. Veus qui ha fet el deure, la
   nota de cada pregunta i descarregues l'informe en CSV.
+- **Pregunta de correspondència**: l'alumnat relaciona cada element amb la
+  seua parella amb tocs. Pots afegir elements «impostors» sense parella.
+  Puntua cada parella encertada. Es pot importar i exportar amb Moodle
+  (XML i GIFT) i imprimir com a fitxa.
+- **Mode a cegues amb correspondència**: tries al lobby com respon el
+  mòbil: tocs amb números i lletres, desplegables o pas a pas.
+- **Pausa en el mode individual**: l'alumnat pot pausar, reprendre o
+  cancel·lar la seua partida.
+- **Encert parcial en taronja**: verd és correcte, taronja parcial i roig
+  incorrecte, en tots els modes.
+- **Sobrenoms aleatoris**: pots triar que l'alumnat no escriga el seu nom.
+  Rebrà un nom de la llista, relacionat amb l'escola, i el pot canviar amb
+  un dau. No es repeteix dins de la mateixa partida.
+- **Importar des de Moodle**: pots pujar un cuestionari exportat de Moodle
+  en XML o en GIFT (opció múltiple, verdader/fals, resposta curta i numèrica).
+  Les preguntes que no es poden importar s'indiquen, amb el motiu.
+- **Ratxa d'encerts**: pots activar o desactivar la bonificació per encadenar
+  respostes correctes des del lobby (activada per defecte). Qui encadena
+  tres o més aciertos apareix amb 🔥 a la pantalla de la partida.
+- **Qui surt de la partida**: l'alumnat pot sortir amb un botó (amb
+  confirmació). Tu veus qui ha abandonat a la mateixa llista de respostes, marcat
+  com a «Abandonament». Si torna, recupera el seu nom anterior.
+- **Botons més clars**: «Saltar» i «Cancel·lar» a dalt de la pregunta, i la
+  llista d'alumnat sota les respostes.
+- **Puntuacions durant la partida**: pots amagar les puntuacions i el rànquing en
+  qualsevol moment de la partida, des de la mateixa pantalla.
+- **Final de partida més clar**: «Cancel·lar» es converteix en «Tornar» i les
+  opcions que no fan falta en acabar desapareixen.
+- **Mostrar respostes**: pots desactivar-ho al lobby perquè l'alumnat no vegi
+  la resposta correcta (activat per defecte).
+- **Avanç automàtic**: tria «Manual» o de 3 a 20 segons entre preguntas. Els
+  resultats avancen sols i pots pausar-ho quan vulguis.
+- **Pausar o cancel·lar la partida**: pots aturar la partida i reprendre-la quan
+  vulgues. Cancel·lar-la tanca la sala per a tothom, amb confirmació.
+- **Opcions avançades**: si la connexió de l'aula falla, pots ampliar els
+  temps de reconnexió i d'inactivitat només per a eixa partida.
+- **Expulsar un alumne**: si un nom no és adequat, pots expulsar-lo del
+  lobby o de la partida. No pot tornar amb el mateix PIN fins que li
+  permetes l'entrada des de la llista d'expulsats.
+- **Pràctica de les no sabudes**: a Flashcards pots marcar cada targeta com a sabuda o no sabuda i repassar després només les que no sabies.
 
 ## Per a l'alumnat
 
@@ -125,57 +165,12 @@
 
 ### Millores de contingut i accessibilitat
 
-- **Pregunta de correspondència**: l'alumnat relaciona cada element amb la
-  seua parella amb tocs. Pots afegir elements «impostors» sense parella.
-  Puntua cada parella encertada. Es pot importar i exportar amb Moodle
-  (XML i GIFT) i imprimir com a fitxa.
-- **Mode a cegues amb correspondència**: tries al lobby com respon el
-  mòbil: tocs amb números i lletres, desplegables o pas a pas.
-- **Pausa en el mode individual**: l'alumnat pot pausar, reprendre o
-  cancel·lar la seua partida.
-- **Encert parcial en taronja**: verd és correcte, taronja parcial i roig
-  incorrecte, en tots els modes.
-- **Importar més formats**: a més del CSV, es podran importar qüestionaris
-  en GIFT, JSON i XML de Moodle/AULES, així que podràs reaprofitar bancs de
-  preguntes que ja tingues.
-- **Sobrenoms aleatoris**: pots triar que l'alumnat no escriga el seu nom.
-  Rebrà un nom de la llista, relacionat amb l'escola, i el pot canviar amb
-  un dau. No es repeteix dins de la mateixa partida.
-- **Importar des de Moodle**: pots pujar un cuestionari exportat de Moodle
-  en XML o en GIFT (opció múltiple, verdader/fals, resposta curta i numèrica).
-  Les preguntes que no es poden importar s'indiquen, amb el motiu.
-- **Racha de aciertos**: pots activar o desactivar la bonificació per encadenar
-  respostes correctes des del lobby (activada per defecte). Qui encadena
-  tres o més aciertos apareix amb 🔥 a la pantalla de la partida.
-- **Qui surt de la partida**: l'alumnat pot sortir amb un botó (amb
-  confirmació). Tu veus qui ha abandonat a la mateixa llista de respostes, marcat
-  com a «Abandonament». Si torna, recupera el seu nom anterior.
-- **Botons més clars**: «Saltar» i «Cancel·lar» a dalt de la pregunta, i la
-  llista d'alumnat sota les respostes.
-- **Puntuacions durant la partida**: pots amagar les puntuacions i el rànquing en
-  qualsevol moment de la partida, des de la mateixa pantalla.
-- **Final de partida més clar**: «Cancel·lar» es converteix en «Tornar» i les
-  opcions que no fan falta en acabar desapareixen.
-- **Mostrar respostes**: pots desactivar-ho al lobby perquè l'alumnat no vegi
-  la resposta correcta (activat per defecte).
-- **Avanç automàtic**: tria «Manual» o de 3 a 20 segons entre preguntas. Els
-  resultats avancen sols i pots pausar-ho quan vulguis.
-- **Pausar o cancel·lar la partida**: pots aturar la partida i reprendre-la quan
-  vulgues. Cancel·lar-la tanca la sala per a tothom, amb confirmació.
-- **Opcions avançades**: si la connexió de l'aula falla, pots ampliar els
-  temps de reconnexió i d'inactivitat només per a eixa partida.
-- **Expulsar un alumne**: si un nom no és adequat, pots expulsar-lo del
-  lobby o de la partida. No pot tornar amb el mateix PIN fins que li
-  permetes l'entrada des de la llista d'expulsats.
+- **Importar més formats**: ja pots importar CSV, GIFT i XML de Moodle; més endavant s'afegiran JSON i la resta de formats de Moodle/AULES.
 
 ### Noves maneres de jugar
 
-- **Ratxa d'encerts**: un contador que premia encertar preguntes seguides:
-  com més llarga la ratxa, més ganes de no trencar-la.
 - **Vídeos «aprén i després respon»**: preguntes precedides d'un vídeo
   explicatiu, per a introduir contingut nou dins de la mateixa partida.
-- **Pràctica adaptativa**: el mode individual podrà repetir automàticament
-  les preguntes que vas fallar fins que les domines.
 - **Mode fantasma**: competeix contra la teua pròpia millor marca, no
   contra els teus companys: motivació sense la pressió del rànquing.
 - **Time Attack**: respon el màxim de preguntes possible dins d'un temps
@@ -257,6 +252,22 @@
   compartes un enlace. El alumnado entra solo con un nombre y recibe un
   código para continuar desde otro dispositivo. Ves quién ha hecho el
   deber, el acierto de cada pregunta y descargas el informe en CSV.
+- **Pregunta de correspondencia**: el alumnado relaciona cada elemento con
+  su pareja con toques. Puedes añadir elementos «impostores» sin pareja.
+  Puntúa cada pareja acertada. Se puede importar y exportar con Moodle
+  (XML y GIFT) e imprimir como ficha.
+- **Modo a ciegas con correspondencia**: eliges en el lobby cómo responde
+  el móvil: toques con números y letras, desplegables o paso a paso.
+- **Pausa en el modo individual**: el alumnado puede pausar, reanudar o
+  cancelar su partida.
+- **Acierto parcial en naranja**: verde es correcto, naranja parcial y rojo
+  incorrecto, en todos los modos.
+- **Apodos aleatorios**: si no quieres que el alumnado elija su nombre, la
+  app puede generar uno divertido y apropiado para cada jugador.
+
+- **Racha de aciertos**: un contador que premia acertar preguntas seguidas:
+  cuanto más larga la racha, más ganas de no romperla.
+- **Práctica de las no sabidas**: en Flashcards puedes marcar cada tarjeta como sabida o no sabida y repasar después solo las que no sabías.
 
 ## Para el alumnado
 
@@ -298,31 +309,13 @@
 
 ### Mejoras de contenido y accesibilidad
 
-- **Pregunta de correspondencia**: el alumnado relaciona cada elemento con
-  su pareja con toques. Puedes añadir elementos «impostores» sin pareja.
-  Puntúa cada pareja acertada. Se puede importar y exportar con Moodle
-  (XML y GIFT) e imprimir como ficha.
-- **Modo a ciegas con correspondencia**: eliges en el lobby cómo responde
-  el móvil: toques con números y letras, desplegables o paso a paso.
-- **Pausa en el modo individual**: el alumnado puede pausar, reanudar o
-  cancelar su partida.
-- **Acierto parcial en naranja**: verde es correcto, naranja parcial y rojo
-  incorrecto, en todos los modos.
-- **Importar más formatos**: además del CSV, se podrán importar
-  cuestionarios en GIFT, JSON y XML de Moodle/AULES, así que podrás
-  reaprovechar bancos de preguntas que ya tengas.
-- **Apodos aleatorios**: si no quieres que el alumnado elija su nombre, la
-  app puede generar uno divertido y apropiado para cada jugador.
+- **Importar más formatos**: ya puedes importar CSV, GIFT y XML de Moodle; más adelante se añadirán JSON y el resto de formatos de Moodle/AULES.
 
 ### Nuevas maneras de jugar
 
-- **Racha de aciertos**: un contador que premia acertar preguntas seguidas:
-  cuanto más larga la racha, más ganas de no romperla.
 - **Vídeos «aprende y después responde»**: preguntas precedidas de un
   vídeo explicativo, para introducir contenido nuevo dentro de la misma
   partida.
-- **Práctica adaptativa**: el modo individual podrá repetir
-  automáticamente las preguntas que fallaste hasta que las domines.
 - **Modo fantasma**: compite contra tu propia mejor marca, no contra tus
   compañeros: motivación sin la presión del ranking.
 - **Time Attack**: responde al máximo de preguntas posible dentro de un
@@ -378,6 +371,21 @@
   a link. Students join with just a name and get a code to continue from
   another device. You see who did the homework and how each question went,
   and you can download the CSV report.
+- **Matching question**: students pair each item with its match by
+  tapping. You can add "distractor" items with no pair. Each correct pair
+  scores. It can be imported and exported with Moodle (XML and GIFT) and
+  printed as a worksheet.
+- **Blind mode with matching**: choose in the lobby how phones answer:
+  taps with numbers and letters, drop-down lists or step by step.
+- **Pause in solo mode**: students can pause, resume or cancel their game.
+- **Partial answers in orange**: green is correct, orange partial and red
+  wrong, in every mode.
+- **Random nicknames**: if you'd rather not let students choose their own
+  name, the app can generate a fun, appropriate one for each player.
+
+- **Answer streaks**: a counter that rewards getting questions right in a
+  row: the longer the streak, the more you'll want to keep it alive.
+- **Practice what you missed**: in Flashcards you can mark each card as known or unknown and then review only the ones you didn't know.
 
 ## For students
 
@@ -417,29 +425,12 @@
 
 ### Content and accessibility improvements
 
-- **Matching question**: students pair each item with its match by
-  tapping. You can add "distractor" items with no pair. Each correct pair
-  scores. It can be imported and exported with Moodle (XML and GIFT) and
-  printed as a worksheet.
-- **Blind mode with matching**: choose in the lobby how phones answer:
-  taps with numbers and letters, drop-down lists or step by step.
-- **Pause in solo mode**: students can pause, resume or cancel their game.
-- **Partial answers in orange**: green is correct, orange partial and red
-  wrong, in every mode.
-- **Import more formats**: besides CSV, quizzes will be importable in
-  GIFT, JSON and Moodle/AULES XML, so you can reuse question banks you
-  already have.
-- **Random nicknames**: if you'd rather not let students choose their own
-  name, the app can generate a fun, appropriate one for each player.
+- **Import more formats**: you can already import CSV, GIFT and Moodle XML; JSON and the remaining Moodle/AULES formats will follow.
 
 ### New ways to play
 
-- **Answer streaks**: a counter that rewards getting questions right in a
-  row: the longer the streak, the more you'll want to keep it alive.
 - **"Learn then answer" videos**: questions preceded by an explainer
   video, to introduce new content within the game itself.
-- **Adaptive practice**: the solo mode will automatically repeat the
-  questions you got wrong until you master them.
 - **Ghost mode**: compete against your own personal best, not your
   classmates: motivation without the pressure of a ranking.
 - **Time Attack**: answer as many questions as you can within a time
