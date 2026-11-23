@@ -348,18 +348,28 @@ test('«Guardar» sin sesión también crea el quiz anónimo', async ({ page }) 
     expect(calls.local).toHaveLength(1);
 });
 
-test('los botones Guardar / Jugar / Cancelar están también arriba y funcionan igual', async ({ page }) => {
+test('el bloque de botones se repite encima de las preguntas, idéntico al de abajo, y funciona igual', async ({ page }) => {
     const calls = await mockBackend(page);
     await openCreator(page);
-    const top = page.locator('.actions-top button');
-    await expect(top).toHaveText(['Guardar quiz', 'Jugar sin guardar', 'Cancelar y volver']);
-    // Quedan por encima del primer recuadro (configuración), no al final.
-    const topBox = await page.locator('.actions-top').boundingBox();
-    const firstPanel = await page.locator('#name').boundingBox();
-    expect(topBox.y).toBeLessThan(firstPanel.y);
+    const top = page.locator('.actions-top');
+    const bottom = page.locator('.panel.actions').last();
+    // Mismos botones y mismo texto informativo en los dos bloques.
+    await expect(top.locator('button')).toHaveText(['Guardar quiz', 'Jugar sin guardar', 'Cancelar y volver']);
+    await expect(bottom.locator('button')).toHaveText(['Guardar quiz', 'Jugar sin guardar', 'Cancelar y volver']);
+    expect(await top.locator('p.subtext').innerHTML()).toBe(await bottom.locator('p.subtext').innerHTML());
+    expect(await top.evaluate(el => el.className)).toContain('panel actions');
+    // Va debajo de la configuración (descripción) y justo encima de las preguntas.
+    const topBox = await top.boundingBox();
+    const desc = await page.locator('#description').boundingBox();
+    const firstCard = await cards(page).first().boundingBox();
+    expect(topBox.y).toBeGreaterThan(desc.y + desc.height);
+    expect(topBox.y + topBox.height).toBeLessThan(firstCard.y);
+    // Mismas medidas que el de abajo.
+    const bottomBox = await bottom.boundingBox();
+    expect(Math.round(topBox.width)).toBe(Math.round(bottomBox.width));
     await fillBasics(page);
     await page.locator('#q1').fill('P');
-    await top.first().click();
+    await top.locator('button').first().click();
     await page.waitForURL('**/host/?id=new1');
     expect(calls.local).toHaveLength(1);
 });

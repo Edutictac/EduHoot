@@ -193,7 +193,7 @@ fitxers corresponents, i els originals es van eliminar.
 
 - **Quiz-creator**: l'avís de connexió en temps real i l'error en carregar un quiz per a editar-lo es mostren traduïts (es, en, ca, va); s'han eliminat estils CSS sense ús d'una finestra antiga d'importació.
 - **Registre (admin)**: els logs relacionats amb un quiz guarden ara el seu nom i identificador; el botó «Ver» els mostra («Nom (id)»). Els logs antics amb identificador resolen el nom actual si el quiz encara existeix, i si no, mostren només l'id. També es pot cercar per nom i l'exportació inclou les columnes `quizId` i `quizName`.
-- **Quiz-creator**: els botons «Guardar», «Jugar sin guardar» i «Cancelar» també apareixen a dalt.
+- **Quiz-creator**: el bloc de botons («Guardar», «Jugar sin guardar», «Cancelar») i el seu text informatiu es repeteix damunt de les preguntes, idèntic al de baix.
 - **Biblioteca**: en importar un qüestionari des d'un fitxer, a més de «Jugar» s'ofereix «Editar qüestionari», amb la tipografia de la pàgina (també en els botons d'IA i Kahoot).
 - **Solo**: en acabar cada pregunta (encert, encert parcial o errada) s'obri una finestra al centre amb el resultat («✓», «◐» o «✕»; botó verd, taronja o roig). Mostra una barra i els segons que queden, i es tanca sola als segons indicats (5 per defecte, configurable de 1 a 30 al formulari d'inici i recordat al navegador) o abans amb «OK»; les enquestes no la mostren.
 - **Solo**: si s'arriba des de la biblioteca (enllaç amb `from=library`), la part superior mostra els botons «Inici» i «Biblioteca»; si s'arriba des d'Inici, només «Inici».

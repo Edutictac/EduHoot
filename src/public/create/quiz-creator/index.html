@@ -22,12 +22,6 @@
 
             <div id="creator-app"></div>
             <template id="creator-tpl">
-            <!-- Mismos botones que al final de la página, también arriba (sin recorrer todas las preguntas). -->
-            <div class="actions-row actions-top">
-                <button class="btn btn-primary" type="button" @click="save()">{{ t('btnSave') }}</button>
-                <button class="btn btn-ghost" type="button" @click="playLocal()">{{ t('btnPlayLocal') }}</button>
-                <button class="btn btn-ghost" type="button" @click="cancel()">{{ t('btnCancel') }}</button>
-            </div>
             <div class="panel">
                 <div class="panel-header">
                     <div>
@@ -71,6 +65,17 @@
                     <label for="description">{{ t('descriptionLabel') }}</label>
                     <textarea id="description" name="description" maxlength="1000" :placeholder="t('descriptionPlaceholder')" v-model="form.description"></textarea>
                 </div>
+            </div>
+
+            <!-- Mismo bloque de acciones que al final de la página, encima de las preguntas. -->
+            <div class="panel actions actions-top">
+                <div class="actions-row">
+                    <button class="btn btn-primary" type="button" @click="save()">{{ t('btnSave') }}</button>
+                    <button class="btn btn-ghost" type="button" @click="playLocal()">{{ t('btnPlayLocal') }}</button>
+                    <button class="btn btn-ghost" type="button" @click="cancel()">{{ t('btnCancel') }}</button>
+                </div>
+                <!-- localInfo es texto propio del diccionario i18n (con <br> y <strong>), no datos del usuario. -->
+                <p class="subtext" v-html="t('localInfo')"></p>
             </div>
 
             <div class="panel">
