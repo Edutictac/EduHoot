@@ -11,6 +11,8 @@ var questionCards = Vue.reactive([]);
 var nextQuestionUid = 1;
 var editingId = null;
 var ui = Vue.reactive({ lang: EduhootLang.init() });
+// Barra fija de acciones: se ve si ni el bloque de arriba ni el de abajo están en pantalla y no hay teclado virtual.
+var fixedBar = Vue.reactive({ ready: false, topVisible: false, bottomVisible: false, keyboard: false });
 // Datos del quiz (panel «Configuración») y estado de la sesión. La plantilla
 // de Vue los lee y los escribe directamente (Subfase B, bloque 2).
 var form = Vue.reactive({ name: '', tags: '', visibility: 'private', allowClone: false, language: '', license: '', description: '' });
@@ -112,6 +114,7 @@ var i18n = {
         saveOk: 'Quiz actualizado',
         confirmCancel: '¿Seguro que quieres salir? Se perderán los cambios.',
         realtimeError: 'No se pudo conectar con el servidor en tiempo real. Recarga la página e inténtalo de nuevo.',
+        fixedActionsLabel: 'Acciones del quiz',
     },
     en: {
         back: 'Library',
@@ -185,6 +188,7 @@ var i18n = {
         saveOk: 'Quiz updated',
         confirmCancel: 'Are you sure? Changes will be lost.',
         realtimeError: 'Could not connect to the real-time server. Reload the page and try again.',
+        fixedActionsLabel: 'Quiz actions',
     },
     ca: {
         back: "Biblioteca",
@@ -258,6 +262,7 @@ var i18n = {
         saveOk: 'Quiz actualitzat',
         confirmCancel: 'Segur que vols sortir? Es perdran els canvis.',
         realtimeError: 'No s\'ha pogut connectar amb el servidor en temps real. Recarrega la pàgina i torna-ho a provar.',
+        fixedActionsLabel: 'Accions del quiz',
     },
     va: {
         subtitle: 'Dissenya les preguntes i guarda el joc per llançar-lo quan vulgues.',
@@ -674,12 +679,46 @@ function addQuestion(prefill){
     });
 }
 
+// Vigila los dos bloques de acciones (arriba y abajo) y el teclado virtual para mostrar u ocultar la barra fija.
+function watchFixedActions(topEl, bottomEl){
+    if(typeof IntersectionObserver === 'function' && topEl && bottomEl){
+        var observer = new IntersectionObserver(function(entries){
+            entries.forEach(function(entry){
+                if(entry.target === topEl) fixedBar.topVisible = entry.isIntersecting;
+                if(entry.target === bottomEl) fixedBar.bottomVisible = entry.isIntersecting;
+            });
+            fixedBar.ready = true;
+        });
+        observer.observe(topEl);
+        observer.observe(bottomEl);
+    }
+    // Teclado virtual (móvil): se oculta la barra mientras se escribe, para no tapar el campo.
+    var coarse = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+    function typing(){
+        var el = document.activeElement;
+        if(!el) return false;
+        var tag = el.tagName;
+        if(tag === 'TEXTAREA') return true;
+        if(tag !== 'INPUT') return false;
+        return ['checkbox', 'radio', 'button', 'submit', 'file', 'range', 'color'].indexOf((el.type || '').toLowerCase()) === -1;
+    }
+    function updateKeyboard(){
+        var vv = window.visualViewport;
+        var shrunk = !!(vv && vv.height < window.innerHeight * 0.75);
+        fixedBar.keyboard = shrunk || (coarse && typing());
+    }
+    document.addEventListener('focusin', function(){ setTimeout(updateKeyboard, 0); });
+    document.addEventListener('focusout', function(){ setTimeout(updateKeyboard, 0); });
+    if(window.visualViewport) window.visualViewport.addEventListener('resize', updateKeyboard);
+}
+
 Vue.createApp({
     template: '#creator-tpl',
     data: function(){
         return {
             cards: questionCards,
             ui: ui,
+            fixedBar: fixedBar,
             form: form,
             session: session,
             typeOptions: [
@@ -691,12 +730,19 @@ Vue.createApp({
         };
     },
     computed: {
+        showFixedActions: function(){
+            var f = this.fixedBar;
+            return f.ready && !f.topVisible && !f.bottomVisible && !f.keyboard;
+        },
         showPublicWarning: function(){
             return !this.session.authenticated && this.form.visibility !== 'private';
         },
         selectedTags: function(){
             return parseTagsInput();
         }
+    },
+    mounted: function(){
+        watchFixedActions(this.$refs.topActions, this.$refs.bottomActions);
     },
     methods: {
         t: function(key){

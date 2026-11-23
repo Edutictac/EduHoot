@@ -68,7 +68,7 @@
             </div>
 
             <!-- Mismo bloque de acciones que al final de la página, encima de las preguntas. -->
-            <div class="panel actions actions-top">
+            <div class="panel actions actions-top" ref="topActions">
                 <div class="actions-row">
                     <button class="btn btn-primary" type="button" @click="save()">{{ t('btnSave') }}</button>
                     <button class="btn btn-ghost" type="button" @click="playLocal()">{{ t('btnPlayLocal') }}</button>
@@ -147,7 +147,7 @@
                 </div>
             </div>
 
-            <div class="panel actions">
+            <div class="panel actions" ref="bottomActions">
                 <div class="actions-row">
                     <button class="btn btn-primary" type="button" data-i18n="btnSave" @click="save()">{{ t('btnSave') }}</button>
                     <button class="btn btn-ghost" type="button" data-i18n="btnPlayLocal" @click="playLocal()">{{ t('btnPlayLocal') }}</button>
@@ -155,6 +155,13 @@
                 </div>
                 <!-- localInfo es texto propio del diccionario i18n (con <br> y <strong>), no datos del usuario. -->
                 <p class="subtext" v-html="t('localInfo')"></p>
+            </div>
+
+            <!-- Barra fija con solo los botones: aparece cuando ni el bloque de arriba ni el de abajo se ven. -->
+            <div id="actions-fixed" class="actions-fixed" :class="{ 'is-visible': showFixedActions }" :inert="!showFixedActions || null" role="toolbar" :aria-label="t('fixedActionsLabel')">
+                <button class="btn btn-primary" type="button" :aria-label="t('btnSave')" :title="t('btnSave')" @click="save()"><span class="fx-icon" aria-hidden="true">💾</span><span class="fx-text">{{ t('btnSave') }}</span></button>
+                <button class="btn btn-ghost" type="button" :aria-label="t('btnPlayLocal')" :title="t('btnPlayLocal')" @click="playLocal()"><span class="fx-icon" aria-hidden="true">▶</span><span class="fx-text">{{ t('btnPlayLocal') }}</span></button>
+                <button class="btn btn-ghost" type="button" :aria-label="t('btnCancel')" :title="t('btnCancel')" @click="cancel()"><span class="fx-icon" aria-hidden="true">✕</span><span class="fx-text">{{ t('btnCancel') }}</span></button>
             </div>
             </template>
 

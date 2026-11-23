@@ -191,6 +191,7 @@ fitxers corresponents, i els originals es van eliminar.
 
 ### Canviat
 
+- **Quiz-creator**: una barra fixa a la part inferior amb només els botons (Guardar, Jugar sense guardar, Cancel·lar) apareix quan no es veu ni el bloc de dalt ni el de baix; s'amaga mentre s'escriu amb teclat virtual (pantalles tàctils) i en mòbil els botons són compactes, només amb icona.
 - **Quiz-creator**: l'avís de connexió en temps real i l'error en carregar un quiz per a editar-lo es mostren traduïts (es, en, ca, va); s'han eliminat estils CSS sense ús d'una finestra antiga d'importació.
 - **Registre (admin)**: els logs relacionats amb un quiz guarden ara el seu nom i identificador; el botó «Ver» els mostra («Nom (id)»). Els logs antics amb identificador resolen el nom actual si el quiz encara existeix, i si no, mostren només l'id. També es pot cercar per nom i l'exportació inclou les columnes `quizId` i `quizName`.
 - **Quiz-creator**: el bloc de botons («Guardar», «Jugar sin guardar», «Cancelar») i el seu text informatiu es repeteix damunt de les preguntes, idèntic al de baix.

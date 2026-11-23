@@ -384,6 +384,27 @@ label{
     text-align: center;
 }
 
+/* Barra fija con solo los botones (sale cuando no se ve ni el bloque de arriba ni el de abajo). */
+.actions-fixed{
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 50;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
+    background: #0f162a;
+    border-top: 1px solid rgba(255,255,255,0.18);
+    box-shadow: 0 -8px 24px rgba(0,0,0,0.35);
+    transform: translateY(100%);
+    visibility: hidden;
+    transition: transform 0.2s ease, visibility 0.2s;
+}
+.actions-fixed.is-visible{ transform: none; visibility: visible; }
+.actions-fixed .btn{ font-family: inherit; font-weight: 700; }
+.actions-fixed .fx-icon{ display: none; }
+@media (prefers-reduced-motion: reduce){ .actions-fixed{ transition: none; } }
+
 @media (max-width: 600px){
     .page-shell{ margin: 16px auto 46px auto; padding: 0 14px 26px; }
     #back{ margin: 12px 0 0 12px; }
@@ -396,4 +417,9 @@ label{
     .question-grid{ grid-template-columns: 1fr; }
     .answers{ grid-template-columns: 1fr; }
     .actions{ text-align: left; }
+    /* Móvil: botones compactos, solo con icono, repartidos al ancho de la pantalla. */
+    .actions-fixed{ gap: 8px; padding-left: 10px; padding-right: 10px; }
+    .actions-fixed .btn{ flex: 1 1 0; min-width: 0; padding: 10px 0; font-size: 20px; line-height: 1; display: inline-flex; align-items: center; justify-content: center; }
+    .actions-fixed .fx-icon{ display: inline; }
+    .actions-fixed .fx-text{ display: none; }
 }

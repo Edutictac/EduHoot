@@ -396,6 +396,75 @@ for (const lang of ['es', 'en', 'ca', 'va']) {
     });
 }
 
+test('barra fija: aparece solo cuando no se ve ni el bloque de arriba ni el de abajo', async ({ page }) => {
+    const calls = await mockBackend(page);
+    await openCreator(page);
+    for (let i = 0; i < 8; i++) await page.locator('[data-i18n="addQuestion"]').click();
+    // Al añadir una pregunta el cursor queda en ella (en móvil cuenta como teclado abierto): se quita para medir.
+    await page.evaluate(() => document.activeElement && document.activeElement.blur());
+    const bar = page.locator('#actions-fixed');
+    const visible = () => bar.evaluate(el => el.classList.contains('is-visible'));
+
+    // Con el bloque superior a la vista no hay barra, y queda oculta también para el lector de pantalla.
+    await page.locator('.actions-top').scrollIntoViewIfNeeded();
+    await expect.poll(visible).toBe(false);
+    await expect(bar).toHaveAttribute('inert', '');
+    // En medio de las preguntas no se ve ninguno de los dos bloques: sale la barra, sin el texto informativo.
+    await cards(page).nth(5).scrollIntoViewIfNeeded();
+    await expect.poll(visible).toBe(true);
+    await expect(bar).not.toHaveAttribute('inert', '');
+    await expect(bar.locator('button')).toHaveCount(3);
+    await expect(bar.locator('p')).toHaveCount(0);
+    const vp = page.viewportSize();
+    // Pegada al borde inferior (se espera a que acabe el deslizamiento).
+    await expect.poll(async () => { const b = await bar.boundingBox(); return Math.round(b.y + b.height); }).toBe(vp.height);
+    // Todos los botones caben en el ancho.
+    for (const b of await bar.locator('button').all()) {
+        const bb = await b.boundingBox();
+        expect(bb.x).toBeGreaterThanOrEqual(0);
+        expect(bb.x + bb.width).toBeLessThanOrEqual(vp.width);
+    }
+    if (vp.width <= 600) {
+        // Móvil: compactos, solo con icono; el nombre completo queda en aria-label.
+        await expect(bar.locator('.fx-text').first()).toBeHidden();
+        await expect(bar.locator('.fx-icon').first()).toBeVisible();
+        await expect(bar.locator('button').first()).toHaveAttribute('aria-label', 'Guardar quiz');
+    } else {
+        await expect(bar.locator('.fx-text').first()).toHaveText('Guardar quiz');
+        await expect(bar.locator('.fx-icon').first()).toBeHidden();
+    }
+    // Al llegar al final se ve el bloque inferior y la barra se retira.
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await expect.poll(visible).toBe(false);
+
+    // Desde la barra se guarda igual que desde los bloques.
+    await fillBasics(page);
+    await page.locator('#q1').fill('P');
+    await page.evaluate(() => document.activeElement && document.activeElement.blur());
+    await cards(page).nth(5).scrollIntoViewIfNeeded();
+    await expect.poll(visible).toBe(true);
+    await bar.locator('button').first().click();
+    await page.waitForURL('**/host/?id=new1');
+    expect(calls.local).toHaveLength(1);
+});
+
+test('barra fija: se oculta mientras se escribe con teclado virtual (pantalla táctil)', async ({ page }) => {
+    await mockBackend(page);
+    await openCreator(page);
+    const coarse = await page.evaluate(() => window.matchMedia('(pointer: coarse)').matches);
+    test.skip(!coarse, 'solo en pantallas táctiles');
+    for (let i = 0; i < 8; i++) await page.locator('[data-i18n="addQuestion"]').click();
+    await page.evaluate(() => document.activeElement && document.activeElement.blur());
+    const bar = page.locator('#actions-fixed');
+    const visible = () => bar.evaluate(el => el.classList.contains('is-visible'));
+    await cards(page).nth(5).scrollIntoViewIfNeeded();
+    await expect.poll(visible).toBe(true);
+    await page.locator('#q6').evaluate(el => el.focus({ preventScroll: true }));
+    await expect.poll(visible).toBe(false);
+    await page.locator('#q6').evaluate(el => el.blur());
+    await expect.poll(visible).toBe(true);
+});
+
 test('«Guardar» con sesión emite newQuiz y va a /host/ al recibir startGameFromCreator', async ({ page }) => {
     const calls = await mockBackend(page, { user: { nickname: 'profe' } });
     await openCreator(page);
