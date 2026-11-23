@@ -186,3 +186,36 @@ test('GET /api/admin/logs?q= encuentra por hostId y playerId', async () => {
   assert.ok(byPlayer.data.some((row) => row.pin === 'DDDDDD'));
   assert.ok(byPlayer.data.every((row) => row.pin !== 'EEEEEE'));
 });
+
+test('GET /api/admin/logs: guarda el nombre del quiz y resuelve el de los logs antiguos por su id', async () => {
+  const cookie = await loginAsAdmin();
+  const headers = { Cookie: cookie };
+
+  // Cuestionario existente: lo busca por id para los logs que solo traen el identificador.
+  await mongoClient.db('kahootDB').collection('kahootGames').insertOne({ id: 4242, name: 'Quiz de prueba logs', questions: [] });
+
+  // Log nuevo: el nombre se guarda en el propio log (válido aunque el quiz se renombre o borre).
+  logger.info('Partida iniciada', { tag: 'game-start', pin: 'QQQQQ1', hostId: 'host-q1', quizId: 4242, quizName: 'Nombre del momento' });
+  // Log antiguo: solo el id dentro de meta (como las subidas de ficheros) o sin nombre.
+  logger.info('upload-csv:success', { tag: 'upload-csv:success', newId: 4242, count: 3 });
+  logger.info('Partida iniciada', { tag: 'game-start', pin: 'QQQQQ2', hostId: 'host-q2', quizId: 9999999 });
+  await new Promise((resolve) => setTimeout(resolve, 250));
+
+  const body = await (await request('/api/admin/logs?limit=50', { headers })).json();
+  const fresh = body.data.find((row) => row.pin === 'QQQQQ1');
+  assert.equal(fresh.quizName, 'Nombre del momento');
+  assert.equal(fresh.quizId, '4242');
+  assert.equal(fresh.meta, null);
+
+  const old = body.data.find((row) => row.tag === 'upload-csv:success' && row.meta && row.meta.newId === 4242);
+  assert.equal(old.quizName, 'Quiz de prueba logs');
+  assert.equal(old.quizId, '4242');
+
+  const missing = body.data.find((row) => row.pin === 'QQQQQ2');
+  assert.equal(missing.quizName, null);
+  assert.equal(missing.quizId, '9999999');
+
+  // Se puede buscar por el nombre del quiz.
+  const byName = await (await request('/api/admin/logs?q=' + encodeURIComponent('Nombre del momento'), { headers })).json();
+  assert.ok(byName.data.some((row) => row.pin === 'QQQQQ1'));
+});

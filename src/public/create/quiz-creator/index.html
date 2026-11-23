@@ -22,6 +22,12 @@
 
             <div id="creator-app"></div>
             <template id="creator-tpl">
+            <!-- Mismos botones que al final de la página, también arriba (sin recorrer todas las preguntas). -->
+            <div class="actions-row actions-top">
+                <button class="btn btn-primary" type="button" @click="save()">{{ t('btnSave') }}</button>
+                <button class="btn btn-ghost" type="button" @click="playLocal()">{{ t('btnPlayLocal') }}</button>
+                <button class="btn btn-ghost" type="button" @click="cancel()">{{ t('btnCancel') }}</button>
+            </div>
             <div class="panel">
                 <div class="panel-header">
                     <div>

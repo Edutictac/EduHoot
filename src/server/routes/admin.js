@@ -415,6 +415,49 @@ module.exports = function createAdminRouter({
     return str;
   }
 
+  // Logs sin `quizName` (anteriores a que se guardara) pero con identificador de cuestionario, en `quizId` o,
+  // en las subidas de ficheros, en `meta.newId` / `meta.id`: se completa con el nombre actual del cuestionario,
+  // si todavía existe. Los que no se pueden resolver se devuelven tal cual.
+  async function addQuizNames(rows) {
+    const idOf = (row) => {
+      if (row.quizName) return null;
+      const raw = row.quizId || (row.meta && (row.meta.newId || row.meta.id));
+      return raw === undefined || raw === null || raw === '' ? null : raw;
+    };
+    const pending = rows.map((row) => ({ row, id: idOf(row) })).filter((x) => x.id !== null);
+    if (!pending.length) return;
+    try {
+      const candidates = new Set();
+      pending.forEach(({ id }) => {
+        candidates.add(String(id));
+        const num = parseInt(id, 10);
+        if (!Number.isNaN(num)) candidates.add(num);
+      });
+      const collection = await getGamesCollection();
+      const found = await collection.find(
+        { $or: [{ id: { $in: [...candidates] } }, { _id: { $in: [...candidates] } }] },
+        { projection: { id: 1, name: 1 } }
+      ).toArray();
+      const names = new Map();
+      found.forEach((quiz) => {
+        if (quiz.name) {
+          if (quiz.id !== undefined) names.set(String(quiz.id), quiz.name);
+          if (quiz._id !== undefined) names.set(String(quiz._id), quiz.name);
+        }
+      });
+      pending.forEach(({ row, id }) => {
+        const name = names.get(String(id));
+        if (name) {
+          row.quizName = name;
+          row.quizNameResolved = true;
+        }
+        if (!row.quizId) row.quizId = String(id);
+      });
+    } catch (err) {
+      console.error('admin-logs: no s\'ha pogut resoldre el nom del quiz', err && err.message ? err.message : err);
+    }
+  }
+
   // Admin: visor de logs (col·lecció capped `appLogs`)
   router.get('/api/admin/logs', requireRole('admin'), async (req, res) => {
     try {
@@ -428,7 +471,9 @@ module.exports = function createAdminRouter({
       const finalQuery = cursorQuery ? { $and: [query, cursorQuery] } : query;
       const docs = await collection.find(finalQuery).sort({ createdAt: -1, _id: -1 }).limit(limit + 1).toArray();
       const hasMore = docs.length > limit;
-      return res.json({ ok: true, data: hasMore ? docs.slice(0, limit) : docs, hasMore });
+      const rows = hasMore ? docs.slice(0, limit) : docs;
+      await addQuizNames(rows);
+      return res.json({ ok: true, data: rows, hasMore });
     } catch (err) {
       console.error('admin-logs error', err);
       return res.status(500).json({ error: 'No s\'han pogut obtindre els logs.' });
@@ -455,7 +500,7 @@ module.exports = function createAdminRouter({
       }
       res.setHeader('Content-Type', 'text/csv; charset=utf-8');
       res.setHeader('Content-Disposition', `attachment; filename="eduhoot-logs-${stamp}.csv"`);
-      res.write('createdAt,level,tag,pin,hostId,playerId,message,meta\n');
+      res.write('createdAt,level,tag,pin,hostId,playerId,message,meta,quizId,quizName\n');
       for await (const doc of cursor) {
         const row = [
           doc.createdAt instanceof Date ? doc.createdAt.toISOString() : doc.createdAt,
@@ -465,7 +510,9 @@ module.exports = function createAdminRouter({
           doc.hostId,
           doc.playerId,
           doc.message,
-          doc.meta ? JSON.stringify(doc.meta) : ''
+          doc.meta ? JSON.stringify(doc.meta) : '',
+          doc.quizId || '',
+          doc.quizName || ''
         ].map(csvField).join(',');
         res.write(row + '\n');
       }

@@ -1,6 +1,6 @@
 const { studentMetaOf } = require('../services/showAnswers');
 const { getQuestionMeta, normalizeSubmission } = require('../questionUtils');
-const { logger } = require('../logger');
+const { logger, quizFields } = require('../logger');
 
 // player-join, player-join-game, playerAnswer.
 const { buildAnswerStatus, leftListOf } = require('./answerStatus');
@@ -102,7 +102,7 @@ module.exports = function createPlayerEvents({
         if (existing && existing.hostId === hostId) {
           players.updatePlayerId(existing, socket.id);
           emitJoinUpdate({ event: 'playerRejoin', payload: { ok: true } });
-          logger.info('Jugador reconectado (token)', { tag: 'player-rejoin', pin: game.pin, hostId, playerId: socket.id });
+          logger.info('Jugador reconectado (token)', { tag: 'player-rejoin', pin: game.pin, hostId, playerId: socket.id, ...quizFields(game) });
           return;
         }
       }
@@ -164,14 +164,14 @@ module.exports = function createPlayerEvents({
           players.tokens.set(token, { hostId, playerId: socket.id });
         }
         emitJoinUpdate({ event: 'playerRejoin', payload: { ok: true } });
-        logger.warn('Jugador reconectado sin token resolt, fila reutilitzada pel nom', { tag: 'player-rejoin-stale', pin: game.pin, hostId, playerId: socket.id, name: safeName });
+        logger.warn('Jugador reconectado sin token resolt, fila reutilitzada pel nom', { tag: 'player-rejoin-stale', pin: game.pin, hostId, playerId: socket.id, name: safeName, ...quizFields(game) });
         return;
       }
 
       // Issue #28: un nom no es pot repetir en la mateixa partida. (La
       // reconnexió de qui ja tenia eixe nom s'ha resolt just abans.)
       if (players.findByName(hostId, safeName, socket.id)) {
-        logger.info('Nom ja en ús en la partida', { tag: 'player-join', pin: game.pin, hostId, name: safeName });
+        logger.info('Nom ja en ús en la partida', { tag: 'player-join', pin: game.pin, hostId, name: safeName, ...quizFields(game) });
         socket.emit('playerJoinRejected', { code: 'nameTaken', error: 'Ese nombre ya está en uso en esta partida. Elige otro.' });
         return;
       }
@@ -187,7 +187,7 @@ module.exports = function createPlayerEvents({
         identity: studentIdentity || null
       }, studentIdentity && studentIdentity.avatar_icon ? studentIdentity.avatar_icon : (params.icon || ''), token);
       emitJoinUpdate();
-      logger.info('Jugador unit a la partida', { tag: 'player-join', pin: game.pin, hostId, playerId: socket.id, name: safeName });
+      logger.info('Jugador unit a la partida', { tag: 'player-join', pin: game.pin, hostId, playerId: socket.id, name: safeName, ...quizFields(game) });
     });
 
     socket.on('player-join-game', (data) => {

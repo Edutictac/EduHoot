@@ -348,6 +348,22 @@ test('«Guardar» sin sesión también crea el quiz anónimo', async ({ page }) 
     expect(calls.local).toHaveLength(1);
 });
 
+test('los botones Guardar / Jugar / Cancelar están también arriba y funcionan igual', async ({ page }) => {
+    const calls = await mockBackend(page);
+    await openCreator(page);
+    const top = page.locator('.actions-top button');
+    await expect(top).toHaveText(['Guardar quiz', 'Jugar sin guardar', 'Cancelar y volver']);
+    // Quedan por encima del primer recuadro (configuración), no al final.
+    const topBox = await page.locator('.actions-top').boundingBox();
+    const firstPanel = await page.locator('#name').boundingBox();
+    expect(topBox.y).toBeLessThan(firstPanel.y);
+    await fillBasics(page);
+    await page.locator('#q1').fill('P');
+    await top.first().click();
+    await page.waitForURL('**/host/?id=new1');
+    expect(calls.local).toHaveLength(1);
+});
+
 test('«Guardar» con sesión emite newQuiz y va a /host/ al recibir startGameFromCreator', async ({ page }) => {
     const calls = await mockBackend(page, { user: { nickname: 'profe' } });
     await openCreator(page);

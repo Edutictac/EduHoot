@@ -197,3 +197,18 @@ test('sin más logs no hay aviso ni botón', async ({ page }) => {
     await expect(page.locator('#logs-tbody tr')).toHaveCount(3);
     await expect(page.locator('#logs-more')).toHaveCount(0);
 });
+
+test('«Ver» muestra el nombre del cuestionario si el log lo trae, y solo el id si no se pudo resolver', async ({ page }) => {
+    await openLogs(page, { logs: { json: { data: [
+        { createdAt: '2026-11-01T10:00:00Z', level: 'info', tag: 'game-start', message: 'Partida iniciada', pin: '123', hostId: 'h1', playerId: '', meta: null, quizId: '7', quizName: 'Geografía de España' },
+        { createdAt: '2026-11-01T10:01:00Z', level: 'info', tag: 'upload-csv:success', message: 'upload-csv:success', pin: '', hostId: '', playerId: '', meta: null, quizId: '9' }
+    ] } } });
+    const modal = page.locator('#logs-detail-modal');
+    // Con solo el cuestionario (sin meta) el botón «Ver» también aparece.
+    await page.locator('#logs-tbody tr').nth(0).locator('.logs-detail-btn').click();
+    await expect(modal.locator('dt').last()).toHaveText('Cuestionario');
+    await expect(modal.locator('dd').last()).toHaveText('Geografía de España (7)');
+    await modal.locator('.logs-detail-modal__close').click();
+    await page.locator('#logs-tbody tr').nth(1).locator('.logs-detail-btn').click();
+    await expect(modal.locator('dd').last()).toHaveText('id 9 (nombre no disponible)');
+});

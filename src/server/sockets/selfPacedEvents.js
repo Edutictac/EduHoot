@@ -8,7 +8,7 @@
 const sp = require('../services/selfPaced');
 const payloads = require('../services/selfPacedPayloads');
 const { getQuestionMeta, normalizeSubmission } = require('../questionUtils');
-const { logger } = require('../logger');
+const { logger, quizFields } = require('../logger');
 
 module.exports = function createSelfPacedEvents({
   io,
@@ -111,7 +111,7 @@ module.exports = function createSelfPacedEvents({
     playersInGame.forEach((p) => io.to(p.playerId).emit('spFinished', finishedPayload(game, p)));
     io.to(game.pin).emit('GameOver', podiumOf(game));
     emitProgress(game);
-    logger.info('Partida autoritme finalitzada', { tag: 'game-end', pin: game.pin, hostId: game.hostId, playersCount: playersInGame.length });
+    logger.info('Partida autoritme finalitzada', { tag: 'game-end', pin: game.pin, hostId: game.hostId, playersCount: playersInGame.length, ...quizFields(game) });
     cacheFinishedSessionReport(game, playersInGame);
     await incrementQuizStats(game.gameData.gameid, playersInGame.length);
     await commons.reportCommonsScores(game, playersInGame);

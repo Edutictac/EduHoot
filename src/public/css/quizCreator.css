@@ -372,6 +372,7 @@ label{
 .actions{
     text-align: right;
 }
+.actions-top{ margin-bottom: 16px; }
 .actions-row{
     display: flex;
     gap: 10px;

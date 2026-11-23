@@ -495,11 +495,11 @@ module.exports = function createQuizzesRouter({
             updatedAt: new Date()
           };
           await collection.insertOne(quiz);
-          logEvent('upload-csv:public-anon', { filename: req.file.originalname, newId, count: questions.length });
+          logEvent('upload-csv:public-anon', { filename: req.file.originalname, newId, count: questions.length, quizId: newId, quizName });
           return res.json({ id: newId, name: quizName, count: questions.length, local: false, skipped });
         } else {
           const saved = await saveEphemeralQuiz({ name: quizName, tags, questions, visibility: 'private', allowClone, ownerToken });
-          logEvent('upload-csv:local', { filename: req.file.originalname, id: saved.id, count: questions.length });
+          logEvent('upload-csv:local', { filename: req.file.originalname, id: saved.id, count: questions.length, quizId: saved.id, quizName });
           return res.json({ id: saved.id, name: quizName, count: questions.length, local: true, skipped });
         }
       }
@@ -526,7 +526,7 @@ module.exports = function createQuizzesRouter({
       };
 
       await collection.insertOne(quiz);
-      logEvent('upload-csv:success', { filename: req.file.originalname, newId, count: questions.length });
+      logEvent('upload-csv:success', { filename: req.file.originalname, newId, count: questions.length, quizId: newId, quizName });
       return res.json({ id: newId, name: quizName, count: questions.length, local: false, skipped });
     } catch (err) {
       console.error('upload-csv error', err);

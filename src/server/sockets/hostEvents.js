@@ -1,5 +1,5 @@
 const { getGamesCollection } = require('../data/repositories');
-const { logger } = require('../logger');
+const { logger, quizFields } = require('../logger');
 const { normalizeAutoAdvance } = require('../services/autoAdvance');
 const { hasMatchingQuestion, normalizeMatchingBlindStyle, normalizeMatchingExtraTime } = require('../questionUtils');
 
@@ -112,7 +112,7 @@ module.exports = function createHostEvents({
 
           socket.join(game.pin);
 
-          logger.info('Partida creada', { tag: 'host-join', pin: game.pin, hostId: game.hostId });
+          logger.info('Partida creada', { tag: 'host-join', pin: game.pin, hostId: game.hostId, ...quizFields(game) });
           logGames('host-join');
 
           // hasMatching: el lobby ofrece cómo responder a ciegas las correspondencias.
@@ -367,7 +367,7 @@ module.exports = function createHostEvents({
           });
           game.gameLive = false;
           game.gameOver = true;
-          logger.info('Partida finalitzada', { tag: 'game-end', pin: game.pin, hostId: game.hostId, playersCount: Array.isArray(playersInGame) ? playersInGame.length : 0 });
+          logger.info('Partida finalitzada', { tag: 'game-end', pin: game.pin, hostId: game.hostId, playersCount: Array.isArray(playersInGame) ? playersInGame.length : 0, ...quizFields(game) });
           // Congelamos el informe con la foto de jugadores de este instante: si esperamos a los
           // await de abajo, los alumnos ya han recibido "GameOver" y sus dispositivos pueden
           // desconectarse (bloqueo de pantalla, cierre de pestaña...), vaciando players.getPlayers()
@@ -486,7 +486,7 @@ module.exports = function createHostEvents({
       }
       game.gameLive = true;
       game.gameOver = false;
-      logger.info('Partida iniciada', { tag: 'game-start', pin: game.pin, hostId: game.hostId, playersCount: gamePlayers.length, questionsCount: game.gameData.questions.length });
+      logger.info('Partida iniciada', { tag: 'game-start', pin: game.pin, hostId: game.hostId, playersCount: gamePlayers.length, questionsCount: game.gameData.questions.length, ...quizFields(game) });
       scheduleGameCleanup(socket.id, timingsFor(socket.id).inactivityMs);
       io.to(game.pin).emit('gameStartedPlayer', { mode: options.mode });
       socket.emit('gameStarted', game.hostId);

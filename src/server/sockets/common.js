@@ -1,5 +1,5 @@
 const { getGamesCollection } = require('../data/repositories');
-const { logger } = require('../logger');
+const { logger, quizFields } = require('../logger');
 const { buildAnswerStatus, leftListOf } = require('./answerStatus');
 const { recordKick, listKicked, unkick } = require('./kick');
 const { normalizeTimings } = require('../services/gameTimings');
@@ -109,7 +109,7 @@ module.exports = function createCommonEvents({ io, games, players, helpers, sele
         io.to(socket.id).emit('answerStatus', buildAnswerStatus(playersInGame, game.gameData.question, leftListOf(game, playersInGame)));
       }
       io.to(socket.id).emit('kickedList', listKicked(game));
-      logger.info('Jugador expulsat per l\'amfitrió', { tag: 'player-kick', pin: game.pin, hostId: socket.id, playerId: target.playerId });
+      logger.info('Jugador expulsat per l\'amfitrió', { tag: 'player-kick', pin: game.pin, hostId: socket.id, playerId: target.playerId, ...quizFields(game) });
     });
 
     // Solo el anfitrión: lista de expulsados (sin tokens) y desbloqueo de uno de ellos.
@@ -124,7 +124,7 @@ module.exports = function createCommonEvents({ io, games, players, helpers, sele
       players.getPlayers(socket.id).forEach((p) => players.removePlayer(p.playerId));
       io.to(pin).emit('hostDisconnect');
       socket.emit('gameCancelled');
-      logger.info('Partida cancel·lada per l\'amfitrió', { tag: 'game-cancel', pin, hostId: socket.id });
+      logger.info('Partida cancel·lada per l\'amfitrió', { tag: 'game-cancel', pin, hostId: socket.id, ...quizFields(game) });
     });
 
     // Solo el anfitrión: ampliación de tiempos de esta partida (issue #13). Vacío = mínimos.
@@ -169,7 +169,7 @@ module.exports = function createCommonEvents({ io, games, players, helpers, sele
         io.to(hostGame.pin).emit('updatePlayerLobby', playersInGame);
         io.to(hostId).emit('updatePlayerLobby', playersInGame);
         io.to(hostId).emit('answerStatus', buildAnswerStatus(playersInGame, hostGame.gameData ? hostGame.gameData.question : 0, leftListOf(hostGame, playersInGame)));
-        logger.info('Alumne ha sortit de la partida', { tag: 'player-leave', pin: hostGame.pin, hostId, playerId: socket.id });
+        logger.info('Alumne ha sortit de la partida', { tag: 'player-leave', pin: hostGame.pin, hostId, playerId: socket.id, ...quizFields(hostGame) });
       }
       socket.emit('playerLeft');
     });
@@ -178,7 +178,7 @@ module.exports = function createCommonEvents({ io, games, players, helpers, sele
       const game = games.getGame(socket.id);
       if (!game) return;
       if (unkick(game, data && data.id)) {
-        logger.info('Expulsió retirada per l\'amfitrió', { tag: 'player-unkick', pin: game.pin, hostId: socket.id });
+        logger.info('Expulsió retirada per l\'amfitrió', { tag: 'player-unkick', pin: game.pin, hostId: socket.id, ...quizFields(game) });
       }
       socket.emit('kickedList', listKicked(game));
     });

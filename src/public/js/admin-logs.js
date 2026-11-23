@@ -132,6 +132,13 @@
     return value ? new Date(value).toLocaleString() : '';
   }
 
+  // «Nombre (id)»; si solo se conoce el identificador (log antiguo o cuestionario borrado), solo el id.
+  function quizLabel(row){
+    var id = row.quizId ? String(row.quizId) : '';
+    if(row.quizName) return id ? (row.quizName + ' (' + id + ')') : row.quizName;
+    return id ? ('id ' + id + ' (nombre no disponible)') : '';
+  }
+
   function openLogDetail(row){
     if(!detailModal) return;
     var meta = row.meta || {};
@@ -144,7 +151,8 @@
         ['Mensaje', row.message],
         ['PIN', row.pin],
         ['hostId', row.hostId],
-        ['playerId', row.playerId]
+        ['playerId', row.playerId],
+        ['Cuestionario', quizLabel(row)]
       ].filter(function(f){ return f[1] !== null && f[1] !== undefined && f[1] !== ''; }),
       stack: meta.stack || meta.error || (Object.keys(meta).length ? JSON.stringify(meta, null, 2) : 'Sin detalle adicional.')
     };
@@ -154,7 +162,7 @@
   }
 
   function hasDetail(row){
-    return !!(row.meta && (row.meta.stack || row.meta.error || Object.keys(row.meta).length));
+    return !!(row.quizName || row.quizId || (row.meta && (row.meta.stack || row.meta.error || Object.keys(row.meta).length)));
   }
 
   function buildFilterParams(){

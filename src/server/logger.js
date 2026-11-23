@@ -29,14 +29,14 @@ async function loadLevelFromSettings() {
 class MongoCappedTransport extends Transport {
   log(info, callback) {
     setImmediate(() => this.emit('logged', info));
-    const { level, message, timestamp, tag, pin, hostId, playerId, ...meta } = info;
+    const { level, message, timestamp, tag, pin, hostId, playerId, quizId, quizName, ...meta } = info;
     const hasMeta = Object.keys(meta).length > 0;
     // Camp pla per a la busca de text lliure del visor (incloent-hi el
     // contingut de `meta`, p. ex. el nom de l'alumnat): un regex sobre un
     // objecte Mongo no funciona, així que es guarda ja concatenat.
     // hostId i playerId també es busquen en text lliure, perquè es puguen filtrar
     // escrivint-los al cercador del visor.
-    const searchText = [message, tag, hostId, playerId, hasMeta ? JSON.stringify(meta) : ''].filter(Boolean).join(' ');
+    const searchText = [message, tag, hostId, playerId, quizName, quizId, hasMeta ? JSON.stringify(meta) : ''].filter(Boolean).join(' ');
     getLogsCollection()
       .then((collection) => collection.insertOne({
         level,
@@ -45,6 +45,9 @@ class MongoCappedTransport extends Transport {
         pin: pin || null,
         hostId: hostId || null,
         playerId: playerId || null,
+        // Cuestionario al que se refiere el log (nombre guardado en el momento: sigue siendo válido aunque se renombre o borre).
+        quizId: quizId !== undefined && quizId !== null && quizId !== '' ? String(quizId) : null,
+        quizName: quizName || null,
         meta: hasMeta ? meta : null,
         searchText,
         createdAt: timestamp ? new Date(timestamp) : new Date()
@@ -85,8 +88,16 @@ function setLevel(level) {
   logger.level = level;
 }
 
+// Campos del cuestionario de una partida para añadir al log: { quizId, quizName }.
+function quizFields(game) {
+  const data = game && game.gameData;
+  if (!data) return {};
+  return { quizId: data.gameid, quizName: data.quizName };
+}
+
 module.exports = {
   logger,
+  quizFields,
   setLevel,
   reloadLevel: loadLevelFromSettings,
   LOG_LEVELS,
