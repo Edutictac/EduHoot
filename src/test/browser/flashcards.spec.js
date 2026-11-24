@@ -33,6 +33,7 @@ async function mockBackend(page) {
 
 test('botones de la tarjeta: «No la sé» en rojos, anterior/siguiente en amarillos, mostrar en blanco con texto rosa y ocultar al revés', async ({ page }) => {
     await mockBackend(page);
+    await page.addInitScript(() => localStorage.setItem('eduh_cards_validate', '0')); // marcat manual (sense validació)
     await page.goto('/solo/?lang=es');
     await page.locator('.card-actions .btn', { hasText: 'Repasar' }).click();
     await page.locator('#cards-start-all').click();
@@ -52,6 +53,7 @@ test('botones de la tarjeta: «No la sé» en rojos, anterior/siguiente en amari
 
 test('el repàs mostra les targetes sense les enquestes i deixa marcar sabudes i no sabudes', async ({ page }) => {
     await mockBackend(page);
+    await page.addInitScript(() => localStorage.setItem('eduh_cards_validate', '0')); // marcat manual (sense validació)
     await page.goto('/solo/?lang=es');
     await page.locator('.card-actions .btn', { hasText: 'Repasar' }).click();
 
@@ -87,6 +89,7 @@ test('el repàs mostra les targetes sense les enquestes i deixa marcar sabudes i
 
 test('el progrés es guarda i el repàs de les no sabudes només porta aquestes targetes', async ({ page }) => {
     await mockBackend(page);
+    await page.addInitScript(() => localStorage.setItem('eduh_cards_validate', '0')); // marcat manual (sense validació)
     await page.goto('/solo/?lang=es');
     await page.locator('.card-actions .btn', { hasText: 'Repasar' }).click();
     await page.locator('#cards-start-all').click();
@@ -107,6 +110,7 @@ test('el progrés es guarda i el repàs de les no sabudes només porta aquestes 
 
 test('reiniciar el progrés esborra les marques', async ({ page }) => {
     await mockBackend(page);
+    await page.addInitScript(() => localStorage.setItem('eduh_cards_validate', '0')); // marcat manual (sense validació)
     await page.goto('/solo/?lang=es');
     await page.locator('.card-actions .btn', { hasText: 'Repasar' }).click();
     await page.locator('#cards-start-all').click();
@@ -193,6 +197,7 @@ test('correspondencia: con la casilla activada, el anverso muestra las dos colum
     await page.setViewportSize({ width: 1280, height: 800 });
     await mockBackend(page);
     await page.route('**/api/quizzes/q1', route => route.fulfill({ json: { ...quiz, questions: [matchingQuiz] } }));
+    await page.addInitScript(() => localStorage.setItem('eduh_cards_validate', '0'));
     await page.goto('/solo/?lang=es');
     await page.locator('.card-actions .btn', { hasText: 'Repasar' }).click();
     await page.locator('#cards-start-all').click();
@@ -211,6 +216,7 @@ test('correspondencia: con la casilla activada, el anverso muestra las dos colum
 test('correspondencia: con la casilla desactivada, solo sale la columna izquierda', async ({ page }) => {
     await mockBackend(page);
     await page.route('**/api/quizzes/q1', route => route.fulfill({ json: { ...quiz, questions: [matchingQuiz] } }));
+    await page.addInitScript(() => localStorage.setItem('eduh_cards_validate', '0'));
     await page.goto('/solo/?lang=es');
     await page.locator('.card-actions .btn', { hasText: 'Repasar' }).click();
     await page.locator('#cards-options').uncheck();
@@ -224,6 +230,7 @@ test('correspondencia en pantalla ancha con imagen: la tabla va a la derecha de 
     await page.setViewportSize({ width: 1280, height: 800 });
     await mockBackend(page);
     await page.route('**/api/quizzes/q1', route => route.fulfill({ json: { ...quiz, questions: [{ ...matchingQuiz, image: png }] } }));
+    await page.addInitScript(() => localStorage.setItem('eduh_cards_validate', '0'));
     await page.goto('/solo/?lang=es');
     await page.locator('.card-actions .btn', { hasText: 'Repasar' }).click();
     await page.locator('#cards-start-all').click();
@@ -523,4 +530,109 @@ test('en preguntas de vertadero/fals el anverso muestra solo les dues opcions', 
     await page.locator('.card-actions .btn', { hasText: 'Repasar' }).click();
     await page.locator('#cards-start-all').click();
     await expect(page.locator('.flashcard__option')).toHaveCount(2);
+});
+
+// Validació de respostes («Comprobar respuestas», activada per defecte).
+const validateQuiz = (questions) => ({ ...quiz, questions });
+const capitalQuestion = { question: 'Quina és la capital d\'Espanya?', type: 'quiz', answers: ['Barcelona', 'Madrid', 'Sevilla', 'València'], correctAnswers: [2], time: 20 };
+
+test('comprobar respuestas: por defecto activada; una opción incorrecta se marca sola y sale el resumen', async ({ page }) => {
+    await mockBackend(page);
+    await page.route('**/api/quizzes/q1', route => route.fulfill({ json: validateQuiz([capitalQuestion]) }));
+    await page.goto('/solo/?lang=es');
+    await page.locator('.card-actions .btn', { hasText: 'Repasar' }).click();
+    await expect(page.locator('#cards-validate')).toBeChecked();
+    await page.locator('#cards-start-all').click();
+    await page.locator('.flashcard__option', { hasText: 'Barcelona' }).click();
+    await page.locator('#cards-check').click();
+    await expect(page.locator('#cards-result')).toHaveText('✕ Incorrecta');
+    await expect(page.locator('.flashcard')).toHaveClass(/is-back/);
+    await expect(page.locator('.cards-mark')).toHaveCount(0);
+    await page.locator('#cards-next').click();
+    await expect(page.locator('#cards-summary')).toContainText('Correctas: 0 · Incorrectas: 1 · Sin responder: 0');
+    await expect(page.locator('#cards-summary li')).toHaveText(['Quina és la capital d\'Espanya?']);
+    // El progreso se guarda: la tarjeta queda como no sabida.
+    expect(await page.evaluate(() => JSON.parse(localStorage.getItem('eduhoot-flashcards-progress'))['q1'].status)).toEqual({ '0': 'unknown' });
+});
+
+test('comprobar respuestas: la opción correcta cuenta como sabida; pasar sin comprobar cuenta como sin responder', async ({ page }) => {
+    await mockBackend(page);
+    await page.route('**/api/quizzes/q1', route => route.fulfill({ json: validateQuiz([
+        capitalQuestion,
+        { question: 'Quina és la capital de França?', type: 'quiz', answers: ['París', 'Lió', 'Niça', 'Lyon'], correctAnswers: [1], time: 20 }
+    ]) }));
+    await page.goto('/solo/?lang=es');
+    await page.locator('.card-actions .btn', { hasText: 'Repasar' }).click();
+    await page.locator('#cards-start-all').click();
+    await page.locator('.flashcard__option', { hasText: 'Madrid' }).click();
+    await page.locator('#cards-check').click();
+    await expect(page.locator('#cards-result')).toHaveText('✓ Correcta');
+    await page.locator('#cards-next').click();
+    await page.locator('#cards-next').click();
+    await expect(page.locator('#cards-summary')).toContainText('Correctas: 1 · Incorrectas: 0 · Sin responder: 1');
+    await expect(page.locator('#cards-summary .cards-summary__title')).toHaveCount(0);
+});
+
+test('comprobar respuestas: la respuesta escrita se valida con Enter (curta)', async ({ page }) => {
+    await mockBackend(page);
+    await page.route('**/api/quizzes/q1', route => route.fulfill({ json: validateQuiz([
+        { question: 'Capital d\'Espanya?', type: 'short-answer', acceptedAnswers: ['Madrid'], time: 20 }
+    ]) }));
+    await page.goto('/solo/?lang=es');
+    await page.locator('.card-actions .btn', { hasText: 'Repasar' }).click();
+    await page.locator('#cards-start-all').click();
+    await page.locator('#cards-typed').fill('madrid');
+    await page.locator('#cards-typed').press('Enter');
+    await expect(page.locator('#cards-result')).toHaveText('✓ Correcta');
+    await page.locator('#cards-next').click();
+    await expect(page.locator('#cards-summary')).toContainText('Correctas: 1 · Incorrectas: 0 · Sin responder: 0');
+});
+
+test('comprobar respuestas desactivada: no hay comprobación y aparecen los botones de marcar a mano', async ({ page }) => {
+    await mockBackend(page);
+    await page.route('**/api/quizzes/q1', route => route.fulfill({ json: validateQuiz([capitalQuestion]) }));
+    await page.goto('/solo/?lang=es');
+    await page.locator('.card-actions .btn', { hasText: 'Repasar' }).click();
+    await page.locator('#cards-validate').uncheck();
+    expect(await page.evaluate(() => localStorage.getItem('eduh_cards_validate'))).toBe('0');
+    await page.locator('#cards-start-all').click();
+    await expect(page.locator('#cards-check')).toHaveCount(0);
+    await page.locator('#cards-flip').click();
+    await expect(page.locator('#cards-know')).toBeVisible();
+});
+
+// Correspondencia validada: cada elemento de la izquierda se empareja en una desplegable y se comprueba al final.
+const matchingValidated = { question: 'Relaciona capital i país', type: 'matching', time: 30,
+    pairs: [{ left: 'França', right: 'París' }, { left: 'Espanya', right: 'Madrid' }] };
+
+test('comprobar respuestas en correspondencia: parejas correctas en desplegables se marcan como correctas', async ({ page }) => {
+    await mockBackend(page);
+    await page.route('**/api/quizzes/q1', route => route.fulfill({ json: validateQuiz([matchingValidated]) }));
+    await page.goto('/solo/?lang=es');
+    await page.locator('.card-actions .btn', { hasText: 'Repasar' }).click();
+    await page.locator('#cards-start-all').click();
+    const selects = page.locator('.flashcard__select');
+    await expect(selects).toHaveCount(2);
+    await selects.nth(0).selectOption({ label: 'París' });
+    await selects.nth(1).selectOption({ label: 'Madrid' });
+    await page.locator('#cards-check').click();
+    await expect(page.locator('#cards-result')).toHaveText('✓ Correcta');
+    await page.locator('#cards-next').click();
+    await expect(page.locator('#cards-summary')).toContainText('Correctas: 1 · Incorrectas: 0 · Sin responder: 0');
+});
+
+test('comprobar respuestas en correspondencia: una pareja mal emparejada cuenta como incorrecta', async ({ page }) => {
+    await mockBackend(page);
+    await page.route('**/api/quizzes/q1', route => route.fulfill({ json: validateQuiz([matchingValidated]) }));
+    await page.goto('/solo/?lang=es');
+    await page.locator('.card-actions .btn', { hasText: 'Repasar' }).click();
+    await page.locator('#cards-start-all').click();
+    const selects = page.locator('.flashcard__select');
+    await selects.nth(0).selectOption({ label: 'Madrid' });
+    await selects.nth(1).selectOption({ label: 'París' });
+    await page.locator('#cards-check').click();
+    await expect(page.locator('#cards-result')).toHaveText('✕ Incorrecta');
+    await page.locator('#cards-next').click();
+    await expect(page.locator('#cards-summary')).toContainText('Correctas: 0 · Incorrectas: 1 · Sin responder: 0');
+    await expect(page.locator('#cards-summary li')).toHaveText(['Relaciona capital i país']);
 });

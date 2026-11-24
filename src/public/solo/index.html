@@ -257,6 +257,11 @@
                     <div v-if="s.cards.phase !== 'card'" class="cards-start">
                       <div class="cards-start__info">
                         <h3 v-if="s.cards.phase === 'done'">{{ t('flashcardsDoneTitle') }}</h3>
+                        <div v-if="cardsSummary" id="cards-summary" class="cards-summary">
+                            <p class="cards-summary__counts">{{ cardsSummaryText }}</p>
+                            <p v-if="cardsSummary.review.length" class="cards-summary__title">{{ t('flashcardsToReview') }}</p>
+                            <ul v-if="cardsSummary.review.length" class="cards-summary__list"><li v-for="(text, i) in cardsSummary.review" :key="i">{{ text }}</li></ul>
+                        </div>
                         <div class="quiz-banner" :class="{ 'quiz-banner--logo-only': !quizImage }">
                             <img class="quiz-banner__logo" src="/icons/logo.svg" alt="EduHoot">
                             <img v-if="quizImage" class="quiz-banner__cover" :src="quizImage" alt="" @error="$event.target.style.display = 'none'; $event.target.parentNode.classList.add('quiz-banner--logo-only')">
@@ -271,6 +276,10 @@
                         <label class="cards-shuffle">
                             <input id="cards-options" type="checkbox" :checked="s.cards.showOptions" @change="cardsToggleOptions">
                             {{ t('flashcardsShowOptions') }}
+                        </label>
+                        <label class="cards-shuffle">
+                            <input id="cards-validate" type="checkbox" :checked="s.cards.validate" @change="cardsToggleValidate">
+                            {{ t('flashcardsValidate') }}
                         </label>
                         <label class="cards-shuffle">
                             <input id="cards-animate" type="checkbox" :checked="s.cards.animate" @change="cardsToggleAnimate">
@@ -310,11 +319,14 @@
                                             <button type="button" class="flashcard__option answer-shape" :class="['answer-shape--' + o.shape, { 'is-picked': isCardPicked(o.n) }]" :aria-pressed="isCardPicked(o.n) ? 'true' : 'false'" @click.stop="cardsPick(o.n)">{{ o.text }}</button>
                                         </li>
                                     </ul>
+                                    <div v-if="cardsTypedKind" class="flashcard__typed" @click.stop>
+                                        <input id="cards-typed" class="flashcard__input" type="text" autocomplete="off" :inputmode="cardsTypedKind === 'number' ? 'decimal' : 'text'" :placeholder="t('flashcardsTypeAnswer')" :value="cardsTypedValue" :disabled="s.cards.flipped" @input="cardsSetTyped($event.target.value)" @keydown.enter.prevent="cardsCheck">
+                                    </div>
                                     <div v-if="cardsMatchTable.length" class="flashcard__match">
                                         <p class="flashcard__label">{{ t('flashcardsMatchLeft') }}</p>
                                         <table class="flashcard__pairs">
                                             <thead class="sr-only"><tr><th>{{ t('flashcardsMatchColumnLeft') }}</th><th>{{ t('flashcardsMatchColumnRight') }}</th></tr></thead>
-                                            <tbody><tr v-for="(row, i) in cardsMatchTable" :key="i"><td>{{ row.left }}</td><td>{{ row.right }}</td></tr></tbody>
+                                            <tbody><tr v-for="(row, i) in cardsMatchTable" :key="i"><td>{{ row.left }}</td><td v-if="cardsAutoCheck"><select class="flashcard__select" :aria-label="row.left" :value="cardsMatchValue(i)" :disabled="s.cards.flipped" @click.stop @change="cardsSetMatch(i, $event.target.value)"><option value="">—</option><option v-for="(text, j) in cardsMatchRight" :key="j" :value="String(j)">{{ text }}</option></select></td><td v-else>{{ row.right }}</td></tr></tbody>
                                         </table>
                                     </div>
                                     <div v-if="cardsMatchLeft.length && !cardsMatchTable.length" class="flashcard__match">
@@ -334,10 +346,12 @@
                         </div>
                         <div class="cards-actions">
                             <button id="cards-prev" class="btn btn-cards-nav" :disabled="s.cards.pos === 0" @click="cardsPrev">{{ t('flashcardsPrev') }}</button>
+                            <button v-if="cardsAutoCheck && !s.cards.flipped && !cardsResult" id="cards-check" class="btn btn-primary" @click="cardsCheck">{{ t('flashcardsCheck') }}</button>
                             <button id="cards-flip" class="btn" :class="s.cards.flipped ? 'btn-cards-hide' : 'btn-cards-show'" @click="cardsFlip">{{ s.cards.flipped ? t('flashcardsHideAnswer') : t('flashcardsShowAnswer') }}</button>
                             <button id="cards-next" class="btn btn-cards-nav" @click="cardsNext">{{ t('flashcardsNext') }}</button>
                         </div>
-                        <div v-if="s.cards.flipped" class="cards-mark">
+                        <p v-if="s.cards.flipped && cardsResultText" id="cards-result" class="cards-result" :class="'cards-result--' + cardsResult">{{ cardsResultText }}</p>
+                        <div v-if="s.cards.flipped && !cardsAutoCheck" class="cards-mark">
                             <button id="cards-dont-know" class="btn btn-cards-unknown" @click="cardsMarkUnknown">{{ t('flashcardsDontKnow') }}</button>
                             <button id="cards-know" class="btn btn-primary" @click="cardsMarkKnown">{{ t('flashcardsKnow') }}</button>
                         </div>

@@ -104,6 +104,68 @@
         }
     }
 
+    // Validació automàtica («Comprobar respuestas»): el mateix criteri que el mode solo (solo-game.js).
+    // Quiz, resposta múltiple, vertader/fals, resposta curta, numèrica i correspondència es validen;
+    // l'enquesta no.
+    var VALIDATABLE = { quiz: true, multiple: true, 'true-false': true, 'short-answer': true, numeric: true, matching: true };
+
+    function isValidatableType(type){
+        return VALIDATABLE[type] === true;
+    }
+
+    // Text lliure sense accents, majúscules ni signes (com normalizeFreeText de solo-questions.js).
+    function normalizeText(value){
+        var str = (value === null || value === undefined ? '' : String(value)).trim().toLowerCase();
+        if(!str) return '';
+        try{
+            str = str.normalize('NFD').replace(/[̀-ͯ]/g, '');
+        }catch(e){}
+        return str.replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+    }
+
+    // Nombre amb coma o punt decimal; null si no és un nombre complet.
+    function parseNumber(value){
+        var str = (value === null || value === undefined ? '' : String(value)).trim().replace(/\s+/g, '').replace(',', '.');
+        if(!/^[-+]?\d+(\.\d+)?$/.test(str)) return null;
+        return Number(str);
+    }
+
+    function sameNumbers(a, b){
+        return a.length === b.length && a.every(function(v, i){ return v === b[i]; });
+    }
+
+    // Té en compte la resposta de l'alumnat: true si és correcta, false si no, null si la pregunta no es valida.
+    // picks: { '<n>': true } (opcions marcades); typed: text o nombre escrit;
+    // matches: { '<i>': <j> } (per a la correspondència: l'element j de la dreta triat per a l'esquerra i).
+    function judgeCard(meta, picks, typed, matches){
+        if(!meta || !isValidatableType(meta.type)) return null;
+        if(meta.type === 'matching'){
+            var solution = meta.matchSolution || [];
+            var answers = matches || {};
+            if(!solution.length) return false;
+            // Totes les parelles han de ser correctes (com al mode solo).
+            return solution.every(function(right, i){ return answers[i] !== undefined && Number(answers[i]) === right; });
+        }
+        if(meta.type === 'short-answer'){
+            var text = normalizeText(typed);
+            if(!text) return false;
+            return (meta.acceptedAnswers || []).some(function(a){ return normalizeText(a) === text; });
+        }
+        if(meta.type === 'numeric'){
+            var num = parseNumber(typed);
+            var target = typeof meta.numericAnswer === 'number' ? meta.numericAnswer : parseNumber(meta.numericAnswer);
+            if(num === null || target === null) return false;
+            var tol = typeof meta.tolerance === 'number' ? meta.tolerance : (parseNumber(meta.tolerance) || 0);
+            return Math.abs(num - target) <= Math.max(0, tol);
+        }
+        var selected = Object.keys(picks || {}).filter(function(k){ return !!picks[k]; }).map(Number).sort(function(a, b){ return a - b; });
+        var correct = (meta.correctAnswers || []).map(Number).sort(function(a, b){ return a - b; });
+        if(!selected.length) return false;
+        if(meta.type === 'multiple') return sameNumbers(selected, correct);
+        // Quiz d'una correcta i vertader/fals: una sola opció, la correcta.
+        return selected.length === 1 && selected[0] === correct[0];
+    }
+
     var api = {
         KNOWN: KNOWN,
         UNKNOWN: UNKNOWN,
@@ -116,7 +178,9 @@
         deckFor: deckFor,
         shuffleCopy: shuffleCopy,
         countStatus: countStatus,
-        defaultStorage: defaultStorage
+        defaultStorage: defaultStorage,
+        isValidatableType: isValidatableType,
+        judgeCard: judgeCard
     };
 
     root.EduhootFlashcards = api;

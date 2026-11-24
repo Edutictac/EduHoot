@@ -90,7 +90,8 @@ test('flashcards: el anverso enseña la columna izquierda y el reverso las parej
     await page.goto('/solo/?id=m1&mode=cards&lang=es');
     await page.locator('#cards-start-all').click();
     await expect(page.locator('#flashcard-question')).toHaveText('Relaciona cada país con su capital');
-    await expect(page.locator('.flashcard__match-left li')).toHaveText(['Francia', 'Italia', 'Alemania']);
+    // Amb «Mostrar opciones de respuesta» (per defecte) la columna esquerra va a la taula de correspondència.
+    await expect(page.locator('.flashcard__pairs tbody td:nth-child(1)')).toHaveText(['Francia', 'Italia', 'Alemania']);
     await expect(page.locator('#flashcard-answer li')).toHaveText(['Francia → París', 'Italia → Roma', 'Alemania → Berlín']);
 });
 

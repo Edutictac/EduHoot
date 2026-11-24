@@ -19,6 +19,7 @@ fitxers corresponents, i els originals es van eliminar.
 ## [1.2.0] - 2026-11-23
 
 ### Afegit
+- **Flashcards: comprovació de respostes** («Comprobar respuestas», activada per defecte): l'alumnat contesta a la targeta (opció, text o número), es comprova i es marca sola com a sabuda o no sabuda. Passar sense comprovar compta com a no sabuda. Al final, resum amb les correctes, les incorrectes i les que cal repassar. En correspondència, cada element s'empareja amb una desplegable i es comprova que totes les parelles siguin correctes.
 - **Deures asíncrons** (feature 1): el docent crea un deure des d'un quiz (botó 📚
   de la biblioteca) amb data límit, intents (1, 2, 3, 5 o il·limitats; compta el
   millor), temps per pregunta i opcions de resposta, i comparteix un enllaç

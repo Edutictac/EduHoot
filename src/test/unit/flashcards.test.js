@@ -99,3 +99,45 @@ test('shuffleCopy no modifica l\'original i conserva els elements', () => {
     assert.deepEqual([...shuffled].sort(), [1, 2, 3, 4, 5]);
     assert.notEqual(shuffled, original);
 });
+
+test('validació: quiz d\'una correcta, resposta múltiple, vertader/fals', () => {
+  const quiz = { type: 'quiz', correctAnswers: [2] };
+  assert.equal(fc.judgeCard(quiz, { 2: true }, null), true);
+  assert.equal(fc.judgeCard(quiz, { 1: true }, null), false);
+  assert.equal(fc.judgeCard(quiz, { 1: true, 2: true }, null), false);
+  assert.equal(fc.judgeCard(quiz, {}, null), false);
+  assert.equal(fc.judgeCard(quiz, { 2: false, 1: true }, null), false);
+
+  const multi = { type: 'multiple', correctAnswers: [1, 3] };
+  assert.equal(fc.judgeCard(multi, { 3: true, 1: true }, null), true);
+  assert.equal(fc.judgeCard(multi, { 1: true }, null), false);
+  assert.equal(fc.judgeCard(multi, { 1: true, 3: true, 4: true }, null), false);
+
+  const tf = { type: 'true-false', correctAnswers: [2] };
+  assert.equal(fc.judgeCard(tf, { 2: true }, null), true);
+  assert.equal(fc.judgeCard(tf, { 1: true }, null), false);
+});
+
+test('validació: resposta curta sense accents ni majúscules; numèrica dins de la tolerància', () => {
+  const short = { type: 'short-answer', acceptedAnswers: ['París', 'Paris'] };
+  assert.equal(fc.judgeCard(short, {}, '  paris '), true);
+  assert.equal(fc.judgeCard(short, {}, 'Madrid'), false);
+  assert.equal(fc.judgeCard(short, {}, ''), false);
+
+  const num = { type: 'numeric', numericAnswer: 3.14, tolerance: 0.01 };
+  assert.equal(fc.judgeCard(num, {}, '3,14'), true);
+  assert.equal(fc.judgeCard(num, {}, '3.135'), true);
+  assert.equal(fc.judgeCard(num, {}, '3.2'), false);
+  assert.equal(fc.judgeCard(num, {}, 'tres'), false);
+});
+
+test('validació: correspondència (totes les parelles han de ser correctes); enquesta no es valida', () => {
+  const m = { type: 'matching', matchSolution: [1, 0, 2] };
+  assert.equal(fc.judgeCard(m, {}, null, { 0: 1, 1: 0, 2: 2 }), true);
+  assert.equal(fc.judgeCard(m, {}, null, { 0: 1, 1: 2, 2: 0 }), false);
+  assert.equal(fc.judgeCard(m, {}, null, { 0: 1, 1: 0 }), false);
+  assert.equal(fc.judgeCard(m, {}, null, {}), false);
+  assert.equal(fc.judgeCard({ type: 'poll' }, {}, null), null);
+  assert.equal(fc.isValidatableType('matching'), true);
+  assert.equal(fc.isValidatableType('poll'), false);
+});

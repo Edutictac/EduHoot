@@ -101,6 +101,22 @@ function saveOptionsPref(on){
     try{ window.localStorage.setItem(OPTIONS_KEY, on ? '1' : '0'); }catch(e){}
 }
 
+// Preferència «Comprobar respuestas» (per dispositiu). Per defecte, activada.
+var VALIDATE_KEY = 'eduh_cards_validate';
+
+function readValidatePref(){
+    try{
+        var v = window.localStorage.getItem(VALIDATE_KEY);
+        return v === null ? true : v === '1';
+    }catch(e){
+        return true;
+    }
+}
+
+function saveValidatePref(on){
+    try{ window.localStorage.setItem(VALIDATE_KEY, on ? '1' : '0'); }catch(e){}
+}
+
 // Torna la targeta al davant sense animació (en canviar de targeta, no ha de girar de nou).
 // Cancel·la un giro en curs: el token invalida la part del giro que quedava per fer.
 function snapCardFront(c){
@@ -153,6 +169,12 @@ function openFlashcards(quiz){
         showOptions: readOptionsPref(),
         // Resposta múltiple: true si alguna paraula no cap en el botó de dues columnes (cardsFitOptions).
         oneColumn: false,
+        // Validació: l'alumnat contesta, es comprova i es marca sola. results: { '<idx>': 'ok'|'fail'|'skip' }.
+        validate: readValidatePref(),
+        roundValidate: false,
+        results: {},
+        typed: {},
+        matches: {},
         picks: {}
     };
     state.view = 'cards';
@@ -198,6 +220,61 @@ var soloFlashcards = {
             if(type === 'quiz' || type === 'multiple') return this.s.cards.oneColumn ? 'one' : 'two';
             return '';
         },
+        // Validació: la pregunta es comprova sola (quiz, múltiple, vertader/fals, curta i numèrica) amb la casella activada.
+        cardsAutoCheck: function(){
+            var cur = this.cardsCurrent;
+            var c = this.s.cards;
+            return !!cur && !!c && !!c.validate && EduhootFlashcards.isValidatableType(normalizeQuestionMeta(cur.q).type);
+        },
+        // Correspondència en validació: les opcions de la dreta (barajades) per a les desplegables.
+        cardsMatchRight: function(){
+            var cur = this.cardsCurrent;
+            var c = this.s.cards;
+            if(!cur || !c.validate) return [];
+            var layout = c.matchLayouts && c.matchLayouts[String(cur.idx)];
+            return layout ? layout.matchRight.slice() : [];
+        },
+        // Camp de text per a la resposta escrita: 'text' (curta), 'number' (numèrica) o '' (no n'hi ha).
+        cardsTypedKind: function(){
+            var cur = this.cardsCurrent;
+            if(!cur || !this.cardsAutoCheck) return '';
+            var type = normalizeQuestionMeta(cur.q).type;
+            return type === 'short-answer' ? 'text' : (type === 'numeric' ? 'number' : '');
+        },
+        cardsTypedValue: function(){
+            var cur = this.cardsCurrent;
+            var typed = this.s.cards.typed || {};
+            return cur && typed[String(cur.idx)] !== undefined ? typed[String(cur.idx)] : '';
+        },
+        cardsResult: function(){
+            var cur = this.cardsCurrent;
+            var results = this.s.cards.results || {};
+            return cur ? (results[String(cur.idx)] || '') : '';
+        },
+        cardsResultText: function(){
+            var r = this.cardsResult;
+            if(r === 'ok') return this.t('flashcardsCorrect');
+            if(r === 'fail') return this.t('flashcardsWrong');
+            if(r === 'skip') return this.t('flashcardsSkipped');
+            return '';
+        },
+        // Resum al final de la ronda (només si s'ha fet amb «Comprobar respuestas»): correctes, incorrectes i les incorrectes.
+        cardsSummary: function(){
+            var c = this.s.cards;
+            if(!c || c.phase !== 'done' || !c.roundValidate) return null;
+            var out = { ok: 0, fail: 0, skip: 0, review: [] };
+            c.deck.forEach(function(card){
+                var r = c.results[String(card.idx)];
+                if(r === 'ok') out.ok += 1;
+                else if(r === 'fail'){ out.fail += 1; out.review.push(card.q.question || ''); }
+                else if(r === 'skip') out.skip += 1;
+            });
+            return out;
+        },
+        cardsSummaryText: function(){
+            var s = this.cardsSummary;
+            return s ? format(this.t('flashcardsSummary'), { ok: s.ok, fail: s.fail, skip: s.skip }) : '';
+        },
         // Vertader/fals amb imatge: les dues opcions una sota l'altra (no en fila).
         cardsOptionsStacked: function(){
             var cur = this.cardsCurrent;
@@ -231,11 +308,13 @@ var soloFlashcards = {
         cardsMatchTable: function(){
             var cur = this.cardsCurrent;
             var c = this.s.cards;
-            if(!cur || !c.showOptions) return [];
+            // Amb la validació activada la correspondència sempre es respon a la taula (amb desplegables).
+            if(!cur || !(c.showOptions || c.validate)) return [];
             var meta = normalizeQuestionMeta(cur.q);
             if(meta.type !== 'matching') return [];
             var layout = (c.matchLayouts && c.matchLayouts[String(cur.idx)]) || { matchRight: [] };
-            var rows = Math.max(meta.matchLeft.length, layout.matchRight.length);
+            // Una fila per element de l'esquerra; una resposta de la dreta sobrant (distractor) només surt a les desplegables.
+            var rows = meta.matchLeft.length;
             var out = [];
             for(var i = 0; i < rows; i++){
                 out.push({ left: meta.matchLeft[i] || '', right: layout.matchRight[i] || '' });
@@ -285,6 +364,12 @@ var soloFlashcards = {
             stopFlashcardsSpeech();
             c.deck = deck;
             c.pos = 0;
+            // Ronda nova: resultats, respostes escrites i opcions marcades de zero.
+            c.results = {};
+            c.typed = {};
+            c.matches = {};
+            c.picks = {};
+            c.roundValidate = !!c.validate;
             snapCardFront(c);
             c.phase = deck.length ? 'card' : 'done';
         },
@@ -384,6 +469,7 @@ var soloFlashcards = {
         },
         cardsNext: function(){
             var c = this.s.cards;
+            this.cardsSkipIfUnchecked();
             stopFlashcardsSpeech();
             snapCardFront(c);
             if(c.pos + 1 < c.deck.length){
@@ -400,6 +486,7 @@ var soloFlashcards = {
             var all = loadFlashcardsProgress();
             c.status = EduhootFlashcards.setStatus(all, c.quizId, c.total, cur.idx, status);
             saveFlashcardsProgress(all);
+            this.cardsSetResult(status === EduhootFlashcards.KNOWN ? 'ok' : 'fail');
             this.cardsNext();
         },
         cardsReset: function(){
@@ -441,6 +528,74 @@ var soloFlashcards = {
         cardsToggleShuffle: function(){ this.s.cards.shuffle = !this.s.cards.shuffle; },
         cardsMarkKnown: function(){ this.cardsMark(EduhootFlashcards.KNOWN); },
         cardsMarkUnknown: function(){ this.cardsMark(EduhootFlashcards.UNKNOWN); },
+        // Correspondència: l'element de la dreta triat per a la fila i (la desplegable).
+        cardsSetMatch: function(i, value){
+            var cur = this.cardsCurrent;
+            var c = this.s.cards;
+            if(!cur) return;
+            var key = String(cur.idx);
+            var current = Object.assign({}, c.matches[key]);
+            if(value === '' || value === null || value === undefined) delete current[i];
+            else current[i] = Number(value);
+            var copy = Object.assign({}, c.matches);
+            copy[key] = current;
+            c.matches = copy;
+        },
+        cardsMatchValue: function(i){
+            var cur = this.cardsCurrent;
+            var m = cur ? this.s.cards.matches[String(cur.idx)] : null;
+            return m && m[i] !== undefined ? String(m[i]) : '';
+        },
+        cardsToggleValidate: function(){
+            var c = this.s.cards;
+            c.validate = !c.validate;
+            saveValidatePref(c.validate);
+        },
+        cardsSetTyped: function(value){
+            var cur = this.cardsCurrent;
+            var c = this.s.cards;
+            if(!cur) return;
+            var copy = Object.assign({}, c.typed);
+            copy[String(cur.idx)] = value;
+            c.typed = copy;
+        },
+        cardsSetResult: function(result){
+            var cur = this.cardsCurrent;
+            var c = this.s.cards;
+            if(!cur) return;
+            var copy = Object.assign({}, c.results);
+            copy[String(cur.idx)] = result;
+            c.results = copy;
+        },
+        // Guarda el resultat de la targeta actual: el progrés (sabida si és correcta) i el resum de la ronda.
+        cardsAutoMark: function(result){
+            var cur = this.cardsCurrent;
+            var c = this.s.cards;
+            if(!cur) return;
+            var all = loadFlashcardsProgress();
+            c.status = EduhootFlashcards.setStatus(all, c.quizId, c.total, cur.idx, result === 'ok' ? EduhootFlashcards.KNOWN : EduhootFlashcards.UNKNOWN);
+            saveFlashcardsProgress(all);
+            this.cardsSetResult(result);
+        },
+        // Comprova la resposta de l'alumnat i gira la targeta per ensenyar la correcta.
+        cardsCheck: function(){
+            var cur = this.cardsCurrent;
+            var c = this.s.cards;
+            if(!cur || !this.cardsAutoCheck || c.results[String(cur.idx)]) return;
+            var meta = normalizeQuestionMeta(cur.q);
+            // La solució de la correspondència és la de la disposició barajada que es mostra.
+            if(meta.type === 'matching') meta = Object.assign({}, meta, { matchSolution: (c.matchLayouts[String(cur.idx)] || {}).matchSolution || [] });
+            var ok = EduhootFlashcards.judgeCard(meta, c.picks[String(cur.idx)] || {}, c.typed[String(cur.idx)], c.matches[String(cur.idx)] || {});
+            this.cardsAutoMark(ok ? 'ok' : 'fail');
+            if(!c.flipped) this.cardsFlip();
+        },
+        // Amb la validació activada, passar una targeta sense comprovar-la compta com a «sense responder» (no sabuda).
+        cardsSkipIfUnchecked: function(){
+            var cur = this.cardsCurrent;
+            var c = this.s.cards;
+            if(!cur || !this.cardsAutoCheck || c.results[String(cur.idx)]) return;
+            this.cardsAutoMark('skip');
+        },
         // Resposta múltiple: les opcions es proven en dues columnes. Si alguna paraula es surt del botó
         // (no cap), passen a una columna i la targeta creix en alçada per encabir-les (no es talla cap paraula).
         cardsFitOptions: function(){
