@@ -320,6 +320,8 @@ fitxers corresponents, i els originals es van eliminar.
   (`/admin-*`) també són ara apps de Vue 3. Funciona igual que abans.
 
 ### Corregit
+- **Privacitat**: un quiz privat només es llegeix, es descarrega o s'inicia una partida amb ell des del seu dueño, l'administració o el dispositiu que el va crear (abans, qualsevol podia llegir-lo per id). Els públics i els per enllaç segueixen igual. Els quizzes locals del dispositiu reben una cookie `eduh_owner`.
+- **Autoritme**: en reconnectar l'anfitrió, una partida ja acabada no es reobri.
 - Flashcards: el anverso de les preguntes de resposta única i de vertader/fals
   no mostrava les opcions. Ara hi ha una casella a l'inici, «Mostrar opcions de
   resposta» (activada per defecte, guardada al dispositiu), que les mostra o

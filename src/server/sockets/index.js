@@ -47,6 +47,7 @@ module.exports = function registerSocketHandlers(io, deps) {
     helpers,
     findGameById,
     canUseQuiz,
+    parseCookies,
     cleanImportedText,
     cacheFinishedSessionReport,
     incrementQuizStats,

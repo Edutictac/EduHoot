@@ -21,10 +21,18 @@ const EDUHOOT_RESOURCES_TOKEN = process.env.EDUHOOT_RESOURCES_TOKEN || '';
 // sanejament en importar). Mou el contingut de server.js, sense canviar
 // comportament. Factoria perquè findGameById cau en els quizzes efímers.
 module.exports = function createQuizzesService({ getEphemeralQuiz }) {
+  // Token del dispositiu que va crear un quiz local («Solo yo»): la capçalera x-owner-token o la cookie eduh_owner
+  // (la cookie la fixa el servidor en crear el quiz i la envien sola el navegador i el socket).
+  const OWNER_COOKIE = 'eduh_owner';
+  function ownerTokenFromCookieHeader(cookieHeader) {
+    const raw = typeof cookieHeader === 'string' ? cookieHeader : '';
+    const part = raw.split(';').map((c) => c.trim()).find((c) => c.startsWith(OWNER_COOKIE + '='));
+    return part ? part.slice(OWNER_COOKIE.length + 1).trim() : '';
+  }
   function ownerTokenFromReq(req) {
     const hdr = req.headers['x-owner-token'];
     if (hdr && typeof hdr === 'string') return hdr.trim();
-    return '';
+    return ownerTokenFromCookieHeader(req.headers.cookie);
   }
 
   async function findGameById(gameId) {
@@ -59,19 +67,19 @@ module.exports = function createQuizzesService({ getEphemeralQuiz }) {
     if (user && user.role === 'admin') return true;
     const ownerId = quiz.ownerId || quiz.owner_id || quiz.owner;
     if (!ownerId) {
-      // Quizzes heredados sin dueño: permite gestionarlos a usuarios autenticados
-      return !!user;
+      // Quizzes heredados sin dueño: permite gestionarlos a usuarios autenticados (amb identitat, no només un token)
+      return !!(user && user.id);
     }
     if (!user) return false;
     return ownerId.toString() === user.id;
   }
 
+  // Lectura, descàrrega i ús (hostejar): els públics i els per enllaç (no listats) són per a tothom;
+  // els privats només per a qui els gestiona (dueño, administració o el token del dispositiu que els va crear).
   function canUseQuiz(quiz, user) {
     const visibility = currentVisibility(quiz);
-    if (visibility === 'public') return true;
-    if (visibility === 'unlisted') return true;
-    // Permitir usar (hostear) aunque sea "solo yo"; se controla por visibilidad solo en lectura/gestión.
-    return true;
+    if (visibility === 'public' || visibility === 'unlisted') return true;
+    return canManageQuiz(quiz, user);
   }
 
   function canCloneQuiz(quiz, user) {
@@ -213,6 +221,7 @@ module.exports = function createQuizzesService({ getEphemeralQuiz }) {
     GLOBAL_OWNER_ID,
     GLOBAL_OWNER_EMAIL,
     ownerTokenFromReq,
+    ownerTokenFromCookieHeader,
     findGameById,
     nextGameId,
     canManageQuiz,

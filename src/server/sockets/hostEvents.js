@@ -12,6 +12,7 @@ module.exports = function createHostEvents({
   helpers,
   findGameById,
   canUseQuiz,
+  parseCookies,
   cleanImportedText,
   cacheFinishedSessionReport,
   incrementQuizStats,
@@ -39,6 +40,18 @@ module.exports = function createHostEvents({
     logGames
   } = helpers;
 
+  // En reconnectar l'anfitrió, la partida torna a estar oberta… excepte l'autoritme ja acabat (no es reobri).
+  function reopenUnlessEnded(game) {
+    if (game.gameData && game.gameData.selfPacedEnded) return;
+    game.gameOver = false;
+  }
+
+  // Qui demana la partida: l'usuari del socket i el token del dispositiu (cookie), per als quizzes privats.
+  function viewerOfSocket(socket) {
+    const cookies = parseCookies((socket.handshake && socket.handshake.headers && socket.handshake.headers.cookie) || '');
+    return { ...(socket.user || {}), ownerToken: cookies.eduh_owner || '' };
+  }
+
   return function registerHostEvents(socket) {
     socket.on('host-join', async (data) => {
       try {
@@ -48,7 +61,7 @@ module.exports = function createHostEvents({
           const previousHostId = existingByPin.hostId;
           markHostConnected(existingByPin);
           existingByPin.hostId = socket.id;
-          existingByPin.gameOver = false;
+          reopenUnlessEnded(existingByPin);
           scheduleGameCleanup(socket.id, timingsFor(socket.id).inactivityMs);
           socket.join(existingByPin.pin);
 
@@ -71,7 +84,7 @@ module.exports = function createHostEvents({
 
         const kahoot = await findGameById(data.id);
 
-        if (kahoot && canUseQuiz(kahoot, socket.user)) {
+        if (kahoot && canUseQuiz(kahoot, viewerOfSocket(socket))) {
           let gamePin = null;
           for (let attempt = 0; attempt < 30; attempt++) {
             const candidate = Math.floor(Math.random() * 90000) + 10000;
@@ -138,7 +151,7 @@ module.exports = function createHostEvents({
         const previousHostId = game.hostId;
         markHostConnected(game);
         game.hostId = socket.id;
-        game.gameOver = false;
+        reopenUnlessEnded(game);
         scheduleGameCleanup(socket.id, timingsFor(socket.id).inactivityMs);
         socket.join(game.pin);
         const playerData = players.getPlayers(previousHostId);

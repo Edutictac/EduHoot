@@ -19,6 +19,7 @@ funcionament del projecte.
 - [Arquitectura tècnica (resum)](#arquitectura-tècnica-resum)
 - [Estructura de directoris](#estructura-de-directoris)
 - [Model de dades (MongoDB)](#model-de-dades-mongodb)
+- [Qui pot veure, gestionar i iniciar un quiz](#qui-pot-veure-gestionar-i-iniciar-un-quiz)
 - [Autenticació i sessions](#autenticació-i-sessions)
 - [Comunicació en temps real (Socket.IO)](#comunicació-en-temps-real-socketio)
 - [Cicle de vida d'una partida: PIN, lobby i temps d'espera](#cicle-de-vida-duna-partida-pin-lobby-i-temps-despera)
@@ -32,6 +33,7 @@ funcionament del projecte.
 - [Lectura en veu alta (TTS)](#lectura-en-veu-alta-tts)
 - [Pantalla completa de la partida](#pantalla-completa-de-la-partida)
 - [Modes de joc](#modes-de-joc)
+- [Flashcards: comprovació de respostes](#flashcards-comprovació-de-respostes)
 - [Avanç de pregunta: automàtic o manual?](#avanç-de-pregunta-automàtic-o-manual)
 - [Mode autoritme i deures asíncrons](#mode-autoritme-i-deures-asíncrons)
 - [Comparativa de tipus amb Kahoot, Wayground i AULES](#comparativa-de-tipus-amb-kahoot-wayground-i-aules)
@@ -191,6 +193,19 @@ finalitzar es bolquen com a fitxers d'informe en disc
 (`src/logs/finished-session-reports/`, vore "Informe de partida" més
 avall). Si el servidor es reinicia a mitat d'una partida, esa partida es
 perd.
+
+## Qui pot veure, gestionar i iniciar un quiz
+
+| Visibilitat | Llegir i descarregar (`GET /api/quizzes/:id`, CSV, XML moodle) | Iniciar una partida (`host-join`) | Editar, esborrar, compartir |
+|---|---|---|---|
+| `public` | Tothom | Tothom | Dueño o administració |
+| `unlisted` (per enllaç) | Qui tinga l'enllaç (no apareix a la biblioteca) | Tothom | Dueño o administració |
+| `private` | Només el dueño, l'administració o el dispositiu que el va crear | El mateix que lectura | Dueño o administració |
+
+- Els quizzes locals («Només jo», sense compte) es guarden amb un `ownerToken` del dispositiu. En crear-los, el servidor fixa la cookie `eduh_owner` (HttpOnly, 24 h): el navegador la envia sola en les peticions i en el socket. També s'accepta la capçalera `x-owner-token`.
+- Implementació: `canUseQuiz` i `canManageQuiz` (`src/server/services/quizzes.js`); `viewerOf` a `routes/quizzes.js` i `viewerOfSocket` a `sockets/hostEvents.js`.
+- Un quiz heretat sense dueño només el gestiona un usuari autenticat amb identitat (no un simple token).
+- Test: `test/integration/quizAccess.test.js`.
 
 ## Autenticació i sessions
 
@@ -1148,6 +1163,15 @@ seguretat i concurrència:
 
 Pendent: entrada amb identitat de Commons i enviar-li la puntuació (vore
 `HOMEWORK_PLAN.md`, fora del repositori).
+
+## Flashcards: comprovació de respostes
+
+Mode repàs de `/solo/`. L'opció «Comprobar respuestas» (activada per defecte, guardada al dispositiu) fa que l'alumnat conteste a la targeta; l'app comprova la resposta i marca la targeta com a sabuda o no sabuda.
+
+- `public/js/solo-flashcards.js`: lògica pura (progrés per quiz a `localStorage` i `judgeCard`), provable amb Node.
+- `public/js/solo-flashcards-view.js`: mixin de Vue. Estat de la ronda: `results` (`ok`, `fail` o `skip`), `typed` (text o número), `matches` (correspondència) i `picks` (opcions).
+- Criteri: el mateix que el mode solo. Es validen quiz, resposta múltiple, vertader/fals, resposta curta, numèrica i correspondència (cada parella amb una desplegable; totes han de ser correctes). L'enquesta no es valida.
+- Passar sense comprovar compta com a «sense responder» (no sabuda). El resum final només apareix si la ronda es va fer amb la validació activada.
 
 ## Avanç de pregunta: automàtic o manual?
 

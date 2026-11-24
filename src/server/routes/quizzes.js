@@ -91,6 +91,13 @@ module.exports = function createQuizzesRouter({
   PUBLIC_IMPORT_SOURCE_URL
 }) {
   const router = express.Router();
+  // Qui consulta el quiz: l'usuari (si n'hi ha) i el token del dispositiu que va crear un quiz local.
+  const viewerOf = (req) => ({ ...(req.user || {}), ownerToken: ownerTokenFromReq(req) });
+  // Cookie del token del dispositiu (24 h, igual que els quizzes locals): la envia el navegador sola.
+  function setOwnerCookie(req, res, token) {
+    const secure = !!req.secure || req.headers['x-forwarded-proto'] === 'https';
+    res.cookie('eduh_owner', token, { httpOnly: true, sameSite: 'lax', path: '/', maxAge: 24 * 60 * 60 * 1000, secure });
+  }
   let catalogueImportRunning = false;
 
   router.get('/api/quizzes/:id', async (req, res) => {
@@ -100,7 +107,7 @@ module.exports = function createQuizzesRouter({
       if (!quiz) {
         return res.status(404).json({ error: 'Quiz no encontrado.' });
       }
-      if (!canUseQuiz(quiz, req.user)) {
+      if (!canUseQuiz(quiz, viewerOf(req))) {
         return res.status(403).json({ error: 'No autorizado para ver este quiz.' });
       }
 
@@ -142,7 +149,7 @@ module.exports = function createQuizzesRouter({
       if (!quiz) {
         return res.status(404).json({ error: 'Quiz no encontrado.' });
       }
-      if (!canUseQuiz(quiz, req.user)) {
+      if (!canUseQuiz(quiz, viewerOf(req))) {
         return res.status(403).json({ error: 'No autorizado para descargar este quiz.' });
       }
       const csv = quizToCsv(quiz);
@@ -163,7 +170,7 @@ module.exports = function createQuizzesRouter({
       if (!quiz) {
         return res.status(404).json({ error: 'Quiz no encontrado.' });
       }
-      if (!canUseQuiz(quiz, req.user)) {
+      if (!canUseQuiz(quiz, viewerOf(req))) {
         return res.status(403).json({ error: 'No autorizado para descargar este quiz.' });
       }
       const xml = quizToMoodleXml(quiz);
@@ -1082,6 +1089,7 @@ module.exports = function createQuizzesRouter({
       }
       if (visibility === 'private') {
         const saved = await saveEphemeralQuiz({ name, questions, tags, visibility, allowClone, ownerToken, language, license, description });
+        if (ownerToken) setOwnerCookie(req, res, ownerToken);
         return res.json({ ok: true, id: saved.id, count: questions.length });
       }
       const collection = await getGamesCollection();
