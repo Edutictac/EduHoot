@@ -423,3 +423,51 @@ label{
     .actions-fixed .fx-icon{ display: inline; }
     .actions-fixed .fx-text{ display: none; }
 }
+
+/* Ordenar: elements en l'ordre correcte (com l'editor d'emparejar). */
+.order-editor{
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px dashed rgba(255,255,255,0.4);
+    background: rgba(255,255,255,0.05);
+}
+.order-row{
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: center;
+}
+.order-pos{
+    font-weight: 700;
+    text-align: center;
+    opacity: 0.8;
+}
+.order-row input{
+    min-width: 0;
+}
+.order-editor .order-add{
+    align-self: flex-start;
+}
+.order-editor button:disabled{
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.order-count{
+    margin: 0;
+    font-size: 13px;
+    opacity: 0.8;
+}
+.order-options{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+.order-options label{
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 13px;
+}

@@ -93,6 +93,20 @@ var i18n = {
         matchingErrorIncomplete: 'Pregunta {n}: completa las dos columnas de cada pareja o quítala.',
         matchingErrorDuplicate: 'Pregunta {n}: los elementos de la derecha no se pueden repetir.',
         matchingErrorMax: 'Pregunta {n}: como máximo 8 elementos en la columna derecha.',
+        questionTypeOrder: 'Ordenar',
+        orderHint: 'Escribe los elementos en el orden correcto. En la partida, se barajan.',
+        orderItemLabel: 'Elemento {n}',
+        orderAddItem: '+ Añadir elemento',
+        orderCount: '{n} de 8 elementos',
+        orderGradingLabel: 'Puntuación',
+        orderGradingAbsolute: 'Posición absoluta (parcial)',
+        orderGradingAll: 'Todo o nada',
+        orderLayoutLabel: 'Disposición',
+        orderLayoutVertical: 'Vertical',
+        orderLayoutHorizontal: 'Horizontal',
+        orderErrorItems: 'Pregunta {n}: ordenar necesita al menos 2 elementos.',
+        orderErrorMax: 'Pregunta {n}: como máximo 8 elementos.',
+        orderErrorDuplicate: 'Pregunta {n}: los elementos no se pueden repetir.',
         questionTypeMultiHint: 'Marca todas las respuestas correctas.',
         questionTimeLabel: 'Tiempo límite (segundos)',
         shortAnswersLabel: 'Respuestas válidas (separadas por |)',
@@ -167,6 +181,20 @@ var i18n = {
         matchingErrorIncomplete: 'Question {n}: fill in both columns of each pair or remove it.',
         matchingErrorDuplicate: 'Question {n}: right-column items cannot be repeated.',
         matchingErrorMax: 'Question {n}: at most 8 items in the right column.',
+        questionTypeOrder: 'Order (sort)',
+        orderHint: 'Write the items in the correct order. During the game, they are shuffled.',
+        orderItemLabel: 'Item {n}',
+        orderAddItem: '+ Add item',
+        orderCount: '{n} of 8 items',
+        orderGradingLabel: 'Scoring',
+        orderGradingAbsolute: 'Absolute position (partial)',
+        orderGradingAll: 'All or nothing',
+        orderLayoutLabel: 'Layout',
+        orderLayoutVertical: 'Vertical',
+        orderLayoutHorizontal: 'Horizontal',
+        orderErrorItems: 'Question {n}: ordering needs at least 2 items.',
+        orderErrorMax: 'Question {n}: at most 8 items.',
+        orderErrorDuplicate: 'Question {n}: items cannot be repeated.',
         questionTypeMultiHint: 'Check every answer that counts.',
         questionTimeLabel: 'Time limit (seconds)',
         shortAnswersLabel: 'Accepted answers (separated by |)',
@@ -241,6 +269,20 @@ var i18n = {
         matchingErrorIncomplete: 'Pregunta {n}: completa les dues columnes de cada parella o lleva-la.',
         matchingErrorDuplicate: 'Pregunta {n}: els elements de la dreta no es poden repetir.',
         matchingErrorMax: 'Pregunta {n}: com a màxim 8 elements en la columna dreta.',
+        questionTypeOrder: 'Ordenar',
+        orderHint: "Escriu els elements en l'ordre correcte. En la partida, es barregen.",
+        orderItemLabel: 'Element {n}',
+        orderAddItem: '+ Afegir element',
+        orderCount: '{n} de 8 elements',
+        orderGradingLabel: 'Puntuació',
+        orderGradingAbsolute: 'Posició absoluta (parcial)',
+        orderGradingAll: 'Tot o res',
+        orderLayoutLabel: 'Disposició',
+        orderLayoutVertical: 'Vertical',
+        orderLayoutHorizontal: 'Horitzontal',
+        orderErrorItems: 'Pregunta {n}: ordenar necessita almenys 2 elements.',
+        orderErrorMax: 'Pregunta {n}: com a màxim 8 elements.',
+        orderErrorDuplicate: 'Pregunta {n}: els elements no es poden repetir.',
         questionTypeMultiHint: 'Marca totes les respostes correctes.',
         questionTimeLabel: 'Temps límit (segons)',
         shortAnswersLabel: 'Respostes vàlides (separades per |)',
@@ -443,6 +485,16 @@ function buildQuizPayload(){
             base.pairs = matchingPairsOf(card);
         }
 
+        // Ordenar: els elements en l'ordre correcte (les files buides no es guarden); a la partida es barregen.
+        if(questionType === 'order'){
+            base.answers = ['', '', '', ''];
+            base.correct = 1;
+            base.correctAnswers = [1];
+            base.items = orderItemsOf(card);
+            base.orderGrading = card.orderGrading;
+            base.layout = card.orderLayout;
+        }
+
         if(questionType === 'numeric'){
             base.answers = ['', '', '', ''];
             base.correct = 1;
@@ -467,6 +519,7 @@ function buildQuizPayload(){
 }
 
 var MATCHING_MAX_ITEMS = 8;
+var ORDER_MAX_ITEMS = 8;
 
 function trimText(v){
     return (v === undefined || v === null) ? '' : String(v).trim();
@@ -506,6 +559,25 @@ function matchingCardError(card, num){
     return duplicate ? msg('matchingErrorDuplicate') : '';
 }
 
+function orderItemsOf(card){
+    return (card.orderItems || []).map(trimText).filter(function(v){ return v; });
+}
+
+// Mensaje de error de la pregunta de ordenar, o '' si está bien.
+function orderCardError(card, num){
+    var msg = function(key){ return t(key).replace('{n}', num); };
+    var items = orderItemsOf(card);
+    if(items.length < 2) return msg('orderErrorItems');
+    if(items.length > ORDER_MAX_ITEMS) return msg('orderErrorMax');
+    var seen = Object.create(null);
+    var duplicate = items.some(function(v){
+        if(seen[v]) return true;
+        seen[v] = true;
+        return false;
+    });
+    return duplicate ? msg('orderErrorDuplicate') : '';
+}
+
 function validateQuizBasics(quiz){
     if(!quiz.name || !quiz.name.trim()){
         alert(t('playErrorName'));
@@ -520,8 +592,9 @@ function validateQuizBasics(quiz){
         return false;
     }
     for(var i = 0; i < questionCards.length; i++){
-        if(questionCards[i].type !== 'matching') continue;
-        var error = matchingCardError(questionCards[i], i + 1);
+        var error = '';
+        if(questionCards[i].type === 'matching') error = matchingCardError(questionCards[i], i + 1);
+        if(questionCards[i].type === 'order') error = orderCardError(questionCards[i], i + 1);
         if(error){
             alert(error);
             return false;
@@ -622,6 +695,10 @@ function applyTypeRules(card){
     if(card.type === 'matching'){
         while(card.pairs.length < 2) card.pairs.push({ left: '', right: '' });
     }
+    if(card.type === 'order'){
+        card.answers = ['', '', '', ''];
+        while(card.orderItems.length < 2) card.orderItems.push('');
+    }
 }
 
 function makeQuestionCard(data){
@@ -645,6 +722,10 @@ function makeQuestionCard(data){
         impostors: (Array.isArray(data.pairs) ? data.pairs : [])
             .filter(function(p){ return p && !trimText(p.left) && trimText(p.right); })
             .map(function(p){ return trimText(p.right); }),
+        // Ordenar: elementos en l'ordre correcte, puntuació (0 = posició absoluta, -1 = tot o res) i disposició.
+        orderItems: (Array.isArray(data.items) ? data.items : []).map(trimText).filter(function(v){ return v; }),
+        orderGrading: (data.orderGrading === undefined || data.orderGrading === null) ? 0 : Number(data.orderGrading),
+        orderLayout: String(data.layout || '').toLowerCase() === 'horizontal' ? 'horizontal' : 'vertical',
         image: data.image || '',
         video: data.video || '',
         imageOk: false,
@@ -725,7 +806,7 @@ Vue.createApp({
                 ['quiz', 'questionTypeSingle'], ['multiple', 'questionTypeMultiple'],
                 ['true-false', 'questionTypeTf'], ['short-answer', 'questionTypeShort'],
                 ['numeric', 'questionTypeNumeric'], ['poll', 'questionTypePoll'],
-                ['matching', 'questionTypeMatching']
+                ['matching', 'questionTypeMatching'], ['order', 'questionTypeOrder']
             ]
         };
     },
@@ -767,7 +848,7 @@ Vue.createApp({
             applyTypeRules(card);
         },
         showCorrect: function(card){
-            return ['multiple', 'short-answer', 'numeric', 'poll', 'matching'].indexOf(card.type) === -1;
+            return ['multiple', 'short-answer', 'numeric', 'poll', 'matching', 'order'].indexOf(card.type) === -1;
         },
         // Elementos de la columna derecha (parejas e impostoras); como máximo 8.
         rightCount: function(card){
@@ -781,6 +862,12 @@ Vue.createApp({
         },
         addImpostor: function(card){
             if(this.rightCount(card) < MATCHING_MAX_ITEMS) card.impostors.push('');
+        },
+        orderCountText: function(card){
+            return t('orderCount').replace('{n}', card.orderItems.length);
+        },
+        addOrderItem: function(card){
+            if(card.orderItems.length < ORDER_MAX_ITEMS) card.orderItems.push('');
         },
         imageSrc: function(card){
             var url = (card.image || '').trim();

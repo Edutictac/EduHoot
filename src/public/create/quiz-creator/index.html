@@ -101,7 +101,7 @@
                                 <option v-for="opt in typeOptions" :key="opt[0]" :value="opt[0]">{{ t(opt[1]) }}</option>
                             </select>
                         </div>
-                        <div class="answers" v-show="card.type !== 'short-answer' && card.type !== 'numeric' && card.type !== 'matching'">
+                        <div class="answers" v-show="card.type !== 'short-answer' && card.type !== 'numeric' && card.type !== 'matching' && card.type !== 'order'">
                             <label v-for="n in 4" :key="n" v-show="!(card.type === 'true-false' && n > 2)">{{ t('answerLabel') + ' ' + n }}<input :id="(index + 1) + 'a' + n" type="text" :placeholder="t('answerLabel') + ' ' + n" v-model="card.answers[n - 1]"></label>
                         </div>
                         <div v-if="card.type === 'matching'" class="matching-editor" :id="'match' + (index + 1)">
@@ -121,6 +121,30 @@
                             </div>
                             <button class="btn btn-ghost btn-small match-add-impostor" type="button" :disabled="rightCount(card) >= 8" @click="addImpostor(card)">{{ t('matchingAddImpostor') }}</button>
                             <p class="matching-count">{{ matchingCountText(card) }}</p>
+                        </div>
+                        <div v-if="card.type === 'order'" class="order-editor" :id="'order' + (index + 1)">
+                            <p class="multi-correct__hint">{{ t('orderHint') }}</p>
+                            <div v-for="(item, k) in card.orderItems" :key="'o' + k" class="order-row">
+                                <span class="order-pos">{{ k + 1 }}</span>
+                                <input type="text" class="order-item" :aria-label="t('orderItemLabel').replace('{n}', k + 1)" :placeholder="t('orderItemLabel').replace('{n}', k + 1)" v-model="card.orderItems[k]">
+                                <button class="btn btn-ghost btn-small order-remove" type="button" :title="t('matchingRemove')" :aria-label="t('matchingRemove')" @click="card.orderItems.splice(k, 1)">✕</button>
+                            </div>
+                            <button class="btn btn-ghost btn-small order-add" type="button" :disabled="card.orderItems.length >= 8" @click="addOrderItem(card)">{{ t('orderAddItem') }}</button>
+                            <p class="order-count">{{ orderCountText(card) }}</p>
+                            <div class="order-options">
+                                <label>{{ t('orderGradingLabel') }}
+                                    <select :id="'orderGrading' + (index + 1)" class="order-grading" v-model="card.orderGrading">
+                                        <option :value="0">{{ t('orderGradingAbsolute') }}</option>
+                                        <option :value="-1">{{ t('orderGradingAll') }}</option>
+                                    </select>
+                                </label>
+                                <label>{{ t('orderLayoutLabel') }}
+                                    <select :id="'orderLayout' + (index + 1)" class="order-layout" v-model="card.orderLayout">
+                                        <option value="vertical">{{ t('orderLayoutVertical') }}</option>
+                                        <option value="horizontal">{{ t('orderLayoutHorizontal') }}</option>
+                                    </select>
+                                </label>
+                            </div>
                         </div>
                         <div class="multi-correct" :class="{ hidden: card.type !== 'multiple' }">
                             <p class="multi-correct__hint">{{ t('questionTypeMultiHint') }}</p>

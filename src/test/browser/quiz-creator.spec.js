@@ -114,7 +114,7 @@ test('arranca con una pregunta vacía de tipo quiz y textos en español', async 
     await expect(page.locator('#type1')).toHaveValue('quiz');
     await expect(page.locator('#correct1')).toHaveValue('1');
     await expect(page.locator('#time1')).toHaveValue('20');
-    await expect(page.locator('#type1 option')).toHaveCount(7);
+    await expect(page.locator('#type1 option')).toHaveCount(8);
     await expect(page.locator('#visibility')).toHaveValue('private');
     await expect(page.locator('#public-warning')).toBeHidden();
 });
@@ -662,4 +662,86 @@ test('correspondencia: al editar se cargan parejas e impostoras', async ({ page 
     await expect(editor.locator('.match-left')).toHaveCount(2);
     await expect(editor.locator('.match-right').nth(1)).toHaveValue('Roma');
     await expect(editor.locator('.match-impostor')).toHaveValue('Lisboa');
+});
+
+test('ordenar: elementos en el orden correcto, límite de 8 y lo que se guarda', async ({ page }) => {
+    const calls = await mockBackend(page);
+    await openCreator(page);
+    await fillBasics(page);
+    await page.locator('#q1').fill('Pasos del arranque');
+    await page.locator('#type1').selectOption('order');
+
+    const editor = page.locator('#order1');
+    await expect(editor.locator('.order-row')).toHaveCount(2);
+    await expect(card(page, 1).locator('.answers')).toBeHidden();
+    await expect(page.locator('#correct1')).toBeHidden();
+
+    const items = ['Encender el equipo', 'Cargar el sistema', 'Iniciar sesión'];
+    for (let i = 0; i < items.length; i++) {
+        if (i >= 2) await editor.locator('.order-add').click();
+        await editor.locator('.order-item').nth(i).fill(items[i]);
+    }
+    await expect(editor.locator('.order-count')).toHaveText('3 de 8 elementos');
+
+    // Límite de 8: con filas vacías, el botón se desactiva; al quitarlas, vuelve a estar activo.
+    for (let i = 0; i < 5; i++) await editor.locator('.order-add').click();
+    await expect(editor.locator('.order-count')).toHaveText('8 de 8 elementos');
+    await expect(editor.locator('.order-add')).toBeDisabled();
+    for (let i = 0; i < 5; i++) await editor.locator('.order-remove').last().click();
+    await expect(editor.locator('.order-add')).toBeEnabled();
+    await expect(editor.locator('.order-count')).toHaveText('3 de 8 elementos');
+
+    await page.locator('#orderGrading1').selectOption('-1');
+    await page.locator('#orderLayout1').selectOption('horizontal');
+
+    await page.locator('[data-i18n="btnPlayLocal"]').click();
+    await expect.poll(() => calls.local.length).toBe(1);
+    const q = calls.local[0].questions[0];
+    expect(q.type).toBe('order');
+    expect(q.items).toEqual(items);
+    expect(q.orderGrading).toBe(-1);
+    expect(q.layout).toBe('horizontal');
+    expect(q.correctAnswers).toEqual([1]);
+    expect(q.answers).toEqual(['', '', '', '']);
+});
+
+test('ordenar: avisos al guardar si hay menos de 2 elementos o se repiten', async ({ page }) => {
+    const calls = await mockBackend(page);
+    const dialogs = collectDialogs(page);
+    await openCreator(page);
+    await fillBasics(page);
+    await page.locator('#type1').selectOption('order');
+    const editor = page.locator('#order1');
+    const play = () => page.locator('[data-i18n="btnPlayLocal"]').click();
+
+    await play();
+    await editor.locator('.order-item').nth(0).fill('a');
+    await play();
+    await editor.locator('.order-item').nth(1).fill('b');
+    await editor.locator('.order-add').click();
+    await editor.locator('.order-item').nth(2).fill(' a ');
+    await play();
+
+    await expect.poll(() => dialogs.length).toBe(3);
+    expect(dialogs.map(d => d.message)).toEqual([
+        'Pregunta 1: ordenar necesita al menos 2 elementos.',
+        'Pregunta 1: ordenar necesita al menos 2 elementos.',
+        'Pregunta 1: los elementos no se pueden repetir.'
+    ]);
+    expect(calls.local).toEqual([]);
+});
+
+test('ordenar: al editar se cargan elementos, puntuación y disposición', async ({ page }) => {
+    const quiz = { ...editableQuiz, questions: [{
+        question: 'Pasos', type: 'order', time: 20,
+        items: ['Uno', 'Dos', 'Tres'], orderGrading: -1, layout: 'horizontal'
+    }] };
+    await mockBackend(page, { quiz });
+    await page.goto('/create/quiz-creator/?id=q9&lang=es');
+    await expect(page.locator('#type1')).toHaveValue('order');
+    const editor = page.locator('#order1');
+    await expect(editor.locator('.order-item')).toHaveCount(3);
+    await expect(editor.locator('.order-item').nth(2)).toHaveValue('Tres');
+    await expect(page.locator('#orderGrading1')).toHaveValue('-1');
+    await expect(page.locator('#orderLayout1')).toHaveValue('horizontal');
 });
