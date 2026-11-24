@@ -238,6 +238,9 @@ test('búsqueda por nombre o por etiqueta (sin tildes) y orden', async ({ page }
     await expect(titles(page)).toHaveText(['Àlgebra', 'Biologia', 'Geografia']);
     await page.locator('#library-sort').selectOption('rating');
     await expect(titles(page)).toHaveText(['Àlgebra', 'Geografia', 'Biologia']);
+    // Més jugats (quart): Geografia (7 partides); a igualtat, el més recent.
+    await page.locator('#library-sort').selectOption('played');
+    await expect(titles(page)).toHaveText(['Geografia', 'Biologia', 'Àlgebra']);
     await page.locator('#library-sort').selectOption('alpha-asc');
     await expect(titles(page)).toHaveText(['Àlgebra', 'Biologia', 'Geografia']);
     await page.locator('#library-sort').selectOption('alpha-desc');

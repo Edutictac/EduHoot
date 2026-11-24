@@ -80,6 +80,14 @@ function sortLibraryQuizzes(quizzes){
         sorted.sort(function(a, b){
             return getQuizTimestamp(a) - getQuizTimestamp(b);
         });
+    }else if(currentSort === 'played'){
+        // Més jugats primer; a igualtat, el més recent.
+        sorted.sort(function(a, b){
+            var pa = Number(a.playsCount) || 0;
+            var pb = Number(b.playsCount) || 0;
+            if(pa === pb) return getQuizTimestamp(b) - getQuizTimestamp(a);
+            return pb - pa;
+        });
     }else if(currentSort === 'rating'){
         sorted.sort(function(a, b){
             var ra = getQuizRatingAvg(a);
