@@ -227,6 +227,24 @@ module.exports = function createQuizzesRouter({
         createdAt: quiz.createdAt || quiz.updatedAt || new Date(0),
         updatedAt: quiz.updatedAt || quiz.createdAt || null
       }));
+      // Valoració (mitjana i vots) de cada quiz, com a /api/public-quizzes. Els quizzes locals no tenen valoració.
+      const listRatingsCol = await getRatingsCollection();
+      const listRatingKeys = new Set();
+      quizzes.forEach((q) => {
+        if (q.id !== undefined && q.id !== null) {
+          listRatingKeys.add(String(q.id));
+          if (typeof q.id === 'number') listRatingKeys.add(q.id);
+        }
+      });
+      const listRatings = listRatingKeys.size
+        ? await listRatingsCol.find({ quizId: { $in: Array.from(listRatingKeys) } }).project({ quizId: 1, avg: 1, count: 1 }).toArray()
+        : [];
+      const listRatingById = new Map(listRatings.map((r) => [String(r.quizId), r]));
+      quizzes.forEach((q) => {
+        const r = listRatingById.get(String(q.id));
+        q.ratingAvg = r ? r.avg : 0;
+        q.ratingCount = r ? r.count : 0;
+      });
       // Añadir quizzes efímeros solicitados
       const localIdsParam = req.query.localIds;
       const localIds = Array.isArray(localIdsParam)

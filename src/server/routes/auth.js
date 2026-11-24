@@ -285,6 +285,36 @@ module.exports = function createAuthRouter({
     return res.json({ id: req.user.id, email: req.user.email, role: req.user.role || 'editor', nickname: req.user.nickname || '' });
   });
 
+  // Preferències de la biblioteca per usuari (al document de l'usuari). Només es guarden valors coneguts.
+  const LIBRARY_PAGE_SIZES = [6, 12, 24, 48, 96];
+
+  router.get('/api/auth/preferences', async (req, res) => {
+    if (!req.user) return res.status(401).json({ error: 'No autorizado' });
+    if (!ObjectId.isValid(req.user.id)) return res.json({ libraryPageSize: null });
+    try {
+      const users = await getUsersCollection();
+      const doc = await users.findOne({ _id: new ObjectId(req.user.id) }, { projection: { preferences: 1 } });
+      const size = doc && doc.preferences ? doc.preferences.libraryPageSize : null;
+      return res.json({ libraryPageSize: LIBRARY_PAGE_SIZES.includes(size) ? size : null });
+    } catch (err) {
+      return res.status(500).json({ error: 'No se pudieron leer las preferencias.' });
+    }
+  });
+
+  router.patch('/api/auth/preferences', async (req, res) => {
+    if (!req.user) return res.status(401).json({ error: 'No autorizado' });
+    const size = Number(req.body && req.body.libraryPageSize);
+    if (!LIBRARY_PAGE_SIZES.includes(size)) return res.status(400).json({ error: 'Valor no válido.' });
+    if (!ObjectId.isValid(req.user.id)) return res.status(400).json({ error: 'Usuario no válido.' });
+    try {
+      const users = await getUsersCollection();
+      await users.updateOne({ _id: new ObjectId(req.user.id) }, { $set: { 'preferences.libraryPageSize': size } });
+      return res.json({ ok: true, libraryPageSize: size });
+    } catch (err) {
+      return res.status(500).json({ error: 'No se pudieron guardar las preferencias.' });
+    }
+  });
+
   router.patch('/api/auth/profile', async (req, res) => {
     if (!req.user) return res.status(401).json({ error: 'No autorizado' });
     try {
