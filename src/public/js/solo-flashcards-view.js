@@ -101,6 +101,22 @@ function saveOptionsPref(on){
     try{ window.localStorage.setItem(OPTIONS_KEY, on ? '1' : '0'); }catch(e){}
 }
 
+// Preferència «Voltear al hacer clic» (per dispositiu). Per defecte, activada: clicar la targeta la gira.
+var FLIP_CLICK_KEY = 'eduh_cards_flip_click';
+
+function readFlipClickPref(){
+    try{
+        var v = window.localStorage.getItem(FLIP_CLICK_KEY);
+        return v === null ? true : v === '1';
+    }catch(e){
+        return true;
+    }
+}
+
+function saveFlipClickPref(on){
+    try{ window.localStorage.setItem(FLIP_CLICK_KEY, on ? '1' : '0'); }catch(e){}
+}
+
 // Preferència «Comprobar respuestas» (per dispositiu). Per defecte, activada.
 var VALIDATE_KEY = 'eduh_cards_validate';
 
@@ -144,7 +160,7 @@ function buildMatchLayouts(cards){
 }
 
 function openFlashcards(quiz){
-    state.quizData = null;
+    state.quizData = quiz;
     state.currentQuiz = quiz.id;
     state.title = quiz.name ? { text: quiz.name } : { key: 'soloTitle' };
     document.body.classList.add('playing');
@@ -171,6 +187,7 @@ function openFlashcards(quiz){
         oneColumn: false,
         // Validació: l'alumnat contesta, es comprova i es marca sola. results: { '<idx>': 'ok'|'fail'|'skip' }.
         validate: readValidatePref(),
+        flipOnClick: readFlipClickPref(),
         roundValidate: false,
         results: {},
         typed: {},
@@ -454,6 +471,8 @@ var soloFlashcards = {
         // Clic a qualsevol punt de la targeta la gira. No ho fa en el media (vídeo, imatge, iframe),
         // ni si l'usuari està seleccionant text.
         cardsFlipFromCard: function(ev){
+            // Amb «Voltear al hacer clic» desactivat, només gira el botó «Mostrar respuesta».
+            if(!this.s.cards.flipOnClick) return;
             // El vídeo i el YouTube tenen els seus propis controls: no giren la targeta. La imatge sí.
             if(ev.target.closest && ev.target.closest('video, iframe')) return;
             var sel = window.getSelection ? window.getSelection() : null;
@@ -545,6 +564,11 @@ var soloFlashcards = {
             var cur = this.cardsCurrent;
             var m = cur ? this.s.cards.matches[String(cur.idx)] : null;
             return m && m[i] !== undefined ? String(m[i]) : '';
+        },
+        cardsToggleFlipOnClick: function(){
+            var c = this.s.cards;
+            c.flipOnClick = !c.flipOnClick;
+            saveFlipClickPref(c.flipOnClick);
         },
         cardsToggleValidate: function(){
             var c = this.s.cards;

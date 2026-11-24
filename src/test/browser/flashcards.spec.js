@@ -670,3 +670,40 @@ test('el resumen final va en una fila propia debajo de la información, a todo e
     expect(summary.y).toBeGreaterThanOrEqual(Math.max(info.y + info.height, options.y + options.height) - 1);
     expect(summary.width).toBeGreaterThan(info.width);
 });
+
+test('la pantalla de tarjetas se etiqueta «Modo tarjetas» (no «Modo individual»)', async ({ page }) => {
+    await mockBackend(page);
+    await page.goto('/solo/?lang=es');
+    await page.locator('.card-actions .btn', { hasText: 'Repasar' }).click();
+    await expect(page.locator('#game-panel .panel__header .eyebrow')).toContainText('Modo tarjetas');
+});
+
+test('voltear al hacer clic: por defecto gira la carta al clicarla; desactivado, solo gira con el botón', async ({ page }) => {
+    await mockBackend(page);
+    await page.route('**/api/quizzes/q1', route => route.fulfill({ json: { ...quiz, questions: [
+        { question: 'Capital de França?', type: 'quiz', answers: ['París', 'Berlín', 'Roma', 'Londres'], correctAnswers: [1], time: 20 }
+    ] } }));
+    await page.goto('/solo/?lang=es');
+    await page.locator('.card-actions .btn', { hasText: 'Repasar' }).click();
+    await expect(page.locator('#cards-flip-click')).toBeChecked();
+    await page.locator('#cards-flip-click').uncheck();
+    expect(await page.evaluate(() => localStorage.getItem('eduh_cards_flip_click'))).toBe('0');
+    await page.locator('#cards-start-all').click();
+    // Clicar la carta ya no la gira.
+    await page.locator('#flashcard-question').click();
+    await expect(page.locator('.flashcard')).not.toHaveClass(/is-back/);
+    // El botón sí la gira.
+    await page.locator('#cards-flip').click();
+    await expect(page.locator('.flashcard')).toHaveClass(/is-back/);
+});
+
+test('la pantalla inicial de flashcards muestra la imagen del quiz, como el modo solo', async ({ page }) => {
+    const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==';
+    await mockBackend(page);
+    await page.route('**/api/quizzes/q1', route => route.fulfill({ json: { ...quiz, questions: [
+        { question: 'Quina és?', type: 'quiz', image: png, answers: ['A', 'B'], correctAnswers: [1], time: 20 }
+    ] } }));
+    await page.goto('/solo/?lang=es');
+    await page.locator('.card-actions .btn', { hasText: 'Repasar' }).click();
+    await expect(page.locator('.cards-start .quiz-banner__cover')).toHaveAttribute('src', png);
+});

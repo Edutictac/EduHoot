@@ -1583,7 +1583,9 @@ body.playing #game-panel{
 /* Inicio en dos columnas (pantallas anchas): imagen y datos a la izquierda, opciones a la derecha. */
 .start-form:not(.hidden){
     display: grid;
-    grid-template-columns: minmax(200px, 340px) minmax(0, 1fr);
+    /* Mateix criteri que flashcards: les columnes ocupen el que necessiten i el conjunt es centra. */
+    grid-template-columns: minmax(200px, 340px) auto;
+    justify-content: center;
     gap: 10px 32px;
     align-items: start;
 }
@@ -1631,7 +1633,9 @@ body.playing #game-panel{
 /* Entrada de Flashcards: como el inicio de Solo (dos columnas, logo e imagen del quiz), pero en rosa oscuro. */
 .cards-start{
     display: grid;
-    grid-template-columns: minmax(200px, 340px) minmax(0, 1fr);
+    /* Les dues columnes ocupen el que necessiten i el conjunt es centra; el text de dins conserva la seua alineació. */
+    grid-template-columns: minmax(200px, 340px) auto;
+    justify-content: center;
     gap: 10px 32px;
     align-items: start;
 }
@@ -1651,7 +1655,7 @@ body.playing #game-panel{
     border-color: rgba(244, 114, 182, 0.4);
 }
 #game-panel.is-cards-entry .eyebrow{ color: #f9a8d4; }
-#game-panel.is-cards-entry #selected-title{ color: #fbcfe8; }
+#game-panel.is-cards-entry #selected-title{ color: #ffffff; }
 #game-panel.is-cards-entry .quiz-banner__logo{
     background: rgba(244, 114, 182, 0.14);
     border-color: rgba(244, 114, 182, 0.45);
@@ -1766,3 +1770,28 @@ body.playing .game-area .question-card > #solo-countdown{
 /* Resum final de la ronda: una fila pròpia a sota de les dues columnes de la pantalla d'inici. */
 .cards-summary--row{ grid-column: 1 / -1; max-width: none; margin: 8px 0 0; text-align: left; }
 .cards-summary--row .cards-summary__counts{ text-align: left; }
+
+/* Amb «Voltear al hacer clic» desactivat, la targeta no es gira en clicar-la (només el botó). */
+.flashcard.no-flip-click{ cursor: default; }
+
+/* Pantalla inicial de flashcards: l'etiqueta («Modo individual») i el títol del quiz, centrats. */
+#game-panel.is-cards-entry .panel__header{ justify-content: center; }
+#game-panel.is-cards-entry .panel__header > div{ text-align: center; }
+
+/* Cabecera del modo individual: etiqueta i títol centrats. */
+.hero__text{ text-align: center; }
+.hero__text .subtext{ margin-left: auto; margin-right: auto; }
+
+/* Modo individual (pantalla d'inici): contingut del recuadro centrat com a flashcards; títol del quiz en groc corporatiu. */
+#game-panel:not(.is-cards-entry) .panel__header{ justify-content: center; }
+#game-panel:not(.is-cards-entry) .panel__header > div{ text-align: center; }
+#game-panel:not(.is-cards-entry) #selected-title{ color: #ffee70; }
+
+/* Títol del quiz i etiqueta «Modo…» més grans al panell (flashcards i modo individual). */
+#game-panel .panel__header .eyebrow{ font-size: 16px; letter-spacing: 0.1em; }
+#game-panel #selected-title{ font-size: clamp(1.6rem, 3.6vw, 2.2rem); line-height: 1.15; }
+
+/* Icona del mode (com a la biblioteca) a l'esquerra de l'etiqueta, gran. */
+.mode-icon{ font-size: 30px; line-height: 1; margin-right: 10px; vertical-align: middle; display: inline-block; }
+/* Durant la partida, la icona és més petita (la cabecera ha de cabre a la pantalla). */
+.mode-icon--small{ font-size: 18px; margin-right: 6px; }

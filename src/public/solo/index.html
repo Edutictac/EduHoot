@@ -27,7 +27,7 @@
         <header class="hero">
             <img class="hero__logo" src="/icons/logo.svg" alt="EduHoot logo">
             <div class="hero__text">
-                <p class="eyebrow" data-i18n="eyebrow">Modo individual</p>
+                <p class="eyebrow"><span class="mode-icon" aria-hidden="true">👤</span><span data-i18n="eyebrow">Modo individual</span></p>
                 <h1 data-i18n="title">Juega a los públicos en solitario</h1>
                 <p class="subtext" data-i18n="subtitle">Elige un quiz público, responde las preguntas y entra en el ranking global.</p>
             </div>
@@ -125,7 +125,7 @@
             <section id="game-panel" class="panel play-panel" :class="{ 'is-cards-entry': s.view === 'cards' && s.cards && s.cards.phase !== 'card' }">
                 <div class="panel__header">
                     <div>
-                        <p class="eyebrow">{{ t('soloEyebrow') }}</p>
+                        <p class="eyebrow"><span class="mode-icon" :class="{ 'mode-icon--small': s.view === 'game' }" aria-hidden="true">{{ s.view === 'cards' ? '🔁' : '👤' }}</span>{{ s.view === 'cards' ? t('flashcardsEyebrow') : t('soloEyebrow') }}</p>
                         <h2 id="selected-title" v-show="s.view !== 'game'">{{ titleText }}</h2>
                     </div>
                 </div>
@@ -277,6 +277,10 @@
                             {{ t('flashcardsValidate') }}
                         </label>
                         <label class="cards-shuffle">
+                            <input id="cards-flip-click" type="checkbox" :checked="s.cards.flipOnClick" @change="cardsToggleFlipOnClick">
+                            {{ t('flashcardsFlipOnClick') }}
+                        </label>
+                        <label class="cards-shuffle">
                             <input id="cards-animate" type="checkbox" :checked="s.cards.animate" @change="cardsToggleAnimate">
                             {{ t('flashcardsAnimate') }}
                         </label>
@@ -303,7 +307,7 @@
                     <div v-else class="flashcard-wrap">
                         <p id="cards-progress" class="cards-progress">{{ cardsProgressText }}</p>
                         <div class="flashcard-scene">
-                            <div id="flashcard" class="flashcard" :class="{ 'is-back': s.cards.flipped, 'is-contrast': s.cards.highContrast, 'is-tall': s.cards.oneColumn }" @click="cardsFlipFromCard">
+                            <div id="flashcard" class="flashcard" :class="{ 'is-back': s.cards.flipped, 'is-contrast': s.cards.highContrast, 'is-tall': s.cards.oneColumn, 'no-flip-click': !s.cards.flipOnClick }" @click="cardsFlipFromCard">
                                 <!-- Les dues cares són sempre al DOM; la que no toca queda oculta i inerta (ni teclat ni lector de pantalla). -->
                                 <div class="flashcard__face flashcard__face--front" :class="{ 'has-options': cardsHasOptionsBlock, 'has-media': cardsHasMedia }" :aria-hidden="s.cards.flipped ? 'true' : 'false'" :inert="s.cards.flipped || null">
                                     <p class="flashcard__label">{{ t('flashcardsFront') }}</p>
