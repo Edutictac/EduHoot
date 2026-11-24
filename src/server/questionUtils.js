@@ -1,4 +1,5 @@
-const VALID_TYPES = new Set(['quiz', 'multiple', 'true-false', 'short-answer', 'numeric', 'poll', 'matching']);
+const VALID_TYPES = new Set(['quiz', 'multiple', 'true-false', 'short-answer', 'numeric', 'poll', 'matching', 'order']);
+const orderQuestion = require('./services/orderQuestion');
 
 // Correspondencia: como máximo 8 elementos en la columna derecha (parejas + impostoras).
 const MATCHING_MAX_ITEMS = 8;
@@ -63,6 +64,9 @@ function normalizeQuestionType(rawType) {
       'emparellament', 'relacionar'].includes(key)
   ) {
     return 'matching';
+  }
+  if (['order', 'ordering', 'ordenar', 'ordenacion', 'ordenar elementos', 'ordenar elements', 'ordenacio', 'poner en orden'].includes(key)) {
+    return 'order';
   }
   if (key === 'multiple' || key.includes('multi')) return 'multiple';
 
@@ -275,6 +279,16 @@ function normalizeQuestionMeta(item = {}) {
   let tolerance = null;
   let pairs = [];
   let layout = null;
+  let orderItems = [];
+  let orderGrading = orderQuestion.ORDER_GRADING.ABSOLUTE_POSITION;
+  let orderLayout = 'vertical';
+
+  if (type === 'order') {
+    orderItems = orderQuestion.normalizeOrderItems(Array.isArray(item.items) ? item.items : (item.elements || [])).items || [];
+    const g = parseInt(item.orderGrading, 10);
+    if (Object.values(orderQuestion.ORDER_GRADING).includes(g)) orderGrading = g;
+    orderLayout = String(item.layout || '').toLowerCase() === 'horizontal' ? 'horizontal' : 'vertical';
+  }
 
   if (type === 'matching') {
     pairs = parseMatchingPairs(Array.isArray(item.pairs) ? item.pairs : (item.pairs || item.texto || item.text || ''));
@@ -310,7 +324,7 @@ function normalizeQuestionMeta(item = {}) {
   }
 
   // Para tipos no indexados, mantenemos defaults para compatibilidad.
-  if (type === 'short-answer' || type === 'numeric' || type === 'matching') {
+  if (type === 'short-answer' || type === 'numeric' || type === 'matching' || type === 'order') {
     correctAnswers = [1];
   }
   const meta = {
@@ -324,6 +338,14 @@ function normalizeQuestionMeta(item = {}) {
   if (type === 'matching') {
     meta.pairs = pairs;
     Object.assign(meta, layout);
+  }
+  if (type === 'order') {
+    meta.items = orderItems;
+    meta.orderGrading = orderGrading;
+    meta.layout = orderLayout;
+    if (Array.isArray(item.orderShown) && orderQuestion.isPermutation(item.orderShown, orderItems.length)) {
+      meta.orderShown = item.orderShown.slice();
+    }
   }
   return meta;
 }
@@ -340,6 +362,12 @@ function getQuestionMeta(question) {
     numericAnswer: meta.numericAnswer,
     tolerance: meta.tolerance
   };
+  if (meta.type === 'order') {
+    out.items = meta.items;
+    out.orderShown = meta.orderShown;
+    out.orderGrading = meta.orderGrading;
+    out.layout = meta.layout;
+  }
   if (meta.type === 'matching') {
     out.matchLeft = meta.matchLeft;
     out.matchRight = meta.matchRight;
@@ -366,12 +394,30 @@ function looksLikeFreeTypeQuestion(q) {
   return hasAccepted || hasNumeric;
 }
 
+// Ordenar: la resposta és la seqüència d'índexs dels elements (en l'ordre que l'alumne els ha col·locat).
+function orderScoreRatioFromMeta(meta, submission) {
+  const n = Array.isArray(meta && meta.items) ? meta.items.length : 0;
+  // La resposta és posicions de la llista barajada: es tradueix a índexs de la solució.
+  const shown = Array.isArray(meta.orderShown) ? meta.orderShown : null;
+  const answer = Array.isArray(submission) ? submission.map((v) => (shown ? shown[Number(v)] : Number(v))) : [];
+  return orderQuestion.orderScoreRatio(answer, n, meta.orderGrading);
+}
+
+// Llista d'elements tal com la veu l'alumnat (barrejada, si la pregunta la té).
+function orderDisplayOf(meta) {
+  if (!meta || !Array.isArray(meta.items)) return [];
+  return Array.isArray(meta.orderShown) ? meta.orderShown.map((i) => meta.items[i]) : meta.items.slice();
+}
+
 function isSubmissionCorrect(meta, submission) {
   if (!meta || !Array.isArray(meta.correctAnswers) || !meta.correctAnswers.length) {
     return false;
   }
   if (meta.type === 'matching') {
     return matchingScoreRatio(meta, submission) === 1;
+  }
+  if (meta.type === 'order') {
+    return orderScoreRatioFromMeta(meta, submission) === 1;
   }
   if (meta.type === 'short-answer') {
     const raw = submission && typeof submission === 'object' && submission.text !== undefined ? submission.text : submission;
@@ -424,6 +470,9 @@ function buildAnswerFields(item = {}, meta, { hasVideo = false } = {}) {
   if (meta.type === 'matching') {
     return { pairs: Array.isArray(meta.pairs) ? meta.pairs.map((p) => ({ ...p })) : [] };
   }
+  if (meta.type === 'order') {
+    return { items: Array.isArray(meta.items) ? meta.items.slice() : [], orderGrading: meta.orderGrading, layout: meta.layout };
+  }
   return {};
 }
 
@@ -463,6 +512,9 @@ function normalizeSubmission(meta, num) {
   if (meta.type === 'matching') {
     return normalizeMatchingSubmission(num, (meta.matchSolution || []).length, (meta.matchRight || []).length);
   }
+  if (meta.type === 'order') {
+    return Array.isArray(num) ? num.map((v) => Number(v)) : [];
+  }
   if (meta.type === 'numeric') {
     return (num && typeof num === 'object' && num.number !== undefined) ? { number: num.number } : { number: num };
   }
@@ -487,6 +539,8 @@ module.exports = {
   buildMatchingLayout,
   normalizeMatchingSubmission,
   matchingScoreRatio,
+  orderScoreRatioFromMeta,
+  orderDisplayOf,
   normalizeMatchingBlindStyle,
   hasMatchingQuestion,
   normalizeMatchingExtraTime,

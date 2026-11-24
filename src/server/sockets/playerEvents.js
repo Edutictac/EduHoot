@@ -1,5 +1,5 @@
 const { studentMetaOf } = require('../services/showAnswers');
-const { getQuestionMeta, normalizeSubmission } = require('../questionUtils');
+const { getQuestionMeta, normalizeSubmission, orderDisplayOf } = require('../questionUtils');
 const { logger, quizFields } = require('../logger');
 
 // player-join, player-join-game, playerAnswer.
@@ -240,7 +240,8 @@ module.exports = function createPlayerEvents({
             video: current.video || '',
             pointsMultiplier: Number(current.pointsMultiplier) > 1 ? 2 : 1,
             time: timeLeft,
-            ...(current.type === 'matching' ? { matchLeft: current.matchLeft, matchRight: current.matchRight } : {})
+            ...(current.type === 'matching' ? { matchLeft: current.matchLeft, matchRight: current.matchRight } : {}),
+            ...(current.type === 'order' ? { orderItems: orderDisplayOf(getQuestionMeta(current)), layout: getQuestionMeta(current).layout } : {})
           }, game.gameData.options));
           socket.emit('questionMedia', { image: current.image || '', video: current.video || '' });
           // Si la pregunta ya cerró, informar al jugador reconectado

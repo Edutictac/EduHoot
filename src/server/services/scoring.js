@@ -1,4 +1,4 @@
-const { isSubmissionCorrect, matchingScoreRatio, normalizeMatchingExtraTime } = require('../questionUtils');
+const { isSubmissionCorrect, matchingScoreRatio, orderScoreRatioFromMeta, normalizeMatchingExtraTime } = require('../questionUtils');
 
 const MAX_POINTS_PER_QUESTION = 1000;
 
@@ -34,6 +34,8 @@ function getSubmissionScoreRatio(meta, submission) {
   if (!meta || meta.type === 'poll') return 0;
   // Correspondencia: proporción de parejas acertadas, sin restar por los fallos.
   if (meta.type === 'matching') return matchingScoreRatio(meta, submission);
+  // Ordenar: proporció de la puntuació segons el mode de Moodle elegit.
+  if (meta.type === 'order') return orderScoreRatioFromMeta(meta, submission);
   if (meta.type !== 'multiple') return isSubmissionCorrect(meta, submission) ? 1 : 0;
   const selected = Array.isArray(submission) ? new Set(submission) : new Set();
   const correct = Array.isArray(meta.correctAnswers) ? meta.correctAnswers : [];

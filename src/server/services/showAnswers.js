@@ -1,6 +1,6 @@
 // «Mostrar respuestas» (por defecto activado): si el anfitrión lo desactiva, al alumnado
 // no le llega la respuesta correcta. El anfitrión siempre recibe el resultado completo.
-const ANSWER_FIELDS = ['correctAnswers', 'acceptedAnswers', 'numericAnswer', 'tolerance', 'matchSolution', 'pairs'];
+const ANSWER_FIELDS = ['correctAnswers', 'acceptedAnswers', 'numericAnswer', 'tolerance', 'matchSolution', 'pairs', 'items', 'orderShown', 'orderSolution'];
 
 function showCorrectAnswersOf(game) {
   return !(game && game.gameData && game.gameData.options && game.gameData.options.showCorrectAnswers === false);

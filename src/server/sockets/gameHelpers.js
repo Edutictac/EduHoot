@@ -3,6 +3,7 @@ const {
   isFreeAnswerType,
   normalizeCorrectAnswers,
   getQuestionMeta,
+  orderDisplayOf,
   isSubmissionCorrect,
   buildMatchingLayout,
   normalizeMatchingBlindStyle
@@ -193,6 +194,29 @@ module.exports = function createGameHelpers({ io, games, players, cleanImportedT
         };
       }
 
+      // Ordenar: els elements es guarden en ordre correcte; l'alumnat veu una llista barrejada (orderShown).
+      if (type === 'order') {
+        const items = Array.isArray(meta.items) ? meta.items : [];
+        const domain = items.map((_, idx) => idx);
+        let shown = shuffleArray(domain);
+        if (domain.length > 1 && shown.every((v, i) => v === i)) shown = [...domain.slice(1), domain[0]];
+        return {
+          question: cleanImportedText(q.question),
+          answers: [],
+          correct: 1,
+          correctAnswers: [1],
+          type,
+          time: useOverrideTime ? overrideTime : (q.time || 0),
+          pointsMultiplier: Number(q.pointsMultiplier) > 1 ? 2 : 1,
+          image: q.image || '',
+          video: q.video || '',
+          items: items.map(cleanImportedText),
+          orderShown: shown,
+          orderGrading: meta.orderGrading,
+          layout: meta.layout
+        };
+      }
+
       // Correspondencia: la izquierda en orden fijo y la derecha barajada siempre
       // (sin barajar, la solución sería el mismo orden). Se evita que salga igual.
       if (type === 'matching') {
@@ -280,6 +304,10 @@ module.exports = function createGameHelpers({ io, games, players, cleanImportedT
     const matching = meta.type === 'matching'
       ? { matchLeft: meta.matchLeft, matchRight: meta.matchRight }
       : null;
+    // Ordenar: el proyector rep la solució; l'alumnat només la llista barrejada.
+    const ordering = meta.type === 'order'
+      ? { orderItems: orderDisplayOf(meta), layout: meta.layout }
+      : null;
     const image = current.image || '';
     const video = current.video || '';
     const time = questionTimeOf(game.gameData, current);
@@ -307,7 +335,8 @@ module.exports = function createGameHelpers({ io, games, players, cleanImportedT
         questionNumber: game.gameData.question,
         totalQuestions: game.gameData.totalQuestions || questions.length,
         time,
-        ...(matching ? { ...matching, matchSolution: meta.matchSolution } : {})
+        ...(matching ? { ...matching, matchSolution: meta.matchSolution } : {}),
+        ...(ordering ? { ...ordering, orderSolution: meta.items } : {})
       },
       playerPayload: {
         question: current.question,
@@ -317,7 +346,8 @@ module.exports = function createGameHelpers({ io, games, players, cleanImportedT
         video,
         pointsMultiplier,
         time,
-        ...(matching || {})
+        ...(matching || {}),
+        ...(ordering || {})
       }
     };
   }
@@ -343,6 +373,8 @@ module.exports = function createGameHelpers({ io, games, players, cleanImportedT
       blind: true,
       answerCount,
       ...matchingCounts,
+      // Ordenar a ciegas: només el nombre d'elements (la llista no surt del servidor fins que la pantalla la mostra).
+      ...(playerPayload.type === 'order' ? { orderCount: (playerPayload.orderItems || []).length, layout: playerPayload.layout } : {}),
       type: playerPayload.type,
       pointsMultiplier: playerPayload.pointsMultiplier,
       time: playerPayload.time

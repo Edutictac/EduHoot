@@ -155,6 +155,9 @@ function normalizeQuestions(list = []) {
       if (Array.isArray(answerFields.acceptedAnswers)) {
         answerFields.acceptedAnswers = answerFields.acceptedAnswers.map(cleanImportedText);
       }
+      if (Array.isArray(answerFields.items)) {
+        answerFields.items = answerFields.items.map(cleanImportedText);
+      }
       if (Array.isArray(answerFields.pairs)) {
         answerFields.pairs = answerFields.pairs.map((p) => ({
           left: cleanImportedText(p.left),
