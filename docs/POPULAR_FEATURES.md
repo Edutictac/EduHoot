@@ -761,6 +761,10 @@ la numeració 1-32 de dalt.
   - **Compatibilitat**: els quizzes existents no canvien; una pregunta amb
     només 4 opcions es comporta exactament com ara.
 
+- **✅ W11 — Valoració de cada quiz amb estrelles des de la biblioteca.** El professorat puntua els quizzes públics a `/create/` amb cinc estrelles, igual que al mode solo (un vot per dispositiu, mateix endpoint `POST /api/quizzes/:id/rating`). Els quizzes privats i locals no es valoren.
+
+- **W12 — Pujar imatges a les preguntes.** Ara la imatge d'una pregunta només es posa com a URL. La proposta és poder pujar-la directament, una per pregunta, o una bateria d'imatges de cop: bé en un zip (cada fitxer associat a una pregunta pel nom) bé amb una llista d'URL (una per línia). Cal decidir els límits de mida i de nombre, els formats admesos, si es reutilitzen les imatges ja pujades (com fa la importació de Kahoot) i com es tracten els drets de les imatges de tercers.
+
 ## Nota sobre drets d'autor
 
 Cap de les 32 propostes té drets d'autor: les mecàniques i regles de joc

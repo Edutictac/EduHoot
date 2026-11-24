@@ -192,6 +192,9 @@ fitxers corresponents, i els originals es van eliminar.
 
 ### Canviat
 
+- **Biblioteca**: valoració amb estrelles (1 a 5) per als quizzes públics, igual que al mode solo; la mitjana i els vots es mostren a la targeta.
+- **Flashcards**: el resum final va en una fila pròpia, a sota de la informació i de les opcions.
+- **Biblioteca**: 6, 12, 24, 48 o 96 quizzes per pàgina (per defecte 6). Amb sessió, la paginació s'emmagatzema al compte de l'usuari (`/api/auth/preferences`); sense sessió, al navegador.
 - **Partida**: el marge per a que el professorat reconnecte si es desconnecta passa de 30 s a 120 s per defecte, i es pot ampliar fins a 5 minuts a la configuració de la partida (abans el màxim era 120 s). Els clients del professorat reintenten la connexió durant més temps perquè el marge siga efectiu.
 - **Flashcards**: les opcions de resposta tenen la forma i el color de les respostes del joc, en dues columnes sempre que hi càpien. La marca de les escollides és un anell i una ✓. La imatge de la pregunta va ara damunt de les opcions en pantalla estreta; en pantalla ampla, les opcions van centrades si no hi ha imatge i a la dreta de la imatge si n'hi ha. En correspondència, amb la casella «Mostrar opcions de resposta» activada, l'anvers mostra les dues columnes en una taula sense vores (la dreta barajada). En vertader/fals amb imatge, les opcions van una sota l'altra. En preguntes de quiz (1 correcta) i de resposta múltiple, les opcions van sempre en dues columnes (2×2 amb quatre): al costat de la imatge si la pantalla és ampla, i sota la imatge si no. Si una paraula no cap en el botó, les opcions passen a una columna i la targeta creix en alçada per encabir-les. En vertader/fals, els dos botons tenen la mateixa amplària (la del text més llarg) i les etiquetes es mostren traduïdes a l'idioma de la interfície.
 - **Biblioteca**: cada quiz mostra la data de creació i la de la darrera modificació, en una línia discreta sota les estadístiques.
