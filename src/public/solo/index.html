@@ -294,9 +294,9 @@
                     <div v-else class="flashcard-wrap">
                         <p id="cards-progress" class="cards-progress">{{ cardsProgressText }}</p>
                         <div class="flashcard-scene">
-                            <div id="flashcard" class="flashcard" :class="{ 'is-back': s.cards.flipped, 'is-contrast': s.cards.highContrast }" @click="cardsFlipFromCard">
+                            <div id="flashcard" class="flashcard" :class="{ 'is-back': s.cards.flipped, 'is-contrast': s.cards.highContrast, 'is-tall': s.cards.oneColumn }" @click="cardsFlipFromCard">
                                 <!-- Les dues cares són sempre al DOM; la que no toca queda oculta i inerta (ni teclat ni lector de pantalla). -->
-                                <div class="flashcard__face flashcard__face--front" :aria-hidden="s.cards.flipped ? 'true' : 'false'" :inert="s.cards.flipped || null">
+                                <div class="flashcard__face flashcard__face--front" :class="{ 'has-options': cardsHasOptionsBlock, 'has-media': cardsHasMedia }" :aria-hidden="s.cards.flipped ? 'true' : 'false'" :inert="s.cards.flipped || null">
                                     <p class="flashcard__label">{{ t('flashcardsFront') }}</p>
                                     <p id="flashcard-question" class="question-text">{{ cardsFrontText }}</p>
                                     <!-- El media es desmunta en girar perquè el vídeo o l'àudio no segueixin sonant de dors. Va sota l'enunciat i damunt de les opcions. -->
@@ -305,12 +305,19 @@
                                         <video v-if="cardsMedia.video" controls playsinline :src="cardsMedia.video"></video>
                                         <iframe v-if="cardsMedia.youtube" title="video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen :src="cardsMedia.youtube"></iframe>
                                     </div>
-                                    <ul v-if="cardsOptions.length" class="flashcard__options" role="group" :aria-label="t('flashcardsOptions')">
+                                    <ul v-if="cardsOptions.length" class="flashcard__options" :class="{ 'flashcard__options--tf': cardsOptionsColumns === 'tf', 'flashcard__options--two': cardsOptionsColumns === 'two', 'flashcard__options--one': cardsOptionsColumns === 'one', 'flashcard__options--stacked': cardsOptionsStacked }" role="group" :aria-label="t('flashcardsOptions')">
                                         <li v-for="o in cardsOptions" :key="o.n">
                                             <button type="button" class="flashcard__option answer-shape" :class="['answer-shape--' + o.shape, { 'is-picked': isCardPicked(o.n) }]" :aria-pressed="isCardPicked(o.n) ? 'true' : 'false'" @click.stop="cardsPick(o.n)">{{ o.text }}</button>
                                         </li>
                                     </ul>
-                                    <div v-if="cardsMatchLeft.length" class="flashcard__match">
+                                    <div v-if="cardsMatchTable.length" class="flashcard__match">
+                                        <p class="flashcard__label">{{ t('flashcardsMatchLeft') }}</p>
+                                        <table class="flashcard__pairs">
+                                            <thead class="sr-only"><tr><th>{{ t('flashcardsMatchColumnLeft') }}</th><th>{{ t('flashcardsMatchColumnRight') }}</th></tr></thead>
+                                            <tbody><tr v-for="(row, i) in cardsMatchTable" :key="i"><td>{{ row.left }}</td><td>{{ row.right }}</td></tr></tbody>
+                                        </table>
+                                    </div>
+                                    <div v-if="cardsMatchLeft.length && !cardsMatchTable.length" class="flashcard__match">
                                         <p class="flashcard__label">{{ t('flashcardsMatchLeft') }}</p>
                                         <ul class="flashcard__answers flashcard__match-left">
                                             <li v-for="(text, i) in cardsMatchLeft" :key="i">{{ text }}</li>

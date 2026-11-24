@@ -217,7 +217,8 @@ module.exports = function createQuizzesRouter({
         sourceQuizName: quiz.sourceQuizName || '',
         sourceOwnerNickname: quiz.sourceOwnerNickname || '',
         sourceQuizId: quiz.sourceQuizId,
-        createdAt: quiz.createdAt || quiz.updatedAt || new Date(0)
+        createdAt: quiz.createdAt || quiz.updatedAt || new Date(0),
+        updatedAt: quiz.updatedAt || quiz.createdAt || null
       }));
       // Añadir quizzes efímeros solicitados
       const localIdsParam = req.query.localIds;

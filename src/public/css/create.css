@@ -763,6 +763,16 @@ details.panel[open] .panel-toggle__chevron{
     opacity: 0.9;
     margin-top: -4px;
 }
+/* Dates de creació i modificació: discretes, una sola línia. */
+.game-dates{
+    font-size: 11px;
+    line-height: 1.3;
+    opacity: 0.72;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 .game-stats__item{
     padding: 4px 10px;
     border-radius: 999px;

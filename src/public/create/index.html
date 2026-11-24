@@ -351,6 +351,7 @@
                                     <span class="game-stats__item">{{ (quiz.playsCount || 0) + ' ' + t('playsShort') }}</span>
                                     <span class="game-stats__item">{{ (quiz.playersCount || 0) + ' ' + t('playersShort') }}</span>
                                 </div>
+                                <div v-if="datesText(quiz)" class="game-dates">{{ datesText(quiz) }}</div>
                                 <div class="tag-wrap">
                                     <template v-for="tagValue in quizTags(quiz)" :key="tagValue">
                                         <span v-if="!perms(quiz).canEdit" class="tag" @click="toggleTag(tagValue)">{{ tagValue }}</span>

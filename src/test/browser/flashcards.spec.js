@@ -170,8 +170,9 @@ test('el giro es animat també amb reducir movimiento activat al sistema', async
     await expect(page.locator('.flashcard')).toHaveClass(/is-back/);
 });
 
-test('la imagen de la pregunta va encima de las opciones de respuesta', async ({ page }) => {
+test('en pantalla estreta, la imagen de la pregunta va encima de las opciones de respuesta', async ({ page }) => {
     const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==';
+    await page.setViewportSize({ width: 600, height: 900 });
     await mockBackend(page);
     await page.route('**/api/quizzes/q1', route => route.fulfill({ json: { ...quiz, questions: [
         { question: 'Quin animal és?', type: 'quiz', image: png, answers: ['Gos', 'Peix'], correctAnswers: [1], time: 20 }
@@ -182,6 +183,79 @@ test('la imagen de la pregunta va encima de las opciones de respuesta', async ({
     const img = await page.locator('.flashcard__media img').boundingBox();
     const firstOption = await page.locator('.flashcard__option').first().boundingBox();
     expect(img.y + img.height).toBeLessThanOrEqual(firstOption.y);
+});
+
+// Pantalla ancha: con imagen, la imagen a la izquierda y las opciones a la dreta; sense imatge, les opcions centrades.
+const matchingQuiz = { question: 'Relaciona capital y país', type: 'matching', time: 30,
+    pairs: [{ left: 'França', right: 'París' }, { left: 'Espanya', right: 'Madrid' }, { left: 'Itàlia', right: 'Roma' }] };
+
+test('correspondencia: con la casilla activada, el anverso muestra las dos columnas en una tabla sin bordes', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await mockBackend(page);
+    await page.route('**/api/quizzes/q1', route => route.fulfill({ json: { ...quiz, questions: [matchingQuiz] } }));
+    await page.goto('/solo/?lang=es');
+    await page.locator('.card-actions .btn', { hasText: 'Repasar' }).click();
+    await page.locator('#cards-start-all').click();
+    const rows = page.locator('.flashcard__pairs tbody tr');
+    await expect(rows).toHaveCount(3);
+    const lefts = await rows.locator('td:nth-child(1)').allTextContents();
+    const rights = await rows.locator('td:nth-child(2)').allTextContents();
+    expect(lefts).toEqual(['França', 'Espanya', 'Itàlia']);
+    // La derecha va barajada: nunca en el mismo orden que la izquierda (no revela las parejas).
+    expect(rights).not.toEqual(['París', 'Madrid', 'Roma']);
+    expect(rights.slice().sort()).toEqual(['Madrid', 'París', 'Roma']);
+    expect(await page.locator('.flashcard__pairs').evaluate(el => getComputedStyle(el).borderTopWidth)).toBe('0px');
+    expect(await page.locator('.flashcard__pairs td').first().evaluate(el => getComputedStyle(el).borderTopWidth)).toBe('0px');
+});
+
+test('correspondencia: con la casilla desactivada, solo sale la columna izquierda', async ({ page }) => {
+    await mockBackend(page);
+    await page.route('**/api/quizzes/q1', route => route.fulfill({ json: { ...quiz, questions: [matchingQuiz] } }));
+    await page.goto('/solo/?lang=es');
+    await page.locator('.card-actions .btn', { hasText: 'Repasar' }).click();
+    await page.locator('#cards-options').uncheck();
+    await page.locator('#cards-start-all').click();
+    await expect(page.locator('.flashcard__pairs')).toHaveCount(0);
+    await expect(page.locator('.flashcard__match-left li')).toHaveText(['França', 'Espanya', 'Itàlia']);
+});
+
+test('correspondencia en pantalla ancha con imagen: la tabla va a la derecha de la imagen', async ({ page }) => {
+    const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==';
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await mockBackend(page);
+    await page.route('**/api/quizzes/q1', route => route.fulfill({ json: { ...quiz, questions: [{ ...matchingQuiz, image: png }] } }));
+    await page.goto('/solo/?lang=es');
+    await page.locator('.card-actions .btn', { hasText: 'Repasar' }).click();
+    await page.locator('#cards-start-all').click();
+    const img = await page.locator('.flashcard__media img').boundingBox();
+    const table = await page.locator('.flashcard__pairs').boundingBox();
+    expect(img.x + img.width).toBeLessThanOrEqual(table.x);
+});
+
+test('en pantalla ancha, con imagen las opciones van a la derecha; sin imagen, centradas', async ({ page }) => {
+    const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==';
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await mockBackend(page);
+    await page.route('**/api/quizzes/q1', route => route.fulfill({ json: { ...quiz, questions: [
+        { question: 'Quin animal és?', type: 'quiz', image: png, answers: ['Gos', 'Peix'], correctAnswers: [1], time: 20 }
+    ] } }));
+    await page.goto('/solo/?lang=es');
+    await page.locator('.card-actions .btn', { hasText: 'Repasar' }).click();
+    await page.locator('#cards-start-all').click();
+    const img = await page.locator('.flashcard__media img').boundingBox();
+    const options = await page.locator('.flashcard__options').boundingBox();
+    expect(img.x + img.width).toBeLessThanOrEqual(options.x);
+
+    // Sin imagen: el bloque de opciones queda centrado en la cara de la pregunta.
+    await page.route('**/api/quizzes/q1', route => route.fulfill({ json: { ...quiz, questions: [
+        { question: 'Quin animal és?', type: 'quiz', answers: ['Gos', 'Peix'], correctAnswers: [1], time: 20 }
+    ] } }));
+    await page.goto('/solo/?lang=es');
+    await page.locator('.card-actions .btn', { hasText: 'Repasar' }).click();
+    await page.locator('#cards-start-all').click();
+    const face = await page.locator('.flashcard__face--front').boundingBox();
+    const centred = await page.locator('.flashcard__options').boundingBox();
+    expect(Math.abs((centred.x + centred.width / 2) - (face.x + face.width / 2))).toBeLessThan(2);
 });
 
 test('si la pregunta té imatge, clicar-la gira la targeta', async ({ page }) => {
@@ -250,6 +324,23 @@ test('en preguntas de respuesta múltiple el anverso muestra las opciones; marca
     await expect(page.locator('.flashcard')).not.toHaveClass(/is-back/);
 });
 
+test('en respuesta múltiple las opciones van en dos columnas, también en pantalla ancha', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await mockBackend(page);
+    await page.route('**/api/quizzes/q1', route => route.fulfill({ json: { ...quiz, questions: [
+        { question: 'Quines són capitals?', type: 'multiple', answers: ['París', 'Madrid', 'Roma', 'Lisboa'], correctAnswers: [1, 3], time: 20 }
+    ] } }));
+    await page.goto('/solo/?lang=es');
+    await page.locator('.card-actions .btn', { hasText: 'Repasar' }).click();
+    await page.locator('#cards-start-all').click();
+    const boxes = [];
+    for (let i = 0; i < 4; i++) boxes.push(await page.locator('.flashcard__option').nth(i).boundingBox());
+    expect(Math.abs(boxes[0].y - boxes[1].y)).toBeLessThan(1);
+    expect(boxes[1].x).toBeGreaterThan(boxes[0].x);
+    expect(Math.abs(boxes[2].y - boxes[3].y)).toBeLessThan(1);
+    expect(boxes[2].y).toBeGreaterThan(boxes[0].y + boxes[0].height - 1);
+});
+
 test('en preguntas de respuesta única el anverso muestra las opciones; elegir una sustituye la anterior', async ({ page }) => {
     await mockBackend(page);
     await page.route('**/api/quizzes/q1', route => route.fulfill({ json: { ...quiz, questions: [
@@ -280,6 +371,147 @@ test('la casella «Mostrar opciones de respuesta» oculta las opciones y se guar
     await page.locator('#cards-start-all').click();
     await expect(page.locator('#flashcard-question')).toBeVisible();
     await expect(page.locator('.flashcard__option')).toHaveCount(0);
+});
+
+test('vertadero/fals con imagen: las dos opciones salen una debajo de otra', async ({ page }) => {
+    const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==';
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await mockBackend(page);
+    await page.route('**/api/quizzes/q1', route => route.fulfill({ json: { ...quiz, questions: [
+        { question: 'La Tierra es plana.', type: 'true-false', image: png, answers: ['Vertader', 'Fals'], correctAnswers: [2], time: 20 }
+    ] } }));
+    await page.goto('/solo/?lang=es');
+    await page.locator('.card-actions .btn', { hasText: 'Repasar' }).click();
+    await page.locator('#cards-start-all').click();
+    const [a, b] = [await page.locator('.flashcard__option').nth(0).boundingBox(), await page.locator('.flashcard__option').nth(1).boundingBox()];
+    // Els dos botons tenen la mateixa amplària (la del text més llarg), centrats; una va sota l'altra.
+    expect(Math.abs(a.width - b.width)).toBeLessThan(1);
+    expect(Math.abs((a.x + a.width / 2) - (b.x + b.width / 2))).toBeLessThan(1);
+    expect(b.y).toBeGreaterThan(a.y + a.height - 1);
+});
+
+test('vertadero/fals sin imagen: las dos opciones siguen en fila', async ({ page }) => {
+    await mockBackend(page);
+    await page.route('**/api/quizzes/q1', route => route.fulfill({ json: { ...quiz, questions: [
+        { question: 'La Tierra es plana.', type: 'true-false', answers: ['Vertader', 'Fals'], correctAnswers: [2], time: 20 }
+    ] } }));
+    await page.goto('/solo/?lang=es');
+    await page.locator('.card-actions .btn', { hasText: 'Repasar' }).click();
+    await page.locator('#cards-start-all').click();
+    const [a, b] = [await page.locator('.flashcard__option').nth(0).boundingBox(), await page.locator('.flashcard__option').nth(1).boundingBox()];
+    expect(Math.abs(a.y - b.y)).toBeLessThan(1);
+    // Botones del tamaño del texto (no de todo el ancho) y con las etiquetas traducidas (quiz en «Vertader/Fals»).
+    expect(await page.locator('.flashcard__option').allTextContents()).toEqual(['Verdadero', 'Falso']);
+    expect(a.width).toBeLessThan(200);
+    expect(Math.abs(a.width - b.width)).toBeLessThan(1);
+});
+
+test('en respuesta múltiple con textos muy largos, sigue en 2×2', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await mockBackend(page);
+    await page.route('**/api/quizzes/q1', route => route.fulfill({ json: { ...quiz, questions: [
+        { question: 'Quines són correctes?', type: 'multiple', answers: ['Una resposta bastant més llarga del que és normal', 'Una altra resposta amb bastant text també', 'Tercera opció molt llarga per provar', 'Quarta opció amb un text extens'], correctAnswers: [1, 3], time: 20 }
+    ] } }));
+    await page.goto('/solo/?lang=es');
+    await page.locator('.card-actions .btn', { hasText: 'Repasar' }).click();
+    await page.locator('#cards-start-all').click();
+    const first = await page.locator('.flashcard__option').nth(0).boundingBox();
+    const second = await page.locator('.flashcard__option').nth(1).boundingBox();
+    const third = await page.locator('.flashcard__option').nth(2).boundingBox();
+    expect(second.x).toBeGreaterThan(first.x + first.width - 1);
+    expect(third.y).toBeGreaterThan(first.y + first.height - 1);
+});
+
+test('respuesta múltiple: una palabra que no cabe en el botón pasa a una columna y la targeta crece', async ({ page }) => {
+    await page.setViewportSize({ width: 412, height: 800 });
+    await mockBackend(page);
+    await page.route('**/api/quizzes/q1', route => route.fulfill({ json: { ...quiz, questions: [
+        { question: 'Quines són correctes?', type: 'multiple', answers: ['Constantinopolitanismo', 'Madrid', 'Roma', 'Lisboa'], correctAnswers: [1, 3], time: 20 }
+    ] } }));
+    await page.goto('/solo/?lang=es');
+    await page.locator('.card-actions .btn', { hasText: 'Repasar' }).click();
+    await page.locator('#cards-start-all').click();
+    await expect(page.locator('.flashcard.is-tall')).toHaveCount(1);
+    const boxes = [];
+    for (let i = 0; i < 4; i++) boxes.push(await page.locator('.flashcard__option').nth(i).boundingBox());
+    // Una columna: cuatro filas, cada una a la izquierda de la siguiente.
+    expect(boxes[1].y).toBeGreaterThan(boxes[0].y + boxes[0].height - 1);
+    expect(Math.abs(boxes[0].x - boxes[1].x)).toBeLessThan(1);
+    // La targeta contiene las opciones (no hay scroll interno) y la palabra larga no se parte.
+    const card = await page.locator('#flashcard').boundingBox();
+    expect(boxes[3].y + boxes[3].height).toBeLessThanOrEqual(card.y + card.height + 1);
+    const lines = await page.locator('.flashcard__option').first().evaluate(b => { const r = document.createRange(); r.selectNodeContents(b.lastChild); return r.getClientRects().length; });
+    expect(lines).toBe(1);
+});
+
+test('quiz de una correcta con imagen y cuatro opciones: 2×2 a la derecha de la imagen, nunca en fila', async ({ page }) => {
+    const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==';
+    await page.setViewportSize({ width: 1920, height: 921 });
+    await mockBackend(page);
+    await page.route('**/api/quizzes/q1', route => route.fulfill({ json: { ...quiz, questions: [
+        { question: 'Con qué programa podemos hacer dibujos parecidos?', type: 'quiz', image: png, answers: ['Inkscape', 'Gwenview', 'GIMP', 'Okular'], correctAnswers: [1], time: 20 }
+    ] } }));
+    await page.goto('/solo/?lang=es');
+    await page.locator('.card-actions .btn', { hasText: 'Repasar' }).click();
+    await page.locator('#cards-start-all').click();
+    const img = await page.locator('.flashcard__media img').boundingBox();
+    const boxes = [];
+    for (let i = 0; i < 4; i++) boxes.push(await page.locator('.flashcard__option').nth(i).boundingBox());
+    expect(img.x + img.width).toBeLessThanOrEqual(Math.min(...boxes.map(b => b.x)));
+    expect(Math.abs(boxes[0].y - boxes[1].y)).toBeLessThan(1);
+    expect(boxes[2].y).toBeGreaterThan(boxes[0].y + boxes[0].height - 1);
+});
+
+test('respuesta múltiple con imagen: 2×2 a la derecha de la imagen en pantalla ancha', async ({ page }) => {
+    const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==';
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await mockBackend(page);
+    await page.route('**/api/quizzes/q1', route => route.fulfill({ json: { ...quiz, questions: [
+        { question: 'Quines són capitals?', type: 'multiple', image: png, answers: ['París', 'Madrid', 'Roma', 'Lisboa'], correctAnswers: [1], time: 20 }
+    ] } }));
+    await page.goto('/solo/?lang=es');
+    await page.locator('.card-actions .btn', { hasText: 'Repasar' }).click();
+    await page.locator('#cards-start-all').click();
+    const img = await page.locator('.flashcard__media img').boundingBox();
+    const boxes = [];
+    for (let i = 0; i < 4; i++) boxes.push(await page.locator('.flashcard__option').nth(i).boundingBox());
+    expect(img.x + img.width).toBeLessThanOrEqual(Math.min(...boxes.map(b => b.x)));
+    expect(Math.abs(boxes[0].y - boxes[1].y)).toBeLessThan(1);
+    expect(boxes[2].y).toBeGreaterThan(boxes[0].y + boxes[0].height - 1);
+});
+
+test('respuesta múltiple con imagen en pantalla estrecha: 2×2 debajo de la imagen', async ({ page }) => {
+    const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==';
+    await page.setViewportSize({ width: 600, height: 900 });
+    await mockBackend(page);
+    await page.route('**/api/quizzes/q1', route => route.fulfill({ json: { ...quiz, questions: [
+        { question: 'Quines són capitals?', type: 'multiple', image: png, answers: ['París', 'Madrid', 'Roma', 'Lisboa'], correctAnswers: [1], time: 20 }
+    ] } }));
+    await page.goto('/solo/?lang=es');
+    await page.locator('.card-actions .btn', { hasText: 'Repasar' }).click();
+    await page.locator('#cards-start-all').click();
+    const img = await page.locator('.flashcard__media img').boundingBox();
+    const boxes = [];
+    for (let i = 0; i < 4; i++) boxes.push(await page.locator('.flashcard__option').nth(i).boundingBox());
+    expect(img.y + img.height).toBeLessThanOrEqual(Math.min(...boxes.map(b => b.y)));
+    expect(Math.abs(boxes[0].y - boxes[1].y)).toBeLessThan(1);
+    expect(boxes[2].y).toBeGreaterThan(boxes[0].y + boxes[0].height - 1);
+});
+
+test('en respuesta múltiple en ventana estrecha (320 px), sigue en dos columnas', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 700 });
+    await mockBackend(page);
+    await page.route('**/api/quizzes/q1', route => route.fulfill({ json: { ...quiz, questions: [
+        { question: 'Quines són capitals?', type: 'multiple', answers: ['París', 'Madrid', 'Roma', 'Lisboa'], correctAnswers: [1, 3], time: 20 }
+    ] } }));
+    await page.goto('/solo/?lang=es');
+    await page.locator('.card-actions .btn', { hasText: 'Repasar' }).click();
+    await page.locator('#cards-start-all').click();
+    const first = await page.locator('.flashcard__option').nth(0).boundingBox();
+    const second = await page.locator('.flashcard__option').nth(1).boundingBox();
+    const third = await page.locator('.flashcard__option').nth(2).boundingBox();
+    expect(Math.abs(first.y - second.y)).toBeLessThan(1);
+    expect(third.y).toBeGreaterThan(first.y + first.height - 1);
 });
 
 test('en preguntas de vertadero/fals el anverso muestra solo les dues opcions', async ({ page }) => {

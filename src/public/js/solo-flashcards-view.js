@@ -15,6 +15,17 @@ function saveFlashcardsProgress(all){
     EduhootFlashcards.saveAllProgress(FLASHCARDS_STORAGE, all);
 }
 
+// Vertader/fals: «Verdadero/Falso» (o la traducció de la interfície) encara que el quiz tinga el text
+// guardat en un altre idioma. Si el text és un altre (p. ex. «Cierto»), es mostra tal com està.
+var TF_TRUE_WORDS = ['true', 'verdadero', 'vertader', 'vertadero', 'cierto', 'verdader'];
+var TF_FALSE_WORDS = ['false', 'falso', 'fals'];
+function trueFalseText(stored, index, t){
+    var key = String(stored === null || stored === undefined ? '' : stored).trim().toLowerCase();
+    if(index === 0 && (key === '' || TF_TRUE_WORDS.indexOf(key) !== -1)) return t('flashcardsTrue');
+    if(index === 1 && (key === '' || TF_FALSE_WORDS.indexOf(key) !== -1)) return t('flashcardsFalse');
+    return stored;
+}
+
 // Textos de la cara posterior: les respostes correctes tal com estan al quiz.
 function cardAnswerTexts(q, t){
     var meta = normalizeQuestionMeta(q);
@@ -34,8 +45,9 @@ function cardAnswerTexts(q, t){
             .map(function(p){ return p.left + ' → ' + p.right; });
     }
     var answers = Array.isArray(q.answers) ? q.answers : [];
+    var isTf = meta.type === 'true-false';
     return meta.correctAnswers
-        .map(function(n){ return answers[n - 1]; })
+        .map(function(n){ return isTf ? trueFalseText(answers[n - 1], n - 1, t) : answers[n - 1]; })
         .filter(function(a){ return a !== undefined && a !== null && String(a).trim() !== ''; });
 }
 
@@ -104,6 +116,17 @@ function stopFlashcardsSpeech(){
     state.ttsSpeaking = false;
 }
 
+// Correspondencia: la columna derecha de cada pregunta se baraja una vez al abrir el repaso,
+// para que el anverso no revele las parejas (la de la izquierda ya va en el orden del quiz).
+function buildMatchLayouts(cards){
+    var layouts = {};
+    cards.forEach(function(card){
+        var meta = normalizeQuestionMeta(card.q);
+        if(meta.type === 'matching') layouts[String(card.idx)] = EduhootMatching.shuffledLayout(meta.pairs);
+    });
+    return layouts;
+}
+
 function openFlashcards(quiz){
     state.quizData = null;
     state.currentQuiz = quiz.id;
@@ -111,10 +134,12 @@ function openFlashcards(quiz){
     document.body.classList.add('playing');
     var questions = Array.isArray(quiz.questions) ? quiz.questions : [];
     var all = loadFlashcardsProgress();
+    var cards = EduhootFlashcards.buildCards(questions);
     state.cards = {
         quizId: String(quiz.id),
         total: questions.length,
-        all: EduhootFlashcards.buildCards(questions),
+        all: cards,
+        matchLayouts: buildMatchLayouts(cards),
         status: EduhootFlashcards.quizStatus(all, quiz.id, questions.length),
         deck: [],
         pos: 0,
@@ -126,6 +151,8 @@ function openFlashcards(quiz){
         animate: readFlipAnimPref(),
         highContrast: readContrastPref(),
         showOptions: readOptionsPref(),
+        // Resposta múltiple: true si alguna paraula no cap en el botó de dues columnes (cardsFitOptions).
+        oneColumn: false,
         picks: {}
     };
     state.view = 'cards';
@@ -156,6 +183,26 @@ var soloFlashcards = {
             var cur = this.cardsCurrent;
             return mediaFor(cur ? cur.q : null);
         },
+        cardsHasMedia: function(){
+            var m = this.cardsMedia;
+            return !!(m.image || m.video || m.youtube);
+        },
+        // Disposició de les opcions: 'two' (resposta múltiple, sempre dues columnes: 2×2 amb quatre opcions),
+        // 'tf' (vertader/fals, els dos botons de la mateixa amplària) o '' (la resta, quadrícula automàtica).
+        cardsOptionsColumns: function(){
+            var cur = this.cardsCurrent;
+            if(!cur) return '';
+            var type = normalizeQuestionMeta(cur.q).type;
+            if(type === 'true-false') return 'tf';
+            // «Quiz (1 correcta)» i «Respuesta múltiple»: les dues amb opcions de text, el mateix tractament.
+            if(type === 'quiz' || type === 'multiple') return this.s.cards.oneColumn ? 'one' : 'two';
+            return '';
+        },
+        // Vertader/fals amb imatge: les dues opcions una sota l'altra (no en fila).
+        cardsOptionsStacked: function(){
+            var cur = this.cardsCurrent;
+            return !!cur && this.cardsHasMedia && normalizeQuestionMeta(cur.q).type === 'true-false';
+        },
         // Opcions que el alumnat veu en el anverso, si la casella de l'inici està activada: en les
         // preguntes de opcions (resposta única, múltiple i vertader/fals). En vertader/fals, només les dues primeres.
         cardsOptions: function(){
@@ -165,8 +212,12 @@ var soloFlashcards = {
             if(type !== 'quiz' && type !== 'multiple' && type !== 'true-false') return [];
             var answers = Array.isArray(cur.q.answers) ? cur.q.answers : [];
             if(type === 'true-false') answers = answers.slice(0, 2);
+            var t = this.t;
             return answers
-                .map(function(a, i){ return { n: i + 1, shape: (i % 4) + 1, text: a === null || a === undefined ? '' : String(a) }; })
+                .map(function(a, i){
+                    var text = type === 'true-false' ? trueFalseText(a, i, t) : a;
+                    return { n: i + 1, shape: (i % 4) + 1, text: text === null || text === undefined ? '' : String(text) };
+                })
                 .filter(function(o){ return o.text.trim() !== ''; });
         },
         // Correspondencia: en el anverso, la columna izquierda (lo que hay que emparejar).
@@ -175,6 +226,25 @@ var soloFlashcards = {
             if(!cur) return [];
             var meta = normalizeQuestionMeta(cur.q);
             return meta.type === 'matching' ? meta.matchLeft : [];
+        },
+        // Con la casilla de opciones activada, el anverso muestra las dos columnas (la derecha barajada), en tabla.
+        cardsMatchTable: function(){
+            var cur = this.cardsCurrent;
+            var c = this.s.cards;
+            if(!cur || !c.showOptions) return [];
+            var meta = normalizeQuestionMeta(cur.q);
+            if(meta.type !== 'matching') return [];
+            var layout = (c.matchLayouts && c.matchLayouts[String(cur.idx)]) || { matchRight: [] };
+            var rows = Math.max(meta.matchLeft.length, layout.matchRight.length);
+            var out = [];
+            for(var i = 0; i < rows; i++){
+                out.push({ left: meta.matchLeft[i] || '', right: layout.matchRight[i] || '' });
+            }
+            return out;
+        },
+        // Hay algún bloque de opciones en el anverso (opciones o tabla de correspondencia): se usa para centrar o dividir.
+        cardsHasOptionsBlock: function(){
+            return this.cardsOptions.length > 0 || this.cardsMatchTable.length > 0;
         },
         cardsBackParts: function(){
             var cur = this.cardsCurrent;
@@ -370,6 +440,31 @@ var soloFlashcards = {
         cardsStartUnknown: function(){ this.cardsStart('unknown'); },
         cardsToggleShuffle: function(){ this.s.cards.shuffle = !this.s.cards.shuffle; },
         cardsMarkKnown: function(){ this.cardsMark(EduhootFlashcards.KNOWN); },
-        cardsMarkUnknown: function(){ this.cardsMark(EduhootFlashcards.UNKNOWN); }
+        cardsMarkUnknown: function(){ this.cardsMark(EduhootFlashcards.UNKNOWN); },
+        // Resposta múltiple: les opcions es proven en dues columnes. Si alguna paraula es surt del botó
+        // (no cap), passen a una columna i la targeta creix en alçada per encabir-les (no es talla cap paraula).
+        cardsFitOptions: function(){
+            var c = this.s.cards;
+            if(!c) return;
+            c.oneColumn = false;
+            var type = this.cardsCurrent ? normalizeQuestionMeta(this.cardsCurrent.q).type : '';
+            if(type !== 'quiz' && type !== 'multiple') return;
+            this.$nextTick(function(){
+                var buttons = document.querySelectorAll('#flashcard .flashcard__option');
+                c.oneColumn = Array.prototype.some.call(buttons, function(b){ return b.scrollWidth > b.clientWidth + 1; });
+            });
+        }
+    },
+    watch: {
+        cardsCurrent: function(){ this.cardsFitOptions(); }
+    },
+    mounted: function(){
+        // En canviar la finestra, les opcions es tornen a provar (poden cabre en dues columnes).
+        var self = this;
+        var timer = null;
+        window.addEventListener('resize', function(){
+            clearTimeout(timer);
+            timer = setTimeout(function(){ self.cardsFitOptions(); }, 150);
+        });
     }
 };

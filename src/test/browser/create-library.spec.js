@@ -85,3 +85,25 @@ test('biblioteca de /create/: listado, búsqueda, etiqueta, CSV y borrado', asyn
     await expect(cards).toHaveCount(1);
     await expect(cards.first()).toContainText('Geografia');
 });
+
+test('biblioteca de /create/: fecha de creación y de modificación en una línea discreta', async ({ page }) => {
+    const state = {
+        quizzes: [
+            { ...quiz('q1', 'Geografia', []), createdAt: '2026-10-01T09:30:00Z', updatedAt: '2026-11-20T18:05:00Z' },
+            // Quiz antiguo sin fecha real: el servidor lo marca con 1970 y no se muestra nada.
+            { ...quiz('q2', 'Antiga', []), createdAt: '1970-01-01T00:00:00.000Z' }
+        ],
+        deleted: []
+    };
+    await stubBackend(page, state);
+    await page.goto('/create/?lang=es');
+
+    const cards = page.locator('#game-list .game-card');
+    await expect(cards).toHaveCount(2);
+    const dates = cards.nth(0).locator('.game-dates');
+    await expect(dates).toContainText('Creado 01/10/2026');
+    await expect(dates).toContainText('Modificado 20/11/2026');
+    expect(await dates.evaluate(el => parseFloat(getComputedStyle(el).fontSize))).toBeLessThanOrEqual(12);
+    expect(await dates.evaluate(el => el.getBoundingClientRect().height)).toBeLessThanOrEqual(20);
+    await expect(cards.nth(1).locator('.game-dates')).toHaveCount(0);
+});

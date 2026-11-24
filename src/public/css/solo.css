@@ -1211,22 +1211,106 @@ body.playing #answers > .free-answer-row{ grid-column: 1 / -1; }
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 9em), 1fr));
     gap: 10px;
 }
+/* Resposta múltiple: sempre dues columnes (2×2 amb quatre opcions), també amb textos llargs (es parteixen). */
+.flashcard__options--two{
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+/* Vertader/fals: els dos botons, del tamany del text més llarg (iguals entre ells), centrats.
+   La llista es dimensiona al seu contingut (width: max-content) i les columnes són 1fr, així que totes
+   tenen l'amplària de la més ampla. */
+.flashcard__options--tf{
+    width: max-content;
+    max-width: 100%;
+    margin: 0 auto;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    justify-content: center;
+    justify-items: stretch;
+}
+.flashcard__options--tf .flashcard__option{
+    width: auto;
+    justify-self: stretch; /* els botons (elements <button>) s'estiren fins a la columna */
+}
+/* Vertader/fals amb imatge: una columna, una opció sota l'altra, amb la mateixa amplària. */
+.flashcard__options--stacked{
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: stretch;
+}
+/* En pantalla ampla (centrada o amb imatge a l'esquerra), la llista també es dimensiona al contingut.
+   Els selectors són més específics que les regles de centrat i de la graella de pantalla ampla. */
+.flashcard__face--front.has-options .flashcard__options.flashcard__options--tf,
+.flashcard__face--front.has-options.has-media .flashcard__options.flashcard__options--tf{
+    width: max-content;
+    margin: 0 auto;
+}
 .flashcard__option{
     width: 100%;
     box-sizing: border-box;
     cursor: pointer;
 }
-/* Dins de la targeta hi ha poc espai: forma i marges més menuts, i les paraules només es parteixen si no caben. */
+/* Dins de la targeta hi ha poc espai: forma i marges més menuts. Les paraules no es parteixen: una que no
+   cap en el botó se surt i la targeta passa a una columna (cardsFitOptions). En una columna sí es poden partir. */
 .flashcard__options .flashcard__option{
     font-size: clamp(0.95rem, 2.2vh, 1.15rem);
     gap: 10px;
     padding: 0 12px 0 14px;
-    overflow-wrap: break-word;
+    overflow-wrap: normal;
 }
+.flashcard__options--one .flashcard__option{
+    overflow-wrap: anywhere;
+}
+/* Una columna per a les opcions (resposta múltiple): la targeta creix en alçada per encabir-les. */
+.flashcard__options--one{
+    grid-template-columns: minmax(0, 1fr);
+}
+.flashcard.is-tall{
+    height: auto;
+    min-height: clamp(260px, 50dvh, 520px);
+}
+.flashcard.is-tall .flashcard__media{ min-height: 200px; }
 .flashcard__options .flashcard__option::before{
     width: 24px;
     height: 24px;
 }
+/* Pantalla ancha (prova de concepte): les opcions van centrades si no hi ha imatge; si n'hi ha,
+   la imatge a l'esquerra i les opcions a la dreta. En pantalla estreta, tot en una columna. */
+@media (min-width: 900px){
+    .flashcard__face--front.has-options .flashcard__options,
+    .flashcard__face--front.has-options .flashcard__match{
+        width: min(100%, 720px);
+        margin: 0 auto;
+    }
+    .flashcard__face--front.has-options.has-media{
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        grid-template-rows: auto auto minmax(0, 1fr);
+        grid-template-areas: "label label" "question question" "media options";
+        align-items: center;
+        column-gap: 28px;
+    }
+    .flashcard__face--front.has-options.has-media > .flashcard__label{ grid-area: label; }
+    .flashcard__face--front.has-options.has-media > #flashcard-question{ grid-area: question; }
+    .flashcard__face--front.has-options.has-media > .flashcard__media{ grid-area: media; height: 100%; min-height: 0; }
+    .flashcard__face--front.has-options.has-media > .flashcard__options,
+    .flashcard__face--front.has-options.has-media > .flashcard__match{ grid-area: options; width: 100%; margin: 0; }
+}
+/* Correspondencia en el anverso: tabla sense vores visibles (només l'espai entre columnes). */
+.flashcard__pairs{
+    width: 100%;
+    border: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 0;
+}
+.flashcard__pairs td{
+    border: 0;
+    padding: 6px 14px;
+    text-align: left;
+    vertical-align: middle;
+    font-size: clamp(0.95rem, 2.2vh, 1.15rem);
+    overflow-wrap: break-word;
+}
+.flashcard__pairs td:first-child{ padding-left: 0; }
+.flashcard__pairs td:last-child{ padding-right: 0; }
 /* Marcada: anell blanc i una ✓, perquè no depengui només del color. */
 .flashcard__option.is-picked{
     box-shadow: 0 0 0 3px #fff, 0 0 0 6px #22c55e;

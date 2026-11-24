@@ -47,6 +47,16 @@ function getQuizTimestamp(quiz){
     return 0;
 }
 
+// Data de creació o modificació en text curt (dd/mm/aaaa hh:mm). Els quizzes antics sense data real
+// (el servidor els marca amb 1970) no mostren res.
+var QUIZ_DATE_MIN_MS = Date.UTC(2000, 0, 1);
+function formatQuizDate(value){
+    var ms = Date.parse(value);
+    if(!(ms > QUIZ_DATE_MIN_MS)) return '';
+    var locale = lang === 'en' ? 'en-GB' : (lang === 'ca' || lang === 'va' ? 'ca-ES' : 'es-ES');
+    return new Date(ms).toLocaleString(locale, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
 function getQuizRatingAvg(quiz){
     var avg = Number(quiz && quiz.ratingAvg);
     return Number.isFinite(avg) ? avg : 0;
@@ -467,6 +477,16 @@ var libraryApp = {
         },
         quizTags: function(quiz){
             return normalizeInlineTags(Array.isArray(quiz.tags) ? quiz.tags : []);
+        },
+        // Línia discreta sota les estadístiques: «Creat … · Modificat …».
+        datesText: function(quiz){
+            this.lib.lang;
+            var created = formatQuizDate(quiz.createdAt);
+            if(!created) return '';
+            var text = t('createdAtLabel') + ' ' + created;
+            var updated = formatQuizDate(quiz.updatedAt);
+            if(updated) text += ' · ' + t('updatedAtLabel') + ' ' + updated;
+            return text;
         },
         metaText: function(quiz){
             this.lib.lang;
