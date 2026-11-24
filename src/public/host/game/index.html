@@ -8,6 +8,7 @@
         <link rel = "stylesheet" href = "../../css/hostLiveStatus.css">
         <link rel = "stylesheet" href = "../../css/hostKick.css">
         <link rel="stylesheet" href="/css/dropdowns.css">
+        <link rel="stylesheet" href="/css/order.css">
         <link rel = "stylesheet" href = "../../css/music-player.css">
         <link href="/css/fonts.css" rel="stylesheet">
         <link href="/css/fonts.css" rel="stylesheet">
@@ -96,6 +97,9 @@
                 <div v-for="(text, j) in matchRight" :key="'r' + j" class="host-matching-item" :data-host-right="j"><span class="host-matching-code">{{ matchLetter(j) }}</span><span>{{ text }}</span></div>
             </div>
         </div>
+        <ol v-if="questionType === 'order' && timerVisible" id="hostOrder" class="host-order">
+            <li v-for="(text, i) in orderItems" :key="'o' + i" class="host-order-item"><span class="host-matching-code">{{ matchLetter(i) }}</span><span>{{ text }}</span></li>
+        </ol>
         <div id="hostAnswers" class="host-answers">
             <h3 id = "answer1" v-show="answerVisible(0)" :style="{ filter: answerFilter(0) }" v-html="answerHtml(0)"></h3>
             <h3 id = "answer2" v-show="answerVisible(1)" :style="{ filter: answerFilter(1) }" v-html="answerHtml(1)"></h3>
@@ -140,6 +144,10 @@
                 <span id="closeRanking" class="close" @click="closeRanking" :style="{ display: closeVisible ? 'block' : 'none' }">&times;</span>
                 <div id="resultsStepChart" class="results-step" v-show="modalStep === 'chart'">
                     <h3 id="resultsTitle">{{ t('resultsTitle') }}</h3>
+                    <div v-if="resultsMode === 'order' && orderSolution.length" id="resultsOrder" class="results-order">
+                        <p class="results-order-hint">{{ t('orderSolutionLabel') }}</p>
+                        <ol class="host-order host-order--solution"><li v-for="(text, i) in orderSolution" :key="'s' + i" class="host-order-item"><span class="host-matching-code">{{ i + 1 }}</span><span>{{ text }}</span></li></ol>
+                    </div>
                     <div v-if="resultsMode === 'matching'" id="resultsMatching" class="results-matching">
                         <p class="results-matching-hint">{{ t('matchingResultsHint') }}</p>
                         <div v-for="row in resultsMatching.rows" :key="row.code" class="results-matching-row">

@@ -118,6 +118,7 @@ var i18n = {
         matchingSummary: 'Todo bien: {f} · parcial: {p} · ninguna: {n} (de {t})',
         matchingNoPair: 'sin pareja',
         matchingImpostors: 'Elementos sin pareja:',
+        orderSolutionLabel: 'Orden correcto:',
         correctOptionBadge: 'Correcta',
         pointsDouble: 'Puntos dobles',
         questionCountdown: 'Prepara la siguiente pregunta...',
@@ -190,6 +191,7 @@ var i18n = {
         matchingSummary: 'All right: {f} · partly: {p} · none: {n} (of {t})',
         matchingNoPair: 'no pair',
         matchingImpostors: 'Items with no pair:',
+        orderSolutionLabel: 'Correct order:',
         correctOptionBadge: 'Correct',
         pointsDouble: 'Double points',
         questionCountdown: 'Get ready for the next question...',
@@ -262,6 +264,7 @@ var i18n = {
         matchingSummary: 'Tot bé: {f} · parcial: {p} · cap: {n} (de {t})',
         matchingNoPair: 'sense parella',
         matchingImpostors: 'Elements sense parella:',
+        orderSolutionLabel: 'Ordre correcte:',
         correctOptionBadge: 'Correcta',
         pointsDouble: 'Punts dobles',
         questionCountdown: 'Prepara la pregunta següent...',
@@ -330,6 +333,9 @@ var app = Vue.createApp({
             // Correspondencia: columnas en pantalla y resultados por pareja.
             matchLeft: [],
             matchRight: [],
+            // Ordenar: la llista barrejada (durant la pregunta) i la solució (en mostrar el resultat).
+            orderItems: [],
+            orderSolution: [],
             resultsMatching: { rows: [], impostors: [], summary: '' },
             rankingRows: [],
             groupCelebrationVisible: false,
@@ -1158,6 +1164,8 @@ socket.on('gameQuestions', function(data){
     setCurrentAnswerTexts([data.a1, data.a2, data.a3, data.a4]);
     app.matchLeft = currentQuestionType === 'matching' ? (data.matchLeft || []).slice() : [];
     app.matchRight = currentQuestionType === 'matching' ? (data.matchRight || []).slice() : [];
+    app.orderItems = currentQuestionType === 'order' ? (data.orderItems || []).slice() : [];
+    app.orderSolution = [];
     currentMatchSolution = currentQuestionType === 'matching' ? (data.matchSolution || []).slice() : [];
     app.answerHighlight = [null, null, null, null];
     hideAnswerSquares();
@@ -1277,7 +1285,11 @@ socket.on('questionOver', function(playerData, payload){
     app.questionType = currentQuestionType;
     var totalPlayers = Array.isArray(playerData) ? playerData.length : 0;
 
-    if(currentQuestionType === 'matching'){
+    if(currentQuestionType === 'order'){
+        hideAnswerSquares();
+        app.resultsMode = 'order';
+        app.orderSolution = payload.showCorrectAnswers === false ? [] : (payload.items || []).slice();
+    }else if(currentQuestionType === 'matching'){
         hideAnswerSquares();
         app.resultsMode = 'matching';
         app.resultsMatching = buildMatchingResults(playerData, payload);

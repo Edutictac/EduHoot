@@ -74,6 +74,11 @@ var app = Vue.createApp({
             matchRightCount: 0,
             matchBlindStyle: 'codes',
             matchKey: 0,
+            // Ordenar: llista barrejada (o, a ciegues, nombre d'elements) i disposició.
+            orderItems: null,
+            orderCount: 0,
+            orderLayout: 'vertical',
+            orderKey: 0,
             multiSelections: [],
             playerAnswered: false,
             answersVisible: true,
@@ -181,6 +186,9 @@ var app = Vue.createApp({
         matchingVisible: function(){
             return this.questionType === 'matching' && !this.playerAnswered && this.answersVisible;
         },
+        orderVisible: function(){
+            return this.questionType === 'order' && !this.playerAnswered && this.answersVisible;
+        },
         multiRowVisible: function(){
             return this.questionType === 'multiple' && !this.playerAnswered && this.answersVisible;
         },
@@ -239,7 +247,7 @@ var app = Vue.createApp({
             return !!(text && String(text).trim());
         },
         buttonVisible: function(i){
-            if(this.questionType === 'matching') return false;
+            if(this.questionType === 'matching' || this.questionType === 'order') return false;
             return this.answersVisible && this.buttonHasContent(i);
         },
         buttonHtml: function(i){
@@ -286,6 +294,10 @@ var app = Vue.createApp({
                 this.submitAnswer({ text: raw });
             }
         },
+        submitOrder: function(order){
+            if(this.playerAnswered) return;
+            this.submitAnswer(order);
+        },
         submitMatching: function(answers){
             if(this.playerAnswered) return;
             lastMatchAnswers = answers.slice();
@@ -324,7 +336,7 @@ var app = Vue.createApp({
             if(!started) this.ttsSpeaking = false;
         }
     }
-}).component('matching-board', window.EduhootMatchingBoard).mount('#player-game');
+}).component('matching-board', window.EduhootMatchingBoard).component('order-board', window.EduhootOrderBoard).mount('#player-game');
 
 // Mostra/oculta el missatge gran (#message), substituint tot el seu
 // contingut (igual que feia abans `textContent = ...`, que esborrava
@@ -884,6 +896,12 @@ socket.on('playerQuestion', function(data){
         app.matchRightCount = Number(data.rightCount) || 0;
         app.matchBlindStyle = data.blindStyle || 'codes';
         app.matchKey += 1;
+    }
+    if(data.type === 'order'){
+        app.orderItems = data.blind ? null : (data.orderItems || []).slice();
+        app.orderCount = Number(data.orderCount) || 0;
+        app.orderLayout = data.layout || 'vertical';
+        app.orderKey += 1;
     }
     if(data.blind){
         app.blind = true;

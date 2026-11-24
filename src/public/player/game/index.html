@@ -6,6 +6,7 @@
         <link rel="stylesheet" href="/css/countdown.css">
         <link rel="stylesheet" href="/css/answers.css">
         <link rel="stylesheet" href="/css/matching.css">
+        <link rel="stylesheet" href="/css/order.css">
         <link rel = "stylesheet" href = "../../css/playerGameView.css">
         <link rel = "stylesheet" href = "../../css/playerLiveStatus.css">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -63,6 +64,7 @@
                 <input id="freeAnswerInput" ref="freeAnswerInput" type="text" autocomplete="off" :inputmode="questionType === 'numeric' ? 'decimal' : 'text'" :placeholder="freePlaceholder" v-model="freeAnswerValue" @keydown.enter.prevent="submitFree" />
                 <button type="button" id="freeSubmitBtn" class="button free-submit" @click="submitFree">{{ t('submit_free', 'Enviar') }}</button>
             </div>
+            <order-board v-if="orderVisible" :key="'order-' + orderKey" :items="orderItems" :count="orderCount" :layout="orderLayout" :t="t" @submit="submitOrder"></order-board>
             <matching-board v-if="matchingVisible" :key="'match-' + matchKey" :left="matchLeft" :right="matchRight" :left-count="matchLeftCount" :right-count="matchRightCount" :blind-style="matchBlindStyle" :t="t" @submit="submitMatching"></matching-board>
             <div id="answerGrid" class="answer-grid">
                 <button id = "answer1" class = "button answer-shape answer-shape--1" :class="{ 'multi-selected': isMultiSelected(1) }" v-show="buttonVisible(0)" :aria-label="buttonAriaLabel(0)" v-html="buttonHtml(0)" @click="onAnswerClick(1)"></button>
@@ -99,6 +101,7 @@
         <script src = "../../js/libs/deparam.js"></script>
         <script src = "../../js/libs/vue.global.prod.js"></script>
         <script src = "../../js/matchingBoard.js"></script>
+        <script src = "../../js/orderBoard.js"></script>
         <script src = "../../js/playerCommon.js"></script>
         <script src = "../../js/playerGame.js"></script>
     </body>
