@@ -1,0 +1,7 @@
+[
+  { "question": "Ordena las capas del modelo OSI de la más baja a la más alta", "items": ["Física", "Enlace de datos", "Red", "Transporte", "Sesión", "Presentación", "Aplicación"] },
+  { "question": "Ordena los pasos del arranque de un ordenador", "items": ["Pulsar el botón de encendido", "Autocomprobación (POST)", "Cargar el gestor de arranque", "Cargar el sistema operativo", "Mostrar el escritorio"] },
+  { "question": "Ordena las unidades de almacenamiento de menor a mayor", "items": ["Bit", "Byte", "Kilobyte", "Megabyte", "Gigabyte", "Terabyte"] },
+  { "question": "Ordena las fases del modelo en cascada", "items": ["Análisis de requisitos", "Diseño", "Implementación", "Pruebas", "Mantenimiento"] },
+  { "question": "Ordena los pasos de una consulta DNS", "items": ["El navegador busca en su caché", "El resolutor consulta un servidor raíz", "Se consulta el servidor del dominio .es", "Se consulta el servidor autoritativo", "Se devuelve la IP al navegador"] }
+]
