@@ -44,6 +44,7 @@ const io = socketIO(server, {
 });
 const games = new LiveGames();
 const players = new Players();
+const gameHistoryService = require('./services/gameHistory')({ getGameHistoryCollection: require('./data/repositories').getGameHistoryCollection });
 const {
   quizToCsv,
   liveSessionToCsv,
@@ -53,7 +54,7 @@ const {
   buildReportFileName,
   buildQuizCsvFileName,
   slugifyForFilename
-} = require('./services/sessionReport')({ players });
+} = require('./services/sessionReport')({ players, onFinished: (info) => gameHistoryService.recordFinishedGame(info) });
 const { sessions, parseCookies } = require('./services/sessions');
 const createCommonsService = require('./services/commons');
 const createPlayerAuthRouter = require('./routes/playerAuth');
@@ -306,6 +307,7 @@ const homeworkService = require('./services/homework')({
   buildQuestions: require('./sockets/gameHelpers')({ io: null, games, players, cleanImportedText }).buildQuestions
 });
 app.use(require('./routes/homework')({ homework: homeworkService, requireRole, findGameById, canUseQuiz, liveSessionToCsv, buildReportFileName }));
+app.use(require('./routes/gameHistory')({ gameHistory: gameHistoryService }));
 
 app.use(createAdminRouter({
   requireRole,

@@ -3,6 +3,7 @@ const {
   GAMES_COLLECTION,
   USERS_COLLECTION,
   SOLO_SCORES_COLLECTION,
+  GAME_HISTORY_COLLECTION,
   EPHEMERAL_COLLECTION,
   RATINGS_COLLECTION,
   RATING_VOTES_COLLECTION,
@@ -25,6 +26,11 @@ async function getUsersCollection() {
 async function getSoloScoresCollection() {
   const database = await getDb();
   return database.collection(SOLO_SCORES_COLLECTION);
+}
+
+async function getGameHistoryCollection() {
+  const database = await getDb();
+  return database.collection(GAME_HISTORY_COLLECTION);
 }
 
 async function getEphemeralCollection() {
@@ -68,6 +74,7 @@ module.exports = {
   getGamesCollection,
   getUsersCollection,
   getSoloScoresCollection,
+  getGameHistoryCollection,
   getEphemeralCollection,
   getRatingsCollection,
   getRatingVotesCollection,

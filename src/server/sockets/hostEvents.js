@@ -106,6 +106,8 @@ module.exports = function createHostEvents({
             playersAnswered: 0,
             questionLive: false,
             gameid: data.id,
+            // Usuari amb compte que crea la partida (per al registre); buit si és anònim.
+            ownerUserId: socket.user && socket.user.id ? String(socket.user.id) : '',
             quizName: cleanImportedText(kahoot.name || ''),
             question: 1,
             questions: [],

@@ -77,7 +77,9 @@ module.exports = function registerSocketHandlers(io, deps) {
     const cookies = parseCookies(socket.handshake.headers.cookie || '');
     const sessionId = cookies.sessionId;
     if (sessionId && sessions.has(sessionId) && (!authentikOnly() || sessions.get(sessionId).provider === 'authentik')) {
-      socket.user = sessions.get(sessionId);
+      // Mateixa forma que req.user (services/authMiddleware.js): id, no userId.
+      const session = sessions.get(sessionId);
+      socket.user = { id: session.userId, email: session.email, role: session.role, nickname: session.nickname || '', provider: session.provider };
     }
 
     registerHostEvents(socket);

@@ -7,6 +7,7 @@ const DB_NAME = process.env.MONGO_DB || 'kahootDB';
 const GAMES_COLLECTION = 'kahootGames';
 const USERS_COLLECTION = 'users';
 const SOLO_SCORES_COLLECTION = 'soloScores';
+const GAME_HISTORY_COLLECTION = 'gameHistory';
 const EPHEMERAL_COLLECTION = 'ephemeralQuizzes';
 const RATINGS_COLLECTION = 'quizRatings';
 const RATING_VOTES_COLLECTION = 'quizRatingVotes';
@@ -72,6 +73,7 @@ async function ensureIndexes(dbInstance) {
   const games = dbInstance.collection(GAMES_COLLECTION);
   const users = dbInstance.collection(USERS_COLLECTION);
   const soloScores = dbInstance.collection(SOLO_SCORES_COLLECTION);
+  const gameHistory = dbInstance.collection(GAME_HISTORY_COLLECTION);
   const ephemerals = dbInstance.collection(EPHEMERAL_COLLECTION);
   const ratings = dbInstance.collection(RATINGS_COLLECTION);
   const ratingVotes = dbInstance.collection(RATING_VOTES_COLLECTION);
@@ -82,6 +84,9 @@ async function ensureIndexes(dbInstance) {
     games.createIndex({ visibility: 1 }),
     games.createIndex({ ownerId: 1 }),
     soloScores.createIndex({ quizId: 1, score: -1, createdAt: 1 }),
+    // Registre de partides per usuari: 90 dies de retenció (només es guarda per a usuaris amb compte).
+    gameHistory.createIndex({ finishedAt: 1 }, { expireAfterSeconds: 90 * 24 * 60 * 60 }),
+    gameHistory.createIndex({ ownerId: 1, finishedAt: -1 }),
     users.createIndex({ email: 1 }, { unique: true, sparse: true }),
     users.createIndex({ authentikIssuer: 1, authentikId: 1 }, { unique: true, partialFilterExpression: { authentikIssuer: { $type: 'string' }, authentikId: { $type: 'string' } } }),
     users.createIndex({ resetTokenHash: 1 }, { sparse: true }),
@@ -143,6 +148,7 @@ module.exports = {
   GAMES_COLLECTION,
   USERS_COLLECTION,
   SOLO_SCORES_COLLECTION,
+  GAME_HISTORY_COLLECTION,
   EPHEMERAL_COLLECTION,
   RATINGS_COLLECTION,
   RATING_VOTES_COLLECTION,

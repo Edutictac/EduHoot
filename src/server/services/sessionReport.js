@@ -148,7 +148,7 @@ resumeFinishedSessionReportCleanup();
 // registre en viu de jugadors (players.getPlayers) quan no li passen una foto explícita
 // (vore src/test/integration/sessionReport.test.js), i eixe registre és un únic Players()
 // compartit, instanciat una sola vegada en server.js — no es pot duplicar ací.
-module.exports = function createSessionReportService({ players }) {
+module.exports = function createSessionReportService({ players, onFinished }) {
   function liveSessionToCsv(game, playersOverride) {
     const playersInGame = Array.isArray(playersOverride) ? playersOverride : (players.getPlayers(game.hostId) || []);
     const totalQuestions = Math.max(0, Number(game && game.gameData && game.gameData.totalQuestions) || 0);
@@ -393,6 +393,11 @@ module.exports = function createSessionReportService({ players }) {
         createdAt: finishedAt,
         cleanupTimer
       });
+      // Registre de partides per usuari (només si la crea un usuari amb compte; la resta no es guarda).
+      if (typeof onFinished === 'function') {
+        const finishedCount = Array.isArray(playersOverride) ? playersOverride.length : (players.getPlayers(game.hostId) || []).length;
+        Promise.resolve(onFinished({ game, csv, playersCount: finishedCount })).catch((recErr) => console.error('gameHistory record error', recErr));
+      }
     } catch (err) {
       console.error('cacheFinishedSessionReport error', err);
     }
