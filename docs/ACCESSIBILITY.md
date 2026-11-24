@@ -156,6 +156,7 @@ quan es decidisca incorporar-les al document principal:
   curt en 2D). L'alumnat pot desactivar-lo amb «Tarjetas con animación»;
   la preferència es guarda en `localStorage` del navegador. Les dos
   opcions tenen un retard de 500 ms abans de girar.
+- **Fet**: flashcards amb «Comprobar respuestas». El camp de resposta escrita té nom accessible («Escriu la teua resposta»); el resultat («Correcta» / «Incorrecta») s'anuncia en una regió `role="status"` que existeix des del principi; les desplegables de la correspondència tenen `aria-label` amb l'element de l'esquerra; el resum final també és `role="status"`.
 - Estendre `.sr-only` i els patrons ARIA ja usats a `solo`/`multiplayer`
   cap a `host`, `create` i `join`.
 - Gestió de focus/`Escape` als tres modals existents.

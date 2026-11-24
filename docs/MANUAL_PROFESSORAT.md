@@ -177,3 +177,6 @@ i correspondència.
 **Puc fer deures de Multijugador o Solo?**
 No. Els deures són per a alumnat individual amb enllaç; el Multijugador (una
 sola pantalla) no té mode «Al seu ritme».
+
+**Què passa si la pantalla del professorat es desconnecta?**
+La partida espera 2 minuts perquè torne a connectar-se (és el valor per defecte; a la configuració de la partida es pot ampliar fins a 5 minuts). En el mode «Al seu ritme», l'alumnat pot seguir contestant mentrestant. Si el temps s'acaba sense tornar, la partida es tanca i l'alumnat ja no pot continuar-la.

@@ -3,6 +3,9 @@
 
 ## Per al professorat
 
+- **Més temps per a reconnectar-te**: si la teua pantalla es desconnecta, la partida espera 2 minuts (abans 30 segons) perquè tornes. A la configuració de la partida pots ampliar-ho fins a 5 minuts.
+- **Data de creació i de modificació a la biblioteca**: cada quiz mostra quan es va crear i quan es va modificar per última vegada, en una línia discreta.
+
 - **Un lobby més vistós i fluid**: la sala d'espera i les pantalles de
   partida s'han renovat de dalt a baix: tot va més ràpid i amb un aspecte
   més atractiu, fins i tot en tablets antigues o amb connexions lentes.
@@ -121,6 +124,9 @@
 
 ## Per a l'alumnat
 
+- **Comprova les respostes a les flashcards**: respon cada targeta (una opció, un text, un número o una parella) i l'app la comprova sola i la marca com a sabuda o no sabuda. Al final veus quantes has encertat i quines has de repassar. Es pot desactivar a l'inici del repàs.
+- **Opcions més clares a les flashcards**: les opcions tenen la forma i el color de les respostes del joc, en dues columnes, i vertader/fals s'ajusta al text.
+
 - **Segona oportunitat si et cau el WiFi**: si et desconnectes, tens un
   temps de gràcia (configurable) per a tornar a entrar sense perdre el teu
   lloc ni la teua puntuació.
@@ -181,6 +187,9 @@
 # ¿Qué hay de nuevo en desarrollo?
 
 ## Para el profesorado
+
+- **Más tiempo para volver a conectarte**: si tu pantalla se desconecta, la partida espera 2 minutos (antes 30 segundos) a que vuelvas. En la configuración de la partida puedes ampliarlo hasta 5 minutos.
+- **Fecha de creación y de modificación en la biblioteca**: cada quiz muestra cuándo se creó y cuándo se modificó por última vez, en una línea discreta.
 
 - **Un lobby más vistoso y fluido**: la sala de espera y las pantallas de
   partida se han renovado de arriba abajo: todo va más rápido y con un
@@ -271,6 +280,9 @@
 
 ## Para el alumnado
 
+- **Comprueba tus respuestas en las flashcards**: responde cada tarjeta (una opción, un texto, un número o una pareja) y la app la comprueba sola y la marca como sabida o no sabida. Al final ves cuántas has acertado y cuáles debes repasar. Se puede desactivar al empezar el repaso.
+- **Opciones más claras en las flashcards**: las opciones tienen la forma y el color de las respuestas del juego, en dos columnas, y verdadero/falso se ajusta al texto.
+
 - **Segunda oportunidad si te falla el WiFi**: si te desconectas, tienes
   un tiempo de gracia (configurable) para volver a entrar sin perder tu
   sitio ni tu puntuación.
@@ -326,6 +338,9 @@
 # What's new under development?
 
 ## For teachers
+
+- **More time to reconnect**: if your screen disconnects, the game waits 2 minutes (it was 30 seconds) for you to come back. In the game settings you can extend this up to 5 minutes.
+- **Creation and last-edit dates in the library**: each quiz shows when it was created and last modified, in a discreet line.
 
 - **A more attractive, faster lobby**: the waiting room and the game
   screens have been refreshed from top to bottom: everything runs quicker
@@ -388,6 +403,9 @@
 - **Practice what you missed**: in Flashcards you can mark each card as known or unknown and then review only the ones you didn't know.
 
 ## For students
+
+- **Check your answers in flashcards**: answer each card (an option, a text, a number or a pair) and the app checks it and marks it as known or unknown automatically. At the end you see how many you got right and which ones to review. You can turn it off when you start a review.
+- **Clearer options in flashcards**: options have the shape and colour of the game answers, in two columns, and true/false fits its text.
 
 - **A second chance if your WiFi drops**: if you get disconnected, you
   have a grace period (configurable) to rejoin without losing your seat or

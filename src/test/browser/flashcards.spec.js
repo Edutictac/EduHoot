@@ -636,3 +636,20 @@ test('comprobar respuestas en correspondencia: una pareja mal emparejada cuenta 
     await expect(page.locator('#cards-summary')).toContainText('Correctas: 0 · Incorrectas: 1 · Sin responder: 0');
     await expect(page.locator('#cards-summary li')).toHaveText(['Relaciona capital i país']);
 });
+
+test('accesibilidad: la respuesta escrita tiene nombre accesible y el resultado va en una región en vivo', async ({ page }) => {
+    await mockBackend(page);
+    await page.route('**/api/quizzes/q1', route => route.fulfill({ json: validateQuiz([
+        { question: 'Capital d\'Espanya?', type: 'short-answer', acceptedAnswers: ['Madrid'], time: 20 }
+    ]) }));
+    await page.goto('/solo/?lang=es');
+    await page.locator('.card-actions .btn', { hasText: 'Repasar' }).click();
+    await page.locator('#cards-start-all').click();
+    const field = page.getByRole('textbox', { name: 'Escribe tu respuesta' });
+    await expect(field).toBeVisible();
+    // La región del resultado existe antes de comprobar; solo cambia su texto.
+    await expect(page.locator('#cards-result')).toHaveAttribute('role', 'status');
+    await field.fill('Madrid');
+    await field.press('Enter');
+    await expect(page.locator('#cards-result')).toHaveText('✓ Correcta');
+});

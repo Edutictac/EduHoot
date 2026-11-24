@@ -257,7 +257,7 @@
                     <div v-if="s.cards.phase !== 'card'" class="cards-start">
                       <div class="cards-start__info">
                         <h3 v-if="s.cards.phase === 'done'">{{ t('flashcardsDoneTitle') }}</h3>
-                        <div v-if="cardsSummary" id="cards-summary" class="cards-summary">
+                        <div v-if="cardsSummary" id="cards-summary" class="cards-summary" role="status">
                             <p class="cards-summary__counts">{{ cardsSummaryText }}</p>
                             <p v-if="cardsSummary.review.length" class="cards-summary__title">{{ t('flashcardsToReview') }}</p>
                             <ul v-if="cardsSummary.review.length" class="cards-summary__list"><li v-for="(text, i) in cardsSummary.review" :key="i">{{ text }}</li></ul>
@@ -320,7 +320,7 @@
                                         </li>
                                     </ul>
                                     <div v-if="cardsTypedKind" class="flashcard__typed" @click.stop>
-                                        <input id="cards-typed" class="flashcard__input" type="text" autocomplete="off" :inputmode="cardsTypedKind === 'number' ? 'decimal' : 'text'" :placeholder="t('flashcardsTypeAnswer')" :value="cardsTypedValue" :disabled="s.cards.flipped" @input="cardsSetTyped($event.target.value)" @keydown.enter.prevent="cardsCheck">
+                                        <input id="cards-typed" class="flashcard__input" type="text" autocomplete="off" :inputmode="cardsTypedKind === 'number' ? 'decimal' : 'text'" :aria-label="t('flashcardsTypeAnswer')" :placeholder="t('flashcardsTypeAnswer')" :value="cardsTypedValue" :disabled="s.cards.flipped" @input="cardsSetTyped($event.target.value)" @keydown.enter.prevent="cardsCheck">
                                     </div>
                                     <div v-if="cardsMatchTable.length" class="flashcard__match">
                                         <p class="flashcard__label">{{ t('flashcardsMatchLeft') }}</p>
@@ -350,7 +350,8 @@
                             <button id="cards-flip" class="btn" :class="s.cards.flipped ? 'btn-cards-hide' : 'btn-cards-show'" @click="cardsFlip">{{ s.cards.flipped ? t('flashcardsHideAnswer') : t('flashcardsShowAnswer') }}</button>
                             <button id="cards-next" class="btn btn-cards-nav" @click="cardsNext">{{ t('flashcardsNext') }}</button>
                         </div>
-                        <p v-if="s.cards.flipped && cardsResultText" id="cards-result" class="cards-result" :class="'cards-result--' + cardsResult">{{ cardsResultText }}</p>
+                        <!-- Región en viu: existe sempre i només canvia el text, perquè el lector de pantalla anuncie el resultat. -->
+                        <p id="cards-result" class="cards-result" role="status" :class="'cards-result--' + cardsResult">{{ s.cards.flipped ? cardsResultText : '' }}</p>
                         <div v-if="s.cards.flipped && !cardsAutoCheck" class="cards-mark">
                             <button id="cards-dont-know" class="btn btn-cards-unknown" @click="cardsMarkUnknown">{{ t('flashcardsDontKnow') }}</button>
                             <button id="cards-know" class="btn btn-primary" @click="cardsMarkKnown">{{ t('flashcardsKnow') }}</button>
