@@ -1,7 +1,8 @@
 // Pantalla del anfitrión en el modo autoritme (feature 3): progreso por alumno y cierre de la partida.
 // Eventos: spProgress (lista), updatePlayerLobby (entradas y salidas → se pide el progreso),
 // spEnd (cerrar), GameOver (podio). La puntuación no se muestra en vivo (decisión 2 del plan).
-var socket = io({ reconnection: true, reconnectionAttempts: 30, reconnectionDelay: 500, reconnectionDelayMax: 3000 });
+// Reintentos suficientes para cubrir el periodo de gracia máximo (300 s) con el retardo máximo de 3 s.
+var socket = io({ reconnection: true, reconnectionAttempts: 200, reconnectionDelay: 500, reconnectionDelayMax: 3000 });
 var lang = EduhootLang.init({ preferKey: 'lang-host' });
 var params = jQuery.deparam(window.location.search);
 

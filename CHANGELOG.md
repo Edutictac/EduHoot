@@ -191,6 +191,8 @@ fitxers corresponents, i els originals es van eliminar.
 
 ### Canviat
 
+- **Partida**: el marge per a que el professorat reconnecte si es desconnecta passa de 30 s a 120 s per defecte, i es pot ampliar fins a 5 minuts a la configuració de la partida (abans el màxim era 120 s). Els clients del professorat reintenten la connexió durant més temps perquè el marge siga efectiu.
+- **Flashcards**: les opcions de resposta tenen la forma i el color de les respostes del joc, en dues columnes sempre que hi càpien. La marca de les escollides és un anell i una ✓. La imatge de la pregunta va ara damunt de les opcions.
 - **Biblioteca**: el paginador també apareix damunt de les targetes, i hi ha un selector de qüestionaris per pàgina (5, 10, 20, 30, 50 o 100; 10 per defecte; 5 és útil en mòbil) que es recorda al navegador. Els botons de pàgina s'amaguen si hi ha una sola pàgina, però el selector continua.
 - **Solo**: nou botó «Passar» (entre «Pausar» i «Cancel·lar la partida») per a saltar a la pregunta següent sense respondre: no suma punts ni encerts, talla la ratxa i no mostra la finestra de resultat. Es pot usar mentre corre el temps o el compte enrere, no en pausa.
 - **Quiz-creator**: una barra fixa a la part inferior amb només els botons (Guardar, Jugar sense guardar, Cancel·lar) apareix quan no es veu ni el bloc de dalt ni el de baix; s'amaga mentre s'escriu amb teclat virtual (pantalles tàctils) i en mòbil els botons són compactes, només amb icona.
@@ -316,6 +318,10 @@ fitxers corresponents, i els originals es van eliminar.
   (`/admin-*`) també són ara apps de Vue 3. Funciona igual que abans.
 
 ### Corregit
+- Flashcards: el anverso de les preguntes de resposta única i de vertader/fals
+  no mostrava les opcions. Ara hi ha una casella a l'inici, «Mostrar opcions de
+  resposta» (activada per defecte, guardada al dispositiu), que les mostra o
+  les oculta en totes les preguntes de opcions.
 - En reconnectar-se a mitja pregunta, l'alumnat rebia la pregunta completa
   encara que l'amfitrió haguera triat el mode a cegues.
 - El text llarg sense espais (enunciats, respostes, finestres de correcció)

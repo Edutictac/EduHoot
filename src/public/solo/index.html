@@ -269,6 +269,10 @@
                             {{ t('flashcardsShuffle') }}
                         </label>
                         <label class="cards-shuffle">
+                            <input id="cards-options" type="checkbox" :checked="s.cards.showOptions" @change="cardsToggleOptions">
+                            {{ t('flashcardsShowOptions') }}
+                        </label>
+                        <label class="cards-shuffle">
                             <input id="cards-animate" type="checkbox" :checked="s.cards.animate" @change="cardsToggleAnimate">
                             {{ t('flashcardsAnimate') }}
                         </label>
@@ -295,9 +299,15 @@
                                 <div class="flashcard__face flashcard__face--front" :aria-hidden="s.cards.flipped ? 'true' : 'false'" :inert="s.cards.flipped || null">
                                     <p class="flashcard__label">{{ t('flashcardsFront') }}</p>
                                     <p id="flashcard-question" class="question-text">{{ cardsFrontText }}</p>
+                                    <!-- El media es desmunta en girar perquè el vídeo o l'àudio no segueixin sonant de dors. Va sota l'enunciat i damunt de les opcions. -->
+                                    <div class="flashcard__media" v-if="!s.cards.flipped && (cardsMedia.image || cardsMedia.video || cardsMedia.youtube)">
+                                        <img v-if="cardsMedia.image" alt="" :src="cardsMedia.image">
+                                        <video v-if="cardsMedia.video" controls playsinline :src="cardsMedia.video"></video>
+                                        <iframe v-if="cardsMedia.youtube" title="video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen :src="cardsMedia.youtube"></iframe>
+                                    </div>
                                     <ul v-if="cardsOptions.length" class="flashcard__options" role="group" :aria-label="t('flashcardsOptions')">
                                         <li v-for="o in cardsOptions" :key="o.n">
-                                            <button type="button" class="flashcard__option" :class="{ 'is-picked': isCardPicked(o.n) }" :aria-pressed="isCardPicked(o.n) ? 'true' : 'false'" @click.stop="cardsPick(o.n)">{{ o.text }}</button>
+                                            <button type="button" class="flashcard__option answer-shape" :class="['answer-shape--' + o.shape, { 'is-picked': isCardPicked(o.n) }]" :aria-pressed="isCardPicked(o.n) ? 'true' : 'false'" @click.stop="cardsPick(o.n)">{{ o.text }}</button>
                                         </li>
                                     </ul>
                                     <div v-if="cardsMatchLeft.length" class="flashcard__match">
@@ -305,12 +315,6 @@
                                         <ul class="flashcard__answers flashcard__match-left">
                                             <li v-for="(text, i) in cardsMatchLeft" :key="i">{{ text }}</li>
                                         </ul>
-                                    </div>
-                                    <!-- El media es desmunta en girar perquè el vídeo o l'àudio no segueixin sonant de dors. -->
-                                    <div class="flashcard__media" v-if="!s.cards.flipped && (cardsMedia.image || cardsMedia.video || cardsMedia.youtube)">
-                                        <img v-if="cardsMedia.image" alt="" :src="cardsMedia.image">
-                                        <video v-if="cardsMedia.video" controls playsinline :src="cardsMedia.video"></video>
-                                        <iframe v-if="cardsMedia.youtube" title="video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen :src="cardsMedia.youtube"></iframe>
                                     </div>
                                 </div>
                                 <div class="flashcard__face flashcard__face--back" :aria-hidden="s.cards.flipped ? 'false' : 'true'" :inert="!s.cards.flipped || null">

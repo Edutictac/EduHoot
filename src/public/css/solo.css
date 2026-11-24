@@ -1200,31 +1200,42 @@ body.playing #answers > .free-answer-row{ grid-column: 1 / -1; }
 }
 .flashcard__media img,
 .flashcard__media video{ object-fit: contain; }
+/* Opcions: els mateixos botons de forma i color que les respostes del joc (answers.css),
+   en dues columnes sempre que hi càpien (si no, una). */
 .flashcard__options{
     list-style: none;
     margin: 0;
     padding: 0;
     width: 100%;
     display: grid;
-    gap: 8px;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 9em), 1fr));
+    gap: 10px;
 }
 .flashcard__option{
     width: 100%;
     box-sizing: border-box;
-    padding: 10px 14px;
-    border-radius: 10px;
-    border: 1px solid var(--card-stroke);
-    background: rgba(255,255,255,0.06);
-    color: var(--text);
-    font: inherit;
-    font-size: clamp(0.95rem, 2.2vh, 1.15rem);
-    text-align: left;
     cursor: pointer;
 }
+/* Dins de la targeta hi ha poc espai: forma i marges més menuts, i les paraules només es parteixen si no caben. */
+.flashcard__options .flashcard__option{
+    font-size: clamp(0.95rem, 2.2vh, 1.15rem);
+    gap: 10px;
+    padding: 0 12px 0 14px;
+    overflow-wrap: break-word;
+}
+.flashcard__options .flashcard__option::before{
+    width: 24px;
+    height: 24px;
+}
+/* Marcada: anell blanc i una ✓, perquè no depengui només del color. */
 .flashcard__option.is-picked{
-    border-color: #22c55e;
-    background: rgba(34,197,94,0.22);
-    font-weight: 700;
+    box-shadow: 0 0 0 3px #fff, 0 0 0 6px #22c55e;
+}
+.flashcard__option.is-picked::after{
+    content: "✓";
+    margin-left: auto;
+    flex-shrink: 0;
+    font-weight: 900;
 }
 .flashcard__answers{
     margin: 0;

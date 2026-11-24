@@ -1,7 +1,7 @@
 // Tiempos de espera y limpieza por partida (issue #13). Los valores por defecto son
 // los mínimos actuales: por partida solo se pueden ampliar, hasta el tope de cada uno.
 const DEFAULTS_MS = {
-  hostReconnectMs: 30 * 1000,
+  hostReconnectMs: 120 * 1000,
   playerReconnectMs: 40 * 1000,
   cleanupMs: 100 * 1000,
   inactivityMs: 30 * 60 * 1000
@@ -9,7 +9,7 @@ const DEFAULTS_MS = {
 
 // Límites de cada ajuste en la unidad en la que se introduce (segundos o minutos).
 const LIMITS = {
-  hostReconnectSec: { min: 30, max: 120 },
+  hostReconnectSec: { min: 120, max: 300 },
   playerReconnectSec: { min: 40, max: 120 },
   cleanupSec: { min: 100, max: 600 },
   inactivityMin: { min: 30, max: 60 }

@@ -170,6 +170,20 @@ test('el giro es animat també amb reducir movimiento activat al sistema', async
     await expect(page.locator('.flashcard')).toHaveClass(/is-back/);
 });
 
+test('la imagen de la pregunta va encima de las opciones de respuesta', async ({ page }) => {
+    const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==';
+    await mockBackend(page);
+    await page.route('**/api/quizzes/q1', route => route.fulfill({ json: { ...quiz, questions: [
+        { question: 'Quin animal és?', type: 'quiz', image: png, answers: ['Gos', 'Peix'], correctAnswers: [1], time: 20 }
+    ] } }));
+    await page.goto('/solo/?lang=es');
+    await page.locator('.card-actions .btn', { hasText: 'Repasar' }).click();
+    await page.locator('#cards-start-all').click();
+    const img = await page.locator('.flashcard__media img').boundingBox();
+    const firstOption = await page.locator('.flashcard__option').first().boundingBox();
+    expect(img.y + img.height).toBeLessThanOrEqual(firstOption.y);
+});
+
 test('si la pregunta té imatge, clicar-la gira la targeta', async ({ page }) => {
     const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==';
     await mockBackend(page);
@@ -214,6 +228,20 @@ test('en preguntas de respuesta múltiple el anverso muestra las opciones; marca
     await page.locator('#cards-start-all').click();
     const options = page.locator('.flashcard__option');
     await expect(options).toHaveCount(4);
+    // Cada opción lleva la forma y el color de su número (como en el juego) y van en dos columnas.
+    await expect(options.nth(0)).toHaveClass(/answer-shape--1/);
+    await expect(options.nth(3)).toHaveClass(/answer-shape--4/);
+    const first = await options.nth(0).boundingBox();
+    const second = await options.nth(1).boundingBox();
+    expect(Math.abs(first.y - second.y)).toBeLessThan(1);
+    expect(second.x).toBeGreaterThan(first.x + first.width - 1);
+    // Palabras cortas no se parten a mitad (p. ej. «Madri-d»): cada texto ocupa una sola línea.
+    const lines = await page.evaluate(() => [...document.querySelectorAll('.flashcard__option')].map(b => {
+        const r = document.createRange();
+        r.selectNodeContents(b.lastChild);
+        return r.getClientRects().length;
+    }));
+    expect(lines).toEqual([1, 1, 1, 1]);
     await options.nth(0).click();
     await expect(options.nth(0)).toHaveClass(/is-picked/);
     await options.nth(2).click();
@@ -222,11 +250,45 @@ test('en preguntas de respuesta múltiple el anverso muestra las opciones; marca
     await expect(page.locator('.flashcard')).not.toHaveClass(/is-back/);
 });
 
-test('en preguntas de respuesta única no se muestran las opciones en el anverso', async ({ page }) => {
+test('en preguntas de respuesta única el anverso muestra las opciones; elegir una sustituye la anterior', async ({ page }) => {
     await mockBackend(page);
+    await page.route('**/api/quizzes/q1', route => route.fulfill({ json: { ...quiz, questions: [
+        { question: '¿Cuál de las siguientes opciones es un animal de compañía?', type: 'quiz', answers: ['Vaca', 'Perro', 'Oveja', 'Cabra'], correctAnswers: [2], time: 20 }
+    ] } }));
     await page.goto('/solo/?lang=es');
     await page.locator('.card-actions .btn', { hasText: 'Repasar' }).click();
     await page.locator('#cards-start-all').click();
+    const options = page.locator('.flashcard__option');
+    await expect(options).toHaveCount(4);
+    await options.nth(0).click();
+    await options.nth(1).click();
+    await expect(options.nth(0)).not.toHaveClass(/is-picked/);
+    await expect(options.nth(1)).toHaveClass(/is-picked/);
+    await expect(page.locator('.flashcard')).not.toHaveClass(/is-back/);
+});
+
+test('la casella «Mostrar opciones de respuesta» oculta las opciones y se guarda en localStorage', async ({ page }) => {
+    await mockBackend(page);
+    await page.route('**/api/quizzes/q1', route => route.fulfill({ json: { ...quiz, questions: [
+        { question: '¿Cuál de las siguientes opciones es un animal de compañía?', type: 'quiz', answers: ['Vaca', 'Perro', 'Oveja', 'Cabra'], correctAnswers: [2], time: 20 }
+    ] } }));
+    await page.goto('/solo/?lang=es');
+    await page.locator('.card-actions .btn', { hasText: 'Repasar' }).click();
+    await expect(page.locator('#cards-options')).toBeChecked();
+    await page.locator('#cards-options').uncheck();
+    expect(await page.evaluate(() => localStorage.getItem('eduh_cards_options'))).toBe('0');
+    await page.locator('#cards-start-all').click();
     await expect(page.locator('#flashcard-question')).toBeVisible();
     await expect(page.locator('.flashcard__option')).toHaveCount(0);
+});
+
+test('en preguntas de vertadero/fals el anverso muestra solo les dues opcions', async ({ page }) => {
+    await mockBackend(page);
+    await page.route('**/api/quizzes/q1', route => route.fulfill({ json: { ...quiz, questions: [
+        { question: 'La Tierra es plana.', type: 'true-false', answers: ['Vertader', 'Fals'], correctAnswers: [2], time: 20 }
+    ] } }));
+    await page.goto('/solo/?lang=es');
+    await page.locator('.card-actions .btn', { hasText: 'Repasar' }).click();
+    await page.locator('#cards-start-all').click();
+    await expect(page.locator('.flashcard__option')).toHaveCount(2);
 });

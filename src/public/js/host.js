@@ -1,6 +1,6 @@
 var socket = io({
     reconnection: true,
-    reconnectionAttempts: 30,
+    reconnectionAttempts: 200,
     reconnectionDelay: 500,
     reconnectionDelayMax: 3000
 });

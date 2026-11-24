@@ -275,7 +275,7 @@ partida amb `getTimings(game)` de `services/gameTimings.js`:
 
 - **100 s** després d'acabar la partida (`GameOver`), abans d'esborrar-la.
 - **30 min** sense cap activitat.
-- **30 s** de marge per a que el professorat reconnecte si es desconnecta.
+- **120 s** de marge per a que el professorat reconnecte si es desconnecta (per defecte; per partida, de 120 s a 5 min).
 - **40 s** de marge per a que un alumne reconnecte.
 
 Són els **mínims**. El professorat pot ampliar-los per a una partida concreta

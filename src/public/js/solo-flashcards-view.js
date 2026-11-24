@@ -73,6 +73,22 @@ function saveContrastPref(on){
     try{ window.localStorage.setItem(CONTRAST_KEY, on ? '1' : '0'); }catch(e){}
 }
 
+// Preferència «Mostrar opciones de respuesta» (per dispositiu). Per defecte, activada.
+var OPTIONS_KEY = 'eduh_cards_options';
+
+function readOptionsPref(){
+    try{
+        var v = window.localStorage.getItem(OPTIONS_KEY);
+        return v === null ? true : v === '1';
+    }catch(e){
+        return true;
+    }
+}
+
+function saveOptionsPref(on){
+    try{ window.localStorage.setItem(OPTIONS_KEY, on ? '1' : '0'); }catch(e){}
+}
+
 // Torna la targeta al davant sense animació (en canviar de targeta, no ha de girar de nou).
 // Cancel·la un giro en curs: el token invalida la part del giro que quedava per fer.
 function snapCardFront(c){
@@ -109,6 +125,7 @@ function openFlashcards(quiz){
         shuffle: false,
         animate: readFlipAnimPref(),
         highContrast: readContrastPref(),
+        showOptions: readOptionsPref(),
         picks: {}
     };
     state.view = 'cards';
@@ -139,15 +156,17 @@ var soloFlashcards = {
             var cur = this.cardsCurrent;
             return mediaFor(cur ? cur.q : null);
         },
-        // Opcions que el alumnat veu en el anverso: només en preguntes de resposta múltiple
-        // (varies correctes). Les de resposta única no les mostren.
+        // Opcions que el alumnat veu en el anverso, si la casella de l'inici està activada: en les
+        // preguntes de opcions (resposta única, múltiple i vertader/fals). En vertader/fals, només les dues primeres.
         cardsOptions: function(){
             var cur = this.cardsCurrent;
-            if(!cur) return [];
-            if(normalizeQuestionMeta(cur.q).type !== 'multiple') return [];
+            if(!cur || !this.s.cards.showOptions) return [];
+            var type = normalizeQuestionMeta(cur.q).type;
+            if(type !== 'quiz' && type !== 'multiple' && type !== 'true-false') return [];
             var answers = Array.isArray(cur.q.answers) ? cur.q.answers : [];
+            if(type === 'true-false') answers = answers.slice(0, 2);
             return answers
-                .map(function(a, i){ return { n: i + 1, text: a === null || a === undefined ? '' : String(a) }; })
+                .map(function(a, i){ return { n: i + 1, shape: (i % 4) + 1, text: a === null || a === undefined ? '' : String(a) }; })
                 .filter(function(o){ return o.text.trim() !== ''; });
         },
         // Correspondencia: en el anverso, la columna izquierda (lo que hay que emparejar).
@@ -241,6 +260,11 @@ var soloFlashcards = {
             var c = this.s.cards;
             c.highContrast = !c.highContrast;
             saveContrastPref(c.highContrast);
+        },
+        cardsToggleOptions: function(){
+            var c = this.s.cards;
+            c.showOptions = !c.showOptions;
+            saveOptionsPref(c.showOptions);
         },
         // Giro en dues meitats: la targeta s'estreny fins a una línia, canvia de cara i es torna a obrir.
         // Sense animació, canvia de cara de seguida.

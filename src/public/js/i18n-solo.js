@@ -99,6 +99,7 @@
         flashcardsStartAll: 'Repasar todas ({count})',
         flashcardsStartUnknown: 'Repetir las no sabidas ({count})',
         flashcardsShuffle: 'Barajar al empezar',
+        flashcardsShowOptions: 'Mostrar opciones de respuesta',
         flashcardsAnimate: 'Tarjetas con animación',
         flashcardsContrast: 'Respuestas con contraste alto',
         flashcardsOptions: 'Opciones de respuesta',
@@ -239,6 +240,7 @@
             flashcardsStartAll: 'Review all ({count})',
             flashcardsStartUnknown: 'Repeat the ones I don\'t know ({count})',
             flashcardsShuffle: 'Shuffle before starting',
+            flashcardsShowOptions: 'Show answer options',
             flashcardsAnimate: 'Animated cards',
             flashcardsContrast: 'High-contrast answers',
             flashcardsOptions: 'Answer options',
@@ -379,6 +381,7 @@
         flashcardsStartAll: 'Repassar totes ({count})',
         flashcardsStartUnknown: 'Repetir les no sabudes ({count})',
         flashcardsShuffle: 'Barrejar en començar',
+        flashcardsShowOptions: 'Mostrar opcions de resposta',
         flashcardsAnimate: 'Targetes amb animació',
         flashcardsContrast: 'Respostes amb contrast alt',
         flashcardsOptions: 'Opcions de resposta',
@@ -426,6 +429,7 @@
             freeTextPlaceholder: 'Escriu la teua resposta',
             flashcardsAnimate: 'Targetes amb animació',
             flashcardsContrast: 'Respostes amb contrast alt',
+            flashcardsShowOptions: 'Mostrar opcions de resposta',
             flashcardsOptions: 'Opcions de resposta'
         }
     };
