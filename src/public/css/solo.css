@@ -1762,3 +1762,7 @@ body.playing .game-area .question-card > #solo-countdown{
     font-size: clamp(0.9rem, 2vh, 1.1rem);
 }
 .flashcard__select option{ color: #0f172a; background: #ffffff; }
+
+/* Resum final de la ronda: una fila pròpia a sota de les dues columnes de la pantalla d'inici. */
+.cards-summary--row{ grid-column: 1 / -1; max-width: none; margin: 8px 0 0; text-align: left; }
+.cards-summary--row .cards-summary__counts{ text-align: left; }

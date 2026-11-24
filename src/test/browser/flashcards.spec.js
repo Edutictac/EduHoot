@@ -653,3 +653,20 @@ test('accesibilidad: la respuesta escrita tiene nombre accesible y el resultado 
     await field.press('Enter');
     await expect(page.locator('#cards-result')).toHaveText('✓ Correcta');
 });
+
+test('el resumen final va en una fila propia debajo de la información, a todo el ancho', async ({ page }) => {
+    await mockBackend(page);
+    await page.route('**/api/quizzes/q1', route => route.fulfill({ json: validateQuiz([capitalQuestion]) }));
+    await page.goto('/solo/?lang=es');
+    await page.locator('.card-actions .btn', { hasText: 'Repasar' }).click();
+    await page.locator('#cards-start-all').click();
+    await page.locator('.flashcard__option', { hasText: 'Barcelona' }).click();
+    await page.locator('#cards-check').click();
+    await page.locator('#cards-next').click();
+    const summary = await page.locator('#cards-summary').boundingBox();
+    const info = await page.locator('.cards-start__info').boundingBox();
+    const options = await page.locator('.cards-start__options').boundingBox();
+    // Debajo de la información y de las opciones, y ocupando el ancho de las dos columnas.
+    expect(summary.y).toBeGreaterThanOrEqual(Math.max(info.y + info.height, options.y + options.height) - 1);
+    expect(summary.width).toBeGreaterThan(info.width);
+});

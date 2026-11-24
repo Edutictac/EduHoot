@@ -257,11 +257,6 @@
                     <div v-if="s.cards.phase !== 'card'" class="cards-start">
                       <div class="cards-start__info">
                         <h3 v-if="s.cards.phase === 'done'">{{ t('flashcardsDoneTitle') }}</h3>
-                        <div v-if="cardsSummary" id="cards-summary" class="cards-summary" role="status">
-                            <p class="cards-summary__counts">{{ cardsSummaryText }}</p>
-                            <p v-if="cardsSummary.review.length" class="cards-summary__title">{{ t('flashcardsToReview') }}</p>
-                            <ul v-if="cardsSummary.review.length" class="cards-summary__list"><li v-for="(text, i) in cardsSummary.review" :key="i">{{ text }}</li></ul>
-                        </div>
                         <div class="quiz-banner" :class="{ 'quiz-banner--logo-only': !quizImage }">
                             <img class="quiz-banner__logo" src="/icons/logo.svg" alt="EduHoot">
                             <img v-if="quizImage" class="quiz-banner__cover" :src="quizImage" alt="" @error="$event.target.style.display = 'none'; $event.target.parentNode.classList.add('quiz-banner--logo-only')">
@@ -297,6 +292,11 @@
                             <button id="cards-reset" class="card-link" :disabled="!cardsCounts.known && !cardsCounts.unknown" @click="cardsReset">{{ t('flashcardsReset') }}</button>
                             <button class="card-link" @click="pickAnother">{{ t('pickAnother') }}</button>
                         </div>
+                      </div>
+                      <div v-if="cardsSummary" id="cards-summary" class="cards-summary cards-summary--row" role="status">
+                          <p class="cards-summary__counts">{{ cardsSummaryText }}</p>
+                          <p v-if="cardsSummary.review.length" class="cards-summary__title">{{ t('flashcardsToReview') }}</p>
+                          <ul v-if="cardsSummary.review.length" class="cards-summary__list"><li v-for="(text, i) in cardsSummary.review" :key="i">{{ text }}</li></ul>
                       </div>
                     </div>
 
