@@ -107,3 +107,23 @@ test('biblioteca de /create/: fecha de creación y de modificación en una líne
     expect(await dates.evaluate(el => el.getBoundingClientRect().height)).toBeLessThanOrEqual(20);
     await expect(cards.nth(1).locator('.game-dates')).toHaveCount(0);
 });
+
+test('biblioteca: valorar un quiz público con cinco estrellas, como en el modo solo', async ({ page }) => {
+    const state = { quizzes: [quiz('q1', 'Geografia', ['socials'])], deleted: [] };
+    await stubBackend(page, state);
+    const posts = [];
+    await page.route('**/api/quizzes/q1/rating', route => {
+        posts.push(route.request().postDataJSON());
+        return route.fulfill({ json: { avg: 4, count: 1 } });
+    });
+    await page.goto('/create/?lang=es');
+    const card = page.locator('#game-list .game-card').first();
+    await expect(card.locator('.rating-star')).toHaveCount(5);
+    await expect(card.locator('.rating-summary')).toHaveText('Sin valoraciones');
+    await card.locator('.rating-star').nth(3).click();
+    await expect(card.locator('.rating-summary')).toHaveText('4.0 · 1 votos');
+    await expect(card.locator('.rating-star.is-filled')).toHaveCount(4);
+    expect(posts).toHaveLength(1);
+    expect(posts[0].rating).toBe(4);
+    expect(typeof posts[0].deviceId).toBe('string');
+});

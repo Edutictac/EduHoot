@@ -306,11 +306,11 @@ test('«Ver más» muestra el resto de carpetas y «Ver menos» las recoge', asy
     await expect(tagButtons(page)).toHaveCount(14);
 });
 
-test('paginación de 10 en 10 por defecto, también arriba, con selector (5, 10, 20, 30, 50, 100)', async ({ page }) => {
+test('paginación de 6 en 6 por defecto, también arriba, con selector (6, 12, 24, 48, 96)', async ({ page }) => {
     const many = Array.from({ length: 13 }, (_, i) => quiz('p' + i, 'Quiz ' + String(i).padStart(2, '0'), { createdAt: '2026-01-' + String(i + 1).padStart(2, '0') + 'T00:00:00Z' }));
     await mockBackend(page, { quizzes: many });
     await openCreate(page);
-    await expect(cards(page)).toHaveCount(10);
+    await expect(cards(page)).toHaveCount(6);
     await expect(page.locator('#library-pagination')).toBeVisible();
     await expect(page.locator('#library-pagination-top')).toBeVisible();
     // La barra de arriba queda antes de las tarjetas y la de abajo después.
@@ -319,42 +319,64 @@ test('paginación de 10 en 10 por defecto, también arriba, con selector (5, 10,
     const bottomBar = await page.locator('#library-pagination').boundingBox();
     expect(topBar.y + topBar.height).toBeLessThanOrEqual(firstCard.y);
     expect(bottomBar.y).toBeGreaterThan(firstCard.y);
-    await expect(page.locator('#library-pagination-info')).toHaveText('Página 1 de 2');
-    await expect(page.locator('#library-pagination-info-top')).toHaveText('Página 1 de 2');
+    await expect(page.locator('#library-pagination-info option:checked')).toHaveText('Página 1 de 3');
+    await expect(page.locator('#library-pagination-info-top option:checked')).toHaveText('Página 1 de 3');
     await expect(page.locator('#library-pagination-prev')).toBeDisabled();
     await expect(page.locator('#library-pagination-prev-top')).toBeDisabled();
     // El paginador de arriba también pasa de página.
     await page.locator('#library-pagination-next-top').click();
-    await expect(cards(page)).toHaveCount(3);
-    await expect(page.locator('#library-pagination-info')).toHaveText('Página 2 de 2');
+    await expect(cards(page)).toHaveCount(6);
+    await expect(page.locator('#library-pagination-info option:checked')).toHaveText('Página 2 de 3');
+    await page.locator('#library-pagination-next').click();
+    await expect(cards(page)).toHaveCount(1);
+    await expect(page.locator('#library-pagination-info option:checked')).toHaveText('Página 3 de 3');
     await expect(page.locator('#library-pagination-next')).toBeDisabled();
     await expect(page.locator('#library-pagination-next-top')).toBeDisabled();
     // Cambiar el orden vuelve a la primera página.
     await page.locator('#library-sort').selectOption('oldest');
-    await expect(page.locator('#library-pagination-info')).toHaveText('Página 1 de 2');
+    await expect(page.locator('#library-pagination-info option:checked')).toHaveText('Página 1 de 3');
     await expect(titles(page).first()).toHaveText('Quiz 00');
 
-    // Selector: 10, 20, 30, 50 y 100 (en las dos barras); al cambiarlo vuelve a la primera página.
-    await expect(page.locator('#library-page-size-top option')).toHaveText(['5', '10', '20', '30', '50', '100']);
-    await expect(page.locator('#library-page-size option')).toHaveText(['5', '10', '20', '30', '50', '100']);
-    await expect(page.locator('#library-page-size')).toHaveValue('10');
-    await page.locator('#library-page-size').selectOption('20');
-    await expect(cards(page)).toHaveCount(13);
-    await expect(page.locator('#library-page-size-top')).toHaveValue('20');
-    // Con una sola página no se ven los botones de página, pero sí el selector para volver atrás.
-    await expect(page.locator('#library-pagination-next')).toBeHidden();
-    await expect(page.locator('#library-page-size-top')).toBeVisible();
-    // Se recuerda en el navegador.
+    // Selector: 6, 12, 24, 48 y 96 (en las dos barras); al cambiarlo vuelve a la primera página.
+    await expect(page.locator('#library-page-size-top option')).toHaveText(['6', '12', '24', '48', '96']);
+    await expect(page.locator('#library-page-size option')).toHaveText(['6', '12', '24', '48', '96']);
+    await expect(page.locator('#library-page-size')).toHaveValue('6');
+    await page.locator('#library-page-size').selectOption('12');
+    await expect(cards(page)).toHaveCount(12);
+    await expect(page.locator('#library-page-size-top')).toHaveValue('12');
+    await expect(page.locator('#library-pagination-info option:checked')).toHaveText('Página 1 de 2');
+    // Sin sesión se recuerda en el navegador.
     await page.reload();
-    await expect(page.locator('#library-page-size-top')).toHaveValue('20');
+    await expect(page.locator('#library-page-size-top')).toHaveValue('12');
+    await expect(cards(page)).toHaveCount(12);
+    await page.locator('#library-page-size-top').selectOption('6');
+    await expect(cards(page)).toHaveCount(6);
+    await expect(page.locator('#library-pagination-info option:checked')).toHaveText('Página 1 de 3');
+    await expect(page.locator('#library-pagination-info-top option:checked')).toHaveText('Página 1 de 3');
+});
+
+test('con sesión, la paginación se guarda en la cuenta y no en el navegador', async ({ page }) => {
+    const mine = Array.from({ length: 13 }, (_, i) => quiz('m' + i, 'Meu ' + String(i).padStart(2, '0'), { ownerId: TEACHER.id, createdAt: '2026-01-' + String(i + 1).padStart(2, '0') + 'T00:00:00Z' }));
+    await mockBackend(page, { user: TEACHER, quizzes: mine });
+    const saved = { libraryPageSize: 24 };
+    const patches = [];
+    await page.route('**/api/auth/preferences', route => {
+        if (route.request().method() === 'PATCH') {
+            const body = route.request().postDataJSON();
+            patches.push(body);
+            saved.libraryPageSize = body.libraryPageSize;
+            return route.fulfill({ json: { ok: true, libraryPageSize: body.libraryPageSize } });
+        }
+        return route.fulfill({ json: saved });
+    });
+    await openCreate(page);
+    // La cuenta tiene 24 por página: los 13 quizzes caben en una página.
     await expect(cards(page)).toHaveCount(13);
-    await page.locator('#library-page-size-top').selectOption('10');
-    await expect(cards(page)).toHaveCount(10);
-    // 5 por página (útil en móvil): 13 cuestionarios → 3 páginas.
-    await page.locator('#library-page-size').selectOption('5');
-    await expect(cards(page)).toHaveCount(5);
-    await expect(page.locator('#library-pagination-info')).toHaveText('Página 1 de 3');
-    await expect(page.locator('#library-pagination-info-top')).toHaveText('Página 1 de 3');
+    await expect(page.locator('#library-page-size')).toHaveValue('24');
+    await page.locator('#library-page-size').selectOption('12');
+    await expect(cards(page)).toHaveCount(12);
+    expect(patches).toEqual([{ libraryPageSize: 12 }]);
+    expect(await page.evaluate(() => localStorage.getItem('eduhoot-library-page-size'))).toBe('12');
 });
 
 test('editar etiquetas de un quiz propio: añadir, quitar y mínimo una', async ({ page }) => {
@@ -845,4 +867,43 @@ test('el logo de EduHoot va delante del título «Crea y lanza tu EduHoot»', as
     });
     expect(t.logoRight).toBeLessThanOrEqual(t.textLeft + 1);
     expect(Math.abs(t.logoMid - t.textMid)).toBeLessThanOrEqual(6);
+});
+
+test('paginador de la biblioteca: barra flotante abajo cuando ni el de arriba ni el de abajo se ven', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 700 });
+    const many = Array.from({ length: 13 }, (_, i) => quiz('f' + i, 'Quiz ' + String(i).padStart(2, '0'), { ownerId: TEACHER.id, createdAt: '2026-01-' + String(i + 1).padStart(2, '0') + 'T00:00:00Z' }));
+    await mockBackend(page, { user: TEACHER, quizzes: many });
+    await openCreate(page);
+    const fixed = page.locator('#library-pagination-fixed');
+    // Amb el paginador de dalt a la vista, la barra flotant no apareix (al carregar, pot quedar sota del plec).
+    await page.locator('#library-pagination-top').scrollIntoViewIfNeeded();
+    await expect(fixed).not.toHaveClass(/is-visible/);
+    const pos = await page.evaluate(() => ({
+        top: document.querySelector('#library-pagination-top').getBoundingClientRect().top + window.scrollY
+    }));
+    // Baixa fins a la mitat de la llista: ni el de dalt ni el de baix es veuen.
+    await page.evaluate(y => window.scrollTo(0, y), pos.top + 300);
+    await expect(fixed).toHaveClass(/is-visible/);
+    await fixed.locator('#library-pagination-fixed-next').click();
+    await expect(page.locator('#library-pagination-info option:checked')).toHaveText('Página 2 de 3');
+    // El selector «Por página» també es pot usar des de la barra flotant.
+    await fixed.locator('#library-page-size-fixed').selectOption('12');
+    await expect(cards(page)).toHaveCount(12);
+    await expect(page.locator('#library-page-size')).toHaveValue('12');
+    // Torna a dalt: la barra flotant es torna a amagar.
+    await page.locator('#library-pagination-top').scrollIntoViewIfNeeded();
+    await expect(fixed).not.toHaveClass(/is-visible/);
+});
+
+test('la página se elige en el desplegable «Página X de Y», arriba y abajo', async ({ page }) => {
+    const many = Array.from({ length: 13 }, (_, i) => quiz('d' + i, 'Quiz ' + String(i).padStart(2, '0'), { createdAt: '2026-01-' + String(i + 1).padStart(2, '0') + 'T00:00:00Z' }));
+    await mockBackend(page, { quizzes: many });
+    await openCreate(page);
+    await page.locator('#library-pagination-info').selectOption('3');
+    await expect(cards(page)).toHaveCount(1);
+    await expect(page.locator('#library-pagination-info option:checked')).toHaveText('Página 3 de 3');
+    await expect(page.locator('#library-pagination-info-top option:checked')).toHaveText('Página 3 de 3');
+    await page.locator('#library-pagination-info-top').selectOption('1');
+    await expect(cards(page)).toHaveCount(6);
+    await expect(page.locator('#library-pagination-info option:checked')).toHaveText('Página 1 de 3');
 });

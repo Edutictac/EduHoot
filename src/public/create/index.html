@@ -328,9 +328,9 @@
                     <div class="library-main">
                         <!-- visibilityHelp es texto propio del diccionario i18n (con <strong> y <br>). -->
                         <p class="subtext" v-html="t('visibilityHelp')"></p>
-                        <div id="library-pagination-top" class="pagination" :class="{ hidden: !showPager }">
+                        <div id="library-pagination-top" ref="pagerTop" class="pagination" :class="{ hidden: !showPager }">
                             <button id="library-pagination-prev-top" v-show="totalPages > 1" class="btn btn-ghost" :disabled="currentPage <= 1" @click="prevPage">{{ t('paginationPrev') }}</button>
-                            <span id="library-pagination-info-top" v-show="totalPages > 1">{{ paginationInfo }}</span>
+                            <select id="library-pagination-info-top" class="page-select" v-show="totalPages > 1" :value="currentPage" :aria-label="paginationInfo" @change="onPageChange"><option v-for="p in pageOptions" :key="p.n" :value="p.n">{{ p.label }}</option></select>
                             <button id="library-pagination-next-top" v-show="totalPages > 1" class="btn btn-ghost" :disabled="currentPage >= totalPages" @click="nextPage">{{ t('paginationNext') }}</button>
                             <label class="page-size"><span>{{ t('pageSizeLabel') }}</span>
                                 <select id="library-page-size-top" :value="lib.pageSize" @change="onPageSize">
@@ -352,6 +352,12 @@
                                     <span class="game-stats__item">{{ (quiz.playersCount || 0) + ' ' + t('playersShort') }}</span>
                                 </div>
                                 <div v-if="datesText(quiz)" class="game-dates">{{ datesText(quiz) }}</div>
+                                <div v-if="quiz.visibility === 'public'" class="card-rating">
+                                    <div class="rating-stars">
+                                        <button v-for="stars in 5" :key="stars" type="button" class="rating-star" :class="{ 'is-filled': stars <= ratingShown(quiz) }" :aria-label="t('ratingStarLabel').replace('{stars}', stars)" :title="t('ratingStarLabel').replace('{stars}', stars)" @click.stop="rateLibraryQuiz(quiz, stars)">★</button>
+                                    </div>
+                                    <span class="rating-summary muted">{{ ratingSummaryText(quiz) }}</span>
+                                </div>
                                 <div class="tag-wrap">
                                     <template v-for="tagValue in quizTags(quiz)" :key="tagValue">
                                         <span v-if="!perms(quiz).canEdit" class="tag" @click="toggleTag(tagValue)">{{ tagValue }}</span>
@@ -395,12 +401,22 @@
                                 </div>
                             </div>
                         </div>
-                        <div id="library-pagination" class="pagination" :class="{ hidden: !showPager }">
+                        <div id="library-pagination" ref="pagerBottom" class="pagination" :class="{ hidden: !showPager }">
                             <button id="library-pagination-prev" v-show="totalPages > 1" class="btn btn-ghost" :disabled="currentPage <= 1" @click="prevPage">{{ t('paginationPrev') }}</button>
-                            <span id="library-pagination-info" v-show="totalPages > 1">{{ paginationInfo }}</span>
+                            <select id="library-pagination-info" class="page-select" v-show="totalPages > 1" :value="currentPage" :aria-label="paginationInfo" @change="onPageChange"><option v-for="p in pageOptions" :key="p.n" :value="p.n">{{ p.label }}</option></select>
                             <button id="library-pagination-next" v-show="totalPages > 1" class="btn btn-ghost" :disabled="currentPage >= totalPages" @click="nextPage">{{ t('paginationNext') }}</button>
                             <label class="page-size"><span>{{ t('pageSizeLabel') }}</span>
                                 <select id="library-page-size" :value="lib.pageSize" @change="onPageSize">
+                                    <option v-for="n in pageSizes" :key="n" :value="n">{{ n }}</option>
+                                </select>
+                            </label>
+                        </div>
+                        <div id="library-pagination-fixed" class="pagination-fixed" :class="{ 'is-visible': showFixedPager }" :inert="!showFixedPager || null">
+                            <button id="library-pagination-fixed-prev" class="btn btn-ghost" :disabled="currentPage <= 1" @click="prevPage">{{ t('paginationPrev') }}</button>
+                            <select id="library-pagination-fixed-info" class="page-select" :value="currentPage" :aria-label="paginationInfo" @change="onPageChange"><option v-for="p in pageOptions" :key="p.n" :value="p.n">{{ p.label }}</option></select>
+                            <button id="library-pagination-fixed-next" class="btn btn-ghost" :disabled="currentPage >= totalPages" @click="nextPage">{{ t('paginationNext') }}</button>
+                            <label class="page-size"><span>{{ t('pageSizeLabel') }}</span>
+                                <select id="library-page-size-fixed" :value="lib.pageSize" @change="onPageSize">
                                     <option v-for="n in pageSizes" :key="n" :value="n">{{ n }}</option>
                                 </select>
                             </label>

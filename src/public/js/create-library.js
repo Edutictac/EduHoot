@@ -1,6 +1,7 @@
-// Cuestionarios por página de la biblioteca (el elegido se recuerda en el navegador).
-var LIBRARY_PAGE_SIZES = [5, 10, 20, 30, 50, 100];
-var LIBRARY_PAGE_SIZE = 10;
+// Cuestionarios por página de la biblioteca. Con sesión se guarda en la cuenta (/api/auth/preferences, mismos valores
+// que el servidor); sin sesión, en el navegador.
+var LIBRARY_PAGE_SIZES = [6, 12, 24, 48, 96];
+var LIBRARY_PAGE_SIZE = 6;
 var LIBRARY_PAGE_SIZE_KEY = 'eduhoot-library-page-size';
 
 // Biblioteca de /create/: etiquetas, filtros (también en la URL), listado y paginación, extraído de create.js
@@ -197,6 +198,59 @@ function readLibraryPageSize(){
     return LIBRARY_PAGE_SIZE;
 }
 
+// Amb sessió: el valor de la cuenta (si en té) substituïx el del navegador. Errors silenciosos: la biblioteca segueix.
+function loadUserLibraryPageSize(){
+    return fetch('/api/auth/preferences', { credentials: 'include' })
+        .then(function(res){ return res.ok ? res.json() : null; })
+        .then(function(data){
+            var v = data && data.libraryPageSize;
+            if(LIBRARY_PAGE_SIZES.indexOf(v) === -1) return;
+            libState.pageSize = v;
+            try{ localStorage.setItem(LIBRARY_PAGE_SIZE_KEY, String(v)); }catch(e){}
+        })
+        .catch(function(){});
+}
+
+function saveUserLibraryPageSize(v){
+    return fetch('/api/auth/preferences', {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ libraryPageSize: v })
+    }).catch(function(){});
+}
+
+// Valoració amb estrelles (com al mode solo): mateixa clau de dispositiu i de valoracions al navegador.
+var LIBRARY_RATINGS_KEY = 'eduhoot-user-ratings';
+var LIBRARY_DEVICE_KEY = 'eduhoot-device-id';
+
+function getLibraryUserRating(id){
+    try{
+        var all = JSON.parse(localStorage.getItem(LIBRARY_RATINGS_KEY) || '{}');
+        return all[String(id)] || 0;
+    }catch(e){ return 0; }
+}
+
+function setLibraryUserRating(id, value){
+    try{
+        var all = JSON.parse(localStorage.getItem(LIBRARY_RATINGS_KEY) || '{}');
+        all[String(id)] = value;
+        localStorage.setItem(LIBRARY_RATINGS_KEY, JSON.stringify(all));
+    }catch(e){}
+}
+
+function getLibraryDeviceId(){
+    try{
+        var existing = localStorage.getItem(LIBRARY_DEVICE_KEY);
+        if(existing) return existing;
+        var bytes = new Uint8Array(12);
+        if(window.crypto && window.crypto.getRandomValues) window.crypto.getRandomValues(bytes);
+        var id = Array.from(bytes).map(function(b){ return b.toString(16).padStart(2, '0'); }).join('');
+        localStorage.setItem(LIBRARY_DEVICE_KEY, id);
+        return id;
+    }catch(e){ return ''; }
+}
+
 var libState = Vue.reactive({
     data: [],
     page: 1,
@@ -342,6 +396,23 @@ var LIBRARY_EXPORT_GROUPS = [
     { label: 'ODT', options: [['odt-normal', 'docOptionNormal'], ['odt-no-answers', 'docOptionNoAnswers'], ['odt-no-images', 'docOptionNoImages'], ['odt-no-answers-no-images', 'docOptionNoAnswersNoImages']] }
 ];
 
+// Barra flotante del paginador (com la de les accions del creador): apareix quan ni el paginador de dalt
+// ni el de baix es veuen. Vigila els dos amb IntersectionObserver.
+var libFixedPager = Vue.reactive({ ready: false, topVisible: false, bottomVisible: false });
+
+function watchLibraryPager(topEl, bottomEl){
+    if(typeof IntersectionObserver !== 'function' || !topEl || !bottomEl) return;
+    var observer = new IntersectionObserver(function(entries){
+        entries.forEach(function(entry){
+            if(entry.target === topEl) libFixedPager.topVisible = entry.isIntersecting;
+            if(entry.target === bottomEl) libFixedPager.bottomVisible = entry.isIntersecting;
+        });
+        libFixedPager.ready = true;
+    });
+    observer.observe(topEl);
+    observer.observe(bottomEl);
+}
+
 // App de Vue de la biblioteca (#library-tpl).
 var libraryApp = {
     template: '#library-tpl',
@@ -354,10 +425,27 @@ var libraryApp = {
             // Borradores por quiz (etiqueta nueva y permisos); se reinician
             // cada vez que llega la biblioteca, como al repintar antes.
             tagDrafts: {},
-            sharing: {}
+            sharing: {},
+            fixedPager: libFixedPager
         };
     },
+    mounted: function(){
+        watchLibraryPager(this.$refs.pagerTop, this.$refs.pagerBottom);
+    },
     computed: {
+        // Opcions del desplegable «Página X de Y» (una per pàgina).
+        pageOptions: function(){
+            var out = [];
+            for(var n = 1; n <= this.totalPages; n++){
+                out.push({ n: n, label: this.t('paginationPageInfo').replace('{current}', n).replace('{total}', this.totalPages) });
+            }
+            return out;
+        },
+        // La barra flotante només es mostra quan hi ha més d'una pàgina i ni el paginador de dalt ni el de baix es veuen.
+        showFixedPager: function(){
+            var f = this.fixedPager;
+            return f.ready && this.showPager && this.totalPages > 1 && !f.topVisible && !f.bottomVisible;
+        },
         // Lo que se ve tras la búsqueda (antes currentDisplayedQuizzes).
         searchedQuizzes: function(){
             var quizzes = Array.isArray(this.lib.data) ? this.lib.data.slice() : [];
@@ -478,6 +566,38 @@ var libraryApp = {
         quizTags: function(quiz){
             return normalizeInlineTags(Array.isArray(quiz.tags) ? quiz.tags : []);
         },
+        // Estrelles de la targeta (només quizzes públics, un vot per dispositiu).
+        ratingShown: function(quiz){
+            var own = getLibraryUserRating(quiz.id);
+            if(own) return own;
+            var avg = Number(quiz.ratingAvg);
+            return Math.round(Number.isFinite(avg) ? avg : 0);
+        },
+        ratingSummaryText: function(quiz){
+            var avg = Number(quiz.ratingAvg);
+            if(!Number.isFinite(avg)) avg = 0;
+            var count = Number(quiz.ratingCount);
+            if(!Number.isFinite(count)) count = 0;
+            if(!count) return t('ratingEmpty');
+            return t('ratingSummary').replace('{avg}', avg.toFixed(1)).replace('{count}', String(count));
+        },
+        rateLibraryQuiz: function(quiz, stars){
+            setLibraryUserRating(quiz.id, stars);
+            fetch('/api/quizzes/' + encodeURIComponent(quiz.id) + '/rating', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rating: stars, deviceId: getLibraryDeviceId() })
+            })
+                .then(function(res){ return res.ok ? res.json() : null; })
+                .then(function(body){
+                    if(body){
+                        quiz.ratingAvg = body.avg;
+                        quiz.ratingCount = body.count;
+                    }
+                })
+                .catch(function(){});
+        },
         // Línia discreta sota les estadístiques: «Creat … · Modificat …».
         datesText: function(quiz){
             this.lib.lang;
@@ -514,12 +634,17 @@ var libraryApp = {
         onSearch: function(){ fetchWithFilters(); },
         onMine: function(){ storeMineOnly(!!currentFilters.mineOnly); fetchWithFilters(); },
         onSort: function(){ this.lib.page = 1; },
+        onPageChange: function(ev){
+            var v = parseInt(ev.target.value, 10);
+            if(v >= 1 && v <= this.totalPages) this.lib.page = v;
+        },
         onPageSize: function(ev){
             var v = parseInt(ev.target.value, 10);
             if(LIBRARY_PAGE_SIZES.indexOf(v) === -1) return;
             this.lib.pageSize = v;
             this.lib.page = 1;
             try{ localStorage.setItem(LIBRARY_PAGE_SIZE_KEY, String(v)); }catch(e){}
+            if(authState.user) saveUserLibraryPageSize(v);
         },
         clearFilters: function(){ clearFilters(); },
         toggleTagMode: function(){ toggleTagMode(); },

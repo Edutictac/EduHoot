@@ -119,6 +119,7 @@ function fetchMe(){
             var savedMine = storedMineOnly();
             currentFilters.mineOnly = savedMine === null ? true : savedMine;
             fetchWithFilters();
+            loadUserLibraryPageSize();
             claimPendingQuizAfterLogin();
         })
         .catch(function(){

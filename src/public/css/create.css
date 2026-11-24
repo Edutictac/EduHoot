@@ -1269,3 +1269,53 @@ body.modal-open{
 /* Botones «Jugar» y «Editar» bajo una importación correcta (IA, archivo o Kahoot): misma tipografía que el resto. */
 .status-actions{ display: inline-flex; flex-wrap: wrap; gap: 8px; margin-left: 10px; vertical-align: middle; }
 .status-actions .btn{ font-family: inherit; font-size: 14px; font-weight: 700; line-height: 1.2; min-height: 36px; padding: 6px 14px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; }
+
+/* Valoració amb estrelles a la targeta de la biblioteca (com al mode solo). */
+.card-rating{ display: flex; align-items: center; gap: 10px; }
+.rating-stars{ display: inline-flex; gap: 4px; }
+.rating-star{
+    border: none;
+    background: transparent;
+    color: rgba(255,255,255,0.35);
+    font-size: 18px;
+    cursor: pointer;
+    padding: 2px;
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+.rating-star:hover{ transform: translateY(-1px); color: #ffe9a3; }
+.rating-star.is-filled{ color: #ffe166; }
+.rating-summary{ font-size: 12px; }
+
+/* Paginador flotant (com la barra d'accions del creador): apareix quan ni el de dalt ni el de baix es veuen. */
+.pagination-fixed{
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 50;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
+    background: #0f162a;
+    border-top: 1px solid rgba(255,255,255,0.18);
+    box-shadow: 0 -8px 24px rgba(0,0,0,0.35);
+    transform: translateY(100%);
+    visibility: hidden;
+    transition: transform 0.2s ease, visibility 0.2s ease;
+}
+.pagination-fixed.is-visible{ transform: none; visibility: visible; }
+.pagination-fixed span{ font-weight: 600; color: #fff; }
+.pagination-fixed .btn{ font-family: inherit; font-weight: 700; }
+@media (prefers-reduced-motion: reduce){ .pagination-fixed{ transition: none; } }
+.pagination-fixed{ flex-wrap: wrap; }
+.pagination-fixed .page-size{ display: inline-flex; align-items: center; gap: 8px; font-weight: 600; }
+.pagination-fixed .page-size select{
+    padding: 6px 12px; border-radius: 999px; font: inherit; font-weight: 600;
+    border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.08); color: #fff;
+}
+.pagination-fixed .page-size select option{ color: #14101f; background: #fff; }
+select.page-select{
+    padding: 6px 12px; border-radius: 999px; font: inherit; font-weight: 600;
+    border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.08); color: #fff;
+}
+select.page-select option{ color: #14101f; background: #fff; }
