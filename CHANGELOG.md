@@ -19,6 +19,8 @@ fitxers corresponents, i els originals es van eliminar.
 ## [1.2.0] - 2026-11-23
 
 ### Afegit
+- **Registre de partides per usuari**: les partides acabades d'un usuari amb compte es guarden amb el seu informe CSV durant 90 dies (no es guarda res de l'anònim). Llistat i descàrrega només per al propi usuari (`/api/partidas`).
+- **Biblioteca**: ordenar per «Més jugats» (quart a la llista), amb desempat pel més recent.
 - **Flashcards: comprovació de respostes** («Comprobar respuestas», activada per defecte): l'alumnat contesta a la targeta (opció, text o número), es comprova i es marca sola com a sabuda o no sabuda. Passar sense comprovar compta com a no sabuda. El camp de resposta té nom accessible i el resultat s'anuncia als lectors de pantalla. Al final, resum amb les correctes, les incorrectes i les que cal repassar. En correspondència, cada element s'empareja amb una desplegable i es comprova que totes les parelles siguin correctes.
 - **Deures asíncrons** (feature 1): el docent crea un deure des d'un quiz (botó 📚
   de la biblioteca) amb data límit, intents (1, 2, 3, 5 o il·limitats; compta el
@@ -192,6 +194,11 @@ fitxers corresponents, i els originals es van eliminar.
 
 ### Canviat
 
+- **Modo individual i flashcards**: l'icona del mode (👤 o 🔁, com a la biblioteca) apareix a l'esquerra de l'etiqueta: gran a la pantalla inicial i més petit durant la partida.
+- **Flashcards i modo individual**: el títol del quiz i l'etiqueta «Modo…» del panell són més grans.
+- **Modo individual**: el contingut del recuadro va centrat, com a flashcards, i el títol del quiz és groc corporatiu. **Flashcards**: el títol de la pantalla inicial és blanc.
+- **Modo individual i flashcards**: la cabecera va centrada; la pantalla de tarjetas es diu «Modo tarjetas» (abans, «Modo individual»).
+- **Flashcards**: la pantalla inicial va centrada (encapçalament i contingut), sense canviar l'alineació interna.
 - **Biblioteca**: valoració amb estrelles (1 a 5) per als quizzes públics, igual que al mode solo; la mitjana i els vots es mostren a la targeta.
 - **Flashcards**: el resum final va en una fila pròpia, a sota de la informació i de les opcions.
 - **Biblioteca**: 6, 12, 24, 48 o 96 quizzes per pàgina (per defecte 6). Amb sessió, la paginació s'emmagatzema al compte de l'usuari (`/api/auth/preferences`); sense sessió, al navegador.
