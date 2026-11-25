@@ -1,4 +1,4 @@
-const { isSubmissionCorrect, matchingScoreRatio, orderScoreRatioFromMeta, normalizeMatchingExtraTime } = require('../questionUtils');
+const { isSubmissionCorrect, matchingScoreRatio, orderScoreRatioFromMeta, normalizeMatchingExtraTime, isCompositeType } = require('../questionUtils');
 
 const MAX_POINTS_PER_QUESTION = 1000;
 
@@ -7,7 +7,7 @@ const MAX_POINTS_PER_QUESTION = 1000;
 function questionTimeOf(gameData, current) {
   const options = (gameData && gameData.options) || {};
   const base = Number(options.timePerQuestion || (current && current.time) || 20) || 20;
-  if (!current || current.type !== 'matching') return base;
+  if (!current || !isCompositeType(current.type)) return base;
   return Math.round(base * (1 + normalizeMatchingExtraTime(options.matchingExtraTime) / 100));
 }
 

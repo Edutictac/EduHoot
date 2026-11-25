@@ -1,7 +1,7 @@
 const { getGamesCollection } = require('../data/repositories');
 const { logger, quizFields } = require('../logger');
 const { normalizeAutoAdvance } = require('../services/autoAdvance');
-const { hasMatchingQuestion, normalizeMatchingBlindStyle, normalizeMatchingExtraTime } = require('../questionUtils');
+const { hasMatchingQuestion, hasCompositeQuestion, isCompositeType, normalizeMatchingBlindStyle, normalizeMatchingExtraTime } = require('../questionUtils');
 
 // host-join, host-join-game, startGame, nextQuestion, skipQuestion, newQuiz.
 module.exports = function createHostEvents({
@@ -75,7 +75,8 @@ module.exports = function createHostEvents({
           socket.emit('showGamePin', {
             pin: existingByPin.pin,
             quizName: (existingByPin.gameData && existingByPin.gameData.quizName) || '',
-            hasMatching: hasMatchingQuestion(existingByPin.gameData && existingByPin.gameData.originalQuestions)
+            hasMatching: hasMatchingQuestion(existingByPin.gameData && existingByPin.gameData.originalQuestions),
+            hasComposite: hasCompositeQuestion(existingByPin.gameData && existingByPin.gameData.originalQuestions)
           });
           socket.emit('updatePlayerLobby', playersInGame);
           io.to(existingByPin.pin).emit('hostReconnected');
@@ -134,7 +135,8 @@ module.exports = function createHostEvents({
           socket.emit('showGamePin', {
             pin: game.pin,
             quizName: game.gameData.quizName || '',
-            hasMatching: hasMatchingQuestion(originalQuestions)
+            hasMatching: hasMatchingQuestion(originalQuestions),
+            hasComposite: hasCompositeQuestion(originalQuestions)
           });
         } else {
           socket.emit('noGameFound');
@@ -210,6 +212,7 @@ module.exports = function createHostEvents({
             pin: game.pin,
             quizName: game.gameData.quizName || '',
             hasMatching: (game.gameData.questions || []).some((q) => q && q.type === 'matching'),
+            hasComposite: (game.gameData.questions || []).some((q) => q && isCompositeType(q.type)),
             matchingExtraTime: normalizeMatchingExtraTime(game.gameData.options && game.gameData.options.matchingExtraTime)
           });
           socket.emit('hostSession', { hostId: game.hostId, pin: game.pin });

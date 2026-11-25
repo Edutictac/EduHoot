@@ -495,6 +495,17 @@ function normalizeMatchingExtraTime(raw) {
   return MATCHING_EXTRA_TIME_PERCENTS.includes(value) ? value : MATCHING_EXTRA_TIME_DEFAULT;
 }
 
+// Preguntes compostes: la correspondència i l'ordenar tenen el marge de tiempo extra.
+const COMPOSITE_TYPES = ['matching', 'order'];
+function isCompositeType(type) {
+  return COMPOSITE_TYPES.includes(String(type || '').toLowerCase());
+}
+
+function hasCompositeQuestion(questions) {
+  return (Array.isArray(questions) ? questions : [])
+    .some((q) => q && isCompositeType(normalizeQuestionMeta(q).type));
+}
+
 function hasMatchingQuestion(questions) {
   return (Array.isArray(questions) ? questions : [])
     .some((q) => q && normalizeQuestionMeta(q).type === 'matching');
@@ -543,6 +554,8 @@ module.exports = {
   orderDisplayOf,
   normalizeMatchingBlindStyle,
   hasMatchingQuestion,
+  hasCompositeQuestion,
+  isCompositeType,
   normalizeMatchingExtraTime,
   MATCHING_EXTRA_TIME_PERCENTS,
   MATCHING_EXTRA_TIME_DEFAULT,
