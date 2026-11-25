@@ -17,7 +17,7 @@ function startQuiz(){
         state.runPoints = {};
         state.ghostDiff = null;
         state.ghost = state.ghostEnabled && window.EduhootGhost && state.quizData
-            ? EduhootGhost.loadGhost(ghostStorage(), state.quizData.id, EduhootGhost.fingerprint(state.quizData.questions))
+            ? EduhootGhost.loadGhost(ghostStorage(), EduhootGhost.fingerprint(state.quizData.questions))
             : null;
         var desiredCount = getDesiredQuestionCount();
         state.desiredQuestionCount = desiredCount;
@@ -540,8 +540,7 @@ function startQuiz(){
         state.view = 'result';
         state.rankingBox = { visible: false, items: [] };
         if(totalQs > 0 && state.ghostEnabled && window.EduhootGhost){
-            var newBest = EduhootGhost.saveGhost(ghostStorage(), state.quizData.id,
-                EduhootGhost.fingerprint(state.quizData.questions), state.score, state.runPoints);
+            var newBest = EduhootGhost.saveGhost(ghostStorage(), EduhootGhost.fingerprint(state.quizData.questions), state.score, state.runPoints);
             state.result.ghost = state.ghost
                 ? { best: state.ghost.total, diff: state.score - state.ghost.total, newBest: newBest }
                 : { best: state.score, diff: 0, newBest: true };

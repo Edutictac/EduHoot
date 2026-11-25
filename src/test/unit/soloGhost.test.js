@@ -1,4 +1,4 @@
-// Mode fantasma (ítem 26): la millor marca personal en Solo, guardada només al navegador.
+// Mode fantasma (ítem 26): la millor marca del quiz, guardada només al navegador i compartida entre solo i aula.
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
@@ -14,7 +14,7 @@ function fakeStorage() {
 }
 
 const QUIZ = [
-  { type: 'quiz', question: 'Capital de França?', answers: ['París', 'Roma', '', ''], correctAnswers: [1], time: 20 },
+  { type: 'quiz', question: 'Capital de França?', answers: ['Roma', 'París', '', ''], correctAnswers: [1], time: 20 },
   { type: 'numeric', question: 'Quant és 2+2?', numericAnswer: 4, tolerance: 0, time: 15 }
 ];
 
@@ -33,7 +33,6 @@ test('la huella canvia només si canvia el contingut del quiz', () => {
 test('la diferència es compara per pregunta jugada, encara que l\'ordre siga aleatori', () => {
   // La marca va fer 100 a la pregunta 0 (original) i 200 a la 1.
   const g = { total: 300, points: { 0: 100, 1: 200 } };
-  // Partida amb barajat: primer la pregunta 1, després la 0. Només compta el que s'ha jugat.
   assert.equal(ghost.ghostTotalFor(g, [1]), 200);
   assert.equal(ghost.ghostTotalFor(g, [1, 0]), 300);
   assert.equal(ghost.diffFor(g, [1], 250), 50);
@@ -50,28 +49,36 @@ test('signe de la diferència: «+» i «−» amb el signe menys tipogràfic', 
 test('només es guarda la millor partida del mateix quiz', () => {
   const store = fakeStorage();
   const fp = ghost.fingerprint(QUIZ);
-  assert.equal(ghost.saveGhost(store, 'q1', fp, 500, { 0: 500 }), true);
-  assert.equal(ghost.saveGhost(store, 'q1', fp, 300, { 0: 300 }), false);
-  assert.equal(ghost.saveGhost(store, 'q1', fp, 800, { 0: 800 }), true);
-  assert.equal(ghost.loadGhost(store, 'q1', fp).total, 800);
+  assert.equal(ghost.saveGhost(store, fp, 500, { 0: 500 }), true);
+  assert.equal(ghost.saveGhost(store, fp, 300, { 0: 300 }), false);
+  assert.equal(ghost.saveGhost(store, fp, 800, { 0: 800 }), true);
+  assert.equal(ghost.loadGhost(store, fp).total, 800);
+});
+
+test('la marca és la mateixa per a qualsevol que tinga el mateix quiz (solo i aula)', () => {
+  const store = fakeStorage();
+  const fp = ghost.fingerprint(QUIZ);
+  // Solo guarda la marca; l'aula, amb la mateixa empremta, la troba.
+  ghost.saveGhost(store, fp, 900, { 0: 900 });
+  assert.equal(ghost.loadGhost(store, fp).total, 900);
 });
 
 test('si el quiz ha canviat, la marca antiga no es carrega i es substitueix', () => {
   const store = fakeStorage();
   const fp = ghost.fingerprint(QUIZ);
-  ghost.saveGhost(store, 'q1', fp, 900, { 0: 900 });
+  ghost.saveGhost(store, fp, 900, { 0: 900 });
   const otherFp = ghost.fingerprint([{ ...QUIZ[0], question: 'Altra' }, QUIZ[1]]);
-  assert.equal(ghost.loadGhost(store, 'q1', otherFp), null);
+  assert.equal(ghost.loadGhost(store, otherFp), null);
   // Una partida amb el quiz nou es guarda encara que siga inferior: és la nova base de comparació.
-  assert.equal(ghost.saveGhost(store, 'q1', otherFp, 100, { 0: 100 }), true);
-  assert.equal(ghost.loadGhost(store, 'q1', otherFp).total, 100);
+  assert.equal(ghost.saveGhost(store, otherFp, 100, { 0: 100 }), true);
+  assert.equal(ghost.loadGhost(store, otherFp).total, 100);
 });
 
 test('dades corruptes o absents: no hi ha marca, sense errors', () => {
   const store = fakeStorage();
-  store.setItem('eduh_ghost_q2', '{no és json');
-  assert.equal(ghost.loadGhost(store, 'q2', 'x'), null);
-  assert.equal(ghost.loadGhost(store, 'q3', 'x'), null);
-  assert.equal(ghost.loadGhost(null, 'q3', 'x'), null);
-  assert.equal(ghost.saveGhost(null, 'q3', 'x', 10, {}), false);
+  store.setItem('eduh_ghost_x', '{no és json');
+  assert.equal(ghost.loadGhost(store, 'x'), null);
+  assert.equal(ghost.loadGhost(store, 'absent'), null);
+  assert.equal(ghost.loadGhost(null, 'absent'), null);
+  assert.equal(ghost.saveGhost(null, 'absent', 10, {}), false);
 });

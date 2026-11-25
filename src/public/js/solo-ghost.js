@@ -49,15 +49,16 @@
         return (Number(score) || 0) - ghostTotalFor(ghost, playedOrigs);
     }
 
-    function storageKey(quizId){
-        return KEY_PREFIX + String(quizId);
+    // La clau és l'empremta del quiz: la mateixa marca serveix a solo i a aula.
+    function storageKey(fp){
+        return KEY_PREFIX + String(fp);
     }
 
     // La marca guardada, o null si no n'hi ha o si és d'un altre contingut de quiz.
-    function loadGhost(storage, quizId, fp){
-        if(!storage || quizId === undefined || quizId === null) return null;
+    function loadGhost(storage, fp){
+        if(!storage || !fp) return null;
         try{
-            var raw = storage.getItem(storageKey(quizId));
+            var raw = storage.getItem(storageKey(fp));
             if(!raw) return null;
             var data = JSON.parse(raw);
             if(!data || data.v !== VERSION || data.fp !== fp) return null;
@@ -69,18 +70,18 @@
 
     // Guarda la partida només si és la millor del mateix qüestionari (o si la marca anterior era d'un altre).
     // Retorna true si l'ha guardada.
-    function saveGhost(storage, quizId, fp, total, points){
-        if(!storage || quizId === undefined || quizId === null) return false;
+    function saveGhost(storage, fp, total, points){
+        if(!storage || !fp) return false;
         var current = null;
         try{
-            current = JSON.parse(storage.getItem(storageKey(quizId)) || 'null');
+            current = JSON.parse(storage.getItem(storageKey(fp)) || 'null');
         }catch(e){
             current = null;
         }
         var sameQuiz = !!current && current.v === VERSION && current.fp === fp;
         if(sameQuiz && (Number(current.total) || 0) >= total) return false;
         try{
-            storage.setItem(storageKey(quizId), JSON.stringify({ v: VERSION, fp: fp, total: total, points: points, savedAt: Date.now() }));
+            storage.setItem(storageKey(fp), JSON.stringify({ v: VERSION, fp: fp, total: total, points: points, savedAt: Date.now() }));
             return true;
         }catch(e){
             return false;

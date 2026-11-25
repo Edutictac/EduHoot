@@ -13,6 +13,7 @@ const { isStreakEnabled, questionTimeOf } = require('../services/scoring');
 const { buildAnswerStatus, leftListOf } = require('./answerStatus');
 
 const { getTimings } = require('../services/gameTimings');
+const { ghostStartInfo } = require('../services/ghostMark');
 const { normalizeAutoAdvance, AutoAdvanceTimer } = require('../services/autoAdvance');
 const { studentMetaOf, showCorrectAnswersOf } = require('../services/showAnswers');
 const QUESTION_COUNTDOWN_SECONDS = 3;
@@ -164,13 +165,21 @@ module.exports = function createGameHelpers({ io, games, players, cleanImportedT
   }
 
   function buildQuestions(questions = [], opts = {}) {
-    const randomQ = opts.randomQuestions === true;
+    const safeQuestions = Array.isArray(questions) ? questions : [];
+    // originalIndex: la posició de la pregunta al quiz, perquè el mode fantasma la compare encara que el barajat la mogui.
+    const indexed = safeQuestions.map((q, i) => ({ q, i }));
+    const ordered = opts.randomQuestions === true ? shuffleQuestions(indexed) : indexed;
+    return buildQuestionList(ordered.map((x) => x.q), opts)
+      .map((b, k) => ({ ...b, originalIndex: ordered[k].i }));
+  }
+
+  function buildQuestionList(questions = [], opts = {}) {
     const randomA = opts.randomAnswers !== false;
     const overrideTime = parseInt(opts.timePerQuestion, 10);
     const useOverrideTime = !Number.isNaN(overrideTime) && overrideTime > 0;
 
     const safeQuestions = Array.isArray(questions) ? questions : [];
-    const base = randomQ ? shuffleQuestions(safeQuestions) : [...safeQuestions];
+    const base = [...safeQuestions];
 
     return base.map((q) => {
       const meta = normalizeQuestionMeta(q);
@@ -346,6 +355,8 @@ module.exports = function createGameHelpers({ io, games, players, cleanImportedT
         video,
         pointsMultiplier,
         time,
+        originalIndex: current.originalIndex,
+        ...ghostStartInfo(game),
         ...(matching || {}),
         ...(ordering || {})
       }
@@ -377,7 +388,10 @@ module.exports = function createGameHelpers({ io, games, players, cleanImportedT
       ...(playerPayload.type === 'order' ? { orderCount: (playerPayload.orderItems || []).length, layout: playerPayload.layout } : {}),
       type: playerPayload.type,
       pointsMultiplier: playerPayload.pointsMultiplier,
-      time: playerPayload.time
+      time: playerPayload.time,
+      originalIndex: playerPayload.originalIndex,
+      ghostMode: playerPayload.ghostMode,
+      ghostFingerprint: playerPayload.ghostFingerprint
     };
   }
 

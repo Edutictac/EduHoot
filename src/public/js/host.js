@@ -271,6 +271,8 @@ var lobby = Vue.createApp({
                 nameMode: 'typed',
                 // Racha de aciertos (feature 11): bonificación para quien encadena aciertos.
                 streak: true,
+                // Mode fantasma en aula (opcional): cada alumne compara amb la seua millor marca, al seu navegador.
+                ghostMode: false,
                 // Avance automático entre preguntas: 0 = manual; 3–20 s.
                 autoAdvanceSec: 0,
                 // Modo de la partida: 'live' (en directo) o 'selfPaced' (cada alumno a su ritmo).
@@ -484,6 +486,7 @@ function startGame(){
         showScoresBetween: !!options.showScoresBetween,
         showCorrectAnswers: !!options.showCorrectAnswers,
         streak: !!options.streak,
+        ghostMode: !!options.ghostMode,
         autoAdvanceSec: parseInt(options.autoAdvanceSec, 10) || 0,
         mode: options.mode === 'selfPaced' ? 'selfPaced' : 'live',
         pin: (function(){

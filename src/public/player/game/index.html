@@ -60,6 +60,7 @@
             <div id="resultIcon" class="result-icon" v-if="resultIcon" aria-hidden="true">{{ resultIcon }}</div>
             <h2 id = "message" :class="messageKind ? 'message--' + messageKind : ''" v-show="messageVisible">{{ message }}<span v-if="messageDetailHtml" class="player-correct-answer" v-html="messageDetailHtml"></span></h2>
             <p id="resultSub" class="result-sub" v-if="resultSub">{{ resultSub }}</p>
+            <p id="ghostLine" class="result-sub ghost-line" v-if="ghostLine">{{ ghostLine }}</p>
             <div id="freeSubmitRow" :style="{ display: freeRowVisible ? 'flex' : 'none' }">
                 <input id="freeAnswerInput" ref="freeAnswerInput" type="text" autocomplete="off" :inputmode="questionType === 'numeric' ? 'decimal' : 'text'" :placeholder="freePlaceholder" v-model="freeAnswerValue" @keydown.enter.prevent="submitFree" />
                 <button type="button" id="freeSubmitBtn" class="button free-submit" @click="submitFree">{{ t('submit_free', 'Enviar') }}</button>
@@ -103,6 +104,7 @@
         <script src = "../../js/matchingBoard.js"></script>
         <script src = "../../js/orderBoard.js"></script>
         <script src = "../../js/playerCommon.js"></script>
+        <script src="../../js/solo-ghost.js"></script>
         <script src = "../../js/playerGame.js"></script>
     </body>
 </html>

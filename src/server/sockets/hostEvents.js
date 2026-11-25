@@ -2,6 +2,7 @@ const { getGamesCollection } = require('../data/repositories');
 const { logger, quizFields } = require('../logger');
 const { normalizeAutoAdvance } = require('../services/autoAdvance');
 const { hasMatchingQuestion, hasCompositeQuestion, isCompositeType, normalizeMatchingBlindStyle, normalizeMatchingExtraTime } = require('../questionUtils');
+const { ghostStartInfo } = require('../services/ghostMark');
 
 // host-join, host-join-game, startGame, nextQuestion, skipQuestion, newQuiz.
 module.exports = function createHostEvents({
@@ -468,6 +469,8 @@ module.exports = function createHostEvents({
       options.matchingExtraTime = normalizeMatchingExtraTime(options.matchingExtraTime);
       // Modo de la partida: en vivo (por defecto) o autoritme (cada alumno a su ritmo).
       options.mode = options.mode === 'selfPaced' ? 'selfPaced' : 'live';
+      // Mode fantasma en aula: opcional (desactivat per defecte); la marca és al navegador de cada alumne.
+      options.ghostMode = options.ghostMode === true || options.ghostMode === 'true';
       if (options.timePerQuestion !== undefined && options.timePerQuestion !== null && String(options.timePerQuestion).trim() !== '') {
         const parsedTime = parseInt(options.timePerQuestion, 10);
         if (Number.isNaN(parsedTime)) {
@@ -506,7 +509,7 @@ module.exports = function createHostEvents({
       game.gameOver = false;
       logger.info('Partida iniciada', { tag: 'game-start', pin: game.pin, hostId: game.hostId, playersCount: gamePlayers.length, questionsCount: game.gameData.questions.length, ...quizFields(game) });
       scheduleGameCleanup(socket.id, timingsFor(socket.id).inactivityMs);
-      io.to(game.pin).emit('gameStartedPlayer', { mode: options.mode });
+      io.to(game.pin).emit('gameStartedPlayer', { mode: options.mode, ...ghostStartInfo(game) });
       socket.emit('gameStarted', game.hostId);
       // Autoritme: no hay pregunta común; cada alumno pide la suya.
       if (options.mode === 'selfPaced') {

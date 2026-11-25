@@ -28,6 +28,9 @@ async function mockBackend(page, questions) {
     });
 }
 
+// Claus de marca al navegador (una per quiz: la clau és l'empremta).
+const ghostKeys = (page) => page.evaluate(() => Object.keys(localStorage).filter((k) => k.startsWith('eduh_ghost_')));
+
 // Una partida: respon cada pregunta amb el text indicat, amb el rellotge fixat.
 // «onAnswer» s'executa mentre la finestra de resultat està oberta.
 async function playRun(page, answers, onAnswer, ghostOn = true) {
@@ -50,7 +53,7 @@ test('mode fantasma: la primera partida fixa la marca i la segona mostra la dife
     await mockBackend(page);
     await playRun(page, RIGHT);
     await expect(page.locator('#result-ghost')).toHaveText('Nova millor marca!');
-    expect(await page.evaluate(() => localStorage.getItem('eduh_ghost_g1'))).not.toBeNull();
+    expect(await ghostKeys(page)).toHaveLength(1);
 
     // Partida 2: la primera pregunta s'erra. La diferència després de la pregunta és negativa.
     await playRun(page, ['Roma'], async () => {
@@ -80,7 +83,7 @@ test('mode fantasma: desactivat per defecte, no compara ni guarda la marca', asy
     await mockBackend(page);
     await playRun(page, RIGHT, undefined, false);
     await expect(page.locator('#opt-ghost')).not.toBeChecked();
-    expect(await page.evaluate(() => localStorage.getItem('eduh_ghost_g1'))).toBeNull();
+    expect(await ghostKeys(page)).toHaveLength(0);
     await playRun(page, ['Roma'], async () => {
         await expect(page.locator('#feedback-ghost')).toHaveCount(0);
     }, false);

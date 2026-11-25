@@ -110,6 +110,7 @@ var app = Vue.createApp({
             scoreBefore: null,
             gained: 0,
             gameOver: false,
+            ghostText: '',
             rankingVisible: false,
             rankingList: []
         };
@@ -146,6 +147,10 @@ var app = Vue.createApp({
             return '';
         },
         // Línea de detalle bajo el mensaje: puntuación final, puntos ganados o aviso de que se comentará la respuesta.
+        // Mode fantasma: la diferència després de cada pregunta i la marca al final.
+        ghostLine: function(){
+            return (this.resultShown || this.gameOver) ? this.ghostText : '';
+        },
         resultSub: function(){
             if(this.gameOver){
                 var line = this.playerScore !== null ? (this.scoreLabel + ' ' + this.playerScore) : '';
@@ -657,7 +662,120 @@ function updatePlayerRank(playerData){
     }
 }
 
+// Mode fantasma en aula: la millor marca de cada alumne és al seu navegador. El servidor només diu
+// si el mode està actiu i l'empremta del quiz; la comparació és per pregunta (posició original).
+var liveGhost = { started: false, on: false, fp: null, mark: null, origs: [], points: {}, current: null, before: 0, score: 0 };
+
+function liveGhostStorage(){
+    try{ return window.localStorage; }catch(e){ return null; }
+}
+
+function liveGhostText(key, vars){
+    var txt = window.i18nPlayer ? window.i18nPlayer.t(key) : key;
+    Object.keys(vars || {}).forEach(function(k){ txt = txt.replace('{' + k + '}', vars[k]); });
+    return txt;
+}
+
+// Partida nova en esta pàgina: s'inicia una vegada, amb la informació que porta la pregunta (o l'inici).
+function liveGhostStart(data){
+    if(liveGhost.started || !data || !('ghostMode' in data)) return;
+    liveGhost.started = true;
+    liveGhost.origs = [];
+    liveGhost.points = {};
+    liveGhost.current = null;
+    liveGhost.score = 0;
+    liveGhost.on = !!(data.ghostMode && data.ghostFingerprint && window.EduhootGhost);
+    if(!liveGhost.on) return;
+    liveGhost.fp = data.ghostFingerprint;
+    // La marca és la del quiz (la mateixa que a solo): s'identifica per l'empremta, no per l'id.
+    liveGhost.mark = EduhootGhost.loadGhost(liveGhostStorage(), liveGhost.fp);
+    // Recàrrega a mitad de partida: es retoma el progrés guardat d'esta mateixa partida (només si la pàgina
+    // s'ha recarregat; des de la sala d'espera és una navegació nova i no es retoma res).
+    if(liveGhostReloaded()){
+        var saved = liveGhostReadRun();
+        if(saved && saved.pin === String(params.pin || '') && saved.fp === liveGhost.fp){
+            liveGhost.origs = Array.isArray(saved.origs) ? saved.origs : [];
+            liveGhost.points = saved.points || {};
+            liveGhost.score = Number(saved.score) || 0;
+        }
+    }
+}
+
+// Progrés de la partida en curs, per a la recàrrega: només a sessionStorage (es perd en tancar la pestanya).
+function liveGhostSession(){
+    try{ return window.sessionStorage; }catch(e){ return null; }
+}
+
+function liveGhostReloaded(){
+    try{
+        var nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
+        return !!nav && nav.type === 'reload';
+    }catch(e){
+        return false;
+    }
+}
+
+function liveGhostReadRun(){
+    try{
+        var st = liveGhostSession();
+        return st ? JSON.parse(st.getItem('eduh_ghost_run') || 'null') : null;
+    }catch(e){
+        return null;
+    }
+}
+
+function liveGhostSaveRun(){
+    var st = liveGhostSession();
+    if(!st || !liveGhost.on) return;
+    try{
+        st.setItem('eduh_ghost_run', JSON.stringify({ pin: String(params.pin || ''), fp: liveGhost.fp, origs: liveGhost.origs, points: liveGhost.points, score: liveGhost.score }));
+    }catch(e){}
+}
+
+function liveGhostClearRun(){
+    var st = liveGhostSession();
+    if(st){
+        try{ st.removeItem('eduh_ghost_run'); }catch(e){}
+    }
+}
+
+socket.on('gameStartedPlayer', liveGhostStart);
+
+function liveGhostQuestion(data){
+    liveGhostStart(data);
+    app.ghostText = '';
+    liveGhost.current = (liveGhost.on && data && typeof data.originalIndex === 'number' && data.type !== 'poll') ? data.originalIndex : null;
+    liveGhost.before = liveGhost.score;
+}
+
+function liveGhostAnswer(playerData){
+    var me = Array.isArray(playerData) ? playerData.find(function(p){ return p.playerId === socket.id; }) : null;
+    if(!me) return;
+    var score = Number(me.gameData.score) || 0;
+    if(liveGhost.on && liveGhost.current !== null){
+        liveGhost.origs.push(liveGhost.current);
+        liveGhost.points[liveGhost.current] = score - liveGhost.before;
+        var diff = EduhootGhost.diffFor(liveGhost.mark, liveGhost.origs, score);
+        app.ghostText = liveGhost.mark ? liveGhostText('ghostDiff', { diff: EduhootGhost.signed(diff) }) : '';
+    }
+    liveGhost.score = score;
+    liveGhost.current = null;
+    liveGhostSaveRun();
+}
+
+function liveGhostFinish(){
+    if(!liveGhost.on) return;
+    var saved = EduhootGhost.saveGhost(liveGhostStorage(), liveGhost.fp, liveGhost.score, liveGhost.points);
+    liveGhostClearRun();
+    if(saved){
+        app.ghostText = liveGhostText('ghostNewBest', {});
+    }else if(liveGhost.mark){
+        app.ghostText = liveGhostText('ghostBest', { score: liveGhost.mark.total, diff: EduhootGhost.signed(liveGhost.score - liveGhost.mark.total) });
+    }
+}
+
 socket.on('questionOver', function(playerData, payload){
+    liveGhostAnswer(playerData);
     // Se muestra el resultado: la barra de tiempo se oculta hasta la siguiente cuenta atrás.
     app.resultShown = true;
     EduhootTTS.cancel();
@@ -865,6 +983,7 @@ function showQuestionCountdown(data){
 socket.on('questionCountdown', showQuestionCountdown);
 
 socket.on('playerQuestion', function(data){
+    liveGhostQuestion(data);
     app.resultShown = false;
     app.gained = 0;
     app.scoreBefore = app.playerScore;
@@ -932,6 +1051,7 @@ socket.on('playerQuestion', function(data){
 });
 
 socket.on('GameOver', function(){
+    liveGhostFinish();
     questionActive = false;
     releaseWakeLock();
     document.body.style.backgroundColor = "#FFFFFF";

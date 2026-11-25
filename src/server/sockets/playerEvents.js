@@ -6,6 +6,7 @@ const { logger, quizFields } = require('../logger');
 const { buildAnswerStatus, leftListOf } = require('./answerStatus');
 const { isKicked } = require('./kick');
 const { streakBonus, nextStreak, isStreakEnabled, questionTimeOf } = require('../services/scoring');
+const { ghostStartInfo } = require('../services/ghostMark');
 const { isRandomName } = require('../services/randomNames');
 const { isValidTypedName } = require('../services/nameRules');
 
@@ -78,7 +79,7 @@ module.exports = function createPlayerEvents({
         socket.emit('playerJoinAck', { ok: true, pin: game.pin, hostId, quizName: quizNameOf(game) });
         if (ackExtra) socket.emit(ackExtra.event, ackExtra.payload);
         if (game.gameLive) {
-          socket.emit('gameStartedPlayer', { mode: (game.gameData && game.gameData.options && game.gameData.options.mode) || 'live' });
+          socket.emit('gameStartedPlayer', { mode: (game.gameData && game.gameData.options && game.gameData.options.mode) || 'live', ...ghostStartInfo(game) });
         }
       };
 
