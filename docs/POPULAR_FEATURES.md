@@ -237,7 +237,10 @@ el context, que ja estan en la taula).
    **Emparellar, implementat** (tipus `matching`, «correspondència»):
    fins a 8 elements amb impostores, puntuació proporcional, en tots els
    modes, CSV, Moodle XML, GIFT i PDF/DOCX/ODT (vore `ARCHITECTURE.md`).
-   **Pendent:** ordenar.
+   **Ordenar, implementat** (tipus `order`): en partida, solo, flashcards,
+   multijugador local, autoritme, deures, documents (PDF, DOCX i ODT), Moodle XML
+   i CSV. El tiempo extra de la correspondència també s'aplica a ordenar.
+   **Pendent:** importar el *puzzle* de Kahoot (format sense verificar).
 
 8. 🟦 **Wayground** — Memes i GIF com a feedback d'encert/fallada — 🟡 Mitjana
    → **Criteri pedagògic:** ✖️ Aprenentatge: Cap · 🙂 Clima: Segur ·

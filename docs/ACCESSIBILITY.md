@@ -66,6 +66,10 @@ Ja implementat, no cal tornar a proposar-ho:
   del color; cada element porta el seu codi (número o lletra) i el de la
   seua parella, i els botons tenen `aria-pressed`. Els colors de parella
   eviten el verd, el taronja i el roig del resultat.
+- **Ordenar** (`orderBoard.js`): cada element es mou també amb els botons ▲ i ▼
+  (amb nom accessible, «Puja» i «Baixa»), no només arrossegant. El primer i
+  l'últim tenen el botó desactivat, i el tauler es presenta com un grup amb nom.
+  A cegues mostra codis (A, B, C) en lloc de text.
 - **Text llarg**: enunciats, respostes i finestres parteixen una paraula
   o un enllaç sense espais en lloc d'eixir-se'n del requadre.
 

@@ -136,7 +136,7 @@ En **Resultats** veus:
 
 Cada pregunta val fins a **1000 punts**: tots si es respon a l'instant,
 cap si s'esgota el temps (les preguntes amb doble puntuació, el doble). Les
-preguntes de correspondència i de resposta múltiple poden donar punts
+preguntes de correspondència, d'ordenar i de resposta múltiple poden donar punts
 parcials. La ratxa d'encerts suma bonificació. La puntuació la decidix
 sempre el servidor, no el dispositiu de l'alumne.
 
@@ -171,8 +171,8 @@ resposta correcta**.
 Es pot, però cada resposta només puntua una vegada.
 
 **El mode «Al seu ritme» admet qualsevol pregunta?**
-Sí: una opció, múltiple, vertader/fals, resposta curta, numèrica, enquesta
-i correspondència.
+Sí: una opció, múltiple, vertader/fals, resposta curta, numèrica, enquesta,
+correspondència i ordenar.
 
 **Puc fer deures de Multijugador o Solo?**
 No. Els deures són per a alumnat individual amb enllaç; el Multijugador (una

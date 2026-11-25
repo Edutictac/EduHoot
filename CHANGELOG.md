@@ -16,6 +16,14 @@ Les versions 1.0.2 i 1.0.5 van tindre en el seu moment una nota de versió
 pròpia (`RELEASE-X.Y.Z.md`); el seu contingut ja està integrat ací i als
 fitxers corresponents, i els originals es van eliminar.
 
+## [Sense publicar]
+
+### Afegit
+- **Preguntes d'ordenar** (feature 7): el tipus `order`, amb editor, partida en viu, solo, flashcards, multijugador local, autoritme, deures, exportació a documents, Moodle XML i CSV.
+- **Música a solo**: selector de tema a la pantalla inicial, amb l'opció «Sense música» (també al lobby de l'anfitrió i a la vista de juego).
+- **Ajudes «?»** a les opcions de la pantalla inicial de solo.
+- **Tiempo extra en preguntes compostes**: el marge de temps de la correspondència també s'aplica a ordenar.
+
 ## [1.2.0] - 2026-11-23
 
 ### Afegit

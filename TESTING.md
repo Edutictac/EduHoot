@@ -82,6 +82,8 @@ problemes d'estil, variables sense usar, etc.
   (`a11yContrast.test.js`), els noms únics en `player-join` (`playerJoinNames.test.js`)
   i la pregunta de correspondència (`matching.test.js`: model, puntuació,
   partida, CSV, Moodle XML, GIFT i informe).
+  Les d'ordenar: `orderQuestion.test.js`, `orderWiring.test.js`, `orderBrowser.test.js`
+  (paritat amb el navegador) i `orderIo.test.js` (Moodle XML i CSV).
 - **`test/integration/`** — alça el servidor Express real (amb Mongo en
   memòria) i prova l'API HTTP d'extrem a extrem: `api.test.js`,
   `sessionReport.test.js`, `auth-migration.test.js` i `authentik.test.js`

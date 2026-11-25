@@ -3,6 +3,7 @@
 
 ## Per al professorat
 
+- **Preguntes d'ordenar**: l'alumnat posa uns elements en l'ordre correcte (de 2 a 8). Funciona en partida, a l'autoritme, als deures, en solo, a les flashcards i en multijugador local. Es poden importar i exportar en Moodle XML i CSV, i exportar a PDF, DOCX i ODT. Pots triar la puntuació (proporcional o tot o res) i la disposició (vertical o horitzontal).
 - **Més temps per a reconnectar-te**: si la teua pantalla es desconnecta, la partida espera 2 minuts (abans 30 segons) perquè tornes. A la configuració de la partida pots ampliar-ho fins a 5 minuts.
 - **Data de creació i de modificació a la biblioteca**: cada quiz mostra quan es va crear i quan es va modificar per última vegada, en una línia discreta.
 

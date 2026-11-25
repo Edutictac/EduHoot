@@ -1237,6 +1237,18 @@ de `/create/` com en la importació de CSV):
   l'esquerra, l'índex triat de la dreta. En CSV va en la columna `texto`:
   `França -> París | -> Lisboa`. La lògica del navegador (Solo i
   multijugador) està en `matchingBoard.js` (`window.EduhootMatching`).
+- **`order`** (ordenar, feature 7): elements `items` en l'ordre correcte, de 2
+  a 8 i sense repetir (`normalizeOrderItems()`). En partida, la llista es barreja
+  per partida (`orderShown`); l'alumne envia les posicions mostrades en l'ordre
+  triat i `orderScoreRatioFromMeta()` les tradueix a índexs de la solució. La
+  puntuació (`orderGrading`) és la de `orderQuestion.js` (els modes de Moodle;
+  l'editor ofereix posició absoluta i tot o res). La disposició (`layout`) no
+  afecta la correcció. En CSV: `texto` amb els elements separats per `|`
+  (dins d'un element, `\|` i `\\`), `numero` és la puntuació i `tolerancia` la
+  disposició. La lògica del navegador està en `orderBoard.js`
+  (`window.EduhootOrder`); `test/unit/orderBrowser.test.js` la compara amb el
+  servidor. La importació de *puzzle* de Kahoot no està feta (el format no està
+  verificat amb un exemple real).
 
 **Tipus provats en partida real de "Jugar a l'aula"**: `quiz`,
 `multiple`, `short-answer` i `numeric` ([issue #24](https://github.com/Edutictac/EduHoot/issues/24),
@@ -1301,7 +1313,7 @@ poden crear una vegada i usar en cada entorn.
 | Resposta curta | Sí (`short-answer`), no en Multijugador | Sí (*type answer*, 20 car.) | Sí (oberta, buits) | Sí |
 | Numèrica | Sí (`numeric`), no en Multijugador | No confirmat | No confirmat | Sí |
 | Emparellament | Sí (`matching`, amb impostores) | No | Sí (*Match*) | Sí |
-| Ordenar | No | Sí (*puzzle*) | Aproximat (desplegable, arrossegar) | Sí (arrossegar) |
+| Ordenar | Sí (`order`) | Sí (*puzzle*) | Aproximat (desplegable, arrossegar) | Sí (arrossegar) |
 | Imatge amb marcador | No | Sí (*pin answer*) | Etiquetat (arrossegar text) | Sí (arrossegar sobre imatge) |
 | Enquesta (no puntua) | Sí (`poll`) | Sí | Sí | No (no és tipus del banc) |
 | Assaig / text llarg | No | No | Sí (oberta) | Sí |
