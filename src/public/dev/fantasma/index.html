@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex">
+    <title>PoC · Mode fantasma | EduHoot</title>
+    <link href="/css/fonts.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/solo.css">
+    <link rel="stylesheet" href="/css/answers.css">
+    <link rel="stylesheet" href="/css/countdown.css">
+    <style>
+        /* Només per a la prova de concepte: les eines de verificació, fora de l'aspecte de Solo. */
+        .poc-note{ margin: 0 0 8px; font-size: 13px; opacity: 0.8; text-align: center; }
+        .poc-debug{ margin-top: 16px; font-size: 13px; }
+        .poc-debug pre{ white-space: pre-wrap; word-break: break-all; background: rgba(0,0,0,0.25); padding: 10px; border-radius: 8px; }
+        .poc-timer{ height: 6px; border-radius: 3px; background: rgba(255,255,255,0.15); overflow: hidden; margin: 10px 0; }
+        .poc-timer > div{ height: 100%; width: 100%; background: #fdbc4b; transition: width 0.1s linear; }
+    </style>
+</head>
+<body class="playing">
+<main class="panel play-panel" id="app">
+    <p class="poc-note">Prova de concepte · mode fantasma (ítem 26) amb l'aspecte de Solo. Només en desenvolupament.</p>
+    <div class="panel__header">
+        <div>
+            <p class="eyebrow"><span class="mode-icon" aria-hidden="true">👤</span>Mode individual</p>
+            <h2>Mode fantasma</h2>
+        </div>
+    </div>
+
+    <section id="start" class="start-form">
+        <div class="start-form__options">
+            <p id="mark" class="muted"></p>
+            <label class="solo-check"><input type="checkbox" id="shuffle"> <span>Barajar preguntas</span></label>
+            <button id="start-btn" class="btn btn-primary" type="button">Jugar en solitario</button>
+            <button id="reset-btn" class="btn btn-ghost" type="button">Esborrar la marca</button>
+        </div>
+    </section>
+
+    <section id="game" class="game-area hidden">
+        <div class="game-progress">
+            <span id="progress" class="pill"></span>
+            <span id="score" class="pill pill-muted"></span>
+            <span id="ghost-pill" class="pill pill-muted"></span>
+        </div>
+        <div class="poc-timer"><div id="bar"></div></div>
+        <div class="question-card">
+            <p id="qtext" class="question-text"></p>
+            <div id="answers" class="answers answer-grid"></div>
+        </div>
+    </section>
+
+    <section id="result" class="result-area hidden">
+        <h3>Final de la partida</h3>
+        <p id="summary" class="subtext"></p>
+        <p id="ghost-result" class="subtext"></p>
+        <div class="result-actions">
+            <button id="again" class="btn btn-primary" type="button">Tornar a jugar</button>
+        </div>
+    </section>
+
+    <div id="modal" class="solo-modal" role="dialog" aria-modal="true">
+        <div class="solo-modal__content" id="modal-content">
+            <h3 id="m-title"></h3>
+            <p id="m-body"></p>
+            <p id="m-ghost" class="solo-modal__ghost"></p>
+            <button id="m-ok" class="btn btn-feedback" type="button">OK</button>
+        </div>
+    </div>
+
+    <details class="poc-debug">
+        <summary>Dades de verificació</summary>
+        <pre id="debug"></pre>
+    </details>
+</main>
+
+<script src="/js/solo-ghost.js"></script>
+<script>
+(function(){
+    'use strict';
+    var QUIZ = {
+        id: 'poc-fantasma',
+        questions: [
+            { type: 'quiz', question: 'Capital de França?', answers: ['Roma', 'París', 'Berlín', 'Londres'], correctAnswers: [2], time: 15 },
+            { type: 'quiz', question: 'Capital d\'Itàlia?', answers: ['Roma', 'Milà', 'Nàpols', 'Torí'], correctAnswers: [2], time: 15 },
+            { type: 'quiz', question: 'Quant és 2 + 2?', answers: ['3', '5', '4', '22'], correctAnswers: [3], time: 15 }
+        ]
+    };
+    var MAX_POINTS = 1000;
+    var FP = EduhootGhost.fingerprint(QUIZ.questions);
+    var STORE = window.localStorage;
+    var $ = function(id){ return document.getElementById(id); };
+    var run = null;       // partida en curs
+    var timer = null;
+    var modalTimer = null;
+
+    function shuffled(list){
+        var copy = list.slice();
+        for(var i = copy.length - 1; i > 0; i--){
+            var j = Math.floor(Math.random() * (i + 1));
+            var tmp = copy[i]; copy[i] = copy[j]; copy[j] = tmp;
+        }
+        return copy;
+    }
+
+    function show(id, visible){ $(id).classList.toggle('hidden', !visible); }
+
+    function renderMark(){
+        var ghost = EduhootGhost.loadGhost(STORE, QUIZ.id, FP);
+        $('mark').textContent = ghost
+            ? 'Millor marca guardada: ' + ghost.total + ' pts (' + Object.keys(ghost.points).length + ' preguntes puntuables).'
+            : 'Encara no hi ha cap marca per a este qüestionari.';
+        return ghost;
+    }
+
+    function debug(){
+        var ghost = EduhootGhost.loadGhost(STORE, QUIZ.id, FP);
+        $('debug').textContent = JSON.stringify({
+            fingerprint: FP,
+            storedMark: STORE.getItem('eduh_ghost_' + QUIZ.id),
+            run: run ? { order: run.order, pos: run.pos, score: run.score, played: run.played, points: run.points, ghostTotal: run.ghost && run.ghost.total } : null,
+            ghostLoaded: ghost
+        }, null, 2);
+    }
+
+    function startRun(){
+        var order = $('shuffle').checked ? shuffled(QUIZ.questions.map(function(_, i){ return i; })) : QUIZ.questions.map(function(_, i){ return i; });
+        run = {
+            order: order, pos: 0, score: 0, played: [], points: {},
+            ghost: EduhootGhost.loadGhost(STORE, QUIZ.id, FP)
+        };
+        show('start', false); show('result', false); show('game', true);
+        $('ghost-pill').textContent = run.ghost ? 'Fantasma: ' + run.ghost.total : 'Sense fantasma';
+        renderQuestion();
+    }
+
+    function renderQuestion(){
+        var q = QUIZ.questions[run.order[run.pos]];
+        $('progress').textContent = 'Pregunta ' + (run.pos + 1) + ' de ' + QUIZ.questions.length;
+        $('score').textContent = 'Punts: ' + run.score;
+        $('qtext').textContent = q.question;
+        var box = $('answers');
+        box.textContent = '';
+        q.answers.forEach(function(text, i){
+            var b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'answer answer-shape answer-shape--' + (i + 1);
+            b.setAttribute('data-answer', String(i + 1));
+            b.textContent = text;
+            b.addEventListener('click', function(){ answer(i + 1); });
+            box.appendChild(b);
+        });
+        startTimer(q.time);
+    }
+
+    // Temporitzador: 15 s; els punts són proporcionals al temps que queda (com a Solo).
+    function startTimer(seconds){
+        var left = seconds;
+        $('bar').style.width = '100%';
+        clearInterval(timer);
+        timer = setInterval(function(){
+            left = Math.max(0, left - 0.1);
+            $('bar').style.width = (100 * left / seconds) + '%';
+            if(left <= 0){ answer(null, left); }
+        }, 100);
+        run.left = function(){ return left; };
+        run.total = seconds;
+    }
+
+    function answer(choice){
+        if(!run || run.locked) return;
+        run.locked = true;
+        clearInterval(timer);
+        var remaining = run.left ? run.left() : 0;
+        var origIdx = run.order[run.pos];
+        var q = QUIZ.questions[origIdx];
+        var before = run.score;
+        var right = choice !== null && choice === q.correctAnswers[0];
+        if(right){
+            run.score += Math.round(MAX_POINTS * Math.max(0, Math.min(1, remaining / run.total)));
+        }
+        run.points[origIdx] = run.score - before;
+        run.played.push(origIdx);
+        var diff = EduhootGhost.diffFor(run.ghost, run.played, run.score);
+        $('score').textContent = 'Punts: ' + run.score;
+        if(run.ghost){ $('ghost-pill').textContent = 'Fantasma: ' + EduhootGhost.ghostTotalFor(run.ghost, run.played); }
+        $('m-title').textContent = choice === null ? 'Temps esgotat' : (right ? 'Correcte!' : 'Incorrecta');
+        $('m-body').textContent = 'Resposta correcta: ' + q.answers[q.correctAnswers[0] - 1];
+        $('m-ghost').textContent = run.ghost ? 'Fantasma: ' + EduhootGhost.signed(diff) : '';
+        $('modal').classList.add('show');
+        clearTimeout(modalTimer);
+        modalTimer = setTimeout(closeModal, 5000);
+        debug();
+    }
+
+    function closeModal(){
+        if(!run) return;
+        clearTimeout(modalTimer);
+        $('modal').classList.remove('show');
+        run.pos += 1;
+        run.locked = false;
+        if(run.pos < QUIZ.questions.length){ renderQuestion(); } else { finish(); }
+        debug();
+    }
+
+    function finish(){
+        clearInterval(timer);
+        var saved = EduhootGhost.saveGhost(STORE, QUIZ.id, FP, run.score, run.points);
+        show('game', false);
+        show('result', true);
+        $('summary').textContent = 'Punts totals: ' + run.score;
+        if(saved){
+            $('ghost-result').textContent = 'Nova millor marca!';
+        }else if(run.ghost){
+            $('ghost-result').textContent = 'Millor marca: ' + run.ghost.total + ' (' + EduhootGhost.signed(run.score - run.ghost.total) + ')';
+        }else{
+            $('ghost-result').textContent = '';
+        }
+        renderMark();
+        debug();
+    }
+
+    $('start-btn').addEventListener('click', startRun);
+    $('again').addEventListener('click', startRun);
+    $('m-ok').addEventListener('click', closeModal);
+    $('reset-btn').addEventListener('click', function(){
+        STORE.removeItem('eduh_ghost_' + QUIZ.id);
+        renderMark();
+        debug();
+    });
+    renderMark();
+    debug();
+})();
+</script>
+</body>
+</html>
