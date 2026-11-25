@@ -1600,10 +1600,10 @@ body.playing #game-panel{
     row-gap: 8px;
     min-width: 0;
 }
-.start-form__options > .solo-check,
 /* El botó de jugar: a la columna de les opcions, alineat a la dreta, una mica separat de les opcions. */
 .start-form__options > #start-btn{ grid-column: 2; margin-top: 14px; }
-.start-form__options > .solo-check{ margin: 0; }
+/* Les caselles, apilades i alineades a l'esquerra amb les etiquetes de les opcions (columna 1). */
+.start-form__options > .solo-check{ grid-column: 1; justify-self: start; margin: 0; }
 .start-form__options > #start-btn{ justify-self: end; }
 .start-form__options .question-count-controls input{ width: 120px; }
 @media (max-width: 760px){
@@ -1835,3 +1835,6 @@ body.playing .game-area .question-card > #solo-countdown{
 
 /* Logo d'EduHoot a l'esquerra del títol del quiz (inici de Solo i flashcards). */
 .selected-title__logo{ display: inline-block; height: 1em; width: auto; vertical-align: -0.15em; margin-right: 0.3em; }
+
+/* Resum del quiz a la pantalla inicial: preguntes i etiquetes, cadascuna en una línia. */
+.selected-meta__line{ display: block; }

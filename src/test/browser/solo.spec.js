@@ -360,7 +360,7 @@ test('seleccionar un quiz muestra el formulario con el nº de preguntas y limita
     await mockBackend(page);
     await openCatalog(page);
     await selectQuiz(page, 'Geografia');
-    await expect(page.locator('#selected-meta')).toHaveText('Preguntas: 5 · Etiquetas: socials, mapes');
+    await expect(page.locator('#selected-meta')).toHaveText('Preguntas: 5 Etiquetas: socials, mapes');
     await expect(page.locator('#question-count')).toHaveValue('5');
     await expect(page.locator('#question-count')).toHaveAttribute('max', '5');
     await expect(page.locator('#question-count-total')).toHaveText('de 5');

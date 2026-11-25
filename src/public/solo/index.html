@@ -138,7 +138,7 @@
                             <img v-if="!quizImage" class="quiz-banner__logo" src="/icons/logo.svg" alt="EduHoot">
                             <img v-if="quizImage" class="quiz-banner__cover" :src="quizImage" alt="" @error="$event.target.style.display = 'none'; $event.target.parentNode.classList.add('quiz-banner--logo-only')">
                         </div>
-                        <p id="selected-meta" class="muted">{{ selectedMeta }}</p>
+                        <p id="selected-meta" class="muted"><span class="selected-meta__line">{{ selectedMetaCount }}</span> <span v-if="selectedMetaTags" class="selected-meta__line">{{ selectedMetaTags }}</span></p>
                                         </div>
 
                     <div class="start-form__options">

@@ -577,12 +577,18 @@ var soloPlay = {
             }
             return '';
         },
-        selectedMeta: function(){
+        // Resum del quiz en dues línies: el nombre de preguntes i les etiquetes.
+        selectedMetaCount: function(){
             var quiz = this.s.quizData;
             if(!quiz) return this.t('startSelect');
             var count = Array.isArray(quiz.questions) ? quiz.questions.length : 0;
+            return format(this.t('selectedMetaCount'), { count: count });
+        },
+        selectedMetaTags: function(){
+            var quiz = this.s.quizData;
+            if(!quiz) return '';
             var tags = Array.isArray(quiz.tags) ? quiz.tags.join(', ') : (Array.isArray(quiz.questionsTags) ? quiz.questionsTags.join(', ') : '');
-            return format(this.t('selectedMeta'), { count: count, tags: tags || '—' });
+            return format(this.t('selectedMetaTags'), { tags: tags || '—' });
         },
         quizTotal: function(){
             var quiz = this.s.quizData;
