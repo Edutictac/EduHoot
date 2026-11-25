@@ -15,7 +15,9 @@
 }
 .order-move:disabled{ opacity: 0.35; cursor: default; }
 .order-move:focus-visible{ outline: 3px solid #ffee70; outline-offset: 2px; }
-.order-submit{ min-width: 180px; }
+/* Botó propi: el tauler es veu igual a totes les pàgines (no depèn de .button de /player/game/). */
+.order-submit{ min-width: 180px; padding: 10px 18px; border: 0; border-radius: 12px; background: #fdbc4b; color: #1f2937; font: inherit; font-weight: 800; cursor: pointer; }
+.order-submit:disabled{ opacity: 0.5; cursor: not-allowed; }
 .order-board--horizontal .order-list{ flex-direction: row; flex-wrap: wrap; justify-content: center; }
 
 /* Projector: la llista d'ordenar (durant la pregunta) i la solució (en mostrar el resultat). */

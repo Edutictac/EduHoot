@@ -73,7 +73,7 @@
 
     function normalizeQuestionMeta(q){
         var type = (q && q.type) ? String(q.type).toLowerCase() : 'quiz';
-        var allowed = { 'quiz': true, 'multiple': true, 'true-false': true, 'short-answer': true, 'numeric': true, 'poll': true, 'matching': true };
+        var allowed = { 'quiz': true, 'multiple': true, 'true-false': true, 'short-answer': true, 'numeric': true, 'poll': true, 'matching': true, 'order': true };
         if(!allowed[type]){
             type = 'quiz';
         }
@@ -109,6 +109,23 @@
                 matchLeft: layout.matchLeft,
                 matchRight: layout.matchRight,
                 matchSolution: layout.matchSolution
+            };
+        }
+
+        // Ordenar (feature 7): la barreja de la partida (orderShown) i la puntuació de EduhootOrder.
+        if(type === 'order'){
+            var orderLayout = EduhootOrder.layoutOf(q);
+            return {
+                type: type,
+                correctAnswers: [1],
+                correct: 1,
+                acceptedAnswers: [],
+                numericAnswer: null,
+                tolerance: null,
+                items: orderLayout.items,
+                orderItems: orderLayout.orderItems,
+                orderShown: orderLayout.orderShown,
+                orderGrading: Number(q && q.orderGrading) || 0
             };
         }
 
@@ -155,7 +172,7 @@
     }
 
     function getVisibleAnswers(q, type){
-        if(type === 'short-answer' || type === 'numeric' || type === 'matching'){
+        if(type === 'short-answer' || type === 'numeric' || type === 'matching' || type === 'order'){
             return [];
         }
         var answers = Array.isArray(q && q.answers) ? q.answers.slice(0, 4) : ['', '', '', ''];
@@ -196,6 +213,25 @@
                 matchLeft: layout.matchLeft,
                 matchRight: layout.matchRight,
                 matchSolution: layout.matchSolution
+            };
+        }
+
+        // Ordenar: cada partida la baraja de nou (mai en l'ordre guardat).
+        if(meta.type === 'order'){
+            var orderShuffle = EduhootOrder.shuffledLayout(meta.items);
+            return {
+                question: q.question || '',
+                answers: ['', '', '', ''],
+                correct: 1,
+                correctAnswers: [1],
+                type: 'order',
+                image: q.image || '',
+                video: q.video || '',
+                time: q.time,
+                items: meta.items,
+                orderItems: orderShuffle.orderItems,
+                orderShown: orderShuffle.orderShown,
+                orderGrading: meta.orderGrading
             };
         }
 

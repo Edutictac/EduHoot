@@ -69,6 +69,7 @@ var i18n = {
         topPlayers: 'Top 5 jugadores',
         gameOver: 'FIN DE LA PARTIDA',
         bgMusicTitle: 'Música de fondo',
+        bgMusicNone: 'Sin música',
         bgMusicChoose: 'Elige un tema',
         bgMusicPlay: 'Reproducir música',
         bgMusicPause: 'Pausar música',
@@ -86,10 +87,10 @@ var i18n = {
         autoLabel: 'Avance automático',
         statePaused: 'Partida en pausa',
         statePlaying: 'Partida en marcha',
-        matchingExtraLabel: 'Más tiempo en correspondencias',
+        matchingExtraLabel: 'Tiempo extra en preguntas compuestas',
         autoTip: 'Pasa solo a la siguiente pregunta tras los resultados, esperando los segundos indicados. «Manual» = lo decides tú con el botón. Se aplica desde la siguiente pregunta.',
         scoresTip: 'Muestra u oculta la puntuación y el ranking entre preguntas y el podio final.',
-        matchingExtraTip: 'Tiempo extra (en %) de las preguntas de correspondencia. Se aplica desde la siguiente pregunta.',
+        matchingExtraTip: 'Tiempo extra (en %) para las preguntas de correspondencia y de ordenar. Se aplica desde la siguiente pregunta.',
         autoManual: 'Manual',
         autoIn: 'Siguiente en {s} s',
         autoPaused: 'Avance pausado',
@@ -142,6 +143,7 @@ var i18n = {
         topPlayers: 'Top 5 Players',
         gameOver: 'GAME OVER',
         bgMusicTitle: 'Background music',
+        bgMusicNone: 'No music',
         bgMusicChoose: 'Choose a track',
         bgMusicPlay: 'Play music',
         bgMusicPause: 'Pause music',
@@ -159,10 +161,10 @@ var i18n = {
         autoLabel: 'Automatic advance',
         statePaused: 'Game paused',
         statePlaying: 'Game running',
-        matchingExtraLabel: 'Extra time for matching',
+        matchingExtraLabel: 'Extra time on composite questions',
         autoTip: 'Moves on to the next question by itself after the results, waiting the seconds shown. "Manual" = you decide with the button. Applies from the next question.',
         scoresTip: 'Shows or hides scores and ranking between questions and the final podium.',
-        matchingExtraTip: 'Extra time (in %) for matching questions. Applies from the next question.',
+        matchingExtraTip: 'Extra time (in %) for matching and ordering questions. Applies from the next question.',
         scoresToggle: 'Scores and ranking',
         autoManual: 'Manual',
         autoIn: 'Next in {s} s',
@@ -215,6 +217,7 @@ var i18n = {
         topPlayers: 'Top 5 jugadors',
         gameOver: 'FI DE LA PARTIDA',
         bgMusicTitle: 'Música de fons',
+        bgMusicNone: 'Sense música',
         bgMusicChoose: 'Tria un tema',
         bgMusicPlay: 'Reprodueix música',
         bgMusicPause: 'Atura la música',
@@ -232,10 +235,10 @@ var i18n = {
         autoLabel: 'Avanç automàtic',
         statePaused: 'Partida en pausa',
         statePlaying: 'Partida en marxa',
-        matchingExtraLabel: 'Més temps en correspondències',
+        matchingExtraLabel: 'Temps extra en preguntes compostes',
         autoTip: 'Passa sol a la pregunta següent després dels resultats, esperant els segons indicats. «Manual» = ho decidixes tu amb el botó. S\'aplica des de la pregunta següent.',
         scoresTip: 'Mostra o amaga la puntuació i el rànquing entre preguntes i el podi final.',
-        matchingExtraTip: 'Temps extra (en %) de les preguntes de correspondència. S\'aplica des de la pregunta següent.',
+        matchingExtraTip: 'Temps extra (en %) per a les preguntes de correspondència i d\'ordenar. S\'aplica des de la pregunta següent.',
         scoresToggle: 'Puntuacions i rànquing',
         autoManual: 'Manual',
         autoIn: 'Següent en {s} s',
@@ -352,6 +355,7 @@ var app = Vue.createApp({
             // Título del quiz y margen de las correspondencias (si el quiz tiene alguna).
             quizName: '',
             hasMatching: false,
+            hasComposite: false,
             matchingExtraTime: 50,
             matchingExtraChoices: [25, 50, 75, 100],
             // Puntuaciones y ranking: se puede cambiar en cualquier momento de la partida.
@@ -561,7 +565,8 @@ function updateHostMusicLabels(){
         pause: t('bgMusicPause'),
         prev: t('bgMusicPrev'),
         next: t('bgMusicNext'),
-        volume: t('bgMusicVolume')
+        volume: t('bgMusicVolume'),
+        none: t('bgMusicNone')
     });
 }
 
@@ -761,7 +766,8 @@ function initHostMusicPlayer(){
         sharedAudio: hostSharedAudio && hostSharedAudio.music,
         storageKey: 'eduhoot-host-music',
         randomStart: true,
-        volume: 0.7
+        volume: 0.7,
+        noneOption: true
     });
     updateHostMusicLabels();
 }
@@ -1247,6 +1253,7 @@ socket.on('gamePin', function(data){
     if(data){
         app.quizName = (data.quizName || '').toString();
         app.hasMatching = !!data.hasMatching;
+        app.hasComposite = !!data.hasComposite;
         if(data.matchingExtraTime) app.matchingExtraTime = Number(data.matchingExtraTime) || 50;
     }
     if(data && data.pin){

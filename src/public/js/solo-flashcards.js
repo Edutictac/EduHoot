@@ -107,7 +107,7 @@
     // Validació automàtica («Comprobar respuestas»): el mateix criteri que el mode solo (solo-game.js).
     // Quiz, resposta múltiple, vertader/fals, resposta curta, numèrica i correspondència es validen;
     // l'enquesta no.
-    var VALIDATABLE = { quiz: true, multiple: true, 'true-false': true, 'short-answer': true, numeric: true, matching: true };
+    var VALIDATABLE = { quiz: true, multiple: true, 'true-false': true, 'short-answer': true, numeric: true, matching: true, order: true };
 
     function isValidatableType(type){
         return VALIDATABLE[type] === true;
@@ -137,8 +137,14 @@
     // Té en compte la resposta de l'alumnat: true si és correcta, false si no, null si la pregunta no es valida.
     // picks: { '<n>': true } (opcions marcades); typed: text o nombre escrit;
     // matches: { '<i>': <j> } (per a la correspondència: l'element j de la dreta triat per a l'esquerra i).
-    function judgeCard(meta, picks, typed, matches){
+    // order: les posicions de la llista barrejada en l'ordre triat (per a ordenar); la puntuació és EduhootOrder.
+    // Per a ordenar, meta necessita orderShown (la barreja de la targeta).
+    function judgeCard(meta, picks, typed, matches, order){
         if(!meta || !isValidatableType(meta.type)) return null;
+        if(meta.type === 'order'){
+            // Correcta només amb l'ordre complet (proporció 1), com a la partida.
+            return !!root.EduhootOrder && root.EduhootOrder.scoreRatio(meta, order || []) === 1;
+        }
         if(meta.type === 'matching'){
             var solution = meta.matchSolution || [];
             var answers = matches || {};

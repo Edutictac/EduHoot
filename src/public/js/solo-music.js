@@ -12,7 +12,8 @@ function updateSoloMusicLabels(){
         pause: t('bgMusicPause'),
         prev: t('bgMusicPrev'),
         next: t('bgMusicNext'),
-        volume: t('bgMusicVolume')
+        volume: t('bgMusicVolume'),
+        none: t('bgMusicNone')
     });
 }
 
@@ -35,7 +36,8 @@ function initSoloMusicPlayer(){
     soloMusicPlayerInstance = initBackgroundMusic('#solo-music-player', {
         storageKey: SOLO_MUSIC_STORAGE_KEY,
         randomStart: true,
-        volume: 0.6
+        volume: 0.6,
+        noneOption: true
     });
     updateSoloMusicLabels();
 }

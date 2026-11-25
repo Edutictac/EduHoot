@@ -49,7 +49,8 @@ function startQuiz(){
             : ((typeof q.time === 'number' && q.time > 0) ? q.time : 20);
         time = Math.max(5, Math.min(120, time));
         // Correspondencia: más margen (+25/50/75/100 %), elegido por el alumno.
-        if(meta.type === 'matching'){
+        // Preguntas compuestas (correspondencia y ordenar): más margen, elegido por el alumno.
+        if(meta.type === 'matching' || meta.type === 'order'){
             time = Math.round(time * (1 + (state.matchingExtraTime || 0) / 100));
         }
         state.timerTotal = time;
@@ -365,6 +366,11 @@ function startQuiz(){
                 return (i + 1) + ' ' + meta.matchLeft[i] + ' → ' + (meta.matchRight[r] || '');
             }).join(' · ');
             state.lastMatchHits = { hits: matchResult.hits, total: matchResult.total };
+        }else if(meta.type === 'order'){
+            // Proporcional, com la correspondència: el mode de puntuació el marca la pregunta.
+            scoreRatio = timedOut ? 0 : EduhootOrder.scoreRatio(meta, choice);
+            isCorrect = scoreRatio === 1;
+            correctAnswerText = meta.items.map(function(text, i){ return (i + 1) + ' ' + text; }).join(' · ');
         }else if(meta.type === 'short-answer'){
             var rawText = timedOut ? '' : (typeof choice === 'string' ? choice : String(choice || ''));
             var normalized = normalizeFreeText(rawText);
@@ -450,7 +456,7 @@ function startQuiz(){
             state.feedback = { text: t('pollThanks'), kind: 'muted' };
         }else if(isCorrect){
             state.feedback = { text: t('correctText'), kind: 'success' };
-        }else if((meta.type === 'multiple' || meta.type === 'matching') && scoreRatio > 0){
+        }else if((meta.type === 'multiple' || meta.type === 'matching' || meta.type === 'order') && scoreRatio > 0){
             var partialText = t('partialText');
             if(meta.type === 'matching'){
                 partialText += ' · ' + format(t('matchingPairsResult'), state.lastMatchHits);
@@ -556,13 +562,16 @@ var soloPlay = {
         isFree: function(){
             return this.meta.type === 'short-answer' || this.meta.type === 'numeric';
         },
-        // Correspondencia: el tablero se ve mientras se puede responder.
-        hasMatching: function(){
+        // Preguntas compuestas (correspondencia y ordenar): el selector de tiempo extra es visible si n'hi ha.
+        hasComposite: function(){
             return (this.s.quizData && Array.isArray(this.s.quizData.questions) ? this.s.quizData.questions : [])
-                .some(function(q){ return q && q.type === 'matching'; });
+                .some(function(q){ return q && (q.type === 'matching' || q.type === 'order'); });
         },
         showMatching: function(){
             return this.meta.type === 'matching' && !this.s.locked && !(this.s.countdown > 0);
+        },
+        showOrder: function(){
+            return this.meta.type === 'order' && !this.s.locked && !(this.s.countdown > 0);
         },
         feedbackLeftSec: function(){
             return Math.ceil((this.s.feedbackLeftMs || 0) / 1000);
@@ -706,9 +715,10 @@ var soloPlay = {
         togglePause: function(){ if(this.s.paused) resumeSolo(); else pauseSolo(); },
         askCancel: function(){ askCancelSolo(); },
         submitMatching: function(answers){ answerQuestion(answers); },
+        submitOrder: function(order){ answerQuestion(order); },
         // Textos del tablero de correspondencia (matchingBoard.js) con el diccionario de /solo/.
         boardT: function(key){
-            var map = { matching_hint: 'matchingHint', matching_count: 'matchingCount', submit_free: 'submitFreeAnswer' };
+            var map = { matching_hint: 'matchingHint', matching_count: 'matchingCount', submit_free: 'submitFreeAnswer', order_board_label: 'orderBoardLabel', order_up: 'orderUp', order_down: 'orderDown', submit_order: 'submitOrder' };
             return t(map[key] || key);
         },
         skip: function(){ skipQuestion(); },

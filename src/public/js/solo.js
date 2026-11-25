@@ -241,6 +241,13 @@ function setLang(newLang){
         mixins: [soloCatalog, soloPlay, soloFlashcards],
         mounted: function(){
             EduhootTTS.watchAvailability(document.documentElement.lang, function(ok){ state.ttsReady = ok; });
+            var vm = this;
+            document.addEventListener('click', function(e){
+                if(vm.helpOpen && !e.target.closest('.help')) vm.helpOpen = null;
+            });
+            document.addEventListener('keydown', function(e){
+                if(e.key === 'Escape' && vm.helpOpen) vm.helpOpen = null;
+            });
         },
         watch: {
             // En desaparéixer el botó (cuenta atrás o resposta) es para la lectura.
@@ -252,16 +259,17 @@ function setLang(newLang){
             }
         },
         data: function(){
-            return { s: state };
+            return { s: state, helpOpen: null };
         },
         methods: {
             t: function(key){
                 this.s.lang;
                 return t(key);
             },
-            format: format
+            format: format,
+            toggleHelp: function(key){ this.helpOpen = (this.helpOpen === key) ? null : key; }
         }
-    }).component('matching-board', window.EduhootMatchingBoard).mount('#solo-app');
+    }).component('matching-board', window.EduhootMatchingBoard).component('order-board', window.EduhootOrderBoard).mount('#solo-app');
 
     applyStaticText();
     initSoloMusicPlayer();

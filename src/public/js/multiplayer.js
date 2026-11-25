@@ -189,6 +189,10 @@
       submitAnswers: 'Enviar respuestas',
       matchingHint: 'Toca un elemento de la izquierda y después su pareja.',
       matchingCount: '{n} de {t} emparejadas',
+      orderBoardLabel: 'Ordena los elementos',
+      orderUp: 'Subir',
+      orderDown: 'Bajar',
+      submitOrder: 'Enviar respuesta',
       matchingPairsResult: '{hits} de {total} parejas',
       iconLabel: 'Icono'
     },
@@ -267,6 +271,10 @@
       submitAnswers: 'Submit answers',
       matchingHint: 'Tap an item on the left, then its match.',
       matchingCount: '{n} of {t} matched',
+      orderBoardLabel: 'Sort the items',
+      orderUp: 'Move up',
+      orderDown: 'Move down',
+      submitOrder: 'Submit answer',
       matchingPairsResult: '{hits} of {total} pairs',
       iconLabel: 'Icon'
     },
@@ -345,6 +353,10 @@
       submitAnswers: 'Enviar respostes',
       matchingHint: 'Toca un element de l\'esquerra i després la seua parella.',
       matchingCount: '{n} de {t} emparellades',
+      orderBoardLabel: 'Ordena els elements',
+      orderUp: 'Puja',
+      orderDown: 'Baixa',
+      submitOrder: 'Envia la resposta',
       matchingPairsResult: '{hits} de {total} parelles',
       iconLabel: 'Icona'
     },
@@ -397,6 +409,28 @@
       player.correct += 1;
       var bonus = Math.max(100, Math.round(1000 * (state.timerLeft / state.timerTotal)));
       player.score += Math.round(bonus * result.ratio);
+    }
+    if(allAnswered()){
+      finishRoundAndContinue();
+    }
+  }
+
+  // Ordenar: puntuació proporcional de la pregunta (EduhootOrder), com la correspondència.
+  function submitOrderAnswer(playerId, order){
+    if(state.phaseLocked) return;
+    var player = state.players[playerId];
+    if(!player || player.answered) return;
+    var q = getQuestionForPlayer(playerId);
+    if(!q) return;
+    var meta = normalizeQuestionMeta(q);
+    if(meta.type !== 'order') return;
+    var ratio = EduhootOrder.scoreRatio(meta, order);
+    player.answered = true;
+    player.outcome = ratio === 1 ? 'ok' : (ratio > 0 ? 'partial' : 'bad');
+    if(ratio > 0){
+      player.correct += 1;
+      var bonus = Math.max(100, Math.round(1000 * (state.timerLeft / state.timerTotal)));
+      player.score += Math.round(bonus * ratio);
     }
     if(allAnswered()){
       finishRoundAndContinue();
@@ -528,6 +562,18 @@
 
   function normalizeQuestionMeta(q){
     var type = (q && q.type) ? String(q.type).toLowerCase() : 'quiz';
+    // Ordenar (feature 7): la barreja de la partida (orderShown) i la puntuació de EduhootOrder.
+    if(type === 'order'){
+      var orderLayout = EduhootOrder.layoutOf(q);
+      return {
+        type: 'order',
+        correctAnswers: [1],
+        items: orderLayout.items,
+        orderItems: orderLayout.orderItems,
+        orderShown: orderLayout.orderShown,
+        orderGrading: Number(q && q.orderGrading) || 0
+      };
+    }
     // Correspondencia (feature 7): lógica compartida en matchingBoard.js (EduhootMatching).
     if(type === 'matching'){
       var layout = EduhootMatching.layoutOf(q);
@@ -568,6 +614,25 @@
 
   function randomizeOneQuestion(q){
     var meta = normalizeQuestionMeta(q);
+
+    // Ordenar: cada ronda la baraja de nou (mai en l'ordre guardat).
+    if(meta.type === 'order'){
+      var orderShuffle = EduhootOrder.shuffledLayout(meta.items);
+      return {
+        question: (q && q.question) || '',
+        answers: ['', '', '', ''],
+        correct: 1,
+        correctAnswers: [1],
+        type: 'order',
+        image: (q && q.image) || '',
+        video: (q && q.video) || '',
+        time: q && q.time,
+        items: meta.items,
+        orderItems: orderShuffle.orderItems,
+        orderShown: orderShuffle.orderShown,
+        orderGrading: meta.orderGrading
+      };
+    }
 
     // Correspondencia: se baraja la columna derecha.
     if(meta.type === 'matching'){
@@ -627,7 +692,7 @@
   }
 
   function getVisibleAnswers(q, type){
-    if(type === 'matching') return [];
+    if(type === 'matching' || type === 'order') return [];
     var answers = Array.isArray(q && q.answers) ? q.answers.slice(0, 4) : ['', '', '', ''];
     while(answers.length < 4) answers.push('');
     if(type === 'true-false'){
@@ -1664,6 +1729,16 @@
       submitMatching: function(playerId, answers){
         submitMatchingAnswer(playerId, answers);
       },
+      submitOrder: function(playerId, order){
+        submitOrderAnswer(playerId, order);
+      },
+      // Ordenar: el tauler de cada jugador, mientras no ha respondido.
+      orderFor: function(p){
+        var q = getQuestionForPlayer(p.id);
+        if(!q || p.answered || state.revealed) return null;
+        var meta = normalizeQuestionMeta(q);
+        return meta.type === 'order' ? meta : null;
+      },
       // Correspondencia: el tablero de cada jugador, mientras no ha respondido.
       matchingFor: function(p){
         var q = getQuestionForPlayer(p.id);
@@ -1672,7 +1747,7 @@
         return meta.type === 'matching' ? meta : null;
       },
       boardT: function(key){
-        var map = { matching_hint: 'matchingHint', matching_count: 'matchingCount', submit_free: 'submitAnswers' };
+        var map = { matching_hint: 'matchingHint', matching_count: 'matchingCount', submit_free: 'submitAnswers', order_board_label: 'orderBoardLabel', order_up: 'orderUp', order_down: 'orderDown', submit_order: 'submitOrder' };
         return t(map[key] || key);
       },
       questionTextFor: function(p){
@@ -1719,7 +1794,7 @@
         return (p.icon ? p.icon + ' ' : '') + p.name + ' — ' + (p.score || 0);
       }
     }
-  }).component('matching-board', window.EduhootMatchingBoard).mount('#multiplayer-app');
+  }).component('matching-board', window.EduhootMatchingBoard).component('order-board', window.EduhootOrderBoard).mount('#multiplayer-app');
 
   applyStaticText();
   bindEvents();

@@ -1795,3 +1795,23 @@ body.playing .game-area .question-card > #solo-countdown{
 .mode-icon{ font-size: 30px; line-height: 1; margin-right: 10px; vertical-align: middle; display: inline-block; }
 /* Durant la partida, la icona és més petita (la cabecera ha de cabre a la pantalla). */
 .mode-icon--small{ font-size: 18px; margin-right: 6px; }
+
+/* Ajuda «?»: el mateix estil que al lobby de l'anfitrió (host.css). Es valida amb toc, clic o teclat. */
+.help{ position: relative; display: inline-flex; margin-left: 6px; vertical-align: middle; }
+.help-btn{
+    width: 20px; height: 20px; padding: 0; border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.7); background: transparent; color: #fff;
+    font-size: 12px; font-weight: 800; line-height: 1; cursor: pointer;
+}
+.help-btn[aria-expanded="true"]{ background: #fff; color: #1b1b3a; }
+.help-pop{
+    position: absolute; z-index: 20; left: 50%; bottom: calc(100% + 8px); transform: translateX(-50%);
+    width: min(280px, 70vw); background: #fff; color: #1b1b3a; border-radius: 10px;
+    padding: 10px 12px; font-weight: 500; font-size: 13px; line-height: 1.35; text-align: left;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+}
+
+/* Música de fons al formulari d'inici: el títol el posa aquí (amb la seva ajuda), no el reproductor. */
+.start-music{ display: flex; flex-direction: column; gap: 6px; }
+.start-music__title{ margin: 0; display: flex; align-items: center; }
+.start-music .music-player__header{ display: none; }

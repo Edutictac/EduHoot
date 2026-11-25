@@ -7,6 +7,7 @@
         <link rel="stylesheet" href="/css/countdown.css">
         <link rel="stylesheet" href="/css/answers.css">
         <link rel="stylesheet" href="/css/matching.css">
+        <link rel="stylesheet" href="/css/order.css">
         <link rel="stylesheet" href="/css/dropdowns.css">
         <link rel="stylesheet" href="../css/music-player.css">
         <link href="/css/fonts.css" rel="stylesheet">
@@ -141,21 +142,21 @@
                     </div>
 
                     <div class="start-form__options">
-                    <label for="question-count" class="muted">{{ t('questionCountLabel') }}</label>
+                    <label for="question-count" class="muted">{{ t('questionCountLabel') }}<span class="help"><button type="button" class="help-btn" :aria-expanded="helpOpen==='count' ? 'true' : 'false'" :aria-label="t('helpAria')" @click.prevent.stop="toggleHelp('count')">?</button><span v-if="helpOpen==='count'" class="help-pop" role="note">{{ t('questionCountTip') }}</span></span></label>
                     <div class="question-count-controls">
                         <input id="question-count" type="number" min="1" step="1" inputmode="numeric" autocomplete="off" :max="quizTotal ? String(quizTotal) : ''" :disabled="!quizTotal" :value="s.countInput" @input="onCountInput">
                         <span id="question-count-total" class="muted">{{ quizTotal ? format(t('questionCountTotal'), { total: quizTotal }) : '' }}</span>
                     </div>
-                    <label for="question-time" class="muted">{{ t('questionTimeLabel') }}</label>
+                    <label for="question-time" class="muted">{{ t('questionTimeLabel') }}<span class="help"><button type="button" class="help-btn" :aria-expanded="helpOpen==='time' ? 'true' : 'false'" :aria-label="t('helpAria')" @click.prevent.stop="toggleHelp('time')">?</button><span v-if="helpOpen==='time'" class="help-pop" role="note">{{ t('startTimeTip') }}</span></span></label>
                     <div class="question-count-controls">
                         <input id="question-time" type="number" min="5" max="120" step="1" inputmode="numeric" autocomplete="off" :placeholder="t('questionTimePlaceholder')" :value="s.timeInput" @input="onTimeInput">
                     </div>
-                    <label for="feedback-seconds" class="muted">{{ t('feedbackSecondsLabel') }}</label>
+                    <label for="feedback-seconds" class="muted">{{ t('feedbackSecondsLabel') }}<span class="help"><button type="button" class="help-btn" :aria-expanded="helpOpen==='feedback' ? 'true' : 'false'" :aria-label="t('helpAria')" @click.prevent.stop="toggleHelp('feedback')">?</button><span v-if="helpOpen==='feedback'" class="help-pop" role="note">{{ t('feedbackSecondsTip') }}</span></span></label>
                     <div class="question-count-controls">
                         <input id="feedback-seconds" type="number" min="1" max="30" step="1" inputmode="numeric" autocomplete="off" :value="s.feedbackSecondsInput" @input="onFeedbackSecondsInput">
                     </div>
-                    <template v-if="hasMatching">
-                        <label for="matching-extra" class="muted">{{ t('matchingExtraLabel') }}</label>
+                    <template v-if="hasComposite">
+                        <label for="matching-extra" class="muted">{{ t('matchingExtraLabel') }}<span class="help"><button type="button" class="help-btn" :aria-expanded="helpOpen==='matching_extra' ? 'true' : 'false'" :aria-label="t('helpAria')" @click.prevent.stop="toggleHelp('matching_extra')">?</button><span v-if="helpOpen==='matching_extra'" class="help-pop" role="note">{{ t('matchingExtraTip') }}</span></span></label>
                         <div class="question-count-controls">
                             <select id="matching-extra" :value="s.matchingExtraTime" @change="onMatchingExtra">
                                 <option v-for="p in [25, 50, 75, 100]" :key="p" :value="p">+{{ p }} %</option>
@@ -163,11 +164,14 @@
                         </div>
                     </template>
 
-                    <label class="solo-check"><input type="checkbox" id="opt-shuffle-questions" v-model="s.shuffleQuestions"> <span>{{ t('optShuffleQuestions') }}</span></label>
-                    <label class="solo-check"><input type="checkbox" id="opt-show-answers" v-model="s.showAnswers"> <span>{{ t('optShowAnswers') }}</span></label>
+                    <label class="solo-check"><input type="checkbox" id="opt-shuffle-questions" v-model="s.shuffleQuestions"> <span>{{ t('optShuffleQuestions') }}</span><span class="help"><button type="button" class="help-btn" :aria-expanded="helpOpen==='shuffle' ? 'true' : 'false'" :aria-label="t('helpAria')" @click.prevent.stop="toggleHelp('shuffle')">?</button><span v-if="helpOpen==='shuffle'" class="help-pop" role="note">{{ t('optShuffleTip') }}</span></span></label>
+                    <label class="solo-check"><input type="checkbox" id="opt-show-answers" v-model="s.showAnswers"> <span>{{ t('optShowAnswers') }}</span><span class="help"><button type="button" class="help-btn" :aria-expanded="helpOpen==='show_answers' ? 'true' : 'false'" :aria-label="t('helpAria')" @click.prevent.stop="toggleHelp('show_answers')">?</button><span v-if="helpOpen==='show_answers'" class="help-pop" role="note">{{ t('optShowAnswersTip') }}</span></span></label>
 
+                    <div class="start-music">
+                        <p class="start-music__title muted">{{ t('bgMusicTitle') }}<span class="help"><button type="button" class="help-btn" :aria-expanded="helpOpen==='music' ? 'true' : 'false'" :aria-label="t('helpAria')" @click.prevent.stop="toggleHelp('music')">?</button><span v-if="helpOpen==='music'" class="help-pop" role="note">{{ t('startMusicTip') }}</span></span></p>
+                        <div id="solo-music-player" class="music-player-shell"></div>
+                    </div>
                     <button id="start-btn" class="btn btn-primary" @click="start">{{ t('startButton') }}</button>
-                    <p class="muted">{{ t('startHint') }}</p>
                     </div>
                 </div>
 
@@ -220,6 +224,7 @@
                             <iframe id="question-iframe" title="video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen :src="media.youtube || null" :style="{ display: media.youtube ? 'block' : 'none' }"></iframe>
                         </div>
                         <matching-board v-if="showMatching" :key="'match-' + s.idx" :left="question.matchLeft" :right="question.matchRight" :t="boardT" @submit="submitMatching"></matching-board>
+                        <order-board v-if="showOrder" :key="'order-' + s.idx" :items="question.orderItems" :t="boardT" @submit="submitOrder"></order-board>
                         <div id="answers" class="answers answer-grid">
                             <div v-if="isFree" class="free-answer-row">
                                 <input id="solo-free-input" class="free-answer-input" type="text" autocomplete="off" :placeholder="meta.type === 'numeric' ? t('freeNumberPlaceholder') : t('freeTextPlaceholder')" v-model="s.freeText" :disabled="s.locked" @keydown.enter.prevent="submitFree">
@@ -333,6 +338,13 @@
                                             <tbody><tr v-for="(row, i) in cardsMatchTable" :key="i"><td>{{ row.left }}</td><td v-if="cardsAutoCheck"><select class="flashcard__select" :aria-label="row.left" :value="cardsMatchValue(i)" :disabled="s.cards.flipped" @click.stop @change="cardsSetMatch(i, $event.target.value)"><option value="">—</option><option v-for="(text, j) in cardsMatchRight" :key="j" :value="String(j)">{{ text }}</option></select></td><td v-else>{{ row.right }}</td></tr></tbody>
                                         </table>
                                     </div>
+                                    <div v-if="cardsOrderItems.length" class="flashcard__order" @click.stop>
+                                        <p class="flashcard__label">{{ t('flashcardsOrderLabel') }}</p>
+                                        <order-board v-if="cardsOrderBoard" :key="'card-order-' + cardsCurrent.idx" :items="cardsOrderItems" :t="boardT" @submit="cardsSubmitOrder"></order-board>
+                                        <ol v-else class="flashcard__answers flashcard__order-list">
+                                            <li v-for="(text, i) in cardsOrderItems" :key="i">{{ text }}</li>
+                                        </ol>
+                                    </div>
                                     <div v-if="cardsMatchLeft.length && !cardsMatchTable.length" class="flashcard__match">
                                         <p class="flashcard__label">{{ t('flashcardsMatchLeft') }}</p>
                                         <ul class="flashcard__answers flashcard__match-left">
@@ -350,7 +362,7 @@
                         </div>
                         <div class="cards-actions">
                             <button id="cards-prev" class="btn btn-cards-nav" :disabled="s.cards.pos === 0" @click="cardsPrev">{{ t('flashcardsPrev') }}</button>
-                            <button v-if="cardsAutoCheck && !s.cards.flipped && !cardsResult" id="cards-check" class="btn btn-primary" @click="cardsCheck">{{ t('flashcardsCheck') }}</button>
+                            <button v-if="cardsAutoCheck && !cardsOrderBoard && !s.cards.flipped && !cardsResult" id="cards-check" class="btn btn-primary" @click="cardsCheck">{{ t('flashcardsCheck') }}</button>
                             <button id="cards-flip" class="btn" :class="s.cards.flipped ? 'btn-cards-hide' : 'btn-cards-show'" @click="cardsFlip">{{ s.cards.flipped ? t('flashcardsHideAnswer') : t('flashcardsShowAnswer') }}</button>
                             <button id="cards-next" class="btn btn-cards-nav" @click="cardsNext">{{ t('flashcardsNext') }}</button>
                         </div>
@@ -409,9 +421,6 @@
         </div>
         </template>
 
-        <div class="music-section bottom-music">
-            <div id="solo-music-player" class="music-player-shell"></div>
-        </div>
 
         <footer class="ett-footer">
             <p class="ett-footer__id">
@@ -436,6 +445,7 @@
         <script src="../js/i18n-solo.js"></script>
         <script src="../js/solo-storage.js"></script>
         <script src="../js/matchingBoard.js"></script>
+        <script src="../js/orderBoard.js"></script>
         <script src="../js/solo-questions.js"></script>
         <script src="../js/solo-library.js"></script>
         <script src="../js/solo-music.js"></script>

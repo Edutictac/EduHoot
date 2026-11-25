@@ -145,7 +145,8 @@ var hostLobbyMusicI18n = {
         bgMusicPause: 'Pausar música',
         bgMusicPrev: 'Anterior',
         bgMusicNext: 'Siguiente',
-        bgMusicVolume: 'Volumen'
+        bgMusicVolume: 'Volumen',
+        bgMusicNone: 'Sin música',
     },
     en: {
         bgMusicTitle: 'Background music',
@@ -154,7 +155,8 @@ var hostLobbyMusicI18n = {
         bgMusicPause: 'Pause music',
         bgMusicPrev: 'Prev',
         bgMusicNext: 'Next',
-        bgMusicVolume: 'Volume'
+        bgMusicVolume: 'Volume',
+        bgMusicNone: 'No music',
     },
     ca: {
         bgMusicTitle: 'Música de fons',
@@ -163,7 +165,8 @@ var hostLobbyMusicI18n = {
         bgMusicPause: 'Atura la música',
         bgMusicPrev: 'Anterior',
         bgMusicNext: 'Següent',
-        bgMusicVolume: 'Volum'
+        bgMusicVolume: 'Volum',
+        bgMusicNone: 'Sense música',
     },
     va: {
         bgMusicTitle: 'Música de fons',
@@ -172,7 +175,8 @@ var hostLobbyMusicI18n = {
         bgMusicPause: 'Atura la música',
         bgMusicPrev: 'Anterior',
         bgMusicNext: 'Següent',
-        bgMusicVolume: 'Volum'
+        bgMusicVolume: 'Volum',
+        bgMusicNone: 'Sense música',
     }
 };
 
@@ -207,6 +211,7 @@ function initHostLobbyMusicPlayer(){
         storageKey: 'eduhoot-host-music',
         randomStart: true,
         volume: 0.7,
+        noneOption: true,
         labels: {
             title: hostLobbyT('bgMusicTitle'),
             choose: hostLobbyT('bgMusicChoose'),
@@ -214,7 +219,8 @@ function initHostLobbyMusicPlayer(){
             pause: hostLobbyT('bgMusicPause'),
             prev: hostLobbyT('bgMusicPrev'),
             next: hostLobbyT('bgMusicNext'),
-            volume: hostLobbyT('bgMusicVolume')
+            volume: hostLobbyT('bgMusicVolume'),
+            none: hostLobbyT('bgMusicNone')
         }
     });
 }
@@ -248,6 +254,7 @@ var lobby = Vue.createApp({
             kickedList: [],
             // El quiz tiene alguna correspondencia: se ofrece cómo responderla a ciegas.
             hasMatching: false,
+            hasComposite: false,
             // Título del quiz elegido (lo envía el servidor con el PIN).
             quizName: '',
             matchingExtraChoices: [25, 50, 75, 100],
@@ -425,6 +432,7 @@ socket.on('connect', function() {
 socket.on('showGamePin', function(data){
     lobby.pin = (data.pin || '').toString();
     lobby.hasMatching = !!data.hasMatching;
+    lobby.hasComposite = !!data.hasComposite;
     lobby.quizName = (data.quizName || '').toString();
     params.pin = data.pin;
     try{ localStorage.setItem(lastPinKey, data.pin); }catch(e){}
@@ -489,7 +497,7 @@ function startGame(){
     if(lobby.hasMatching && !opts.sendToStudents){
         opts.matchingBlindStyle = options.matchingBlindStyle || 'codes';
     }
-    if(lobby.hasMatching){
+    if(lobby.hasComposite){
         opts.matchingExtraTime = parseInt(options.matchingExtraTime, 10) || 50;
     }
     // v-model en un input numérico da un número o '' si está vacío.

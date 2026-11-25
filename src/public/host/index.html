@@ -83,7 +83,7 @@
                             <input type="number" id="opt-time" min="5" max="120" placeholder="Auto" v-model="options.time">
                         <span class="help"><button type="button" class="help-btn" :aria-expanded="helpOpen==='time' ? 'true' : 'false'" :aria-label="t('help_aria')" @click.prevent.stop="toggleHelp('time')">?</button><span v-if="helpOpen==='time'" class="help-pop" role="note">{{ t('tip_time') }}</span></span></label>
                     </div>
-                    <label v-if="hasMatching" class="opt-auto" id="opt-matching-extra-row" :title="t('tip_matching_extra')"><span>{{ t('opt_matching_extra') }}</span>
+                    <label v-if="hasComposite" class="opt-auto" id="opt-matching-extra-row" :title="t('tip_matching_extra')"><span>{{ t('opt_matching_extra') }}</span>
                         <select id="opt-matching-extra" v-model.number="options.matchingExtraTime">
                             <option v-for="p in matchingExtraChoices" :key="p" :value="p">+{{ p }} %</option>
                         </select>

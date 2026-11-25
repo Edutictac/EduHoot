@@ -38,6 +38,10 @@ function cardAnswerTexts(q, t){
         if(meta.tolerance) text += ' (' + format(t('flashcardTolerance'), { tol: meta.tolerance }) + ')';
         return [text];
     }
+    // Ordenar: en el reverso, los elementos en el orden correcto.
+    if(meta.type === 'order'){
+        return meta.items.map(function(text, i){ return (i + 1) + ' ' + text; });
+    }
     // Correspondencia: en el reverso, las parejas («Francia → París»).
     if(meta.type === 'matching'){
         return meta.pairs
@@ -159,6 +163,16 @@ function buildMatchLayouts(cards){
     return layouts;
 }
 
+// Ordenar: la barreja de cada pregunta també es fa en obrir el repàs, perquè l'anvers no revele l'ordre.
+function buildOrderLayouts(cards){
+    var layouts = {};
+    cards.forEach(function(card){
+        var meta = normalizeQuestionMeta(card.q);
+        if(meta.type === 'order') layouts[String(card.idx)] = EduhootOrder.shuffledLayout(meta.items);
+    });
+    return layouts;
+}
+
 function openFlashcards(quiz){
     state.quizData = quiz;
     state.currentQuiz = quiz.id;
@@ -172,6 +186,8 @@ function openFlashcards(quiz){
         total: questions.length,
         all: cards,
         matchLayouts: buildMatchLayouts(cards),
+        orderLayouts: buildOrderLayouts(cards),
+        orders: {},
         status: EduhootFlashcards.quizStatus(all, quiz.id, questions.length),
         deck: [],
         pos: 0,
@@ -314,6 +330,19 @@ var soloFlashcards = {
                 })
                 .filter(function(o){ return o.text.trim() !== ''; });
         },
+        // Ordenar: en el anverso, los elementos barajados (la barreja de la tarjeta).
+        cardsOrderItems: function(){
+            var cur = this.cardsCurrent;
+            if(!cur) return [];
+            var meta = normalizeQuestionMeta(cur.q);
+            if(meta.type !== 'order') return [];
+            var layout = (this.s.cards.orderLayouts && this.s.cards.orderLayouts[String(cur.idx)]) || { orderItems: meta.items };
+            return layout.orderItems.slice();
+        },
+        // Con la validación activada, el tablero para ordenar hace de comprobación (sustituye al botón).
+        cardsOrderBoard: function(){
+            return this.cardsOrderItems.length > 0 && this.cardsAutoCheck && !this.cardsResult;
+        },
         // Correspondencia: en el anverso, la columna izquierda (lo que hay que emparejar).
         cardsMatchLeft: function(){
             var cur = this.cardsCurrent;
@@ -340,7 +369,7 @@ var soloFlashcards = {
         },
         // Hay algún bloque de opciones en el anverso (opciones o tabla de correspondencia): se usa para centrar o dividir.
         cardsHasOptionsBlock: function(){
-            return this.cardsOptions.length > 0 || this.cardsMatchTable.length > 0;
+            return this.cardsOptions.length > 0 || this.cardsMatchTable.length > 0 || this.cardsOrderItems.length > 0;
         },
         cardsBackParts: function(){
             var cur = this.cardsCurrent;
@@ -575,6 +604,16 @@ var soloFlashcards = {
             c.validate = !c.validate;
             saveValidatePref(c.validate);
         },
+        // Ordenar: l'alumnat envia el seu ordre des del tauler i la targeta es comprova com les altres.
+        cardsSubmitOrder: function(order){
+            var cur = this.cardsCurrent;
+            var c = this.s.cards;
+            if(!cur) return;
+            var copy = Object.assign({}, c.orders);
+            copy[String(cur.idx)] = order.slice();
+            c.orders = copy;
+            this.cardsCheck();
+        },
         cardsSetTyped: function(value){
             var cur = this.cardsCurrent;
             var c = this.s.cards;
@@ -609,7 +648,8 @@ var soloFlashcards = {
             var meta = normalizeQuestionMeta(cur.q);
             // La solució de la correspondència és la de la disposició barajada que es mostra.
             if(meta.type === 'matching') meta = Object.assign({}, meta, { matchSolution: (c.matchLayouts[String(cur.idx)] || {}).matchSolution || [] });
-            var ok = EduhootFlashcards.judgeCard(meta, c.picks[String(cur.idx)] || {}, c.typed[String(cur.idx)], c.matches[String(cur.idx)] || {});
+            if(meta.type === 'order') meta = Object.assign({}, meta, { orderShown: (c.orderLayouts[String(cur.idx)] || {}).orderShown || [] });
+            var ok = EduhootFlashcards.judgeCard(meta, c.picks[String(cur.idx)] || {}, c.typed[String(cur.idx)], c.matches[String(cur.idx)] || {}, c.orders[String(cur.idx)]);
             this.cardsAutoMark(ok ? 'ok' : 'fail');
             if(!c.flipped) this.cardsFlip();
         },
