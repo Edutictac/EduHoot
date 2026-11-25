@@ -12,6 +12,13 @@ function startQuiz(){
         state.streak = 0;
         state.streakBonus = 0;
         state.locked = false;
+        // Mode fantasma: la millor marca d'este qüestionari (null si no n'hi ha o si el quiz ha canviat).
+        state.runOrigs = [];
+        state.runPoints = {};
+        state.ghostDiff = null;
+        state.ghost = state.ghostEnabled && window.EduhootGhost && state.quizData
+            ? EduhootGhost.loadGhost(ghostStorage(), state.quizData.id, EduhootGhost.fingerprint(state.quizData.questions))
+            : null;
         var desiredCount = getDesiredQuestionCount();
         state.desiredQuestionCount = desiredCount;
         var randomized = randomizeQuestions(state.quizData.questions || [], state.shuffleQuestions);
@@ -347,6 +354,7 @@ function startQuiz(){
     function answerQuestion(choice, timedOut){
         if(state.locked) return;
         state.locked = true;
+        var scoreBefore = state.score;
         stopTimer();
         var questions = getQuestions();
         var q = questions[state.idx];
@@ -476,6 +484,12 @@ function startQuiz(){
             state.feedback = { text: t('wrongText'), kind: 'error' };
             correctAnswerText = '';
         }
+        // Mode fantasma: els punts d'esta pregunta i la diferència amb la marca (les enquestes no puntuen).
+        if(meta.type !== 'poll' && state.ghostEnabled && window.EduhootGhost){
+            state.runOrigs.push(q.origIdx);
+            state.runPoints[q.origIdx] = state.score - scoreBefore;
+            state.ghostDiff = EduhootGhost.diffFor(state.ghost, state.runOrigs, state.score);
+        }
         state.multiSelections = [];
         state.lastResult = null;
         if(meta.type === 'poll'){
@@ -500,6 +514,20 @@ function startQuiz(){
         showFeedbackModal();
     }
 
+    function ghostResultText(ghost, t){
+        if(ghost.newBest) return t('ghostNewBest');
+        return format(t('ghostBest'), { score: ghost.best, diff: EduhootGhost.signed(ghost.diff) });
+    }
+
+    // localStorage del navegador (la marca es perd si s'esborra; no es guarda res al servidor).
+    function ghostStorage(){
+        try{
+            return window.localStorage;
+        }catch(e){
+            return null;
+        }
+    }
+
     function finishQuiz(){
         stopTimer();
         var totalQs = getScoredQuestionCount();
@@ -511,6 +539,13 @@ function startQuiz(){
         };
         state.view = 'result';
         state.rankingBox = { visible: false, items: [] };
+        if(totalQs > 0 && state.ghostEnabled && window.EduhootGhost){
+            var newBest = EduhootGhost.saveGhost(ghostStorage(), state.quizData.id,
+                EduhootGhost.fingerprint(state.quizData.questions), state.score, state.runPoints);
+            state.result.ghost = state.ghost
+                ? { best: state.ghost.total, diff: state.score - state.ghost.total, newBest: newBest }
+                : { best: state.score, diff: 0, newBest: true };
+        }
         if(totalQs > 0) prepareScoreSubmission();
     }
 
@@ -634,6 +669,17 @@ var soloPlay = {
             var scored = r.total ? format(this.t('resultSummary'), { correct: r.correct, total: r.total, score: r.score }) : '';
             var polls = r.polls ? format(this.t('pollSummary'), { total: r.polls }) : '';
             return [scored, polls].filter(Boolean).join(' · ');
+        },
+        // Mode fantasma: la marca al resum final (en el seu propi paragraf, sense canviar el resum).
+        resultGhostText: function(){
+            var r = this.s.result;
+            return r && r.ghost ? ghostResultText(r.ghost, this.t) : '';
+        },
+        // Mode fantasma: diferència amb la millor marca, després de cada pregunta puntuada.
+        ghostDiffText: function(){
+            var d = this.s.ghostDiff;
+            if(!this.s.ghost || d === null || d === undefined || !this.s.lastResult) return '';
+            return format(this.t('ghostDiff'), { diff: EduhootGhost.signed(d) });
         },
         feedbackBody: function(){
             var label = this.t('correctLabel');

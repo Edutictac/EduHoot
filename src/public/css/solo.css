@@ -1591,9 +1591,24 @@ body.playing #game-panel{
 }
 .start-form__info{ display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .start-form__info .quiz-banner{ flex-wrap: wrap; }
-.start-form__options{ display: flex; flex-direction: column; align-items: flex-start; gap: 10px; min-width: 0; }
+.start-form__options{
+    display: grid;
+    /* Etiqueta a l'esquerra i control a la dreta: totes les opcions cabent sense desplaçar-se en un PC normal. */
+    grid-template-columns: auto auto;
+    align-items: center;
+    column-gap: 14px;
+    row-gap: 8px;
+    min-width: 0;
+}
+.start-form__options > .solo-check,
+/* El botó de jugar: a la columna de les opcions, alineat a la dreta, una mica separat de les opcions. */
+.start-form__options > #start-btn{ grid-column: 2; margin-top: 14px; }
+.start-form__options > .solo-check{ margin: 0; }
+.start-form__options > #start-btn{ justify-self: end; }
+.start-form__options .question-count-controls input{ width: 120px; }
 @media (max-width: 760px){
     .start-form:not(.hidden){ display: flex; flex-direction: column; gap: 10px; }
+    .start-form__options{ display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
 }
 
 /* Catálogo: imágenes más bajas, para ver más quizzes sin desplazarse tanto. */
@@ -1813,5 +1828,10 @@ body.playing .game-area .question-card > #solo-countdown{
 
 /* Música de fons al formulari d'inici: el títol el posa aquí (amb la seva ajuda), no el reproductor. */
 .start-music{ display: flex; flex-direction: column; gap: 6px; }
+/* Escritori: el bloc de música és una fila pròpia que ocupa les dues columnes. */
+.start-form:not(.hidden) > .start-music{ grid-column: 1 / -1; width: 100%; }
 .start-music__title{ margin: 0; display: flex; align-items: center; }
 .start-music .music-player__header{ display: none; }
+
+/* Logo d'EduHoot a l'esquerra del títol del quiz (inici de Solo i flashcards). */
+.selected-title__logo{ display: inline-block; height: 1em; width: auto; vertical-align: -0.15em; margin-right: 0.3em; }

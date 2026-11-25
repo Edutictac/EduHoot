@@ -85,6 +85,7 @@ const ASSETS = [
   '/js/libs/vue.global.prod.js',
   '/js/i18n-solo.js',
   '/js/solo-storage.js',
+  '/js/solo-ghost.js',
   '/js/solo-questions.js',
   '/js/solo-library.js',
   '/js/solo-music.js',

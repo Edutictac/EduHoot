@@ -292,8 +292,14 @@
     // Las respuestas se barajan siempre; el orden de las preguntas solo si se pide.
     function randomizeQuestions(baseQuestions, shuffleOrder){
         var source = Array.isArray(baseQuestions) ? baseQuestions : [];
-        var shuffledOrder = shuffleOrder ? shuffleArray(source) : source.slice();
-        return shuffledOrder.map(function(q){ return randomizeOneQuestion(q); });
+        // origIdx: la posició de la pregunta al quiz original, perquè el mode fantasma la compare encara que el barajat la mogui.
+        var indexed = source.map(function(q, i){ return { q: q, i: i }; });
+        var shuffledOrder = shuffleOrder ? shuffleArray(indexed) : indexed.slice();
+        return shuffledOrder.map(function(item){
+            var r = randomizeOneQuestion(item.q);
+            r.origIdx = item.i;
+            return r;
+        });
     }
 
     function getQuestions(){

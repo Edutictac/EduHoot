@@ -735,14 +735,23 @@ test('inicio: con imagen del quiz, el logo sale pequeño junto a ella; sin image
     await expect(page.locator('#start-form')).toBeVisible();
     const withImage = await page.evaluate(() => {
         const b = document.querySelector('#start-form .quiz-banner');
-        const logo = b.querySelector('.quiz-banner__logo').getBoundingClientRect();
         const cover = b.querySelector('.quiz-banner__cover');
-        return { logoOnly: b.classList.contains('quiz-banner--logo-only'), logoH: logo.height, cover: !!cover, coverLeft: cover ? cover.getBoundingClientRect().left : 0, logoRight: logo.right };
+        return { logoOnly: b.classList.contains('quiz-banner--logo-only'), logoInBanner: !!b.querySelector('.quiz-banner__logo'), cover: !!cover };
     });
     expect(withImage.logoOnly).toBe(false);
     expect(withImage.cover).toBe(true);
-    expect(withImage.logoH).toBeLessThan(60);
-    expect(withImage.coverLeft).toBeGreaterThanOrEqual(withImage.logoRight);
+    // Amb imatge, el logo ja no és al banner: va a l'esquerra del títol.
+    expect(withImage.logoInBanner).toBe(false);
+    const titleLogo = await page.evaluate(() => {
+        const h2 = document.querySelector('#selected-title');
+        const img = h2.querySelector('.selected-title__logo').getBoundingClientRect();
+        const textNode = Array.from(h2.childNodes).find(n => n.nodeType === 3 && n.textContent.trim());
+        const range = document.createRange();
+        range.selectNodeContents(textNode);
+        return { h: img.height, imgRight: img.right, textLeft: range.getBoundingClientRect().left };
+    });
+    expect(titleLogo.h).toBeLessThan(60);
+    expect(titleLogo.imgRight).toBeLessThanOrEqual(titleLogo.textLeft + 1);
 
     await page.goto('/solo/?id=qn&lang=es');
     await expect(page.locator('#start-form')).toBeVisible();

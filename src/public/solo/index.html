@@ -127,7 +127,7 @@
                 <div class="panel__header">
                     <div>
                         <p class="eyebrow"><span class="mode-icon" :class="{ 'mode-icon--small': s.view === 'game' }" aria-hidden="true">{{ s.view === 'cards' ? '🔁' : '👤' }}</span>{{ s.view === 'cards' ? t('flashcardsEyebrow') : t('soloEyebrow') }}</p>
-                        <h2 id="selected-title" v-show="s.view !== 'game'">{{ titleText }}</h2>
+                        <h2 id="selected-title" v-show="s.view !== 'game'"><img class="selected-title__logo" src="/icons/logo.svg" alt="" aria-hidden="true">{{ titleText }}</h2>
                     </div>
                 </div>
 
@@ -135,11 +135,11 @@
                     <!-- Logo de EduHoot e imagen representativa del quiz, bajo el título. -->
                     <div class="start-form__info">
                         <div class="quiz-banner" :class="{ 'quiz-banner--logo-only': !quizImage }">
-                            <img class="quiz-banner__logo" src="/icons/logo.svg" alt="EduHoot">
+                            <img v-if="!quizImage" class="quiz-banner__logo" src="/icons/logo.svg" alt="EduHoot">
                             <img v-if="quizImage" class="quiz-banner__cover" :src="quizImage" alt="" @error="$event.target.style.display = 'none'; $event.target.parentNode.classList.add('quiz-banner--logo-only')">
                         </div>
                         <p id="selected-meta" class="muted">{{ selectedMeta }}</p>
-                    </div>
+                                        </div>
 
                     <div class="start-form__options">
                     <label for="question-count" class="muted">{{ t('questionCountLabel') }}<span class="help"><button type="button" class="help-btn" :aria-expanded="helpOpen==='count' ? 'true' : 'false'" :aria-label="t('helpAria')" @click.prevent.stop="toggleHelp('count')">?</button><span v-if="helpOpen==='count'" class="help-pop" role="note">{{ t('questionCountTip') }}</span></span></label>
@@ -166,13 +166,14 @@
 
                     <label class="solo-check"><input type="checkbox" id="opt-shuffle-questions" v-model="s.shuffleQuestions"> <span>{{ t('optShuffleQuestions') }}</span><span class="help"><button type="button" class="help-btn" :aria-expanded="helpOpen==='shuffle' ? 'true' : 'false'" :aria-label="t('helpAria')" @click.prevent.stop="toggleHelp('shuffle')">?</button><span v-if="helpOpen==='shuffle'" class="help-pop" role="note">{{ t('optShuffleTip') }}</span></span></label>
                     <label class="solo-check"><input type="checkbox" id="opt-show-answers" v-model="s.showAnswers"> <span>{{ t('optShowAnswers') }}</span><span class="help"><button type="button" class="help-btn" :aria-expanded="helpOpen==='show_answers' ? 'true' : 'false'" :aria-label="t('helpAria')" @click.prevent.stop="toggleHelp('show_answers')">?</button><span v-if="helpOpen==='show_answers'" class="help-pop" role="note">{{ t('optShowAnswersTip') }}</span></span></label>
+                    <label class="solo-check"><input type="checkbox" id="opt-ghost" v-model="s.ghostEnabled"> <span>{{ t('optGhost') }}</span><span class="help"><button type="button" class="help-btn" :aria-expanded="helpOpen==='ghost' ? 'true' : 'false'" :aria-label="t('helpAria')" @click.prevent.stop="toggleHelp('ghost')">?</button><span v-if="helpOpen==='ghost'" class="help-pop" role="note">{{ t('optGhostTip') }}</span></span></label>
 
-                    <div class="start-music">
-                        <p class="start-music__title muted">{{ t('bgMusicTitle') }}<span class="help"><button type="button" class="help-btn" :aria-expanded="helpOpen==='music' ? 'true' : 'false'" :aria-label="t('helpAria')" @click.prevent.stop="toggleHelp('music')">?</button><span v-if="helpOpen==='music'" class="help-pop" role="note">{{ t('startMusicTip') }}</span></span></p>
-                        <div id="solo-music-player" class="music-player-shell"></div>
-                    </div>
                     <button id="start-btn" class="btn btn-primary" @click="start">{{ t('startButton') }}</button>
                     </div>
+                <div class="start-music">
+                <p class="start-music__title muted">{{ t('bgMusicTitle') }}<span class="help"><button type="button" class="help-btn" :aria-expanded="helpOpen==='music' ? 'true' : 'false'" :aria-label="t('helpAria')" @click.prevent.stop="toggleHelp('music')">?</button><span v-if="helpOpen==='music'" class="help-pop" role="note">{{ t('startMusicTip') }}</span></span></p>
+                <div id="solo-music-player" class="music-player-shell"></div>
+                </div>
                 </div>
 
                 <div id="game-area" class="game-area" :class="{ hidden: s.view !== 'game' }">
@@ -245,6 +246,7 @@
                 <div id="result-area" class="result-area" :class="{ hidden: s.view !== 'result' }">
                     <h3>{{ t('finishTitle') }}</h3>
                     <p id="result-summary" class="subtext">{{ resultSummary }}</p>
+                    <p v-if="resultGhostText" id="result-ghost" class="subtext">{{ resultGhostText }}</p>
                     <div id="ranking" class="ranking" :class="{ hidden: !s.rankingBox.visible }">
                         <div class="ranking__header">
                             <h4>{{ t('rankingTitle') }}</h4>
@@ -263,7 +265,7 @@
                       <div class="cards-start__info">
                         <h3 v-if="s.cards.phase === 'done'">{{ t('flashcardsDoneTitle') }}</h3>
                         <div class="quiz-banner" :class="{ 'quiz-banner--logo-only': !quizImage }">
-                            <img class="quiz-banner__logo" src="/icons/logo.svg" alt="EduHoot">
+                            <img v-if="!quizImage" class="quiz-banner__logo" src="/icons/logo.svg" alt="EduHoot">
                             <img v-if="quizImage" class="quiz-banner__cover" :src="quizImage" alt="" @error="$event.target.style.display = 'none'; $event.target.parentNode.classList.add('quiz-banner--logo-only')">
                         </div>
                         <p class="muted">{{ cardsTotal ? cardsCountsText : t('flashcardsEmpty') }}</p>
@@ -394,6 +396,7 @@
                 <div class="solo-modal__icon" aria-hidden="true">{{ feedbackIcon }}</div>
                 <h3 id="feedback-title">{{ feedbackTitle }}</h3>
                 <p id="feedback-body">{{ feedbackBody }}</p>
+                <p v-if="ghostDiffText" id="feedback-ghost" class="solo-modal__ghost">{{ ghostDiffText }}</p>
                 <button id="feedback-close" class="btn btn-feedback" @click="closeFeedback">OK</button>
                 <div class="solo-modal__bar" aria-hidden="true"><span :style="{ width: feedbackBarWidth }"></span></div>
                 <p id="feedback-time" class="solo-modal__time">{{ format(t('feedbackClosesIn'), { seconds: feedbackLeftSec }) }}</p>
@@ -446,6 +449,7 @@
         <script src="../js/solo-storage.js"></script>
         <script src="../js/matchingBoard.js"></script>
         <script src="../js/orderBoard.js"></script>
+        <script src="../js/solo-ghost.js"></script>
         <script src="../js/solo-questions.js"></script>
         <script src="../js/solo-library.js"></script>
         <script src="../js/solo-music.js"></script>

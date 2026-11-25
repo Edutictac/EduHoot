@@ -80,6 +80,13 @@ function readFeedbackSeconds(){
         rankingBox: { visible: false, items: [] },
         rankingModal: { open: false, items: [] },
         feedbackModalOpen: false,
+        // Mode fantasma: desactivat per defecte; només amb el check activat es compara i es guarda la marca.
+        ghostEnabled: false,
+        // Mode fantasma: marca anterior, diferència després de la pregunta i punts de la partida.
+        ghost: null,
+        ghostDiff: null,
+        runOrigs: [],
+        runPoints: {},
         nameModalOpen: false,
         // Se incrementa al cambiar de idioma para que la plantilla se repinte.
         lang: 0
