@@ -1,7 +1,7 @@
 // Mensajes que recibe el alumno en el modo autoritme (en clase) y en los deberes:
 // pregunta, resultado y resumen final. Puros: no dependen de sockets ni de MongoDB.
 const sp = require('./selfPaced');
-const { getQuestionMeta } = require('../questionUtils');
+const { getQuestionMeta, orderDisplayOf } = require('../questionUtils');
 const { studentMetaOf } = require('./showAnswers');
 const { questionTimeOf } = require('./scoring');
 
@@ -19,7 +19,8 @@ function questionPayload(game, player, now, toStudent) {
     video: q.video || '',
     pointsMultiplier: Number(q.pointsMultiplier) > 1 ? 2 : 1,
     time: Math.ceil(sp.remainingMs(game, player, now) / 1000),
-    ...(meta.type === 'matching' ? { matchLeft: meta.matchLeft, matchRight: meta.matchRight } : {})
+    ...(meta.type === 'matching' ? { matchLeft: meta.matchLeft, matchRight: meta.matchRight } : {}),
+    ...(meta.type === 'order' ? { orderItems: orderDisplayOf(meta), layout: meta.layout } : {})
   };
   return {
     ...toStudent(full, game.gameData.options),

@@ -55,6 +55,10 @@ var app = Vue.createApp({
             matchRightCount: 0,
             matchBlindStyle: 'codes',
             matchKey: 0,
+            orderItems: [],
+            orderCount: 0,
+            orderLayout: 'vertical',
+            orderKey: 0,
             multiSelections: [],
             freeAnswerValue: '',
             timerLeft: 20,
@@ -118,7 +122,7 @@ var app = Vue.createApp({
         t: function(key){ return tPlayer(key); },
         fmt: fmtPlayer,
         buttonVisible: function(i){
-            if(this.questionType === 'matching' || this.freeAnswerType) return false;
+            if(this.questionType === 'matching' || this.questionType === 'order' || this.freeAnswerType) return false;
             if(this.blind) return i < this.blindActiveCount;
             return !!(this.answers[i] && String(this.answers[i]).trim());
         },
@@ -137,6 +141,7 @@ var app = Vue.createApp({
             this.send(this.questionType === 'numeric' ? { number: raw } : { text: raw });
         },
         submitMatching: function(answers){ lastMatchAnswers = answers.slice(); this.send(answers); },
+        submitOrder: function(order){ this.send(order); },
         send: function(payload){
             if(this.state !== 'question') return;
             // Se espera el resultado del servidor; si lo rechaza, se vuelve a la pregunta.
@@ -173,7 +178,7 @@ var app = Vue.createApp({
             socket.emit('playerLeave');
         }
     }
-}).component('matching-board', window.EduhootMatchingBoard).mount('#player-sp');
+}).component('matching-board', window.EduhootMatchingBoard).component('order-board', window.EduhootOrderBoard).mount('#player-sp');
 
 // ----- Parámetros y token (igual que en la pantalla en vivo) -----
 var params = jQuery.deparam(window.location.search);
@@ -291,6 +296,13 @@ socket.on('spQuestion', function(d){
         app.matchBlindStyle = d.blindStyle || 'codes';
         app.matchKey += 1;
     }
+    if(d.type === 'order'){
+        // A cegues només arriba el nombre d'elements; el tauler mostra codis (A, B…).
+        app.orderItems = d.blind ? [] : (d.orderItems || []).slice();
+        app.orderCount = Number(d.orderCount) || (d.orderItems || []).length;
+        app.orderLayout = d.layout === 'horizontal' ? 'horizontal' : 'vertical';
+        app.orderKey += 1;
+    }
     if(d.blind){
         app.blind = true;
         app.blindActiveCount = Math.max(0, Number(d.answerCount) || 0);
@@ -316,6 +328,11 @@ function correctDetailHtml(meta){
     if(!meta) return '';
     if(meta.type === 'matching'){
         return Array.isArray(meta.matchSolution) && window.EduhootMatchingReview ? matchingReviewHtml(meta) : '';
+    }
+    // Ordenar: l'ordre correcte, en la seqüència de la pregunta (llega en meta si «Mostrar respuestas» està activat).
+    if(meta.type === 'order'){
+        var orderItems = Array.isArray(meta.items) ? meta.items : [];
+        return orderItems.length ? '<span class="order-review">' + escapeHtml(tPlayer('correct_answer') + ' ' + orderItems.map(function(x, i){ return (i + 1) + '. ' + x; }).join(' · ')) + '</span>' : '';
     }
     var txt = '';
     if(meta.type === 'short-answer'){

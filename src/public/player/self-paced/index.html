@@ -5,6 +5,7 @@
         <title>Game | EduHoot</title>
         <link rel="stylesheet" href="/css/answers.css">
         <link rel="stylesheet" href="/css/matching.css">
+        <link rel="stylesheet" href="/css/order.css">
         <link rel="stylesheet" href="../../css/playerGameView.css">
         <link rel="stylesheet" href="../../css/playerLiveStatus.css">
         <link rel="stylesheet" href="../../css/playerSelfPaced.css">
@@ -116,6 +117,8 @@
                         <input id="freeAnswerInput" ref="freeAnswerInput" type="text" autocomplete="off" :inputmode="questionType === 'numeric' ? 'decimal' : 'text'" :placeholder="freePlaceholder" v-model="freeAnswerValue" @keydown.enter.prevent="submitFree" />
                         <button type="button" id="freeSubmitBtn" class="button free-submit" @click="submitFree">{{ t('submit_free') }}</button>
                     </div>
+                    <order-board v-if="questionType === 'order' && !blind" :key="'order-' + orderKey" :items="orderItems" :layout="orderLayout" :t="t" @submit="submitOrder"></order-board>
+                    <order-board v-if="questionType === 'order' && blind" :key="'order-blind-' + orderKey" :count="orderCount" :layout="orderLayout" :t="t" @submit="submitOrder"></order-board>
                     <matching-board v-if="questionType === 'matching'" :key="'match-' + matchKey" :left="matchLeft" :right="matchRight" :left-count="matchLeftCount" :right-count="matchRightCount" :blind-style="matchBlindStyle" :t="t" @submit="submitMatching"></matching-board>
                     <div id="answerGrid" class="answer-grid">
                         <button v-for="i in 4" :key="i" :id="'answer' + i" class="button answer-shape" :class="['answer-shape--' + i, { 'multi-selected': multiSelections.indexOf(i) !== -1 }]" v-show="buttonVisible(i - 1)" v-html="buttonHtml(i - 1)" @click="onAnswerClick(i)"></button>
@@ -145,6 +148,7 @@
         <script src="../../js/libs/deparam.js"></script>
         <script src="../../js/libs/vue.global.prod.js"></script>
         <script src="../../js/matchingBoard.js"></script>
+        <script src="../../js/orderBoard.js"></script>
         <script src="../../js/tts.js"></script>
         <script src="../../js/playerCommon.js"></script>
         <script src="../../js/homeworkTransport.js"></script>

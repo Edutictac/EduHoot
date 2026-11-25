@@ -345,6 +345,31 @@ function matchingExportLines(question, includeAnswers){
     return lines;
 }
 
+// Ordenar: els elements barrejats amb lletres (A, B…) i, amb respostes, l'ordre correcte com a seqüència de lletres.
+function orderExportLines(question, includeAnswers){
+    var items = (Array.isArray(question && question.items) ? question.items : [])
+        .map(function(v){ return (v === null || v === undefined) ? '' : String(v).trim(); })
+        .filter(function(v){ return v; });
+    var n = items.length;
+    var shown = items.map(function(_, i){ return i; });
+    for(var i = n - 1; i > 0; i--){
+        var j = Math.floor(Math.random() * (i + 1));
+        var tmp = shown[i]; shown[i] = shown[j]; shown[j] = tmp;
+    }
+    // Mai en l'ordre correcte (com a la correspondència).
+    if(n > 1 && shown.every(function(v, k){ return v === k; })){
+        shown = shown.slice(1).concat(shown[0]);
+    }
+    var letters = 'ABCDEFGH';
+    var lines = shown.map(function(idx, pos){ return letters.charAt(pos) + ') ' + items[idx]; });
+    if(includeAnswers && n){
+        var sequence = [];
+        for(var k = 0; k < n; k++) sequence.push(letters.charAt(shown.indexOf(k)));
+        lines.push(t('pdfCorrect') + ': ' + sequence.join(' → '));
+    }
+    return lines;
+}
+
 function shuffleAnswersForPdf(question, qType){
     var answers = normalizePdfAnswers(question, qType);
     var items = answers.map(function(text, idx){ return { text: text, idx: idx }; });
@@ -499,6 +524,11 @@ async function downloadPdf(id, options){
                 }else{
                     y += 8;
                 }
+            }else if(qType === 'order'){
+                orderExportLines(q, includeAnswers).forEach(function(line){
+                    y = pdfAddWrapped(doc, line, margin, y, maxWidth, { fontSize: 11 });
+                });
+                y += 6;
             }else if(qType === 'matching'){
                 matchingExportLines(q, includeAnswers).forEach(function(line){
                     y = pdfAddWrapped(doc, line, margin, y, maxWidth, { fontSize: 11 });
@@ -634,6 +664,10 @@ async function downloadDocx(id, options){
                     parts.push(new docxLib.Paragraph(t('pdfNumericAnswer') + ': ' + n + ' (± ' + t('pdfTolerance') + ': ' + tol + ')'));
                     parts.push(new docxLib.Paragraph(t('pdfCorrect') + ': ' + n + ' (± ' + tol + ')'));
                 }
+            }else if(qType === 'order'){
+                orderExportLines(q, includeAnswers).forEach(function(line){
+                    parts.push(new docxLib.Paragraph(line));
+                });
             }else if(qType === 'matching'){
                 matchingExportLines(q, includeAnswers).forEach(function(line){
                     parts.push(new docxLib.Paragraph(line));
@@ -761,6 +795,10 @@ async function downloadOdt(id, options){
                     contentParts.push('<text:p>' + escapeXml(t('pdfNumericAnswer') + ': ' + n + ' (± ' + t('pdfTolerance') + ': ' + tol + ')') + '</text:p>');
                     contentParts.push('<text:p>' + escapeXml(t('pdfCorrect') + ': ' + n + ' (± ' + tol + ')') + '</text:p>');
                 }
+            }else if(qType === 'order'){
+                orderExportLines(q, includeAnswers).forEach(function(line){
+                    contentParts.push('<text:p>' + escapeXml(line) + '</text:p>');
+                });
             }else if(qType === 'matching'){
                 matchingExportLines(q, includeAnswers).forEach(function(line){
                     contentParts.push('<text:p>' + escapeXml(line) + '</text:p>');
