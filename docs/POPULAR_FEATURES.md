@@ -100,7 +100,7 @@ decisió de producte.
 | 4 | Power-ups (doble puntuació, 50/50, congelar ratxa) | 🟩 | 🔴 | ➖ Neutre | 🙂 Segur¹ | ➖ Neutra | ✅ Encaixa | Fase 2 |
 | 5 | Avatars de personatge personalitzables | 🟩 | 🟡 | ✖️ Cap | 🙂 Segur | ➖ Neutra | ✅ Encaixa | 📦 Aparcada |
 | 6 | Mode equips, amb variant "relay" | 🟩 | 🔴 | 📚 Alt | ⚠️ Risc lleu² | 🤝 Alta | ✅ Encaixa | Fase 2 |
-| 7 | ✅ Tipus de pregunta: ordenar i emparellar (◐ importació de *puzzle* de Kahoot pendent) | 🟩 | 🔴 | 📚 Alt | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 2 |
+| 7 | ✅ Tipus de pregunta: ordenar i emparellar (importació de *puzzle* de Kahoot només per issue) | 🟩 | 🔴 | 📚 Alt | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 2 |
 | 8 | Memes i GIF com a feedback | 🟦 | 🟡 | ✖️ Cap | 🙂 Segur | ➖ Neutra | ✅ Encaixa | 📦 Aparcada |
 | 9 | Música/so de tensió per fases | 🟨 | 🟡 | ✖️ Cap | 🙂 Segur | ➖ Neutra | ✅ Encaixa | 📦 Aparcada |
 | 10 | Modes de joc immersius tipus arcade | 🟦 | 🔴 | ➖ Neutre | ⚠️ Risc³ | 🚧 Baixa | ✅ Encaixa | Fase 4 |
@@ -119,7 +119,7 @@ decisió de producte.
 | 23 | ✅ Compte arrere "¡Prepara't!" 3-2-1 | 🟨 | 🟢 | ✖️ Cap | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1a⁷ |
 | 24 | Vídeos "aprén i després respon" | 🟦 | 🟡 | 📚 Alt | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1b |
 | 25 | ✅ Pràctica adaptativa (repetir fallades) | 🟦 | 🟡 | 📚 Alt | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1b |
-| 26 | Mode "fantasma"/millor marca personal | 🟨 | 🟡 | ➖ Neutre⁸ | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1b |
+| 26 | ✅ Mode "fantasma"/millor marca personal | 🟨 | 🟡 | ➖ Neutre⁸ | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1b |
 | 27 | Mode "presentació" híbrid | 🟦 | 🟡 | 📚 Alt | 🙂 Segur | 🤝 Alta | ✅ Encaixa | Fase 3 |
 | 28 | "Energizers"/pauses amb vídeo | 🟨 | 🟡 | ✖️ Cap | 🙂 Segur | ➖ Neutra | ✅ Encaixa | ❌ Descartada |
 | 29 | Matchmaking contra desconeguts | 🟦 | 🔴 | ➖ Neutre | 🙂 Segur | ➖ Neutra | 🚫 No encaixa | ❌ Descartada |
@@ -240,7 +240,7 @@ el context, que ja estan en la taula).
    **Ordenar, implementat** (tipus `order`): en partida, solo, flashcards,
    multijugador local, autoritme, deures, documents (PDF, DOCX i ODT), Moodle XML
    i CSV. El tiempo extra de la correspondència també s'aplica a ordenar.
-   **Pendent:** importar el *puzzle* de Kahoot (format sense verificar).
+   **Fora d'abast:** importar el *puzzle* de Kahoot (format sense verificar); només per issue si es demana.
 
 8. 🟦 **Wayground** — Memes i GIF com a feedback d'encert/fallada — 🟡 Mitjana
    → **Criteri pedagògic:** ✖️ Aprenentatge: Cap · 🙂 Clima: Segur ·
@@ -390,7 +390,8 @@ el context, que ja estan en la taula).
     → **Criteri pedagògic:** 📚 Aprenentatge: Alt · 🙂 Clima: Segur ·
     ➖ Inclusió: Neutra → **Prioritat alta** (confirmat).
 
-26. 🟨 **Kahoot** — Mode "fantasma"/millor marca personal en Solo — 🟡 Mitjana
+26. ✅ 🟨 **Kahoot** — Mode "fantasma"/millor marca personal en Solo — 🟡 Mitjana
+    **Implementat** en Solo i en aula (opció de l'anfitrió, desactivada per defecte): diferència pregunta a pregunta amb la millor marca del quiz, guardada al navegador de cada alumne.
     → **Criteri pedagògic:** ➖ Aprenentatge: Neutre (autoavaluació
     progressiva) · 🙂 Clima: Segur (compara contra un mateix, no contra
     companys) · ➖ Inclusió: Neutra → sense canvis; nota positiva: al
@@ -609,7 +610,7 @@ confirmada.
 
 ### Fase 1b — Mecàniques de Solo/amfitrió, sense tocar l'arquitectura del cicle de partida
 
-✅ 11 (ratxa), 24 (vídeos "aprén i respon"), ✅ 25 (pràctica adaptativa), 26
+✅ 11 (ratxa), 24 (vídeos "aprén i respon"), ✅ 25 (pràctica adaptativa), ✅ 26
 (mode fantasma), 30 (Time Attack), 31 (mode paper).
 
 A diferència de la Fase 1a, estes sí que canvien la puntuació (11) o la
@@ -621,7 +622,7 @@ pedagògica alta confirmada.
 ### Fase 2 — Mecàniques de joc de major abast, però autocontingudes
 
 4 (power-ups, sense "robar punts"), 6 (mode equips), ✅ 7 (tipus de
-pregunta: ordenar/emparellar; ◐ puzzle de Kahoot pendent), 17 (tipus de pregunta addicionals).
+pregunta: ordenar/emparellar; importació de *puzzle* de Kahoot només per issue), 17 (tipus de pregunta addicionals).
 
 Amplien el model de dades de la partida (equips, power-ups, tipus de
 pregunta nous), però no canvien el ritme compartit de la partida: continua
