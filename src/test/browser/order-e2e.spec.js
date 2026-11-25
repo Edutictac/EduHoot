@@ -81,6 +81,26 @@ test('partida completa amb el quiz 69: anfitrió i dos alumnes ordenen les cinc 
             }
         }
     }
+    // Informe de la partida (CSV): cada pregunta d'ordenar es llegeix com a text. Ana l'encerta; Bruno l'invers.
+    // El hostId que accepta el servidor és el que la pàgina del projector rep (params.id), no el de la URL.
+    const gameFrame = host.frames().find((fr) => fr.parentFrame() && fr.url().includes('/host/game/'));
+    const hostId = await gameFrame.evaluate(() => window.params && window.params.id);
+    const res = await host.request.get(BASE + '/api/live-games/' + pin + '/report.csv?hostId=' + encodeURIComponent(hostId));
+    expect(res.ok()).toBeTruthy();
+    const rows = (await res.text()).split('\n').map((line) => line.split(';'));
+    // Columnes: 5 alumne, 10 nombre de pregunta, 11 tipus, 14 resposta, 15 correcta.
+    const textOf = (items) => items.map((text, i) => (i + 1) + ' ' + text).join(' | ');
+    for (let q = 0; q < QUESTIONS.length; q++) {
+        const items = QUESTIONS[q].items;
+        const rowOf = (name) => rows.find((r) => r[5] === name && r[10] === String(q + 1) && r[11] === 'order');
+        const ana = rowOf('Ana');
+        const bruno = rowOf('Bruno');
+        expect(ana, 'fila d\'Ana per a la pregunta ' + (q + 1)).toBeTruthy();
+        expect(ana[14]).toBe(textOf(items));
+        expect(ana[15]).toBe(textOf(items));
+        expect(bruno[14]).toBe(textOf([...items].reverse()));
+        expect(bruno[15]).toBe(textOf(items));
+    }
     await hostCtx.close();
     for (const s of students) await s.page.context().close();
 });
