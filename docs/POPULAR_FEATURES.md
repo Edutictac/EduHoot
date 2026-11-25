@@ -14,7 +14,7 @@
 - [Full de ruta d'implementació](#full-de-ruta-dimplementació)
   - [Troballes que condicionen l'orde](#troballes-que-condicionen-lorde)
   - [✅ Fase 0 — Habilitadors (requisits, no una recomanació)](#-fase-0--habilitadors-requisits-no-una-recomanació)
-  - [Fase 1a — Millores cosmètiques/aïllades, sense tocar la lògica de joc](#fase-1a--millores-cosmètiquesaïllades-sense-tocar-la-lògica-de-joc)
+  - [✅ Fase 1a — Millores cosmètiques/aïllades, sense tocar la lògica de joc](#-fase-1a--millores-cosmètiquesaïllades-sense-tocar-la-lògica-de-joc)
   - [Fase 1b — Mecàniques de Solo/amfitrió, sense tocar l'arquitectura del cicle de partida](#fase-1b--mecàniques-de-soloamfitrió-sense-tocar-larquitectura-del-cicle-de-partida)
   - [Fase 2 — Mecàniques de joc de major abast, però autocontingudes](#fase-2--mecàniques-de-joc-de-major-abast-però-autocontingudes)
   - [Fase 3 — Canvi d'arquitectura del cicle de partida](#fase-3--canvi-darquitectura-del-cicle-de-partida)
@@ -100,7 +100,7 @@ decisió de producte.
 | 4 | Power-ups (doble puntuació, 50/50, congelar ratxa) | 🟩 | 🔴 | ➖ Neutre | 🙂 Segur¹ | ➖ Neutra | ✅ Encaixa | Fase 2 |
 | 5 | Avatars de personatge personalitzables | 🟩 | 🟡 | ✖️ Cap | 🙂 Segur | ➖ Neutra | ✅ Encaixa | 📦 Aparcada |
 | 6 | Mode equips, amb variant "relay" | 🟩 | 🔴 | 📚 Alt | ⚠️ Risc lleu² | 🤝 Alta | ✅ Encaixa | Fase 2 |
-| 7 | Tipus de pregunta: ordenar i emparellar (◐ emparellar fet) | 🟩 | 🔴 | 📚 Alt | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 2 |
+| 7 | ✅ Tipus de pregunta: ordenar i emparellar (◐ importació de *puzzle* de Kahoot pendent) | 🟩 | 🔴 | 📚 Alt | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 2 |
 | 8 | Memes i GIF com a feedback | 🟦 | 🟡 | ✖️ Cap | 🙂 Segur | ➖ Neutra | ✅ Encaixa | 📦 Aparcada |
 | 9 | Música/so de tensió per fases | 🟨 | 🟡 | ✖️ Cap | 🙂 Segur | ➖ Neutra | ✅ Encaixa | 📦 Aparcada |
 | 10 | Modes de joc immersius tipus arcade | 🟦 | 🔴 | ➖ Neutre | ⚠️ Risc³ | 🚧 Baixa | ✅ Encaixa | Fase 4 |
@@ -108,7 +108,7 @@ decisió de producte.
 | 12 | ✅ Generador de sobrenoms aleatoris | 🟨 | 🟢 | ✖️ Cap⁴ | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1a |
 | 13 | ✅ Lectura en veu alta (TTS) | 🟩 | 🟢 | ➖ Neutre | 🙂 Segur | 🤝 Alta | ✅ Encaixa | Fase 1a |
 | 14 | So de feedback individual | 🟨 | 🟢 | ✖️ Cap | 🙂 Segur | ➖ Neutra | ✅ Encaixa | 📦 Aparcada |
-| 15 | ✅ Ampliar la importació: GIFT, XML de Moodle i la resta de formats de Moodle/AULES⁵ (◐ GIFT i XML fets) | 🟦 | 🟡 | ➖ Neutre | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1a |
+| 15 | ✅ Ampliar la importació: GIFT, XML de Moodle i la resta de formats de Moodle/AULES (GIFT i XML de Moodle fets; la resta de formats, per issue si es demana) | 🟦 | 🟡 | ➖ Neutre | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1a |
 | 16 | Reaccions en directe (emoji) | 🟨 | 🟡 | ✖️ Cap | ⚠️ Risc | ➖ Neutra | ✅ Encaixa | 📦 Aparcada |
 | 17 | Tipus de pregunta addicionals | 🟦 | 🔴 | 📚 Alt | 🙂 Segur | 🤝 Alta | ✅ Encaixa | Fase 2 |
 | 18 | Informe de progrés històric | 🟩 | 🔴 | 📚 Alt⁶ | 🙂 Segur | ➖ Neutra | ✅ Encaixa | ❌ Descartada |
@@ -597,10 +597,10 @@ un suggeriment ajornable:
 ✅ Fora d'esta fase (no era requisit): la Subfase B de `docs/MIGRATING.md`
 (Vue 3, també sense build step) està FET. 
 
-### Fase 1a — Millores cosmètiques/aïllades, sense tocar la lògica de joc
+### ✅ Fase 1a — Millores cosmètiques/aïllades, sense tocar la lògica de joc
 
 ✅ 12 (sobrenoms aleatoris), ✅ 13 (TTS), ✅ 15 (ampliar importació:
-GIFT/XML fets; falta la resta de formats Moodle/AULES), ✅ 20 (flashcards), ✅ 23 (compte arrere 3-2-1).
+GIFT i XML fets; la resta de formats Moodle/AULES, per issue si es demana), ✅ 20 (flashcards), ✅ 23 (compte arrere 3-2-1).
 
 No canvien ni la puntuació ni la seqüència de preguntes: són canvis
 d'interfície, d'àudio, o d'importació de contingut, autocontinguts en un
@@ -620,8 +620,8 @@ pedagògica alta confirmada.
 
 ### Fase 2 — Mecàniques de joc de major abast, però autocontingudes
 
-4 (power-ups, sense "robar punts"), 6 (mode equips), 7 (tipus de
-pregunta: ordenar/emparellar), 17 (tipus de pregunta addicionals).
+4 (power-ups, sense "robar punts"), 6 (mode equips), ✅ 7 (tipus de
+pregunta: ordenar/emparellar; ◐ puzzle de Kahoot pendent), 17 (tipus de pregunta addicionals).
 
 Amplien el model de dades de la partida (equips, power-ups, tipus de
 pregunta nous), però no canvien el ritme compartit de la partida: continua
