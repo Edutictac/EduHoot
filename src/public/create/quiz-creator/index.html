@@ -134,8 +134,7 @@
                             <div class="order-options">
                                 <label>{{ t('orderGradingLabel') }}
                                     <select :id="'orderGrading' + (index + 1)" class="order-grading" v-model="card.orderGrading">
-                                        <option :value="0">{{ t('orderGradingAbsolute') }}</option>
-                                        <option :value="-1">{{ t('orderGradingAll') }}</option>
+                                        <option v-for="g in orderGradingChoices" :key="g.value" :value="g.value">{{ t(g.key) }}</option>
                                     </select>
                                 </label>
                                 <label>{{ t('orderLayoutLabel') }}

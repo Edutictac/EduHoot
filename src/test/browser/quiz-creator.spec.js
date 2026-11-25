@@ -745,3 +745,19 @@ test('ordenar: al editar se cargan elementos, puntuación y disposición', async
     await expect(page.locator('#orderGrading1')).toHaveValue('-1');
     await expect(page.locator('#orderLayout1')).toHaveValue('horizontal');
 });
+
+test('ordenar: el selector de puntuació ofrece els nou modes i guarda el triat', async ({ page }) => {
+    const calls = await mockBackend(page);
+    await openCreator(page);
+    await fillBasics(page);
+    await page.locator('#type1').selectOption('order');
+    const editor = page.locator('#order1');
+    await editor.locator('.order-item').nth(0).fill('a');
+    await editor.locator('.order-item').nth(1).fill('b');
+    const grading = page.locator('#orderGrading1');
+    await expect(grading.locator('option')).toHaveCount(9);
+    await grading.selectOption('7');
+    await page.locator('[data-i18n="btnPlayLocal"]').click();
+    await expect.poll(() => calls.local.length).toBe(1);
+    expect(calls.local[0].questions[0].orderGrading).toBe(7);
+});
