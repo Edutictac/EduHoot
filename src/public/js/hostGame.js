@@ -69,6 +69,7 @@ var i18n = {
         topPlayers: 'Top 5 jugadores',
         gameOver: 'FIN DE LA PARTIDA',
         bgMusicTitle: 'Música de fondo',
+        finishVideo: 'Finalitzar vídeo',
         bgMusicNone: 'Sin música',
         bgMusicChoose: 'Elige un tema',
         bgMusicPlay: 'Reproducir música',
@@ -143,6 +144,7 @@ var i18n = {
         topPlayers: 'Top 5 Players',
         gameOver: 'GAME OVER',
         bgMusicTitle: 'Background music',
+        finishVideo: 'Finish video',
         bgMusicNone: 'No music',
         bgMusicChoose: 'Choose a track',
         bgMusicPlay: 'Play music',
@@ -217,6 +219,7 @@ var i18n = {
         topPlayers: 'Top 5 jugadors',
         gameOver: 'FI DE LA PARTIDA',
         bgMusicTitle: 'Música de fons',
+        finishVideo: 'Finalitzar vídeo',
         bgMusicNone: 'Sense música',
         bgMusicChoose: 'Tria un tema',
         bgMusicPlay: 'Reprodueix música',
@@ -335,6 +338,7 @@ var app = Vue.createApp({
             resultsFreeLines: [],
             // Correspondencia: columnas en pantalla y resultados por pareja.
             matchLeft: [],
+            videoLearning: false,
             matchRight: [],
             // Ordenar: la llista barrejada (durant la pregunta) i la solució (en mostrar el resultat).
             orderItems: [],
@@ -419,6 +423,7 @@ var app = Vue.createApp({
         // atributos on… y la CSP puede prohibir los scripts en línea.
         toggleFullscreen: function(){ toggleHostFullscreen(); },
         goNextQuestion: function(){ nextQuestion(); },
+        finishVideo: function(){ socket.emit('finishVideoLearning'); },
         showRankingToggle: function(){ toggleRanking(); },
         // Expulsión en dos pasos desde la lista de respuestas (issue #29).
         askKick: function(player){
@@ -1140,7 +1145,34 @@ function showQuestionCountdown(data){
 
 socket.on('questionCountdown', showQuestionCountdown);
 
+// Fase «aprén i després respon» (feature 24): el vídeo a la pantalla abans de les respostes.
+function startVideoLearning(data){
+    app.videoLearning = true;
+    var startAt = Number(data && data.startAt) || 0;
+    setMedia(null, (data && data.video) || '');
+    var v = document.getElementById('questionVideo');
+    var iframe = document.getElementById('questionIframe');
+    var ytId = parseYouTubeId((data && data.video) || '');
+    if(ytId && startAt > 0 && iframe){
+        // YouTube: el segon d'inici va al paràmetre «start» de l'iframe.
+        iframe.src = 'https://www.youtube-nocookie.com/embed/' + ytId + '?start=' + startAt;
+    }
+    if(v && !ytId){
+        // Arxiu: en acabar, la fase es tanca sola; el segon d'inici es posa en carregar el vídeo.
+        if(!v.dataset.learnBound){
+            v.dataset.learnBound = '1';
+            v.addEventListener('ended', function(){ if(app.videoLearning) socket.emit('finishVideoLearning'); });
+        }
+        if(startAt > 0){
+            var seek = function(){ try{ v.currentTime = startAt; }catch(e){} };
+            if(v.readyState >= 1) seek(); else v.addEventListener('loadedmetadata', seek, { once: true });
+        }
+    }
+}
+socket.on('videoLearn', startVideoLearning);
+
 socket.on('gameQuestions', function(data){
+    app.videoLearning = false;
     clearQuestionCountdown();
     hostQuestionEnded = false;
     hostRankingGongPlayed = false;

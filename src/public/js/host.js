@@ -283,7 +283,9 @@ var lobby = Vue.createApp({
                 matchingExtraTime: 50,
                 // Tiempos ampliados de esta partida (issue #13). Vacío = mínimo.
                 timings: { hostReconnectSec: '', playerReconnectSec: '', cleanupSec: '', inactivityMin: '' },
-                time: ''
+                time: '',
+                // Fase del vídeo: segon en què comença el vídeo (0 = des del principi).
+                videoStartSec: 0
             }
         };
     },
@@ -513,6 +515,7 @@ function startGame(){
             opts.timePerQuestion = parsedTime;
         }
     }
+    opts.videoStartSec = Math.max(0, Math.min(3600, parseInt(options.videoStartSec, 10) || 0));
     emitStartGameWhenGongEnds(opts);
 }
 // Cancelar desde el lobby: pide confirmación (dos pasos) y el servidor cierra la partida.

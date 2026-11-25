@@ -217,6 +217,14 @@ module.exports = function createPlayerEvents({
         const questions = game.gameData.questions || [];
         const current = questions[game.gameData.question - 1];
         if (current) {
+          // Fase del vídeo: l'alumnat espera; la pregunta arriba quan el profesorat tanca el vídeo.
+          if (game.gameData.questionLearning) {
+            socket.emit('videoLearnWait', {
+              questionNumber: game.gameData.question,
+              totalQuestions: game.gameData.totalQuestions || questions.length
+            });
+            return;
+          }
           if (game.gameData.questionPending) {
             socket.emit('questionCountdown', {
               seconds: Math.max(0, Math.ceil(((game.gameData.questionCountdownEndsAt || Date.now()) - Date.now()) / 1000)),
@@ -244,7 +252,7 @@ module.exports = function createPlayerEvents({
             ...(current.type === 'matching' ? { matchLeft: current.matchLeft, matchRight: current.matchRight } : {}),
             ...(current.type === 'order' ? { orderItems: orderDisplayOf(getQuestionMeta(current)), layout: getQuestionMeta(current).layout } : {})
           }, game.gameData.options));
-          socket.emit('questionMedia', { image: current.image || '', video: current.video || '' });
+          socket.emit('questionMedia', { image: current.image || '', video: '' });
           // Si la pregunta ya cerró, informar al jugador reconectado
           if (game.gameData.questionLive === false) {
             const meta = getQuestionMeta(current);

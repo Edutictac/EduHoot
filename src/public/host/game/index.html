@@ -55,6 +55,7 @@
             <button @click="skipQuestion" id="skipQButton" :style="{ display: skipVisible ? 'inline-block' : 'none' }" :disabled="skipDisabled">{{ t('skip') }}</button>
             <button type="button" id="cancelGameBtn" :class="{ 'is-confirming': cancelGameConfirming }" @click="gameOverMode ? goBackToLibrary() : askCancelGame()">{{ gameOverMode ? t('backToLibrary') : (cancelGameConfirming ? t('cancelConfirm') : t('cancelGame')) }}</button>
             <button type="button" @click="goNextQuestion" id="nextQButton">Next Question</button>
+            <button v-if="videoLearning" type="button" @click="finishVideo" id="finishVideoBtn" class="btn-finish-video">{{ t('finishVideo') }}</button>
             <button type="button" @click="showRankingToggle" id="showRanking" v-show="showRankingButton">{{ t('showRanking') }}</button>
             <button type="button" id="downloadReportBtn" @click="downloadReport" :style="{ display: downloadReportVisible ? 'inline-block' : 'none' }">{{ t('downloadReport') }}</button>
         </div>

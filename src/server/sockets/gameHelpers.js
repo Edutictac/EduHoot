@@ -395,17 +395,51 @@ module.exports = function createGameHelpers({ io, games, players, cleanImportedT
     };
   }
 
+  // Fase «aprén i després respon» (feature 24): una pregunta amb vídeo primer es mira a la pantalla de
+  // l'anfitrió (projector); l'alumnat espera i no rep la pregunta fins que acaba el vídeo.
+  function beginVideoLearning(game, payload) {
+    game.gameData.questionPending = false;
+    game.gameData.questionLive = false;
+    game.gameData.questionLearning = true;
+    const options = game.gameData.options || {};
+    io.to(game.hostId).emit('videoLearn', {
+      questionNumber: game.gameData.question,
+      video: payload.video,
+      image: payload.image,
+      startAt: Number(options.videoStartSec) || 0
+    });
+    io.to(game.pin).except(game.hostId).emit('videoLearnWait', {
+      questionNumber: game.gameData.question,
+      totalQuestions: game.gameData.totalQuestions || 0
+    });
+  }
+
+  // Acaba la fase del vídeo (el profesorat ho tanca, o el vídeo acaba): comencen les respostes i el temps.
+  function finishVideoLearning(game) {
+    if (!game || !game.gameData || !game.gameData.questionLearning) return false;
+    game.gameData.videoLearnedFor = game.gameData.question;
+    game.gameData.questionLearning = false;
+    startCurrentQuestion(game);
+    return true;
+  }
+
   function startCurrentQuestion(game) {
     if (!game || !game.gameData || game.gameOver) return;
     clearQuestionStartTimer(game);
     const payload = getCurrentQuestionPayload(game);
     if (!payload) return;
+    const learnFirst = !!payload.video && game.gameData.videoLearnedFor !== game.gameData.question;
+    if (learnFirst) {
+      beginVideoLearning(game, payload);
+      return;
+    }
     game.gameData.questionPending = false;
     game.gameData.questionLive = true;
     game.gameData.questionStartedAt = Date.now();
     io.to(game.hostId).emit('gameQuestions', payload.hostPayload);
     emitAutoAdvanceState(game);
-    io.to(game.pin).emit('questionMedia', { image: payload.image, video: payload.video });
+    // El vídeo ja l'ha vist l'anfitrió: l'alumnat i la pantalla no el tornen a rebre.
+    io.to(game.pin).emit('questionMedia', { image: payload.image, video: '' });
     io.to(game.pin).emit('playerQuestion', buildStudentPlayerPayload(payload.playerPayload, game.gameData.options));
   }
 
@@ -415,6 +449,7 @@ module.exports = function createGameHelpers({ io, games, players, cleanImportedT
     const seconds = Math.max(0, Math.round(Number(delaySeconds) || 0));
     game.gameData.questionLive = false;
     game.gameData.questionPending = true;
+    game.gameData.questionLearning = false;
     game.gameData.questionCountdownEndsAt = Date.now() + (seconds * 1000);
     io.to(game.pin).emit('questionCountdown', {
       seconds,
@@ -550,6 +585,7 @@ module.exports = function createGameHelpers({ io, games, players, cleanImportedT
   }
 
   return {
+    finishVideoLearning,
     timingsFor,
     stopAutoAdvance,
     emitAutoAdvanceState,

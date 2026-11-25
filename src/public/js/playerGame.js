@@ -982,6 +982,15 @@ function showQuestionCountdown(data){
 
 socket.on('questionCountdown', showQuestionCountdown);
 
+// Fase del vídeo (feature 24): l'alumnat mira la pantalla de l'anfitrió i espera; sense respostes.
+socket.on('videoLearnWait', function(){
+    questionActive = false;
+    app.answersVisible = false;
+    app.resultShown = false;
+    document.body.style.backgroundColor = "#FFFFFF";
+    showMessage(tPlayer('video_wait', 'Mira la pantalla: el profesorado està mostrant un vídeo.'));
+});
+
 socket.on('playerQuestion', function(data){
     liveGhostQuestion(data);
     app.resultShown = false;

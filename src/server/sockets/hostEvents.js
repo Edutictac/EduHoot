@@ -38,7 +38,8 @@ module.exports = function createHostEvents({
     buildQuestions,
     buildStudentPlayerPayload,
     scheduleQuestionCountdown,
-    logGames
+    logGames,
+    finishVideoLearning
   } = helpers;
 
   // En reconnectar l'anfitrió, la partida torna a estar oberta… excepte l'autoritme ja acabat (no es reobri).
@@ -403,6 +404,16 @@ module.exports = function createHostEvents({
       }
     });
 
+    // El profesorat tanca la fase del vídeo (botó «Finalitzar vídeo» o el final del vídeo): comencen les respostes.
+    socket.on('finishVideoLearning', () => {
+      const game = games.getGame(socket.id);
+      if (!game) {
+        socket.emit('noGameFound');
+        return;
+      }
+      finishVideoLearning(game);
+    });
+
     socket.on('skipQuestion', async () => {
       const game = games.getGame(socket.id);
       if (game && game.paused) {
@@ -471,6 +482,8 @@ module.exports = function createHostEvents({
       options.mode = options.mode === 'selfPaced' ? 'selfPaced' : 'live';
       // Mode fantasma en aula: opcional (desactivat per defecte); la marca és al navegador de cada alumne.
       options.ghostMode = options.ghostMode === true || options.ghostMode === 'true';
+      // Fase del vídeo (feature 24): segon d'inici del vídeo, de 0 a 3600 (0 = des del principi).
+      options.videoStartSec = Math.max(0, Math.min(3600, parseInt(options.videoStartSec, 10) || 0));
       if (options.timePerQuestion !== undefined && options.timePerQuestion !== null && String(options.timePerQuestion).trim() !== '') {
         const parsedTime = parseInt(options.timePerQuestion, 10);
         if (Number.isNaN(parsedTime)) {
