@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { joinOrderItemsForCsv } = require('./orderQuestion');
-const { splitAcceptedAnswers, parseLenientNumber, getQuestionMeta, formatMatchingPairs } = require('../questionUtils');
+const { splitAcceptedAnswers, parseLenientNumber, getQuestionMeta, formatMatchingPairs, orderDisplayOf } = require('../questionUtils');
 
 const finishedSessionReports = new Map(); // pin -> { csv, hostId, createdAt, cleanupTimer }
 const FINISHED_SESSION_REPORT_TTL_MS = 6 * 60 * 60 * 1000; // 6 horas
@@ -201,10 +201,21 @@ module.exports = function createSessionReportService({ players, onFinished }) {
       }).join(' | ');
     }
 
+    // Ordenar: els elements en l'ordre que els ha posat l'alumne («1 A | 2 B | …»).
+    function formatOrderList(texts) {
+      return texts.map((text, i) => `${i + 1} ${text}`).join(' | ');
+    }
+
     function formatSubmissionForCsv(meta, question, submission) {
       if (submission === undefined || submission === null || submission === '') return '';
       if (meta.type === 'matching') {
         return formatMatchingList(meta, submission);
+      }
+      if (meta.type === 'order') {
+        // La resposta són posicions de la llista barrejada: es tradueix al text de cada posició.
+        const shown = orderDisplayOf(meta);
+        const placed = Array.isArray(submission) ? submission : [];
+        return formatOrderList(placed.map((p) => String(shown[Number(p)] === undefined ? '' : shown[Number(p)])));
       }
       if (meta.type === 'short-answer') {
         const text = submission && typeof submission === 'object' && submission.text !== undefined
@@ -227,6 +238,9 @@ module.exports = function createSessionReportService({ players, onFinished }) {
     function formatCorrectForCsv(meta, question) {
       if (meta.type === 'matching') {
         return formatMatchingList(meta, meta.matchSolution);
+      }
+      if (meta.type === 'order') {
+        return formatOrderList(Array.isArray(meta.items) ? meta.items : []);
       }
       if (meta.type === 'short-answer') {
         const accepted = Array.isArray(meta.acceptedAnswers) ? meta.acceptedAnswers : [];
