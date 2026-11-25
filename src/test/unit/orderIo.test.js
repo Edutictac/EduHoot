@@ -55,3 +55,20 @@ test('CSV: la paraula «ordenar» de la columna tipo també és ordenar, i amb m
   const bad = parseCsv('tipo;pregunta;r1;r2;r3;r4;tiempo;correcta;imagen;video;texto;numero;tolerancia\nordenar;Pasos;;;;;20;;;;A;;')[0];
   assert.equal(toQuestion(bad), null);
 });
+
+test('CSV: un element amb «|» o barra torna intacte; la puntuació i la disposició també viatgen', () => {
+  const tricky = { type: 'order', question: 'Fitxers', items: ['a|b', 'c\\d', 'e\\'], orderGrading: -1, layout: 'horizontal', answers: ['', '', '', ''], time: 20 };
+  const csv = quizToCsv({ name: 'Fitxers', questions: [tricky] });
+  const [row] = parseCsv(csv);
+  const q = toQuestion(row);
+  assert.deepEqual(q.items, ['a|b', 'c\\d', 'e\\']);
+  assert.equal(q.orderGrading, -1);
+  assert.equal(q.layout, 'horizontal');
+});
+
+test('CSV antic: sense puntuació ni disposició, ordenar és absoluta i vertical', () => {
+  const [row] = parseCsv('tipo;pregunta;r1;r2;r3;r4;tiempo;correcta;imagen;video;texto;numero;tolerancia\nordenar;Pasos;;;;;20;;;;A|B|C;;');
+  const q = toQuestion(row);
+  assert.equal(q.orderGrading, 0);
+  assert.equal(q.layout, 'vertical');
+});

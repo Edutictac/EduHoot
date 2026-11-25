@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { joinOrderItemsForCsv } = require('./orderQuestion');
 const { splitAcceptedAnswers, parseLenientNumber, getQuestionMeta, formatMatchingPairs } = require('../questionUtils');
 
 const finishedSessionReports = new Map(); // pin -> { csv, hostId, createdAt, cleanupTimer }
@@ -72,7 +73,10 @@ function quizToCsv(quiz) {
 
     // Ordenar: els elements en ordre correcte a `texto`, separats per «|».
     if (type === 'order') {
-      texto = (Array.isArray(q.items) ? q.items : []).map((v) => String(v || '').trim()).filter(Boolean).join('|');
+      texto = joinOrderItemsForCsv(q.items);
+      // Puntuació i disposició: les columnes numero i tolerancia (no les usa ordenar).
+      numero = String(Number.isInteger(Number(q.orderGrading)) ? Number(q.orderGrading) : 0);
+      tolerancia = q.layout === 'horizontal' ? 'horizontal' : 'vertical';
       correctVals = '';
     }
 

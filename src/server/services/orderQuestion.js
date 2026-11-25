@@ -130,7 +130,39 @@ function orderIsCorrect(answer, n, mode) {
   return orderScoreRatio(answer, n, mode) === 1;
 }
 
+// CSV: els elements van separats per «|». Dins d'un element, «|» s'escriu «\|» i la barra «\» com «\\»,
+// perquè un element amb «|» no es parteixi en dos al tornar a importar.
+function joinOrderItemsForCsv(items) {
+  return (Array.isArray(items) ? items : [])
+    .map((v) => (v === null || v === undefined ? '' : String(v).trim()))
+    .filter((v) => v !== '')
+    .map((v) => v.replace(/\\/g, '\\\\').replace(/\|/g, '\\|'))
+    .join('|');
+}
+
+function splitOrderItemsFromCsv(text) {
+  const str = String(text || '');
+  const parts = [];
+  let cur = '';
+  for (let i = 0; i < str.length; i++) {
+    const ch = str[i];
+    if (ch === '\\' && (str[i + 1] === '|' || str[i + 1] === '\\')) {
+      cur += str[i + 1];
+      i++;
+    } else if (ch === '|') {
+      parts.push(cur);
+      cur = '';
+    } else {
+      cur += ch;
+    }
+  }
+  parts.push(cur);
+  return parts.map((v) => v.trim()).filter((v) => v !== '');
+}
+
 module.exports = {
+  joinOrderItemsForCsv,
+  splitOrderItemsFromCsv,
   MIN_ITEMS,
   MAX_ITEMS,
   ORDER_GRADING,
