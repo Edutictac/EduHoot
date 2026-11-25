@@ -28,7 +28,7 @@ test('PoC fantasma: la primera partida fixa la marca i la segona mostra la difer
     await page.locator('#m-ok').click();
     await expect(page.locator('#result')).toBeVisible();
     await expect(page.locator('#ghost-result')).toHaveText('Nova millor marca!');
-    await expect(page.locator('#mark')).toContainText('Millor marca guardada');
+    await expect(page.locator('#mark')).toContainText('Millor marca compartida');
 
     // Partida 2: la primera pregunta s'erra (Roma). La diferència després de la pregunta és negativa.
     await page.locator('#again').click();
@@ -54,7 +54,27 @@ test('PoC fantasma: esborrar la marca la deixa en blanc', async ({ page }) => {
     await page.locator('#m-ok').click();
     await expect(page.locator('#result')).toBeVisible();
     await page.reload();
-    await expect(page.locator('#mark')).toContainText('Millor marca guardada');
+    await expect(page.locator('#mark')).toContainText('Millor marca compartida');
     await page.locator('#reset-btn').click();
     await expect(page.locator('#mark')).toContainText('Encara no hi ha cap marca');
+});
+
+test('PoC fantasma en aula: el final és el GAME OVER de l\'alumnat, amb la marca compartida', async ({ page }) => {
+    await page.goto('/dev/fantasma/');
+    await page.locator('input[name="mode"][value="aula"]').check();
+    await page.locator('#start-btn').click();
+    await page.locator('#answers [data-answer="2"]').click();
+    await page.locator('#m-ok').click();
+    await page.locator('#answers [data-answer="2"]').click();
+    await page.locator('#m-ok').click();
+    await page.locator('#answers [data-answer="3"]').click();
+    await page.locator('#m-ok').click();
+    await expect(page.locator('#res-aula')).toBeVisible();
+    await expect(page.locator('#res-solo')).toBeHidden();
+    await expect(page.locator('#aula-sub')).toContainText('Puntuació:');
+    await expect(page.locator('#ghost-result')).toHaveText('Nova millor marca!');
+    // La marca d'aula és independent de la de solo.
+    // Solo i aula comparteixen la mateixa marca: una sola clau al navegador.
+    const keys = await page.evaluate(() => Object.keys(localStorage).filter((k) => k.startsWith('eduh_ghost_')));
+    expect(keys).toHaveLength(1);
 });
