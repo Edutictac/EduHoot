@@ -1,4 +1,5 @@
 const { splitAcceptedAnswers, parseLenientNumber, parseMatchingPairs } = require('../questionUtils');
+const { ORDER_GRADING } = require('./orderQuestion');
 
 function escapeHtmlText(value = '') {
   return String(value || '')
@@ -107,6 +108,37 @@ function quizToMoodleXml(quiz) {
         lines.push('    <answer fraction="100" format="html">');
         lines.push(`      <text>${wrapCdata(escapeHtmlText(ans || ''))}</text>`);
         lines.push('      <feedback><text><![CDATA[]]></text></feedback>');
+        lines.push('    </answer>');
+      });
+      lines.push('  </question>');
+      return;
+    }
+
+    // Ordenar (tipus «ordering» del plugin de Moodle): les respostes en ordre correcte, amb la posició com a fracció.
+    if (qType === 'order') {
+      const items = (Array.isArray(question.items) ? question.items : [])
+        .map((v) => (v === null || v === undefined ? '' : String(v).trim()))
+        .filter(Boolean);
+      const gradingName = Object.keys(ORDER_GRADING).find((k) => ORDER_GRADING[k] === Number(question.orderGrading)) || 'ABSOLUTE_POSITION';
+      lines.push('  <question type="ordering">');
+      lines.push(`    <name><text>${wrapCdata(nameText)}</text></name>`);
+      lines.push('    <questiontext format="html">');
+      lines.push(`      <text>${wrapCdata(html)}</text>`);
+      lines.push('    </questiontext>');
+      lines.push('    <generalfeedback format="html"><text></text></generalfeedback>');
+      lines.push('    <defaultgrade>1.0000000</defaultgrade>');
+      lines.push('    <penalty>0.3333333</penalty>');
+      lines.push('    <hidden>0</hidden>');
+      lines.push(`    <layouttype>${question.layout === 'horizontal' ? 'HORIZONTAL' : 'VERTICAL'}</layouttype>`);
+      lines.push('    <selecttype>ALL</selecttype>');
+      lines.push('    <selectcount>2</selectcount>');
+      lines.push(`    <gradingtype>${gradingName}</gradingtype>`);
+      lines.push('    <showgrading>SHOW</showgrading>');
+      lines.push('    <numberingstyle>none</numberingstyle>');
+      lines.push('    <shownumcorrect>1</shownumcorrect>');
+      items.forEach((item, i) => {
+        lines.push(`    <answer fraction="${i + 1}" format="moodle_auto_format">`);
+        lines.push(`      <text>${escapeHtmlText(item)}</text>`);
         lines.push('    </answer>');
       });
       lines.push('  </question>');

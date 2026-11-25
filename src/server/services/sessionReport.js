@@ -70,6 +70,12 @@ function quizToCsv(quiz) {
       correctVals = texto;
     }
 
+    // Ordenar: els elements en ordre correcte a `texto`, separats per «|».
+    if (type === 'order') {
+      texto = (Array.isArray(q.items) ? q.items : []).map((v) => String(v || '').trim()).filter(Boolean).join('|');
+      correctVals = '';
+    }
+
     // Correspondencia: las parejas en `texto` («a -> b | -> impostora»).
     if (type === 'matching') {
       texto = formatMatchingPairs(q.pairs || []);

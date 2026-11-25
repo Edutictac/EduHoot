@@ -1,6 +1,6 @@
 // Importación de XML de Moodle (feature 15). Lee el formato que exporta EduHoot
 // (services/moodleExport.js) y los tipos habituales de Moodle: opción múltiple,
-// verdadero/falso, respuesta corta, numérica y emparejamiento (correspondencia). Las demás preguntas se omiten y se
+// verdadero/falso, respuesta corta, numérica, emparejamiento (correspondencia) y ordenar (tipo «ordering» de AULES). Las demás preguntas se omiten y se
 // devuelven en `skipped`.
 //
 // Sin dependencias: un lector de etiquetas acotado a este formato, para no añadir
@@ -8,6 +8,7 @@
 
 const { toQuestion } = require('../importCsv');
 const { MATCHING_MAX_ITEMS, normalizeFreeText } = require('../questionUtils');
+const { ORDER_GRADING, MIN_ITEMS: ORDER_MIN_ITEMS, MAX_ITEMS: ORDER_MAX_ITEMS } = require('./orderQuestion');
 
 // Token: CDATA (contenido literal), comentario, etiqueta de cierre, etiqueta de
 // apertura (con sus atributos) o texto.
@@ -168,6 +169,17 @@ function questionToRow(question) {
     return { row: { ...base, tipo: 'matching', pairs } };
   }
 
+  if (type === 'ordering') {
+    // La posició correcta és la fracció: en ordenar els elements per fracció surt l'ordre correcte.
+    const items = answers.slice().sort((a, b) => a.fraction - b.fraction).map((a) => a.text).filter(Boolean);
+    const check = checkOrderItems(items);
+    if (check.skipped) return check;
+    const layout = (textChild(question, 'layouttype') || 'VERTICAL').trim().toUpperCase() === 'HORIZONTAL' ? 'horizontal' : 'vertical';
+    const gradingName = (textChild(question, 'gradingtype') || 'ABSOLUTE_POSITION').trim();
+    const orderGrading = Object.prototype.hasOwnProperty.call(ORDER_GRADING, gradingName) ? ORDER_GRADING[gradingName] : ORDER_GRADING.ABSOLUTE_POSITION;
+    return { row: { ...base, tipo: 'order', items, orderGrading, layout } };
+  }
+
   if (type === 'category') return null;
   return { skipped: 'unsupported-type:' + type };
 }
@@ -186,6 +198,14 @@ function checkMatchingPairs(pairs) {
   return {};
 }
 
+// Ordenar importada: entre 2 i 8 elements, sense repetir (els mateixos límits que EduHoot).
+function checkOrderItems(items) {
+  if (items.length < ORDER_MIN_ITEMS) return { skipped: 'not-enough-items' };
+  if (items.length > ORDER_MAX_ITEMS) return { skipped: 'too-many-items' };
+  if (new Set(items).size !== items.length) return { skipped: 'repeated-order-item' };
+  return {};
+}
+
 // Motivo legible (en castellano) para el docente, a partir del código interno.
 function describeSkipReason(code) {
   const reasons = {
@@ -196,7 +216,10 @@ function describeSkipReason(code) {
     'no-numeric-answer': 'no tiene valor numérico',
     'not-enough-pairs': 'la correspondencia necesita al menos 2 parejas',
     'too-many-pairs': 'la correspondencia tiene más de 8 elementos',
-    'repeated-match-answer': 'la correspondencia repite una respuesta en varias parejas'
+    'repeated-match-answer': 'la correspondencia repite una respuesta en varias parejas',
+    'not-enough-items': 'ordenar necesita al menos 2 elementos',
+    'too-many-items': 'ordenar tiene más de 8 elementos',
+    'repeated-order-item': 'ordenar repite un elemento'
   };
   if (reasons[code]) return reasons[code];
   if (String(code).startsWith('unsupported-type:')) {

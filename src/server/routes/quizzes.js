@@ -483,7 +483,7 @@ module.exports = function createQuizzesRouter({
           logEvent('upload-xml:skipped', { filename: req.file.originalname, skipped: parsed.skipped.length, reasons: parsed.skipped.map((s) => s.reason) });
         }
       } else {
-        questions = parseCsv(content).map(toQuestion);
+        questions = parseCsv(content).map(toQuestion).filter(Boolean);
       }
       if (questions.length === 0) {
         logEvent('upload-csv:empty', { filename: req.file.originalname });

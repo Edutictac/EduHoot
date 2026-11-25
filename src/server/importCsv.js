@@ -169,7 +169,14 @@ function normalizeSvgDataUrl(value) {
 
 function toQuestion(row) {
   const answers = [row.r1, row.r2, row.r3, row.r4];
+  // Ordenar: els elements en ordre correcte (de Moodle en row.items; del CSV, separats per « | » a texto).
+  const orderItems = Array.isArray(row.items)
+    ? row.items
+    : String(row.texto || '').split('|').map((v) => v.trim()).filter(Boolean);
   const meta = normalizeQuestionMeta({
+    items: orderItems,
+    orderGrading: row.orderGrading,
+    layout: row.layout,
     type: row.tipo,
     correct: row.correcta,
     texto: row.texto,
@@ -202,6 +209,18 @@ function toQuestion(row) {
       ...base,
       answers: ['', '', '', ''],
       pairs: meta.pairs || []
+    };
+  }
+
+  if (meta.type === 'order') {
+    // Una ordenar amb menys de 2 elements no es pot jugar: la fila no es desa.
+    if (!Array.isArray(meta.items) || meta.items.length < 2) return null;
+    return {
+      ...base,
+      answers: ['', '', '', ''],
+      items: meta.items,
+      orderGrading: meta.orderGrading,
+      layout: meta.layout
     };
   }
 
@@ -240,7 +259,7 @@ async function insertQuiz(filePath, quizName) {
   const quiz = {
     id: nextId,
     name: quizName,
-    questions: rows.map(toQuestion)
+    questions: rows.map(toQuestion).filter(Boolean)
   };
 
   await collection.insertOne(quiz);
