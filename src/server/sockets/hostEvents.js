@@ -1,6 +1,8 @@
 const { getGamesCollection } = require('../data/repositories');
 const { logger, quizFields } = require('../logger');
 const { normalizeAutoAdvance } = require('../services/autoAdvance');
+// El lobby mostra l'inici del vídeo només si alguna pregunta en té.
+const hasVideoQuestion = (list) => (Array.isArray(list) ? list : []).some((q) => !!(q && q.video));
 const { hasMatchingQuestion, hasCompositeQuestion, isCompositeType, normalizeMatchingBlindStyle, normalizeMatchingExtraTime } = require('../questionUtils');
 const { ghostStartInfo } = require('../services/ghostMark');
 
@@ -79,6 +81,7 @@ module.exports = function createHostEvents({
             pin: existingByPin.pin,
             quizName: (existingByPin.gameData && existingByPin.gameData.quizName) || '',
             hasMatching: hasMatchingQuestion(existingByPin.gameData && existingByPin.gameData.originalQuestions),
+            hasVideo: hasVideoQuestion(existingByPin.gameData && existingByPin.gameData.originalQuestions),
             hasComposite: hasCompositeQuestion(existingByPin.gameData && existingByPin.gameData.originalQuestions)
           });
           socket.emit('updatePlayerLobby', playersInGame);
@@ -139,6 +142,7 @@ module.exports = function createHostEvents({
             pin: game.pin,
             quizName: game.gameData.quizName || '',
             hasMatching: hasMatchingQuestion(originalQuestions),
+            hasVideo: hasVideoQuestion(originalQuestions),
             hasComposite: hasCompositeQuestion(originalQuestions)
           });
         } else {
@@ -225,6 +229,7 @@ module.exports = function createHostEvents({
             pin: game.pin,
             quizName: game.gameData.quizName || '',
             hasMatching: (game.gameData.questions || []).some((q) => q && q.type === 'matching'),
+            hasVideo: hasVideoQuestion(game.gameData.questions),
             hasComposite: (game.gameData.questions || []).some((q) => q && isCompositeType(q.type)),
             matchingExtraTime: normalizeMatchingExtraTime(game.gameData.options && game.gameData.options.matchingExtraTime)
           });

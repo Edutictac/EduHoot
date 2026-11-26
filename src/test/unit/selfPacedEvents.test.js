@@ -80,8 +80,8 @@ test('no se salta una pregunta en curso: spNext reenvía la actual', () => {
   assert.equal(qs[1].args[0].question, 'a');
 });
 
-test('doble respuesta rechazada; el anfitrión recibe progreso sin puntos', () => {
-  const t = setup();
+test('doble respuesta rechazada; el anfitrión recibe progreso sin puntos (si ha activat el check)', () => {
+  const t = setup({ selfPacedHostScores: true });
   const a = t.connect('a', 'Ana');
   t.send(a, 'spNext');
   t.send(a, 'spAnswer', 2);

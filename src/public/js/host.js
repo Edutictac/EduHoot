@@ -283,6 +283,8 @@ var lobby = Vue.createApp({
             // El quiz tiene alguna correspondencia: se ofrece cómo responderla a ciegas.
             hasMatching: false,
             hasComposite: false,
+            // El quiz té alguna pregunta amb vídeo: només aleshores es mostra l'inici del vídeo.
+            hasVideo: false,
             // Título del quiz elegido (lo envía el servidor con el PIN).
             quizName: '',
             matchingExtraChoices: [25, 50, 75, 100],
@@ -494,6 +496,7 @@ socket.on('showGamePin', function(data){
     lobby.pin = (data.pin || '').toString();
     lobby.hasMatching = !!data.hasMatching;
     lobby.hasComposite = !!data.hasComposite;
+    lobby.hasVideo = !!data.hasVideo;
     lobby.quizName = (data.quizName || '').toString();
     params.pin = data.pin;
     try{ localStorage.setItem(lastPinKey, data.pin); }catch(e){}

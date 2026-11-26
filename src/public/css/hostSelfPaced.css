@@ -18,13 +18,20 @@
 }
 
 /* Botones propios (hostGameView.css oculta por id los de la partida en vivo). */
-.sp-btn{ display: inline-block; padding: 12px 22px; border-radius: 14px; border: 1px solid var(--card-stroke, rgba(255,255,255,0.3));
-    background: rgba(15,23,42,0.8); color: var(--text-main, #fff); font-weight: 700; cursor: pointer; }
-.sp-btn--end{ background: rgba(218,68,83,0.22); }
+/* Mismos colores, sombra y efecto al pasar el ratón que los botones del lobby (host.css). */
+.sp-btn{ display: inline-block; padding: 12px 22px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.14);
+    background: #0f172a; color: #e9eefb; font-weight: 700; cursor: pointer;
+    box-shadow: 0 18px 55px rgba(0,0,0,0.25); transition: transform 0.18s ease, filter 0.18s ease; }
+.sp-btn--end{ background: rgba(218,68,83,0.22); border-color: rgba(218,68,83,0.55); }
 .sp-btn--end.is-confirming{ background: #da4453; border-color: #da4453; color: #fff; }
-.sp-btn--report{ background: rgba(16,185,129,0.22); }
-.sp-btn:hover{ filter: brightness(1.1); }
+.sp-btn--report{ background: #15803d; border-color: #15803d; color: #fff; }
+.sp-btn:hover{ transform: translateY(-2px); filter: brightness(1.05); }
+.sp-btn--report:hover{ filter: brightness(1.08); }
 
 .sp-ranking{ max-width: 960px; margin: 12px auto; padding: 8px 16px; border-radius: 12px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); }
 .sp-ranking h3{ margin: 4px 0; }
 .sp-ranking ol{ margin: 4px 0; padding-left: 28px; }
+
+/* Check «Mostrar puntuaciones y ranking en el anfitrión»: centrat, sobre el Top 10. */
+.sp-host-scores{ display: flex; align-items: center; justify-content: center; gap: 8px; margin: 10px auto 4px; font-weight: 600; cursor: pointer; }
+.sp-host-scores input{ width: 20px; height: 20px; margin: 0; cursor: pointer; accent-color: #ffee70; }

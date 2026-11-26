@@ -47,6 +47,8 @@ var app = Vue.createApp({
         },
         // Top 10 en vivo: solo si el servidor envía puntos (casilla de puntuaciones activada).
         top: function(){
+            // El Top 10 només es mostra si el check de l'anfitrió està activat.
+            if(!this.hostScores) return [];
             return this.list.filter(function(p){ return typeof p.score === 'number'; })
                 .sort(function(a, b){ return b.score - a.score; }).slice(0, 10);
         },

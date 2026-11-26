@@ -105,7 +105,7 @@ test('pantalla del anfitrión en autoritme: progreso por alumno, expulsar y acab
     await page.locator('#spEndBtn').click();
     expect(await emitsNamed(page, 'spEnd')).toHaveLength(1);
 
-    await serverEmit(page, 'GameOver', { num1: 'Ana', num2: 'Bruno', num3: '', num4: '', num5: '', showPodium: true });
+    await serverEmit(page, 'GameOver', { num1: 'Ana', num2: 'Bruno', num3: '', num4: '', num5: '', showPodium: true, hostPodium: true });
     await expect(page.locator('#spPodium')).toContainText('1. Ana');
     await expect(page.locator('#spPodium')).toContainText('2. Bruno');
     await expect(page.locator('#spDownloadBtn')).toBeVisible();
@@ -140,6 +140,7 @@ test('pantalla del anfitrión en autoritme: Top 10 ordenado solo si llegan punto
     await page.goto('/host/self-paced/?id=h0&pin=12345&lang=es');
     await page.waitForLoadState('load');
     await page.evaluate(() => window.__serverEmit('connect'));
+    await serverEmit(page, 'spHostScoresState', { enabled: true });
     await serverEmit(page, 'spProgress', [
         { playerId: 'a', name: 'Ana', icon: '', question: 1, total: 4, answered: 1, finished: false, score: 500 },
         { playerId: 'b', name: 'Bruno', icon: '', question: 1, total: 4, answered: 1, finished: false, score: 900 }
@@ -178,4 +179,28 @@ test('a su ritmo incrustado: al acabar la partida la música se para', async ({ 
     expect(await page.evaluate(() => window.__played)).toBe(true);
     await frame.evaluate(() => window.__serverEmit('GameOver', [{ podium: [] }]));
     await expect.poll(() => page.evaluate(() => window.__played)).toBe(false);
+});
+
+test('pantalla del anfitrión en autoritme: el check de puntuaciones envía la opción i mostra el Top 10 només quan està activat', async ({ page }) => {
+    await page.route(/^https:\/\//, route => route.abort());
+    await page.route('**/api/**', route => route.fulfill({ json: {} }));
+    await page.route('**/socket.io/socket.io.js', route => route.fulfill({ contentType: 'application/javascript', body: FAKE_SOCKET_IO }));
+    await page.goto('/host/self-paced/?id=h0&pin=12345&lang=es');
+    await page.waitForLoadState('load');
+    await page.evaluate(() => window.__serverEmit('connect'));
+    await serverEmit(page, 'spProgress', [
+        { playerId: 'a', name: 'Ana', icon: '', question: 1, total: 4, answered: 1, finished: false, score: 500 },
+        { playerId: 'b', name: 'Bruno', icon: '', question: 1, total: 4, answered: 1, finished: false, score: 900 }
+    ]);
+    // Per defecte el check està desmarcat i el Top 10 no es mostra.
+    await expect(page.locator('#spHostScores')).not.toBeChecked();
+    await expect(page.locator('#spRanking')).toHaveCount(0);
+    await page.locator('#spHostScores').check();
+    expect(await emitsNamed(page, 'spHostScores')).toEqual([{ enabled: true }]);
+    // El servidor confirma l'estat i el Top 10 apareix amb els punts.
+    await serverEmit(page, 'spHostScoresState', { enabled: true });
+    await expect(page.locator('#spHostScores')).toBeChecked();
+    await expect(page.locator('#spRanking li')).toHaveText(['Bruno - 900', 'Ana - 500']);
+    await page.locator('#spHostScores').uncheck();
+    expect(await emitsNamed(page, 'spHostScores')).toEqual([{ enabled: true }, { enabled: false }]);
 });

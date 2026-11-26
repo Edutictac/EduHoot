@@ -103,7 +103,9 @@ module.exports = function createSelfPacedEvents({
     const name = (i) => (top[i] && top[i].gameData.score > 0 ? top[i].name : '');
     return {
       num1: name(0), num2: name(1), num3: name(2), num4: name(3), num5: name(4),
-      showPodium: showScoresOf(game)
+      showPodium: showScoresOf(game),
+      // El podi de la pantalla de l'anfitrió depèn del seu check (els alumnes segueixen amb showPodium).
+      hostPodium: hostScoresOf(game)
     };
   }
 

@@ -50,7 +50,7 @@
                     </template>
                 </li>
             </ul>
-            <section id="spPodium" class="sp-podium" v-if="ended && podium.showPodium !== false">
+            <section id="spPodium" class="sp-podium" v-if="ended && podium.hostPodium === true">
                 <h2>{{ t('topPlayers') }}</h2>
                 <h3 v-for="(n, i) in podiumNames" :key="i">{{ (i + 1) + '. ' + n }}</h3>
             </section>

@@ -95,7 +95,7 @@
                             <input type="number" id="opt-time" min="5" max="120" placeholder="Auto" v-model="options.time">
                         <span class="help"><button type="button" class="help-btn" :aria-expanded="helpOpen==='time' ? 'true' : 'false'" :aria-label="t('help_aria')" @click.prevent.stop="toggleHelp('time')">?</button><span v-if="helpOpen==='time'" class="help-pop" role="note">{{ t('tip_time') }}</span></span></label>
                     </div>
-                    <div class="opt-time">
+                    <div class="opt-time" v-if="hasVideo">
                         <label class="opt-inline" :title="t('tip_video_start')">
                             <span>{{ t('opt_video_start') }}</span>
                             <input type="number" id="opt-video-start" min="0" max="3600" placeholder="0" v-model="options.videoStartSec">
@@ -151,7 +151,7 @@
                             <input type="number" id="opt-time" min="5" max="120" placeholder="Auto" v-model="options.time">
                         <span class="help"><button type="button" class="help-btn" :aria-expanded="helpOpen==='time' ? 'true' : 'false'" :aria-label="t('help_aria')" @click.prevent.stop="toggleHelp('time')">?</button><span v-if="helpOpen==='time'" class="help-pop" role="note">{{ t('tip_time') }}</span></span></label>
                     </div>
-                    <div class="opt-time">
+                    <div class="opt-time" v-if="hasVideo">
                         <label class="opt-inline" :title="t('tip_video_start')">
                             <span>{{ t('opt_video_start') }}</span>
                             <input type="number" id="opt-video-start" min="0" max="3600" placeholder="0" v-model="options.videoStartSec">

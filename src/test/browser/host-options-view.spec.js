@@ -127,3 +127,12 @@ test('con sesión: la vista de la cuenta se aplica al abrir y los cambios se gua
     await expect.poll(() => patches.length).toBe(1);
     expect(patches).toEqual([{ hostOptionsView: 'a' }]);
 });
+
+// «Inici del vídeo» només surt si el quiz té alguna pregunta amb vídeo.
+test('lobby: «Inicio del vídeo» solo aparece si el quiz tiene alguna pregunta con vídeo', async ({ page }) => {
+    await openLobby(page, '?id=q1&lang=es');
+    await page.evaluate(() => window.__serverEmit('showGamePin', { pin: '12345', quizName: 'Sin vídeo', hasVideo: false }));
+    await expect(page.locator('#opt-video-start')).toHaveCount(0);
+    await page.evaluate(() => window.__serverEmit('showGamePin', { pin: '12345', quizName: 'Con vídeo', hasVideo: true }));
+    await expect(page.locator('#opt-video-start')).toBeVisible();
+});
