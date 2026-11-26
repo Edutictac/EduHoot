@@ -67,7 +67,9 @@ const createKahootImportService = require('./services/kahootImport');
 const createEphemeralQuizzesService = require('./services/ephemeralQuizzes');
 const { getTopSoloScores, enqueueSoloScore } = require('./services/soloScores');
 const commons = createCommonsService({ normalizePlayerName });
-const kahootImport = createKahootImportService({ publicPath, normalizeQuestions, cleanImportedText });
+// Imatges dels quizzes: QUIZ_IMAGES_DIR si es defineix (dev: volum fora del projecte); si no, la ruta de sempre (stage i producció no canvien).
+const QUIZ_IMAGES_DIR = process.env.QUIZ_IMAGES_DIR || path.join(publicPath, 'uploads', 'quiz-images');
+const kahootImport = createKahootImportService({ imagesDir: QUIZ_IMAGES_DIR, normalizeQuestions, cleanImportedText });
 const { extractKahootId, mirrorExternalImage, mirrorKahootImage, mapKahootQuestions } = kahootImport;
 const ephemeralQuizzes = createEphemeralQuizzesService({
   getEphemeralCollection,
@@ -263,6 +265,7 @@ if (process.env.NODE_ENV === 'staging') {
 } else if (process.env.NODE_ENV !== 'development') {
   app.use('/dev', (req, res) => res.status(404).type('text').send('Not found'));
 }
+app.use('/uploads/quiz-images', express.static(QUIZ_IMAGES_DIR, { fallthrough: true, maxAge: '1h' }));
 app.use(express.static(publicPath, {
   etag: true,
   lastModified: true,
