@@ -769,6 +769,21 @@ la numeració 1-32 de dalt.
 
 - **W12 — Pujar imatges a les preguntes.** Ara la imatge d'una pregunta només es posa com a URL. La proposta és poder pujar-la directament, una per pregunta, o una bateria d'imatges de cop: bé en un zip (cada fitxer associat a una pregunta pel nom) bé amb una llista d'URL (una per línia). Cal decidir els límits de mida i de nombre, els formats admesos, si es reutilitzen les imatges ja pujades (com fa la importació de Kahoot) i com es tracten els drets de les imatges de tercers.
 
+- **W13 — Més cançons de fons per a les partides.** Ara el reproductor
+  (`src/public/js/music-player.js`) només té 11 pistes de so de videojoc, totes
+  a `src/public/music/`, i el professorat tria entre elles. La proposta és ampliar
+  el catàleg de música de fons: més estils i ritmes, i també sons de tensió per
+  fases (relació amb la **9**). Coses a tindre en compte en implementar-ho:
+  - **Llicències**: només música que permeta l'ús educatiu i la redistribució dins
+    de l'aplicació (domini públic, Creative Commons compatible o de stock amb
+    llicència adequada). Cada pista ha de guardar la font i la llicència.
+  - **Pes**: els arxius ocupen espai al servidor i al navegador; cal decidir el
+    format (MP3 o OGG), la qualitat i la càrrega diferida.
+  - **Selecció**: categories o estils al selector de l'amfitrió, sense convertir-lo
+    en una llista llarga i difícil d'usar.
+  - **Accessibilitat**: el volum i el silenci han de seguir funcionant igual amb el
+    catàleg nou.
+
 ## Nota sobre drets d'autor
 
 Cap de les 32 propostes té drets d'autor: les mecàniques i regles de joc
