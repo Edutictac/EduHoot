@@ -1353,4 +1353,3 @@ select.page-select option{ color: #14101f; background: #fff; }
 .cover-pagination .page-size{ margin-left: 0; font-size: 13px; }
 .cover-pagination .page-size select{ font-size: 13px; padding: 4px 10px; }
 /* Paginador superior: separació pròpia de les targetes (ja no és el primer fill de la columna, pel selector d'imatge de fons). */
-#library-pagination-top{ margin-top: 14px; margin-bottom: 14px; }

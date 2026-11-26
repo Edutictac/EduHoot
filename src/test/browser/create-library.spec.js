@@ -219,7 +219,7 @@ test('biblioteca de /create/: «Imagen de fondo» va just sota del texto de visi
     expect(cover.y).toBeGreaterThanOrEqual(help.y + help.height - 1);
     expect(cover.y - (help.y + help.height)).toBeLessThanOrEqual(40);
     const styles = await page.evaluate(() => {
-        const pageSize = getComputedStyle(document.querySelector('#library-page-size-top'));
+        const pageSize = getComputedStyle(document.querySelector('#library-page-size'));
         const cover = getComputedStyle(document.querySelector('#library-cover-level'));
         return { radius: cover.borderRadius === pageSize.borderRadius, weight: cover.fontWeight === pageSize.fontWeight };
     });
@@ -230,7 +230,7 @@ test('biblioteca de /create/: «Imagen de fondo» va just sota del texto de visi
     expect(Math.abs(label.x - sub.x)).toBeLessThanOrEqual(2);
     const sizes = await page.evaluate(() => ({
         cover: parseFloat(getComputedStyle(document.querySelector('.cover-pagination .page-size')).fontSize),
-        pageSize: parseFloat(getComputedStyle(document.querySelector('#library-page-size-top').closest('.page-size')).fontSize)
+        pageSize: parseFloat(getComputedStyle(document.querySelector('#library-page-size').closest('.page-size')).fontSize)
     }));
     expect(sizes.cover).toBeLessThan(sizes.pageSize);
 });

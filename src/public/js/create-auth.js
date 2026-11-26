@@ -94,6 +94,9 @@ function updateAuthUI(){
     var isLogged = !!(authState && authState.user);
     var openAccountBtn = document.getElementById('open-account');
     if(openAccountBtn) openAccountBtn.classList.toggle('hidden', !isLogged);
+    // «Mis partidas» (historial de partidas de la cuenta) solo con sesión.
+    var myGames = document.getElementById('my-games');
+    if(myGames) myGames.classList.toggle('hidden', !isLogged);
 
     // Las imágenes SVG de la IA solo con sesión (la plantilla oculta la casilla).
     if(!isLogged){

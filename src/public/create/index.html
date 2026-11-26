@@ -25,6 +25,7 @@
                         <select id="lang-select" data-lang-options="name"></select>
                     </label>
                     <a id="my-homework" class="btn btn-ghost btn-small" href="homework/" data-i18n="myHomework">Mis deberes</a>
+                    <a id="my-games" class="btn btn-ghost btn-small hidden" href="partidas/" data-i18n="myGames">Mis partidas</a>
                     <button id="open-account" type="button" class="btn btn-ghost btn-small hidden" data-i18n="btnAccount">Preferencias</button>
                 </div>
             </div>
@@ -337,16 +338,6 @@
                                     <option :value="10">{{ t('cover10') }}</option>
                                     <option :value="20">{{ t('cover20') }}</option>
                                     <option :value="30">{{ t('cover30') }}</option>
-                                </select>
-                            </label>
-                        </div>
-                        <div id="library-pagination-top" ref="pagerTop" class="pagination" :class="{ hidden: !showPager }">
-                            <button id="library-pagination-prev-top" v-show="totalPages > 1" class="btn btn-ghost" :disabled="currentPage <= 1" @click="prevPage">{{ t('paginationPrev') }}</button>
-                            <select id="library-pagination-info-top" class="page-select" v-show="totalPages > 1" :value="currentPage" :aria-label="paginationInfo" @change="onPageChange"><option v-for="p in pageOptions" :key="p.n" :value="p.n">{{ p.label }}</option></select>
-                            <button id="library-pagination-next-top" v-show="totalPages > 1" class="btn btn-ghost" :disabled="currentPage >= totalPages" @click="nextPage">{{ t('paginationNext') }}</button>
-                            <label class="page-size"><span>{{ t('pageSizeLabel') }}</span>
-                                <select id="library-page-size-top" :value="lib.pageSize" @change="onPageSize">
-                                    <option v-for="n in pageSizes" :key="n" :value="n">{{ n }}</option>
                                 </select>
                             </label>
                         </div>

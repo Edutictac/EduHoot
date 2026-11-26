@@ -121,7 +121,10 @@ module.exports = function createSelfPacedEvents({
     io.to(game.pin).emit('GameOver', podiumOf(game));
     emitProgress(game);
     logger.info('Partida autoritme finalitzada', { tag: 'game-end', pin: game.pin, hostId: game.hostId, playersCount: playersInGame.length, ...quizFields(game) });
-    cacheFinishedSessionReport(game, playersInGame);
+    // L'informe inclou també l'alumnat que ha sortit abans del final (el seu resultat no es perd).
+    const departed = players.departedOf(game.hostId).filter((d) => !playersInGame.some((p) => p.playerId === d.playerId));
+    cacheFinishedSessionReport(game, playersInGame.concat(departed));
+    players.clearDeparted(game.hostId);
     await incrementQuizStats(game.gameData.gameid, playersInGame.length);
     await commons.reportCommonsScores(game, playersInGame);
     scheduleGameCleanup(game.hostId);

@@ -309,55 +309,45 @@ test('«Ver más» muestra el resto de carpetas y «Ver menos» las recoge', asy
     await expect(tagButtons(page)).toHaveCount(14);
 });
 
-test('paginación de 6 en 6 por defecto, también arriba, con selector (6, 12, 24, 48, 96)', async ({ page }) => {
+test('paginación de 6 en 6 por defecto, abajo, con selector (6, 12, 24, 48, 96)', async ({ page }) => {
     const many = Array.from({ length: 13 }, (_, i) => quiz('p' + i, 'Quiz ' + String(i).padStart(2, '0'), { createdAt: '2026-01-' + String(i + 1).padStart(2, '0') + 'T00:00:00Z' }));
     await mockBackend(page, { quizzes: many });
     await openCreate(page);
     await expect(cards(page)).toHaveCount(6);
+    // Sin paginador arriba: solo el de abajo, después de la lista.
+    await expect(page.locator('#library-pagination-top')).toHaveCount(0);
     await expect(page.locator('#library-pagination')).toBeVisible();
-    await expect(page.locator('#library-pagination-top')).toBeVisible();
-    // La barra de arriba queda antes de las tarjetas y la de abajo después.
-    const topBar = await page.locator('#library-pagination-top').boundingBox();
     const firstCard = await cards(page).first().boundingBox();
     const bottomBar = await page.locator('#library-pagination').boundingBox();
-    expect(topBar.y + topBar.height).toBeLessThanOrEqual(firstCard.y);
     expect(bottomBar.y).toBeGreaterThan(firstCard.y);
     await expect(page.locator('#library-pagination-info option:checked')).toHaveText('Página 1 de 3');
-    await expect(page.locator('#library-pagination-info-top option:checked')).toHaveText('Página 1 de 3');
     await expect(page.locator('#library-pagination-prev')).toBeDisabled();
-    await expect(page.locator('#library-pagination-prev-top')).toBeDisabled();
-    // El paginador de arriba también pasa de página.
-    await page.locator('#library-pagination-next-top').click();
+    await page.locator('#library-pagination-next').click();
     await expect(cards(page)).toHaveCount(6);
     await expect(page.locator('#library-pagination-info option:checked')).toHaveText('Página 2 de 3');
     await page.locator('#library-pagination-next').click();
     await expect(cards(page)).toHaveCount(1);
     await expect(page.locator('#library-pagination-info option:checked')).toHaveText('Página 3 de 3');
     await expect(page.locator('#library-pagination-next')).toBeDisabled();
-    await expect(page.locator('#library-pagination-next-top')).toBeDisabled();
     // Cambiar el orden vuelve a la primera página.
     await page.locator('#library-sort').selectOption('oldest');
     await expect(page.locator('#library-pagination-info option:checked')).toHaveText('Página 1 de 3');
     await expect(titles(page).first()).toHaveText('Quiz 00');
 
-    // Selector: 6, 12, 24, 48 y 96 (en las dos barras); al cambiarlo vuelve a la primera página.
-    await expect(page.locator('#library-page-size-top option')).toHaveText(['6', '12', '24', '48', '96']);
+    // Selector: 6, 12, 24, 48 y 96; al cambiarlo vuelve a la primera página.
     await expect(page.locator('#library-page-size option')).toHaveText(['6', '12', '24', '48', '96']);
     await expect(page.locator('#library-page-size')).toHaveValue('6');
     await page.locator('#library-page-size').selectOption('12');
     await expect(cards(page)).toHaveCount(12);
-    await expect(page.locator('#library-page-size-top')).toHaveValue('12');
     await expect(page.locator('#library-pagination-info option:checked')).toHaveText('Página 1 de 2');
     // Sin sesión se recuerda en el navegador.
     await page.reload();
-    await expect(page.locator('#library-page-size-top')).toHaveValue('12');
+    await expect(page.locator('#library-page-size')).toHaveValue('12');
     await expect(cards(page)).toHaveCount(12);
-    await page.locator('#library-page-size-top').selectOption('6');
+    await page.locator('#library-page-size').selectOption('6');
     await expect(cards(page)).toHaveCount(6);
     await expect(page.locator('#library-pagination-info option:checked')).toHaveText('Página 1 de 3');
-    await expect(page.locator('#library-pagination-info-top option:checked')).toHaveText('Página 1 de 3');
 });
-
 test('con sesión, la paginación se guarda en la cuenta y no en el navegador', async ({ page }) => {
     const mine = Array.from({ length: 13 }, (_, i) => quiz('m' + i, 'Meu ' + String(i).padStart(2, '0'), { ownerId: TEACHER.id, createdAt: '2026-01-' + String(i + 1).padStart(2, '0') + 'T00:00:00Z' }));
     await mockBackend(page, { user: TEACHER, quizzes: mine });
@@ -872,41 +862,36 @@ test('el logo de EduHoot va delante del título «Crea y lanza tu EduHoot»', as
     expect(Math.abs(t.logoMid - t.textMid)).toBeLessThanOrEqual(6);
 });
 
-test('paginador de la biblioteca: barra flotante abajo cuando ni el de arriba ni el de abajo se ven', async ({ page }) => {
+test('paginador de la biblioteca: barra flotante abajo cuando el paginador de abajo no se ve', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 700 });
     const many = Array.from({ length: 13 }, (_, i) => quiz('f' + i, 'Quiz ' + String(i).padStart(2, '0'), { ownerId: TEACHER.id, createdAt: '2026-01-' + String(i + 1).padStart(2, '0') + 'T00:00:00Z' }));
     await mockBackend(page, { user: TEACHER, quizzes: many });
     await openCreate(page);
     const fixed = page.locator('#library-pagination-fixed');
-    // Amb el paginador de dalt a la vista, la barra flotant no apareix (al carregar, pot quedar sota del plec).
-    await page.locator('#library-pagination-top').scrollIntoViewIfNeeded();
+    // Con el paginador de abajo a la vista, la barra flotante no aparece.
+    await page.locator('#library-pagination').scrollIntoViewIfNeeded();
     await expect(fixed).not.toHaveClass(/is-visible/);
-    const pos = await page.evaluate(() => ({
-        top: document.querySelector('#library-pagination-top').getBoundingClientRect().top + window.scrollY
-    }));
-    // Baixa fins a la mitat de la llista: ni el de dalt ni el de baix es veuen.
-    await page.evaluate(y => window.scrollTo(0, y), pos.top + 300);
+    // Arriba del todo, el paginador de abajo no se ve: aparece la barra flotante.
+    await page.evaluate(() => window.scrollTo(0, 0));
     await expect(fixed).toHaveClass(/is-visible/);
     await fixed.locator('#library-pagination-fixed-next').click();
     await expect(page.locator('#library-pagination-info option:checked')).toHaveText('Página 2 de 3');
-    // El selector «Por página» també es pot usar des de la barra flotant.
+    // El selector «Por página» también se puede usar desde la barra flotante.
     await fixed.locator('#library-page-size-fixed').selectOption('12');
     await expect(cards(page)).toHaveCount(12);
     await expect(page.locator('#library-page-size')).toHaveValue('12');
-    // Torna a dalt: la barra flotant es torna a amagar.
-    await page.locator('#library-pagination-top').scrollIntoViewIfNeeded();
+    // Al bajar al paginador de abajo, la barra flotante se oculta.
+    await page.locator('#library-pagination').scrollIntoViewIfNeeded();
     await expect(fixed).not.toHaveClass(/is-visible/);
 });
-
-test('la página se elige en el desplegable «Página X de Y», arriba y abajo', async ({ page }) => {
+test('la página se elige en el desplegable «Página X de Y», abajo', async ({ page }) => {
     const many = Array.from({ length: 13 }, (_, i) => quiz('d' + i, 'Quiz ' + String(i).padStart(2, '0'), { createdAt: '2026-01-' + String(i + 1).padStart(2, '0') + 'T00:00:00Z' }));
     await mockBackend(page, { quizzes: many });
     await openCreate(page);
     await page.locator('#library-pagination-info').selectOption('3');
     await expect(cards(page)).toHaveCount(1);
     await expect(page.locator('#library-pagination-info option:checked')).toHaveText('Página 3 de 3');
-    await expect(page.locator('#library-pagination-info-top option:checked')).toHaveText('Página 3 de 3');
-    await page.locator('#library-pagination-info-top').selectOption('1');
+    await page.locator('#library-pagination-info').selectOption('1');
     await expect(cards(page)).toHaveCount(6);
     await expect(page.locator('#library-pagination-info option:checked')).toHaveText('Página 1 de 3');
 });

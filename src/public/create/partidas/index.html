@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Mis partidas | EduHoot</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="/css/create.css">
+        <link rel="stylesheet" href="/css/dropdowns.css">
+        <link href="/css/fonts.css" rel="stylesheet">
+        <link rel="stylesheet" href="/css/edutictac-footer.css">
+        <link rel="stylesheet" href="/css/edutictac-shared.css">
+        <link rel="stylesheet" href="/css/homeworkManage.css">
+        <link rel="stylesheet" href="/css/partidas.css">
+        <script src="/js/edutictac-chip.js"></script>
+        <script src="https://commons.edutictac.es/assets/account-widget.js" defer></script>
+        <link rel="icon" href="/icons/logo.svg" type="image/svg+xml">
+    </head>
+    <body>
+        <!-- Historial de partides de l'usuari amb sessió (les acabades des de la seua compta, 90 dies). -->
+        <a id="back" href="/create/" data-hw="back"></a>
+        <edutictac-account class="site-account site-account--top" data-base="https://commons.edutictac.es"></edutictac-account>
+        <div id="pt-app"></div>
+        <template id="pt-tpl">
+        <div class="page-shell hw-shell pt-shell">
+            <div class="top-row">
+                <h1 id="ptPageTitle"><img class="title-logo" src="/icons/logo.svg" alt="" width="44" height="44"><span>{{ t('title') }}</span></h1>
+                <div class="top-actions">
+                    <a id="ptHomeworkLink" class="btn btn-small btn-ghost" href="/create/homework/">{{ t('myHomework') }}</a>
+                    <label class="lang-switch">
+                        <span>{{ t('langLabel') }}</span>
+                        <select id="lang-select" data-lang-options="name"></select>
+                    </label>
+                </div>
+            </div>
+
+            <p v-if="loading" class="hw-muted">{{ t('loading') }}</p>
+            <p v-else-if="!user" id="ptNeedLogin" class="hw-notice">{{ t('needLogin') }} <a href="/create/">{{ t('goLogin') }}</a></p>
+
+            <section v-else id="ptList" class="hw-card pt-card">
+                <p v-if="error" class="hw-error" role="alert">{{ t(error) }}</p>
+                <p v-if="!list.length" id="ptEmpty" class="hw-muted">{{ t('empty') }}</p>
+                <div id="ptTableArea" class="pt-table-area" v-else>
+                    <table class="hw-table pt-table" id="ptGames">
+                        <thead><tr>
+                            <th>{{ t('colQuiz') }}</th>
+                            <th class="pt-col-wide">PIN</th>
+                            <th>{{ t('colMode') }}</th>
+                            <th>{{ t('colStudents') }}</th>
+                            <th>{{ t('colFinished') }}</th>
+                            <th class="pt-col-wide">{{ t('colExpires') }}</th>
+                            <th></th>
+                        </tr></thead>
+                        <tbody>
+                            <tr v-for="g in pageItems" :key="g.id">
+                                <td class="pt-name" :title="g.quizName">{{ g.quizName || '—' }}</td>
+                                <td class="pt-col-wide" data-label="PIN">{{ g.pin }}</td>
+                                <td><span class="pt-badge" :class="'is-' + g.mode">{{ t('mode_' + g.mode) }}</span></td>
+                                <td :data-label="t('colStudents')">{{ g.playersCount }}</td>
+                                <td class="pt-date" :data-label="t('colFinished')">{{ dateText(g.finishedAt) }}</td>
+                                <td class="pt-col-wide pt-date" :data-label="t('colExpires')">{{ dateText(g.expiresAt) }}</td>
+                                <td><a class="btn btn-primary pt-csv" :title="t('downloadCsv')" :href="'/api/partidas/' + encodeURIComponent(g.id) + '/report.csv'"><span class="pt-csv-long">{{ t('downloadCsv') }}</span><span class="pt-csv-short">CSV</span></a></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <div v-if="user && list.length" id="ptPager" ref="pager" class="pagination pt-pager">
+                <button id="ptPrev" class="btn btn-ghost" v-show="totalPages > 1" :disabled="currentPage <= 1" @click="prevPage">{{ t('paginationPrev') }}</button>
+                <select id="ptPageInfo" class="page-select" v-show="totalPages > 1" :value="currentPage" :aria-label="pageInfo" @change="onPage">
+                    <option v-for="n in pageNumbers" :key="n" :value="n">{{ pageLabel(n) }}</option>
+                </select>
+                <button id="ptNext" class="btn btn-ghost" v-show="totalPages > 1" :disabled="currentPage >= totalPages" @click="nextPage">{{ t('paginationNext') }}</button>
+                <label class="page-size"><span>{{ t('pageSizeLabel') }}</span>
+                    <select id="ptPageSize" :value="pageSizeChoice" @change="onPageSize">
+                        <option value="auto">{{ t('pageSizeAuto') }}</option>
+                        <option v-for="n in sizes" :key="n" :value="String(n)">{{ n }}</option>
+                    </select>
+                </label>
+            </div>
+            <!-- Barra flotante (como la de la biblioteca): aparece al fondo de la ventana cuando el paginador de la lista no se ve. -->
+            <div v-if="user && list.length" id="ptPagerFixed" class="pagination-fixed" :class="{ 'is-visible': showFixed }" :inert="!showFixed || null">
+                <button id="ptFixedPrev" class="btn btn-ghost" :disabled="currentPage <= 1" @click="prevPage">{{ t('paginationPrev') }}</button>
+                <select id="ptFixedInfo" class="page-select" :value="currentPage" :aria-label="pageInfo" @change="onPage">
+                    <option v-for="n in pageNumbers" :key="n" :value="n">{{ pageLabel(n) }}</option>
+                </select>
+                <button id="ptFixedNext" class="btn btn-ghost" :disabled="currentPage >= totalPages" @click="nextPage">{{ t('paginationNext') }}</button>
+            </div>
+        </div>
+        </template>
+        <script src="/js/libs/vue.global.prod.js"></script>
+        <script src="/js/languages.js"></script>
+        <script src="/js/chip-align.js"></script>
+        <script src="/js/env-badge.js"></script>
+        <script src="/js/partidasHistory.js"></script>
+    </body>
+</html>

@@ -2,6 +2,8 @@ class Players {
     constructor () {
         this.players = [];
         this.tokens = new Map(); // token -> { hostId, playerId }
+        // Alumnat que ha sortit de la partida (desconnexió o expulsió) amb el seu resultat, per al informe final.
+        this.departed = new Map(); // hostId -> [snapshot]
     }
     addPlayer(hostId, playerId, name, gameData, icon, token){
         var player = {hostId, playerId, name, icon: icon || '', gameData, token: token || ''};
@@ -19,8 +21,20 @@ class Players {
                 this.tokens.delete(player.token);
             }
             this.players = this.players.filter((player) => player.playerId !== playerId);
+            this.rememberDeparted(player);
         }
         return player;
+    }
+    rememberDeparted(player){
+        var list = (this.departed.get(player.hostId) || []).filter((p) => p.playerId !== player.playerId);
+        list.push({ hostId: player.hostId, playerId: player.playerId, name: player.name, icon: player.icon || '', token: '', gameData: JSON.parse(JSON.stringify(player.gameData || {})) });
+        this.departed.set(player.hostId, list);
+    }
+    departedOf(hostId){
+        return (this.departed.get(hostId) || []).slice();
+    }
+    clearDeparted(hostId){
+        this.departed.delete(hostId);
     }
     getByToken(token){
         if(!token) return null;

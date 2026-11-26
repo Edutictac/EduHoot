@@ -435,7 +435,7 @@ var LIBRARY_EXPORT_GROUPS = [
 var libFixedPager = Vue.reactive({ ready: false, topVisible: false, bottomVisible: false });
 
 function watchLibraryPager(topEl, bottomEl){
-    if(typeof IntersectionObserver !== 'function' || !topEl || !bottomEl) return;
+    if(typeof IntersectionObserver !== 'function' || !bottomEl) return;
     var observer = new IntersectionObserver(function(entries){
         entries.forEach(function(entry){
             if(entry.target === topEl) libFixedPager.topVisible = entry.isIntersecting;
@@ -443,7 +443,7 @@ function watchLibraryPager(topEl, bottomEl){
         });
         libFixedPager.ready = true;
     });
-    observer.observe(topEl);
+    if(topEl) observer.observe(topEl);
     observer.observe(bottomEl);
 }
 
@@ -464,7 +464,7 @@ var libraryApp = {
         };
     },
     mounted: function(){
-        watchLibraryPager(this.$refs.pagerTop, this.$refs.pagerBottom);
+        watchLibraryPager(null, this.$refs.pagerBottom);
     },
     computed: {
         // Opcions del desplegable «Página X de Y» (una per pàgina).
