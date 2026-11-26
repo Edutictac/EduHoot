@@ -1444,3 +1444,9 @@ body.lp-page .page-shell{ margin-top: 81px; }
 .lp-cover select option{ color: #14101f; background: #fff; }
 .cover-pagination .lp-cover{ font-size: 13px; }
 .cover-pagination .lp-cover select{ font-size: 13px; padding: 4px 10px; }
+
+/* Preferències: el botó «Tancar» va a sota del panell, centrat (no al cantó superior dret). */
+.modal__content{ display: flex; flex-direction: column; }
+.modal__content > .panel{ order: 1; }
+.modal__content > .modal__close{ position: static; top: auto; right: auto; z-index: auto; order: 2; align-self: center; margin: 14px 0 0; }
+.modal .panel-header{ padding-right: 0; }

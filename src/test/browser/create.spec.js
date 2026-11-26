@@ -781,10 +781,11 @@ test('cuenta: el modal de preferencias es legible, accesible y no se solapa con 
     const labelText = await page.locator('#admin-import-quizzes-replace + span').boundingBox();
     expect(labelText.x - (box.x + box.width)).toBeLessThanOrEqual(16);
     await expect(page.locator('#admin-export-quizzes')).toHaveCSS('justify-content', 'center');
-    // «Cerrar» no queda tapado por el título y todo cabe dentro de la ventana.
+    // «Cerrar» va a sota del panell, centrat, i tot cap dins de la finestra.
     const close = await page.locator('#auth-modal-close').boundingBox();
-    const title = await page.locator('#auth-modal-title').boundingBox();
-    expect(title.x + title.width).toBeLessThanOrEqual(close.x);
+    const panel = await page.locator('#auth-panel').boundingBox();
+    expect(close.y).toBeGreaterThanOrEqual(panel.y + panel.height - 1);
+    expect(Math.abs((close.x + close.width / 2) - (panel.x + panel.width / 2))).toBeLessThanOrEqual(2);
     const content = await page.locator('#auth-modal .modal__content').boundingBox();
     expect(content.y).toBeGreaterThanOrEqual(0);
     expect(content.y + content.height).toBeLessThanOrEqual(page.viewportSize().height);
