@@ -95,7 +95,7 @@ var app = Vue.createApp({
 if(window.EduhootLang && typeof window.EduhootLang.render === 'function') window.EduhootLang.render();
 document.querySelectorAll('select[data-lang-options]').forEach(function(sel){
     sel.value = lang;
-    sel.addEventListener('change', function(){ lang = sel.value; EduhootLang.persist(lang); app.langTick += 1; });
+    sel.addEventListener('change', function(){ lang = sel.value; EduhootLang.persist(lang); app.langTick += 1; if(spMusicPlayer) spMusicPlayer.updateLabels(musicLabels()); });
 });
 
 // La música de la sala (iniciada en el lobby) sigue sonando en la ventana principal cuando esta vista va incrustada
@@ -112,9 +112,41 @@ function leaveToLibrary(){
 }
 window.addEventListener('pagehide', stopSharedMusic);
 
+// Música de fons (com al lobby i a la vista de juego): si la pàgina és dins del lobby, reutilitza el mateix <audio>.
+var musicI18n = {
+    es: { title: 'Música de fondo', choose: 'Elige un tema', play: 'Reproducir música', pause: 'Pausar música', prev: 'Anterior', next: 'Siguiente', volume: 'Volumen', none: 'Sin música' },
+    en: { title: 'Background music', choose: 'Choose a track', play: 'Play music', pause: 'Pause music', prev: 'Prev', next: 'Next', volume: 'Volume', none: 'No music' },
+    ca: { title: 'Música de fons', choose: 'Tria un tema', play: 'Reprodueix música', pause: 'Atura la música', prev: 'Anterior', next: 'Següent', volume: 'Volum', none: 'Sense música' }
+};
+musicI18n.va = musicI18n.ca;
+function musicLabels(){
+    var d = musicI18n[lang] || musicI18n.es;
+    return { title: d.title, choose: d.choose, play: d.play, pause: d.pause, prev: d.prev, next: d.next, volume: d.volume, none: d.none };
+}
+var hostSharedAudio = (function(){
+    try{
+        if(window.parent && window.parent !== window && window.parent.eduhootHostAudio) return window.parent.eduhootHostAudio;
+    }catch(e){}
+    return null;
+})();
+var spMusicPlayer = null;
+function initSpMusicPlayer(){
+    if(typeof initBackgroundMusic !== 'function') return;
+    spMusicPlayer = initBackgroundMusic('#sp-music-player', {
+        // Només es reutilitza un <audio> de veritat (el del lobby); si no, el reproductor en crea un de propi.
+        sharedAudio: (hostSharedAudio && hostSharedAudio.music instanceof HTMLMediaElement) ? hostSharedAudio.music : null,
+        storageKey: 'eduhoot-host-music',
+        randomStart: true,
+        volume: 0.7,
+        noneOption: true,
+        labels: musicLabels()
+    });
+}
+initSpMusicPlayer();
+
 socket.on('connect', function(){ socket.emit('host-join-game', params); });
 socket.on('noGameFound', leaveToLibrary);
-socket.on('gamePin', function(d){ app.pin = d.pin || ''; app.quizName = d.quizName || ''; });
+socket.on('gamePin', function(d){ app.pin = d.pin || ''; app.quizName = d.quizName || ''; if(app.quizName) document.title = 'Eduhoot | ' + app.quizName; });
 socket.on('hostSession', function(d){
     // El anfitrión puede cambiar de conexión: se guarda el id nuevo para el informe.
     if(d && d.hostId) params.id = d.hostId;

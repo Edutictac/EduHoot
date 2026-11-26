@@ -35,3 +35,6 @@
 /* Check «Mostrar puntuaciones y ranking en el anfitrión»: centrat, sobre el Top 10. */
 .sp-host-scores{ display: flex; align-items: center; justify-content: center; gap: 8px; margin: 10px auto 4px; font-weight: 600; cursor: pointer; }
 .sp-host-scores input{ width: 20px; height: 20px; margin: 0; cursor: pointer; accent-color: #ffee70; }
+
+/* Música de fons: fila inferior, centrada, sota la llista i el podi. */
+.sp-music.host-music-player{ margin: 14px auto 0; max-width: 960px; }

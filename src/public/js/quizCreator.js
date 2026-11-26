@@ -996,6 +996,11 @@ async function loadQuiz(id){
         if(questionCards.length === 0){
             addQuestion();
         }
+        // Al editar, el cursor va al títol (addQuestion el posa a la última pregunta; aquest nextTick va després).
+        Vue.nextTick(function(){
+            var nameInput = document.getElementById('name');
+            if(nameInput) nameInput.focus();
+        });
         var subtitle = document.getElementById('subtitle');
         if(subtitle){
             subtitle.textContent = 'Editando quiz ID ' + id;

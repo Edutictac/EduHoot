@@ -8,6 +8,7 @@
         <link rel="stylesheet" href="../../css/hostGameView.css">
         <link rel="stylesheet" href="../../css/hostKick.css">
         <link rel="stylesheet" href="../../css/hostSelfPaced.css">
+        <link rel="stylesheet" href="../../css/music-player.css">
         <link href="/css/fonts.css" rel="stylesheet">
         <link rel="stylesheet" href="/css/page-fit.css">
     </head>
@@ -54,6 +55,7 @@
                 <h2>{{ t('topPlayers') }}</h2>
                 <h3 v-for="(n, i) in podiumNames" :key="i">{{ (i + 1) + '. ' + n }}</h3>
             </section>
+            <div id="sp-music-player" class="music-player-shell host-music-player sp-music"></div>
         </div>
         </template>
         <script src="../../socket.io/socket.io.js"></script>
@@ -62,6 +64,7 @@
         <script src="/js/languages.js"></script>
         <script src="/js/env-badge.js"></script>
         <script src="../../js/libs/vue.global.prod.js"></script>
+        <script src="../../js/music-player.js"></script>
         <script src="../../js/hostSelfPaced.js"></script>
     </body>
 </html>

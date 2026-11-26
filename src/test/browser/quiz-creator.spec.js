@@ -761,3 +761,10 @@ test('ordenar: el selector de puntuació ofrece els nou modes i guarda el triat'
     await expect.poll(() => calls.local.length).toBe(1);
     expect(calls.local[0].questions[0].orderGrading).toBe(7);
 });
+
+test('?id= deja el cursor en el campo «Título del quiz»', async ({ page }) => {
+    await mockBackend(page, { quiz: editableQuiz, tags: ['física'] });
+    await page.goto('/create/quiz-creator/?id=q9&lang=es');
+    await expect(cards(page)).toHaveCount(4);
+    await expect(page.locator('#name')).toBeFocused();
+});

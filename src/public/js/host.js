@@ -621,6 +621,13 @@ socket.on('gameStarted', function(id){
 // Carga la vista de juego en un iframe sin salir de esta página. Así la música y el
 // gong siguen siendo los <audio> que desbloqueó el clic en "Iniciar partida" y el
 // navegador no vuelve a bloquear el autoplay al cambiar de página.
+// Títol de la pàgina durant una partida a su ritmo: «Eduhoot | <títol del quiz>». Buit en els altres casos.
+function hostEmbeddedTitle(){
+    if(lobby.options.mode !== 'selfPaced') return '';
+    var name = (lobby.quizName || '').trim();
+    return name ? 'Eduhoot | ' + name : 'Eduhoot';
+}
+
 function openEmbeddedHostGame(url){
     if(!hostStartClicked || document.getElementById('host-game-frame')) return false;
     var music = hostLobbyMusicPlayerInstance;
@@ -637,10 +644,11 @@ function openEmbeddedHostGame(url){
         frame.setAttribute('allowfullscreen', '');
         frame.addEventListener('load', function(){
             try{
-                document.title = frame.contentDocument.title || document.title;
+                document.title = hostEmbeddedTitle() || frame.contentDocument.title || document.title;
                 frame.contentWindow.focus();
             }catch(e){}
         });
+        document.title = hostEmbeddedTitle() || document.title;
         frame.src = url;
         document.body.classList.add('host-game-embedded');
         document.body.appendChild(frame);
