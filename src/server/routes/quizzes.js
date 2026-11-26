@@ -142,6 +142,39 @@ module.exports = function createQuizzesRouter({
   });
 
   // Download quiz as CSV
+  // Portada del quiz (la primera pregunta amb imatge): la carrega la biblioteca amb <img>, només per a les tarjetes visibles.
+  router.get('/api/quizzes/:id/cover', async (req, res) => {
+    try {
+      const quiz = await findGameById(req.params.id);
+      if (!quiz) return res.status(404).end();
+      if (!canUseQuiz(quiz, viewerOf(req))) return res.status(403).end();
+      const questions = Array.isArray(quiz.questions) ? quiz.questions : [];
+      const first = questions.find((q) => q && ((typeof q.image === 'string' && q.image) || (typeof q.video === 'string' && q.video)));
+      const image = first && typeof first.image === 'string' ? first.image : '';
+      if (!image) return res.status(404).end();
+      if (/^https?:\/\//i.test(image)) return res.redirect(302, image);
+      // data:<tipus>[;paràmetres][;base64],<dades>: el tipus ha de ser d'imatge.
+      const m = /^data:([^;,]+)([^,]*),([\s\S]*)$/i.exec(image);
+      if (!m || !/^image\/(png|jpeg|gif|webp|svg\+xml)$/i.test(m[1])) return res.status(404).end();
+      const base64 = /;base64$/i.test(m[2]);
+      let body;
+      if (base64) body = Buffer.from(m[3], 'base64');
+      else {
+        try { body = Buffer.from(decodeURIComponent(m[3]), 'utf8'); } catch (e) { body = Buffer.from(m[3], 'utf8'); }
+      }
+      res.set({
+        'Content-Type': m[1],
+        'Cache-Control': 'private, max-age=3600',
+        'X-Content-Type-Options': 'nosniff',
+        // Si s'obri directament, un SVG no pot executar scripts.
+        'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; sandbox"
+      });
+      return res.send(body);
+    } catch (err) {
+      return res.status(500).end();
+    }
+  });
+
   router.get('/api/quizzes/:id/csv', async (req, res) => {
     const quizIdParam = req.params.id;
     try {
@@ -197,7 +230,24 @@ module.exports = function createQuizzesRouter({
       const collection = await getGamesCollection();
       // El nombre de preguntas es compta a la base de dades: no s'envien les preguntes a la biblioteca.
       let quizzesRaw = await collection.aggregate([
-        { $addFields: { questionCount: { $size: { $cond: [{ $isArray: '$questions' }, '$questions', []] } } } },
+        { $addFields: {
+          questionCount: { $size: { $cond: [{ $isArray: '$questions' }, '$questions', []] } },
+          // Primera pregunta amb imatge o vídeo: només es calcula si té imatge i l'URL del vídeo (sense dades d'imatge).
+          coverMedia: { $let: {
+            vars: { m: { $arrayElemAt: [{ $filter: {
+              input: { $cond: [{ $isArray: '$questions' }, '$questions', []] }, as: 'q',
+              cond: { $or: [
+                { $and: [{ $eq: [{ $type: '$$q.image' }, 'string'] }, { $ne: ['$$q.image', ''] }] },
+                { $and: [{ $eq: [{ $type: '$$q.video' }, 'string'] }, { $ne: ['$$q.video', ''] }] }
+              ] }
+            } }, 0] } },
+            in: {
+              image: { $and: [{ $eq: [{ $type: '$$m.image' }, 'string'] }, { $ne: ['$$m.image', ''] }] },
+              video: { $cond: [{ $eq: [{ $type: '$$m.video' }, 'string'] },
+                { $cond: [{ $lt: [{ $strLenCP: '$$m.video' }, 500] }, '$$m.video', ''] }, ''] }
+            }
+          } }
+        } },
         { $project: { questions: 0 } }
       ]).toArray();
       if (normalized.length) {
@@ -221,6 +271,8 @@ module.exports = function createQuizzesRouter({
         playsCount: quiz.playsCount || 0,
         playersCount: quiz.playersCount || 0,
         questionCount: Number(quiz.questionCount) || 0,
+        coverImage: quiz.coverMedia && quiz.coverMedia.image ? `/api/quizzes/${encodeURIComponent(String(quiz.id))}/cover` : '',
+        coverVideo: (quiz.coverMedia && quiz.coverMedia.video) || '',
         visibility: currentVisibility(quiz),
         allowClone: normalizeAllowClone(quiz.allowClone),
         ownerId: quiz.ownerId,

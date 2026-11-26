@@ -289,6 +289,8 @@ module.exports = function createAuthRouter({
   const LIBRARY_PAGE_SIZES = [6, 12, 24, 48, 96];
   // Vista de las opciones del lobby del anfitrión: A (dos bloques) o B (tarjetas por tema).
   const HOST_OPTIONS_VIEWS = ['a', 'b'];
+  // Transparència de la imatge de fons de la biblioteca (0 = sense imatge).
+  const COVER_LEVELS = [0, 10, 20, 30];
 
   router.get('/api/auth/preferences', async (req, res) => {
     if (!req.user) return res.status(401).json({ error: 'No autorizado' });
@@ -300,7 +302,8 @@ module.exports = function createAuthRouter({
       const view = prefs.hostOptionsView;
       return res.json({
         libraryPageSize: LIBRARY_PAGE_SIZES.includes(prefs.libraryPageSize) ? prefs.libraryPageSize : null,
-        hostOptionsView: HOST_OPTIONS_VIEWS.includes(view) ? view : null
+        hostOptionsView: HOST_OPTIONS_VIEWS.includes(view) ? view : null,
+        libraryCoverLevel: COVER_LEVELS.includes(prefs.libraryCoverLevel) ? prefs.libraryCoverLevel : null
       });
     } catch (err) {
       return res.status(500).json({ error: 'No se pudieron leer las preferencias.' });
@@ -311,6 +314,19 @@ module.exports = function createAuthRouter({
   router.patch('/api/auth/preferences', async (req, res) => {
     if (!req.user) return res.status(401).json({ error: 'No autorizado' });
     const body = req.body || {};
+    // Nivell de la imatge de fons de les targetes de la biblioteca: 0 (sense), 10, 20 o 30 %.
+    if (Object.prototype.hasOwnProperty.call(body, 'libraryCoverLevel')) {
+      const level = Number(body.libraryCoverLevel);
+      if (!COVER_LEVELS.includes(level)) return res.status(400).json({ error: 'Valor no válido.' });
+      if (!ObjectId.isValid(req.user.id)) return res.status(400).json({ error: 'Usuario no válido.' });
+      try {
+        const users = await getUsersCollection();
+        await users.updateOne({ _id: new ObjectId(req.user.id) }, { $set: { 'preferences.libraryCoverLevel': level } });
+        return res.json({ ok: true, libraryCoverLevel: level });
+      } catch (err) {
+        return res.status(500).json({ error: 'No se pudieron guardar las preferencias.' });
+      }
+    }
     const hasView = Object.prototype.hasOwnProperty.call(body, 'hostOptionsView');
     const size = Number(body.libraryPageSize);
     const field = hasView ? 'hostOptionsView' : 'libraryPageSize';

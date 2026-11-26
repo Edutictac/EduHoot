@@ -329,6 +329,17 @@
                     <div class="library-main">
                         <!-- visibilityHelp es texto propio del diccionario i18n (con <strong> y <br>). -->
                         <p class="subtext" v-html="t('visibilityHelp')"></p>
+                        <!-- Imatge de fons de les targetes: sota el text de visibilitat, amb l'estil del selector de pàgina. -->
+                        <div class="pagination cover-pagination">
+                            <label class="page-size"><span>{{ t('filterCovers') }}</span>
+                                <select id="library-cover-level" v-model.number="lib.coverLevel" @change="onCoverLevel">
+                                    <option :value="0">{{ t('coverNone') }}</option>
+                                    <option :value="10">{{ t('cover10') }}</option>
+                                    <option :value="20">{{ t('cover20') }}</option>
+                                    <option :value="30">{{ t('cover30') }}</option>
+                                </select>
+                            </label>
+                        </div>
                         <div id="library-pagination-top" ref="pagerTop" class="pagination" :class="{ hidden: !showPager }">
                             <button id="library-pagination-prev-top" v-show="totalPages > 1" class="btn btn-ghost" :disabled="currentPage <= 1" @click="prevPage">{{ t('paginationPrev') }}</button>
                             <select id="library-pagination-info-top" class="page-select" v-show="totalPages > 1" :value="currentPage" :aria-label="paginationInfo" @change="onPageChange"><option v-for="p in pageOptions" :key="p.n" :value="p.n">{{ p.label }}</option></select>
@@ -342,6 +353,7 @@
                         <div id="game-list" class="game-grid">
                             <div v-if="!sortedQuizzes.length" class="empty-state"><p>{{ t('noGames') }}</p><p>{{ t('noGamesHint') }}</p></div>
                             <div v-for="quiz in pageQuizzes" :key="quiz.id" class="game-card">
+                                <img v-if="lib.coverLevel > 0" class="game-card__cover" :style="{ '--cover-opacity': lib.coverLevel / 100 }" :src="coverSrc(quiz)" alt="" aria-hidden="true" loading="lazy" decoding="async" @error="onCoverError($event)">
                                 <div class="game-card-head">
                                     <div class="game-title">{{ quiz.name || 'Quiz sin nombre' }}</div>
                                     <span class="badge">{{ (t('idLabel') || 'ID') + ' ' + quiz.id }}</span>

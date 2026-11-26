@@ -48,7 +48,7 @@ test('con sesión, guarda y lee la vista del lobby, sin tocar la del tamaño de 
   assert.equal(view.status, 200);
   assert.deepEqual(await view.json(), { ok: true, hostOptionsView: 'b' });
   const read = await (await fetch(`${baseUrl}/api/auth/preferences`, { headers: withSession })).json();
-  assert.deepEqual(read, { libraryPageSize: 24, hostOptionsView: 'b' });
+  assert.deepEqual(read, { libraryPageSize: 24, hostOptionsView: 'b', libraryCoverLevel: null });
 });
 
 test('valores desconocidos se rechazan y no cambian lo guardado', async () => {
@@ -57,5 +57,19 @@ test('valores desconocidos se rechazan y no cambian lo guardado', async () => {
   const bad2 = await fetch(`${baseUrl}/api/auth/preferences`, { method: 'PATCH', headers: withSession, body: JSON.stringify({ libraryPageSize: 7 }) });
   assert.equal(bad2.status, 400);
   const read = await (await fetch(`${baseUrl}/api/auth/preferences`, { headers: withSession })).json();
-  assert.deepEqual(read, { libraryPageSize: 24, hostOptionsView: 'b' });
+  assert.deepEqual(read, { libraryPageSize: 24, hostOptionsView: 'b', libraryCoverLevel: null });
+});
+
+test('nivell de la imatge de fons: 0, 10, 20 o 30 per compte; altres valors es rebutgen', async () => {
+  const ok = await fetch(`${baseUrl}/api/auth/preferences`, { method: 'PATCH', headers: withSession, body: JSON.stringify({ libraryCoverLevel: 30 }) });
+  assert.equal(ok.status, 200);
+  assert.deepEqual(await ok.json(), { ok: true, libraryCoverLevel: 30 });
+  const read = await (await fetch(`${baseUrl}/api/auth/preferences`, { headers: withSession })).json();
+  assert.equal(read.libraryCoverLevel, 30);
+  for (const bad of [15, 'no', true, 40]) {
+    const res = await fetch(`${baseUrl}/api/auth/preferences`, { method: 'PATCH', headers: withSession, body: JSON.stringify({ libraryCoverLevel: bad }) });
+    assert.equal(res.status, 400, `valor ${bad}`);
+  }
+  const still = await (await fetch(`${baseUrl}/api/auth/preferences`, { headers: withSession })).json();
+  assert.equal(still.libraryCoverLevel, 30);
 });

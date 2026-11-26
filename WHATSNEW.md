@@ -3,6 +3,12 @@
 
 ## Per al professorat
 
+- **Mode fantasma a l'aula**: a l'amfitrió, la casella «Mode fantasma» (desactivada per defecte). L'alumnat compara la seua partida amb la millor marca del quiz, pregunta a pregunta, sense competir pel rànquing.
+- **Imatge de fons a la biblioteca**: a `/create/`, el desplegable «Imatge de fons» tria si les targetes mostren la portada del quiz (sense imatge, 10 %, 20 % o 30 %; per defecte, 20 %). Amb compte, es guarda al teu usuari.
+- **Estrelles i ordenació per «Més jugats»**: a la biblioteca pots valorar els quizzes públics amb estrelles i ordenar-los pels més jugats.
+- **Privacitat dels quizzes**: els quizzes privats només els veu el seu propietari, l'administració o el seu dispositiu.
+- **Registre de partides**: les partides acabades d'un usuari amb compte es guarden amb el seu informe CSV durant 90 dies.
+- **Icona d'EduHoot**: el logo és el favicon de totes les pàgines.
 - **Vídeos «aprén i després respon»**: pots posar un vídeo abans d'una pregunta perquè l'alumnat el mire abans de respondre. Tries des de quin segon comença («Inici del vídeo»).
 - **Puntuacions a l'autoritme**: decideixes si veus els punts i el Top 10 durant la partida (casella a la pantalla de progrés).
 - **Preguntes d'ordenar**: l'alumnat posa uns elements en l'ordre correcte (de 2 a 8). Funciona en partida, a l'autoritme, als deures, en solo, a les flashcards i en multijugador local. Es poden importar i exportar en Moodle XML i CSV, i exportar a PDF, DOCX i ODT. Pots triar la puntuació (proporcional o tot o res) i la disposició (vertical o horitzontal).
@@ -127,6 +133,10 @@
 
 ## Per a l'alumnat
 
+- **Mode fantasma a solo**: pots activar-lo per comparar la partida amb la teua millor marca del quiz, pregunta a pregunta. La marca es guarda al navegador.
+- **Música de fons**: a la pantalla inicial de solo tries el tema musical o «Sense música».
+- **Opcions de solo més clares**: ajudes «?» a cada opció i temps extra en preguntes compostes (correspondència i ordenar).
+- **Pantalla inicial de solo més ordenada**: resum en dues línies, opcions en dues columnes i música en una fila pròpia.
 - **Comprova les respostes a les flashcards**: respon cada targeta (una opció, un text, un número o una parella) i l'app la comprova sola i la marca com a sabuda o no sabuda. Al final veus quantes has encertat i quines has de repassar. Es pot desactivar a l'inici del repàs.
 - **Opcions més clares a les flashcards**: les opcions tenen la forma i el color de les respostes del joc, en dues columnes, i vertader/fals s'ajusta al text.
 
@@ -178,8 +188,6 @@
 
 ### Noves maneres de jugar
 
-- **Mode fantasma**: competeix contra la teua pròpia millor marca, no
-  contra els teus companys: motivació sense la pressió del rànquing.
 - **Time Attack**: respon el màxim de preguntes possible dins d'un temps
   límit.
 - **Mode paper**: jugar sense un dispositiu per a cada alumne: una
@@ -189,6 +197,12 @@
 
 ## Para el profesorado
 
+- **Modo fantasma en el aula**: en el anfitrión, la casilla «Modo fantasma» (desactivada por defecto). El alumnado compara su partida con la mejor marca del quiz, pregunta a pregunta, sin competir por el ranking.
+- **Imagen de fondo en la biblioteca**: en `/create/`, el desplegable «Imagen de fondo» elige si las tarjetas muestran la portada del quiz (sin imagen, 10 %, 20 % o 30 %; por defecto, 20 %). Con cuenta, se guarda en tu usuario.
+- **Estrellas y orden por «Más jugados»**: en la biblioteca puedes valorar los quizzes públicos con estrellas y ordenarlos por los más jugados.
+- **Privacidad de los quizzes**: los quizzes privados solo los ve su propietario, la administración o su dispositivo.
+- **Registro de partidas**: las partidas terminadas de un usuario con cuenta se guardan con su informe CSV durante 90 días.
+- **Icono de EduHoot**: el logo es el favicon de todas las páginas.
 - **Vídeos «aprende y después responde»**: puedes poner un vídeo antes de una pregunta para que el alumnado lo vea antes de responder. Eliges desde qué segundo empieza («Inicio del vídeo»).
 - **Puntuaciones en el autoritmo**: decides si ves los puntos y el Top 10 durante la partida (casilla en la pantalla de progreso).
 - **Más tiempo para volver a conectarte**: si tu pantalla se desconecta, la partida espera 2 minutos (antes 30 segundos) a que vuelvas. En la configuración de la partida puedes ampliarlo hasta 5 minutos.
@@ -283,6 +297,10 @@
 
 ## Para el alumnado
 
+- **Modo fantasma en solo**: puedes activarlo para comparar la partida con tu mejor marca del quiz, pregunta a pregunta. La marca se guarda en el navegador.
+- **Música de fondo**: en la pantalla inicial de solo eliges el tema musical o «Sin música».
+- **Opciones de solo más claras**: ayudas «?» en cada opción y tiempo extra en preguntas compuestas (correspondencia y ordenar).
+- **Pantalla inicial de solo más ordenada**: resumen en dos líneas, opciones en dos columnas y música en una fila propia.
 - **Comprueba tus respuestas en las flashcards**: responde cada tarjeta (una opción, un texto, un número o una pareja) y la app la comprueba sola y la marca como sabida o no sabida. Al final ves cuántas has acertado y cuáles debes repasar. Se puede desactivar al empezar el repaso.
 - **Opciones más claras en las flashcards**: las opciones tienen la forma y el color de las respuestas del juego, en dos columnas, y verdadero/falso se ajusta al texto.
 
@@ -328,8 +346,6 @@
 
 ### Nuevas maneras de jugar
 
-- **Modo fantasma**: compite contra tu propia mejor marca, no contra tus
-  compañeros: motivación sin la presión del ranking.
 - **Time Attack**: responde al máximo de preguntas posible dentro de un
   tiempo límite.
 - **Modo papel**: jugar sin un dispositivo por alumno: una alternativa
@@ -339,6 +355,12 @@
 
 ## For teachers
 
+- **Ghost mode in class**: on the host screen, the "Ghost mode" checkbox (off by default). Students compare their game with the quiz's best score, question by question, without competing for the ranking.
+- **Background image in the library**: on `/create/`, the "Background image" dropdown chooses whether cards show the quiz cover (no image, 10%, 20% or 30%; default 20%). With an account, it is saved to your user.
+- **Stars and sort by "Most played"**: in the library you can rate public quizzes with stars and sort them by most played.
+- **Quiz privacy**: private quizzes can only be seen by their owner, the administrators or their device.
+- **Game log**: finished games of users with an account are saved with their CSV report for 90 days.
+- **EduHoot icon**: the logo is the favicon of every page.
 - **"Learn then answer" videos**: you can put a video before a question so students watch it before answering. You choose the second it starts (video start option).
 - **Self-paced scores**: you decide whether you see the scores and the top 10 during the game (checkbox on the progress screen).
 - **More time to reconnect**: if your screen disconnects, the game waits 2 minutes (it was 30 seconds) for you to come back. In the game settings you can extend this up to 5 minutes.
@@ -406,6 +428,10 @@
 
 ## For students
 
+- **Ghost mode in solo**: turn it on to compare your game with your best score on the quiz, question by question. The best score is saved in your browser.
+- **Background music**: on the solo start screen, choose a music theme or "No music".
+- **Clearer solo options**: "?" help for each option and extra time on compound questions (matching and ordering).
+- **Tidier solo start screen**: two-line summary, options in two columns and music in its own row.
 - **Check your answers in flashcards**: answer each card (an option, a text, a number or a pair) and the app checks it and marks it as known or unknown automatically. At the end you see how many you got right and which ones to review. You can turn it off when you start a review.
 - **Clearer options in flashcards**: options have the shape and colour of the game answers, in two columns, and true/false fits its text.
 
@@ -449,8 +475,6 @@
 
 ### New ways to play
 
-- **Ghost mode**: compete against your own personal best, not your
-  classmates: motivation without the pressure of a ranking.
 - **Time Attack**: answer as many questions as you can within a time
   limit.
 - **Paper mode**: play without one device per student: an alternative for

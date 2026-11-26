@@ -3,6 +3,16 @@
 var LIBRARY_PAGE_SIZES = [6, 12, 24, 48, 96];
 var LIBRARY_PAGE_SIZE = 6;
 var LIBRARY_PAGE_SIZE_KEY = 'eduhoot-library-page-size';
+// Transparència de la imatge de fons de les targetes: 0 (sense imatge), 10, 20 (per defecte) o 30 %. Amb sessió, es guarda a la cuenta.
+var LIBRARY_COVERS_KEY = 'eduhoot-library-cover-level';
+var LIBRARY_COVER_LEVELS = [0, 10, 20, 30];
+function readLibraryCoverLevel(){
+    try{
+        var v = parseInt(localStorage.getItem(LIBRARY_COVERS_KEY), 10);
+        if(LIBRARY_COVER_LEVELS.indexOf(v) !== -1) return v;
+    }catch(e){}
+    return 20;
+}
 
 // Biblioteca de /create/: etiquetas, filtros (también en la URL), listado y paginación, extraído de create.js
 function getTagsFromLibraryData(data){
@@ -212,11 +222,26 @@ function loadUserLibraryPageSize(){
         .then(function(res){ return res.ok ? res.json() : null; })
         .then(function(data){
             var v = data && data.libraryPageSize;
-            if(LIBRARY_PAGE_SIZES.indexOf(v) === -1) return;
-            libState.pageSize = v;
-            try{ localStorage.setItem(LIBRARY_PAGE_SIZE_KEY, String(v)); }catch(e){}
+            if(LIBRARY_PAGE_SIZES.indexOf(v) !== -1){
+                libState.pageSize = v;
+                try{ localStorage.setItem(LIBRARY_PAGE_SIZE_KEY, String(v)); }catch(e){}
+            }
+            var c = data && data.libraryCoverLevel;
+            if(LIBRARY_COVER_LEVELS.indexOf(c) !== -1){
+                libState.coverLevel = c;
+                try{ localStorage.setItem(LIBRARY_COVERS_KEY, String(c)); }catch(e){}
+            }
         })
         .catch(function(){});
+}
+
+function saveUserLibraryCoverLevel(v){
+    return fetch('/api/auth/preferences', {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ libraryCoverLevel: v })
+    }).catch(function(){});
 }
 
 function saveUserLibraryPageSize(v){
@@ -263,6 +288,7 @@ var libState = Vue.reactive({
     data: [],
     page: 1,
     pageSize: readLibraryPageSize(),
+    coverLevel: readLibraryCoverLevel(),
     sort: 'newest',
     knownTags: [],
     tagsExpanded: false,
@@ -606,6 +632,18 @@ var libraryApp = {
                 })
                 .catch(function(){});
         },
+        // Fons de la tarjeta: la portada del quiz, la miniatura de su vídeo o el logo de EduHoot.
+        coverSrc: function(quiz){
+            if(!this.lib.coverLevel) return '';
+            if(quiz.coverImage) return quiz.coverImage;
+            var m = /(?:youtube\.com\/(?:.*[?&]v=|embed\/)|youtu\.be\/)([\w-]{11})/.exec(quiz.coverVideo || '');
+            if(m) return 'https://img.youtube.com/vi/' + m[1] + '/hqdefault.jpg';
+            return '/icons/logo.svg';
+        },
+        // Si la portada no carga, se usa el logo de EduHoot.
+        onCoverError: function(ev){
+            if(ev.target.getAttribute('src') !== '/icons/logo.svg') ev.target.src = '/icons/logo.svg';
+        },
         // Línia discreta sota les estadístiques: «Creat … · Modificat …».
         datesText: function(quiz){
             this.lib.lang;
@@ -653,6 +691,12 @@ var libraryApp = {
             this.lib.page = 1;
             try{ localStorage.setItem(LIBRARY_PAGE_SIZE_KEY, String(v)); }catch(e){}
             if(authState.user) saveUserLibraryPageSize(v);
+        },
+        onCoverLevel: function(){
+            var v = Number(this.lib.coverLevel);
+            if(LIBRARY_COVER_LEVELS.indexOf(v) === -1) return;
+            try{ localStorage.setItem(LIBRARY_COVERS_KEY, String(v)); }catch(e){}
+            if(authState.user) saveUserLibraryCoverLevel(v);
         },
         clearFilters: function(){ clearFilters(); },
         toggleTagMode: function(){ toggleTagMode(); },

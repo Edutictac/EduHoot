@@ -662,6 +662,30 @@ details.panel[open] .panel-toggle__chevron{
     display: flex;
     flex-direction: column;
     gap: 10px;
+    /* Fons de la portada: capa pròpia sota el contingut (vore .game-card__cover). */
+    position: relative;
+    isolation: isolate;
+}
+/* Portada o logo de fons: opacitat des de --cover-opacity (20 % per defecte; 10, 20 o 30 %). Degradat fosc per a la llegibilitat. */
+.game-card__cover{
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: inherit;
+    opacity: var(--cover-opacity, 0.2);
+    z-index: -1;
+    pointer-events: none;
+}
+.game-card::after{
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(rgba(15,23,42,0.45), rgba(15,23,42,0.75));
+    z-index: -1;
+    pointer-events: none;
 }
 .game-card-head{
     display: flex;
@@ -1322,3 +1346,9 @@ select.page-select{
     border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.08); color: #fff;
 }
 select.page-select option{ color: #14101f; background: #fff; }
+
+/* «Imagen de fondo»: alineada a la izquierda, sota el text de visibilitat, amb text més petit. */
+.library-main > .pagination.cover-pagination.cover-pagination:first-of-type{ margin-top: 6px; margin-bottom: 8px; }
+.cover-pagination{ justify-content: flex-start; }
+.cover-pagination .page-size{ margin-left: 0; font-size: 13px; }
+.cover-pagination .page-size select{ font-size: 13px; padding: 4px 10px; }
