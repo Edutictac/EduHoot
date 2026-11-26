@@ -39,7 +39,8 @@ module.exports = function createHostEvents({
     buildStudentPlayerPayload,
     scheduleQuestionCountdown,
     logGames,
-    finishVideoLearning
+    finishVideoLearning,
+    countdownPreviewOf
   } = helpers;
 
   // En reconnectar l'anfitrió, la partida torna a estar oberta… excepte l'autoritme ja acabat (no es reobri).
@@ -194,11 +195,21 @@ module.exports = function createHostEvents({
             ? Math.max(0, Math.ceil(((game.gameData.questionCountdownEndsAt || Date.now()) - Date.now()) / 1000))
             : 0;
 
-          if (game.gameData.questionPending) {
+          // Fase del vídeo (feature 24): l'anfitrió torna a veure el vídeo; l'alumnat no rep ni pregunta ni vídeo.
+          const learning = !!game.gameData.questionLearning;
+          if (learning) {
+            socket.emit('videoLearn', {
+              questionNumber: game.gameData.question,
+              video: currentQuestion.video || '',
+              image: currentQuestion.image || '',
+              startAt: Number(game.gameData.options && game.gameData.options.videoStartSec) || 0
+            });
+          } else if (game.gameData.questionPending) {
             socket.emit('questionCountdown', {
               seconds: countdownRemaining,
               questionNumber: game.gameData.question,
-              totalQuestions: game.gameData.totalQuestions || kahootQuestions.length || 0
+              totalQuestions: game.gameData.totalQuestions || kahootQuestions.length || 0,
+              preview: countdownPreviewOf(game)
             });
           } else {
             const payload = getCurrentQuestionPayload(game);
@@ -219,14 +230,15 @@ module.exports = function createHostEvents({
           });
           socket.emit('hostSession', { hostId: game.hostId, pin: game.pin });
           io.to(game.pin).emit('hostReconnected');
-          if (!game.gameData.questionPending) {
-            io.to(game.pin).emit('questionMedia', { image: currentQuestion.image || '', video: currentQuestion.video || '' });
+          if (!game.gameData.questionPending && !learning) {
+            // El vídeo ja l'ha vist l'anfitrió: l'alumnat rep només la imatge i la pregunta.
+            io.to(game.pin).emit('questionMedia', { image: currentQuestion.image || '', video: '' });
             const fullPlayerPayload = {
               question: currentQuestion.question,
               answers: currentQuestion.answers,
               type: currentQuestion.type || 'quiz',
               image: currentQuestion.image || '',
-              video: currentQuestion.video || '',
+              video: '',
               pointsMultiplier: Number(currentQuestion.pointsMultiplier) > 1 ? 2 : 1,
               ...(currentQuestion.type === 'matching'
                 ? { matchLeft: currentQuestion.matchLeft, matchRight: currentQuestion.matchRight }
@@ -482,6 +494,8 @@ module.exports = function createHostEvents({
       options.mode = options.mode === 'selfPaced' ? 'selfPaced' : 'live';
       // Mode fantasma en aula: opcional (desactivat per defecte); la marca és al navegador de cada alumne.
       options.ghostMode = options.ghostMode === true || options.ghostMode === 'true';
+      // Opció «Mostrar pregunta durante la cuenta atrás»: la pregunta es veu durant els 3-2-1 (per defecte, sí des del lobby).
+      options.showQuestionDuringCountdown = options.showQuestionDuringCountdown === true || options.showQuestionDuringCountdown === 'true';
       // Fase del vídeo (feature 24): segon d'inici del vídeo, de 0 a 3600 (0 = des del principi).
       options.videoStartSec = Math.max(0, Math.min(3600, parseInt(options.videoStartSec, 10) || 0));
       if (options.timePerQuestion !== undefined && options.timePerQuestion !== null && String(options.timePerQuestion).trim() !== '') {

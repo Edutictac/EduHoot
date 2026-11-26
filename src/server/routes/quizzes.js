@@ -195,7 +195,11 @@ module.exports = function createQuizzesRouter({
       const tagMode = req.query.tagMode === 'any' ? 'any' : 'all';
       const matchesTagFilter = (quiz) => matchesTags(quiz, normalized, tagMode);
       const collection = await getGamesCollection();
-      let quizzesRaw = await collection.find({}).project({ questions: 0 }).toArray();
+      // El nombre de preguntas es compta a la base de dades: no s'envien les preguntes a la biblioteca.
+      let quizzesRaw = await collection.aggregate([
+        { $addFields: { questionCount: { $size: { $cond: [{ $isArray: '$questions' }, '$questions', []] } } } },
+        { $project: { questions: 0 } }
+      ]).toArray();
       if (normalized.length) {
         quizzesRaw = quizzesRaw.filter(matchesTagFilter);
       }
@@ -216,6 +220,7 @@ module.exports = function createQuizzesRouter({
         tags: quiz.tags || [],
         playsCount: quiz.playsCount || 0,
         playersCount: quiz.playersCount || 0,
+        questionCount: Number(quiz.questionCount) || 0,
         visibility: currentVisibility(quiz),
         allowClone: normalizeAllowClone(quiz.allowClone),
         ownerId: quiz.ownerId,

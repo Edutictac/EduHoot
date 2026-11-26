@@ -939,3 +939,45 @@ h3[id^="answer"]::before{
 .timer-state svg{ fill: currentColor; }
 .timer-state.is-paused{ color: #ffee70; }
 .timer-state.is-playing{ color: #7ee787; }
+
+/* Text de la pregunta durant la compte arrere (opció «Mostrar pregunta durante la cuenta atrás»). */
+.question-countdown__preview{ margin: 0; max-width: 92%; font-weight: 800; font-size: clamp(22px, 4.2vh, 48px); line-height: 1.22; color: #f8fafc; text-shadow: 0 8px 28px rgba(0,0,0,0.45); overflow-wrap: anywhere; }
+/* Amb la pregunta: l'enunciat a dalt i la compte a sota, centrats i ocupant l'alt de la pantalla (si cap). */
+.question-countdown.is-visible.has-preview{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 18px;
+    width: min(1100px, 100%);
+    min-height: clamp(360px, calc(100vh - 290px), 900px);
+    margin: 12px auto;
+}
+/* Amb l'enunciat, el fons és un rectangle arrodonit (la el·lipse tallaria el text). */
+.question-countdown.is-visible.has-preview::before,
+.question-countdown.is-visible.has-preview::after{ inset: 0; border-radius: 28px; }
+
+/* Botons del vídeo de la fase (aula): el mateix estil i la mateixa fila que Saltar, Cancelar i Top 10. */
+#pauseVideoBtn, #finishVideoBtn{
+    display: inline-block;
+    flex: 1 1 0;
+    min-width: 160px;
+    height: 48px;
+    padding: 0 22px;
+    box-sizing: border-box;
+    background: rgba(15,23,42,0.8);
+    border: 1px solid var(--card-stroke);
+    color: var(--text-main);
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 1.1em;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    transition: transform 0.18s ease, filter 0.18s ease;
+}
+#pauseVideoBtn:hover, #finishVideoBtn:hover{ transform: translateY(-2px); filter: brightness(1.05); }
+
+/* Colors dels botons del vídeo: reproduir (verd, com Siguiente), pausar (ambre, com Top 10) i parar (roig, com Cancelar). */
+#pauseVideoBtn.is-stopped{ background: rgba(16,185,129,0.22); }
+#pauseVideoBtn.is-playing{ background: #fdbc4b; color: #4d4d4d; }
+#finishVideoBtn{ background: rgba(218,68,83,0.22); }

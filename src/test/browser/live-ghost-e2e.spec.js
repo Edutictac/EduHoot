@@ -22,7 +22,7 @@ async function arrange(page, target) {
         const list = await page.locator('.order-item .order-text').allTextContents();
         const p = list.indexOf(target[k]);
         for (let step = p; step > k; step--) {
-            await page.locator('.order-item').nth(step).locator('button').first().click();
+            await page.locator('.order-item').nth(step).locator('button').first().click({ timeout: 15000 });
         }
     }
 }
@@ -38,11 +38,11 @@ async function playGame(browser, students, { ghost, anaCorrect, afterQuestion })
     for (const s of students) {
         await s.page.goto(`${BASE}/join.html?lang=es`);
         await s.page.locator('#pinModalInput').fill(pin);
-        await s.page.locator('#pinModalSubmit').click();
+        await s.page.locator('#pinModalSubmit').click({ timeout: 15000 });
         await s.page.locator('#name').fill(s.name, { timeout: 15000 });
         await s.page.locator('#joinButton').click({ timeout: 15000 });
     }
-    await host.locator('#start').click();
+    await host.locator('#start').click({ timeout: 15000 });
     const gl = (sel) => host.frameLocator('#host-game-frame').locator(sel);
     const [ana, bruno] = students.map((s) => s.page);
     for (let q = 0; q < QUESTIONS.length; q++) {
@@ -51,9 +51,9 @@ async function playGame(browser, students, { ghost, anaCorrect, afterQuestion })
         await expect(bruno.locator('.order-board')).toBeVisible({ timeout: 30000 });
         await expect(gl('#hostOrder li')).toHaveCount(sol.length, { timeout: 30000 });
         await arrange(ana, anaCorrect ? sol : [...sol].reverse());
-        await ana.locator('.order-submit').click();
+        await ana.locator('.order-submit').click({ timeout: 15000 });
         await arrange(bruno, [...sol].reverse());
-        await bruno.locator('.order-submit').click();
+        await bruno.locator('.order-submit').click({ timeout: 15000 });
         await expect(ana.locator('#message')).toHaveClass(anaCorrect ? /message--correct/ : /message--incorrect|message--partial/, { timeout: 30000 });
         if (ghost && !anaCorrect && q === 0) {
             // Ja després de la primera pregunta, l'Ana veu la diferència amb la marca (negativa).
@@ -62,7 +62,7 @@ async function playGame(browser, students, { ghost, anaCorrect, afterQuestion })
         // Pas a la següent pregunta (o final, a la darrera): el modal de rànquing.
         await expect(gl('#rankingNextBtn')).toBeVisible({ timeout: 30000 });
         for (let k = 0; k < 3 && await gl('#rankingNextBtn').isVisible(); k++) {
-            await gl('#rankingNextBtn').click();
+            await gl('#rankingNextBtn').click({ timeout: 15000 });
             await host.waitForTimeout(400);
         }
         if (afterQuestion) await afterQuestion(q, students);

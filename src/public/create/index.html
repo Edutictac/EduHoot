@@ -349,6 +349,7 @@
                                 <p class="game-subtitle"></p>
                                 <div class="game-meta">{{ metaText(quiz) }}</div>
                                 <div class="game-stats">
+                                    <span class="game-stats__item game-stats__item--questions"><span class="game-stats__num">{{ quiz.questionCount || 0 }}</span> {{ t('questionsShort') }}</span>
                                     <span class="game-stats__item">{{ (quiz.playsCount || 0) + ' ' + t('playsShort') }}</span>
                                     <span class="game-stats__item">{{ (quiz.playersCount || 0) + ' ' + t('playersShort') }}</span>
                                 </div>

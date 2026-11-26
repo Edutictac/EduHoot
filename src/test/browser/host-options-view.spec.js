@@ -1,0 +1,129 @@
+const { test, expect } = require('@playwright/test');
+
+if (process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH) {
+    test.use({ launchOptions: { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } });
+}
+
+// Socket.IO falso: el servidor de los specs solo sirve estáticos, así que se
+// sustituye /socket.io/socket.io.js por un `io()` que guarda lo que emite la
+// página (window.__emits) y deja que el test lance eventos del servidor
+// (window.__serverEmit). No conecta solo: el test lanza 'connect' cuando la
+// página ya ha cargado, como pasa con una conexión real.
+const FAKE_SOCKET_IO = `
+(function(){
+    window.__emits = [];
+    window.__sockets = [];
+    window.io = function(){
+        var handlers = {};
+        var socket = {
+            connected: false,
+            on: function(name, fn){ (handlers[name] = handlers[name] || []).push(fn); return socket; },
+            emit: function(name, data){ window.__emits.push({ name: name, data: JSON.parse(JSON.stringify(data === undefined ? null : data)) }); return socket; },
+            disconnect: function(){ socket.connected = false; window.__disconnected = true; return socket; },
+            __trigger: function(name, data){
+                if(name === 'connect') socket.connected = true;
+                (handlers[name] || []).forEach(function(fn){ fn(data); });
+            }
+        };
+        window.__sockets.push(socket);
+        return socket;
+    };
+    window.__serverEmit = function(name, data){
+        window.__sockets[0].__trigger(name, data);
+    };
+})();
+`;
+
+async function mockBackend(page) {
+    await page.route(/^https:\/\//, route => route.abort());
+    await page.route('**/socket.io/socket.io.js', route => route.fulfill({
+        contentType: 'application/javascript',
+        body: FAKE_SOCKET_IO
+    }));
+    await page.route('**/api/**', route => route.fulfill({ json: {} }));
+}
+
+async function openLobby(page, query) {
+    await mockBackend(page);
+    await page.goto('/host/' + query);
+    await page.waitForLoadState('load');
+    await page.evaluate(() => window.__serverEmit('connect'));
+}
+
+function emitsNamed(page, name) {
+    return page.evaluate(n => window.__emits.filter(e => e.name === n).map(e => e.data), name);
+}
+
+// Red de seguridad para el piloto de Vue (Subfase B): fija el comportamiento
+// actual del lobby de /host/ para comprobar que sigue igual cuando host.js
+// pase a ser una app de Vue. El spec no debe cambiar en esa conversión.
+// Vista de las opciones del lobby (A dos bloques / B tarjetas por tema): solo cambia la presentación.
+test('por defecto muestra la vista A; la B muestra cuatro tarjetas con los mismos controles', async ({ page }) => {
+    await openLobby(page, '?id=q1&lang=es');
+    await expect(page.locator('#opt-view')).toHaveValue('a');
+    await expect(page.locator('.opt-cards')).toHaveCount(0);
+    await expect(page.locator('#opt-rand-q')).toHaveCount(1);
+
+    await page.locator('#opt-view').selectOption('b');
+    await expect(page.locator('.opt-cards .opt-card')).toHaveCount(4);
+    await expect(page.locator('.opt-card h3').nth(0)).toContainText('Mostrar al alumnado');
+    await expect(page.locator('.opt-card h3').nth(3)).toContainText('Ritmo');
+    // Cada control aparece una sola vez: en la vista B no queda la A.
+    await expect(page.locator('#opt-rand-q')).toHaveCount(1);
+    await expect(page.locator('#opt-ghost-live')).toHaveCount(1);
+    await expect(page.locator('#host-options > .opt-group')).toHaveCount(0);
+});
+
+test('el estado de las casillas se mantiene al cambiar de vista', async ({ page }) => {
+    await openLobby(page, '?id=q1&lang=es');
+    await page.locator('#opt-streak').check();
+    await page.locator('#opt-view').selectOption('b');
+    await expect(page.locator('#opt-streak')).toBeChecked();
+    await page.locator('#opt-streak').uncheck();
+    await page.locator('#opt-view').selectOption('a');
+    await expect(page.locator('#opt-streak')).not.toBeChecked();
+});
+
+test('la vista elegida se recuerda en el dispositivo al volver a abrir el lobby', async ({ page }) => {
+    await openLobby(page, '?id=q1&lang=es');
+    await page.locator('#opt-view').selectOption('b');
+    expect(await page.evaluate(() => localStorage.getItem('eduhoot-host-options-view'))).toBe('b');
+    await page.goto('/host/?id=q1&lang=es');
+    await page.waitForLoadState('load');
+    await page.evaluate(() => window.__serverEmit('connect'));
+    await expect(page.locator('#opt-view')).toHaveValue('b');
+    await expect(page.locator('.opt-cards')).toHaveCount(1);
+});
+
+// El desplegable debe recibir los clics: no lo puede tapar el título del grupo de casillas.
+test('el desplegable de vista recibe el clic (no lo tapa otro elemento)', async ({ page }) => {
+    await openLobby(page, '?id=q1&lang=es');
+    const hitsSelect = await page.evaluate(() => {
+        const s = document.getElementById('opt-view');
+        const r = s.getBoundingClientRect();
+        const top = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
+        return top === s || s.contains(top);
+    });
+    expect(hitsSelect).toBe(true);
+});
+
+// Con sesión, la vista de la cuenta se aplica al abrir el lobby y cada cambio se guarda en la cuenta.
+test('con sesión: la vista de la cuenta se aplica al abrir y los cambios se guardan en la cuenta', async ({ page }) => {
+    await mockBackend(page);
+    const patches = [];
+    await page.route('**/api/auth/preferences', route => {
+        if (route.request().method() === 'PATCH') {
+            patches.push(route.request().postDataJSON());
+            return route.fulfill({ json: { ok: true } });
+        }
+        return route.fulfill({ json: { libraryPageSize: null, hostOptionsView: 'b' } });
+    });
+    await page.goto('/host/?id=q1&lang=es');
+    await page.waitForLoadState('load');
+    await page.evaluate(() => window.__serverEmit('connect'));
+    await expect(page.locator('#opt-view')).toHaveValue('b');
+    expect(patches).toEqual([]);
+    await page.locator('#opt-view').selectOption('a');
+    await expect.poll(() => patches.length).toBe(1);
+    expect(patches).toEqual([{ hostOptionsView: 'a' }]);
+});

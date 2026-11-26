@@ -32,18 +32,19 @@ body{
 }
 
 /* La fila tiene el mismo ancho que el recuadro de opciones: el icono queda a su izquierda y el QR a su derecha. */
+/* Icona a l'esquerra del bloc central (nom, títol i PIN), i el QR a la dreta. */
 .join-cta{
-    display: flex;
-    align-items: stretch;
-    /* En una sola fila, el texto se estira y el QR queda a la derecha; si la fila se parte, el QR queda centrado debajo. */
-    justify-content: center;
+    display: grid;
+    grid-template-columns: 72px minmax(0, 1fr) auto;
+    align-items: center;
     gap: 18px;
-    flex-wrap: wrap;
     width: 100%;
     max-width: 800px;
     box-sizing: border-box;
     margin: 0 auto 12px;
 }
+.join-cta > .host-logo{ justify-self: center; width: 64px; height: auto; }
+.join-cta > .qr-card{ justify-self: end; margin: 0; }
 .join-text{
     text-align: center;
     padding: 0 28px;
@@ -60,13 +61,13 @@ body{
     color: #ffee70; /* amarillo de la portada: se distingue de «Únete a la partida» */
     overflow-wrap: anywhere;
 }
-/* Logo a la izquierda del título; centrado en vertical con el bloque de unión. */
-.host-logo{
-    width: 64px;
-    height: auto;
-    align-self: center;
-    flex-shrink: 0;
+.quiz-title-row{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 6px;
 }
+.quiz-title-row .quiz-name{ margin: 0; }
 .pin-badge{
     align-self: center;
     display: inline-flex;
@@ -221,14 +222,17 @@ body{
     opacity: 0.75;
     margin-top: 2px;
 }
-#opt-time{
-    width: 80px;
-    padding: 6px 8px;
+/* Campos numèrics i desplegables del lobby: el mateix aspecte que «Tiempo por pregunta». */
+#host-options input[type="number"],
+#host-options select{
+    padding: 4px 8px;
     border-radius: 8px;
     border: 1px solid rgba(255,255,255,0.2);
     background: rgba(255,255,255,0.1);
     color: #fff;
 }
+#host-options input[type="number"]{ width: 80px; }
+#host-options select option{ background: #2b1d4a; color: #fff; }
 .opt-inline{
     justify-content: flex-start;
 }
@@ -438,10 +442,22 @@ body.host-game-embedded > *:not(#host-game-frame){
     cursor: pointer;
 }
 
-/* Por debajo de 1200 px: logo, título/PIN y QR en una sola columna, todo centrado
-   (antes, al romper la fila, el QR y el logo quedaban pegados a la izquierda). */
-@media (max-width: 1200px){
-    .join-cta{ flex-direction: column; align-items: center; justify-content: center; gap: 12px; }
-    .join-text{ padding: 0; align-items: center; flex: 0 0 auto; width: 100%; }
-    .qr-card{ width: min(100%, 260px); min-width: 0; align-self: center; box-sizing: border-box; }
+/* Por debajo de 720 px: icona, títol/PIN i QR en una sola columna, tot centrat. */
+@media (max-width: 720px){
+    .join-cta{ grid-template-columns: minmax(0, 1fr); justify-items: center; gap: 12px; }
+    .join-cta > .host-logo{ justify-self: center; }
+    .join-text{ padding: 0; align-items: center; width: 100%; }
+    .join-cta > .qr-card{ width: min(100%, 260px); min-width: 0; justify-self: center; box-sizing: border-box; }
 }
+
+/* Vista de les opcions: A (dos blocs) o B (tarjetas por tema). Ocupa todo el ancho de la cuadrícula de opciones. */
+#host-options{ position: relative; }
+/* En la esquina superior derecha de las opciones: no añade altura (la pantalla de 800 px debe seguir cabiendo). */
+#host-options .opt-view{ position: absolute; z-index: 2; top: 6px; right: 14px; display: flex; justify-content: flex-end; }
+#host-options.host-options--cards{ padding-top: 40px; }
+#host-options .opt-view__label{ display: inline-flex; align-items: center; gap: 8px; font-size: 14px; }
+#host-options .opt-cards{ grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+#host-options .opt-card{ box-sizing: border-box; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 12px 14px; border: 1px solid var(--card-stroke); border-radius: 12px; }
+#host-options .opt-card .opt-group__title{ margin: 0; }
+@media (max-width: 600px){ #host-options .opt-cards{ grid-template-columns: minmax(0, 1fr); } }
+

@@ -287,6 +287,8 @@ module.exports = function createAuthRouter({
 
   // Preferències de la biblioteca per usuari (al document de l'usuari). Només es guarden valors coneguts.
   const LIBRARY_PAGE_SIZES = [6, 12, 24, 48, 96];
+  // Vista de las opciones del lobby del anfitrión: A (dos bloques) o B (tarjetas por tema).
+  const HOST_OPTIONS_VIEWS = ['a', 'b'];
 
   router.get('/api/auth/preferences', async (req, res) => {
     if (!req.user) return res.status(401).json({ error: 'No autorizado' });
@@ -294,22 +296,32 @@ module.exports = function createAuthRouter({
     try {
       const users = await getUsersCollection();
       const doc = await users.findOne({ _id: new ObjectId(req.user.id) }, { projection: { preferences: 1 } });
-      const size = doc && doc.preferences ? doc.preferences.libraryPageSize : null;
-      return res.json({ libraryPageSize: LIBRARY_PAGE_SIZES.includes(size) ? size : null });
+      const prefs = (doc && doc.preferences) || {};
+      const view = prefs.hostOptionsView;
+      return res.json({
+        libraryPageSize: LIBRARY_PAGE_SIZES.includes(prefs.libraryPageSize) ? prefs.libraryPageSize : null,
+        hostOptionsView: HOST_OPTIONS_VIEWS.includes(view) ? view : null
+      });
     } catch (err) {
       return res.status(500).json({ error: 'No se pudieron leer las preferencias.' });
     }
   });
 
+  // Una preferencia por petición: libraryPageSize o hostOptionsView.
   router.patch('/api/auth/preferences', async (req, res) => {
     if (!req.user) return res.status(401).json({ error: 'No autorizado' });
-    const size = Number(req.body && req.body.libraryPageSize);
-    if (!LIBRARY_PAGE_SIZES.includes(size)) return res.status(400).json({ error: 'Valor no válido.' });
+    const body = req.body || {};
+    const hasView = Object.prototype.hasOwnProperty.call(body, 'hostOptionsView');
+    const size = Number(body.libraryPageSize);
+    const field = hasView ? 'hostOptionsView' : 'libraryPageSize';
+    const value = hasView ? body.hostOptionsView : size;
+    const valid = hasView ? HOST_OPTIONS_VIEWS.includes(value) : LIBRARY_PAGE_SIZES.includes(size);
+    if (!valid) return res.status(400).json({ error: 'Valor no válido.' });
     if (!ObjectId.isValid(req.user.id)) return res.status(400).json({ error: 'Usuario no válido.' });
     try {
       const users = await getUsersCollection();
-      await users.updateOne({ _id: new ObjectId(req.user.id) }, { $set: { 'preferences.libraryPageSize': size } });
-      return res.json({ ok: true, libraryPageSize: size });
+      await users.updateOne({ _id: new ObjectId(req.user.id) }, { $set: { ['preferences.' + field]: value } });
+      return res.json({ ok: true, [field]: value });
     } catch (err) {
       return res.status(500).json({ error: 'No se pudieron guardar las preferencias.' });
     }

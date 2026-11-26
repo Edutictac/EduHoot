@@ -6,6 +6,7 @@
 // Anfitrión → servidor: spProgressRequest, spEnd
 // Servidor → anfitrión: spProgress
 const sp = require('../services/selfPaced');
+const { questionTimeOf } = require('../services/scoring');
 const payloads = require('../services/selfPacedPayloads');
 const { getQuestionMeta, normalizeSubmission } = require('../questionUtils');
 const { logger, quizFields } = require('../logger');
@@ -33,9 +34,14 @@ module.exports = function createSelfPacedEvents({
     return game.gameData.options ? game.gameData.options.showScoresBetween !== false : true;
   }
 
+  // Prova de concepte: el check de la pantalla de progrés de l'amfitrió decideix si veu els punts (i el Top 10).
+  function hostScoresOf(game) {
+    return !!(game.gameData.options && game.gameData.options.selfPacedHostScores === true);
+  }
+
   // Lo que ve el anfitrión: avance por alumno; con puntuaciones activadas, también los puntos (Top 10 en su pantalla).
   function progressList(game) {
-    const showScores = showScoresOf(game);
+    const showScores = hostScoresOf(game);
     return players.getPlayers(game.hostId).map((p) => Object.assign(
       { playerId: p.playerId, name: p.name, icon: p.icon || '' },
       sp.progressOf(game, p),
@@ -54,6 +60,7 @@ module.exports = function createSelfPacedEvents({
   }
   function emitProgress(game) {
     io.to(game.hostId).emit('spProgress', progressList(game));
+    io.to(game.hostId).emit('spHostScoresState', { enabled: hostScoresOf(game) });
   }
 
   const questionPayload = (game, player, now) => payloads.questionPayload(game, player, now, buildStudentPlayerPayload);
@@ -131,13 +138,22 @@ module.exports = function createSelfPacedEvents({
         sendQuestion(socket, game, player, now);
         return;
       }
-      if (!sp.beginNext(game, player, now)) {
+      if (!sp.beginNext(game, player, now, { videoLearn: true })) {
         socket.emit('spFinished', finishedPayload(game, player));
       } else {
         sendQuestion(socket, game, player, now);
       }
       emitProgress(game);
       scheduleGameCleanup(game.hostId, timingsFor(game.hostId).inactivityMs);
+    });
+
+    // Fin de la fase de vídeo (feature 24): el alumno ha acabat el vídeo; el reloj de la pregunta arranca ara.
+    socket.on('spLearned', () => {
+      const ctx = contextOf(socket);
+      if (!ctx || ctx.game.gameOver || !ctx.game.gameLive) return;
+      const { game, player } = ctx;
+      if (!sp.finishLearning(game, player, Date.now())) return;
+      socket.emit('spLearnedAck', { timeTotal: questionTimeOf(game.gameData, sp.currentQuestion(game, player)) });
     });
 
     socket.on('spAnswer', (value) => {
@@ -175,6 +191,14 @@ module.exports = function createSelfPacedEvents({
       if (state.finished || state.index === 0) return;
       state.hand = !!(data && data.raised);
       emitProgress(ctx.game);
+    });
+
+    socket.on('spHostScores', (data) => {
+      const game = games.getGame(socket.id);
+      if (!game || !sp.isSelfPaced(game)) return;
+      game.gameData.options = game.gameData.options || {};
+      game.gameData.options.selfPacedHostScores = !!(data && data.enabled);
+      emitProgress(game);
     });
 
     socket.on('spProgressRequest', () => {

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <link rel="icon" href="/icons/logo.svg" type="image/svg+xml">
         <meta charset="utf-8">
         <title>Game | EduHoot</title>
         <link rel="stylesheet" href="/css/countdown.css">
@@ -40,6 +41,7 @@
                     <span id="questionCountdownNumber">{{ countdownSeconds > 0 ? countdownSeconds : '' }}</span>
                 </div>
                 <div class="question-countdown__hint" id="questionCountdownHint">{{ t('question_countdown_hint', 'La siguiente empieza en') }}</div>
+                <p v-if="countdownPreview" id="questionCountdownPreview" class="question-countdown__preview">{{ countdownPreview }}</p>
             </div>
             <div id="playerPointsBadge" class="player-points-badge points-badge-pop" :key="'badge-' + badgeKey" :style="{ display: badgeVisible ? 'inline-flex' : 'none' }">{{ badgeText }}</div>
             <div id="playerStatusRow">
@@ -55,7 +57,7 @@
             <div id="playerImageWrap">
                 <img id="playerQuestionImage" alt="">
                 <video id="playerQuestionVideo" controls></video>
-                <iframe id="playerQuestionIframe" allowfullscreen loading="lazy"></iframe>
+                <iframe referrerpolicy="strict-origin-when-cross-origin" id="playerQuestionIframe" allowfullscreen loading="lazy"></iframe>
             </div>
             <div id="resultIcon" class="result-icon" v-if="resultIcon" aria-hidden="true">{{ resultIcon }}</div>
             <h2 id = "message" :class="messageKind ? 'message--' + messageKind : ''" v-show="messageVisible">{{ message }}<span v-if="messageDetailHtml" class="player-correct-answer" v-html="messageDetailHtml"></span></h2>

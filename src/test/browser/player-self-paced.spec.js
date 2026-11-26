@@ -185,3 +185,42 @@ test('autoritme: Top 10 tras el resultado solo si el servidor lo envía (casilla
     await serverEmit(page, 'spResult', base);
     await expect(page.locator('#spRanking')).toHaveCount(0);
 });
+
+// Fase de vídeo (feature 24) en el autoritme: primero se mira el vídeo, sin pregunta ni respuestas;
+// la pregunta empieza al acabar (botón o final del archivo), con el temporizador del servidor.
+const VIDEO_URL = 'https://example.com/clip.mp4';
+const LEARN_Q = { ...Q1, learning: true, videoStartSec: 5, video: VIDEO_URL };
+
+test('autoritme con vídeo: primero se mira el vídeo; con el botón empieza la pregunta', async ({ page }) => {
+    await open(page);
+    await serverEmit(page, 'spIdle');
+    await serverEmit(page, 'spQuestion', LEARN_Q);
+    await serverEmit(page, 'questionMedia', { image: '', video: VIDEO_URL });
+    await expect(page.locator('#spLearning')).toBeVisible();
+    await expect(page.locator('#questionText')).toHaveCount(0);
+    await expect(page.locator('#answerGrid button:visible')).toHaveCount(0);
+    await page.locator('#spLearnedBtn').click();
+    expect(await emitsNamed(page, 'spLearned')).toHaveLength(1);
+    await serverEmit(page, 'spLearnedAck', { timeTotal: 20 });
+    await expect(page.locator('#spLearning')).toHaveCount(0);
+    await expect(page.locator('#questionText')).toHaveText('¿Capital de Francia?');
+    await expect(page.locator('#answerGrid button:visible')).toHaveCount(4);
+});
+
+test('autoritme con vídeo: al acabar el archivo la fase se cierra sola', async ({ page }) => {
+    await open(page);
+    await serverEmit(page, 'spIdle');
+    await serverEmit(page, 'spQuestion', LEARN_Q);
+    await serverEmit(page, 'questionMedia', { image: '', video: VIDEO_URL });
+    await expect(page.locator('#spLearning')).toBeVisible();
+    await page.evaluate(() => document.getElementById('playerQuestionVideo').dispatchEvent(new Event('ended')));
+    expect(await emitsNamed(page, 'spLearned')).toHaveLength(1);
+});
+
+test('autoritme sin vídeo: no hay fase y la pregunta va directa', async ({ page }) => {
+    await open(page);
+    await serverEmit(page, 'spIdle');
+    await serverEmit(page, 'spQuestion', Q1);
+    await expect(page.locator('#spLearning')).toHaveCount(0);
+    await expect(page.locator('#answerGrid button:visible')).toHaveCount(4);
+});

@@ -47,6 +47,10 @@
         userEl.className = 'env-badge__user';
         userEl.textContent = info.user || '';
         userEl.style.textAlign = 'left';
+        // Un correo o un nombre largo se recorta con «…» para no ensanchar el distintivo.
+        userEl.style.overflow = 'hidden';
+        userEl.style.textOverflow = 'ellipsis';
+        userEl.style.minWidth = '0';
         infoRow.appendChild(userEl);
         // Ancho × alto de la ventana (en píxeles CSS), sin recargar: solo cambia al redimensionar.
         var sizeEl = document.createElement('span');
@@ -72,6 +76,16 @@
             tagEl.style.marginTop = '2px';
             badge.appendChild(tagEl);
         }
+        // Pista pequeña: cómo ocultar el distintivo (F9 o Alt+B).
+        var hintEl = document.createElement('span');
+        hintEl.className = 'env-badge__hint';
+        hintEl.textContent = 'Pots ocultar-lo amb F9 o Alt+B';
+        hintEl.style.display = 'block';
+        hintEl.style.fontSize = '0.5em';
+        hintEl.style.fontWeight = '400';
+        hintEl.style.opacity = '0.8';
+        hintEl.style.marginTop = '2px';
+        badge.appendChild(hintEl);
         window.addEventListener('resize', updateSize);
         if(cfg.href){
             badge.href = cfg.href;
@@ -86,6 +100,10 @@
         badgeStyle.transform = 'translateX(-50%)';
         badgeStyle.zIndex = '999999';
         badgeStyle.padding = '8px 14px';
+        // Mismo ancho en dev y en stage (la etiqueta de dev es más larga); en pantallas estrechas, se encoge.
+        badgeStyle.boxSizing = 'border-box';
+        badgeStyle.width = '400px';
+        badgeStyle.maxWidth = 'calc(100vw - 20px)';
         badgeStyle.borderRadius = '10px';
         badgeStyle.font = '700 22px/1.3 system-ui, sans-serif';
         badgeStyle.textAlign = 'center';
@@ -100,6 +118,8 @@
         // En las pantallas de partida (alumnado y anfitrión, dev y stage) el distintivo va al 50 % para no tapar el juego.
         if(window.location.pathname.indexOf('/player/') === 0 || window.location.pathname.indexOf('/host/') === 0){
             badgeStyle.opacity = '0.5';
+            // En estes pantalles el distintiu no captura clics: no pot tapar els botons del joc (p. ex. «Ver clasificación»).
+            badgeStyle.pointerEvents = 'none';
         }
 
         var tint = document.createElement('div');

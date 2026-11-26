@@ -9,13 +9,13 @@ var params = jQuery.deparam(window.location.search);
 var i18n = {
     es: { endGame: 'Acabar partida', endConfirm: 'Confirmar: acabar', downloadReport: 'Descargar informe (CSV)', downloadReportError: 'No se ha podido descargar el informe de la sesión.',
         backToLibrary: 'Biblioteca', noStudents: 'Esperando alumnado…', finished: 'Terminado', handRaised: 'Mano levantada', kickBtn: 'Expulsar', kickConfirm: '¿Seguro?',
-        topPlayers: 'Mejores jugadores', summary: '{n} alumnos · {f} han terminado', summaryEnded: 'Partida terminada · {n} alumnos' },
+        topPlayers: 'Mejores jugadores', hostScores: 'Mostrar puntuaciones y ranking en el anfitrión', summary: '{n} alumnos · {f} han terminado', summaryEnded: 'Partida terminada · {n} alumnos' },
     en: { endGame: 'End game', endConfirm: 'Confirm: end it', downloadReport: 'Download report (CSV)', downloadReportError: 'Could not download the session report.',
         backToLibrary: 'Library', noStudents: 'Waiting for students…', finished: 'Finished', handRaised: 'Hand raised', kickBtn: 'Kick', kickConfirm: 'Sure?',
-        topPlayers: 'Top players', summary: '{n} students · {f} finished', summaryEnded: 'Game over · {n} students' },
+        topPlayers: 'Top players', hostScores: 'Show scores and ranking on the host screen', summary: '{n} students · {f} finished', summaryEnded: 'Game over · {n} students' },
     ca: { endGame: 'Acabar partida', endConfirm: 'Confirma: acabar', downloadReport: 'Descarregar informe (CSV)', downloadReportError: 'No s\'ha pogut descarregar l\'informe de la sessió.',
         backToLibrary: 'Biblioteca', noStudents: 'Esperant alumnat…', finished: 'Acabat', handRaised: 'Mà alçada', kickBtn: 'Expulsar', kickConfirm: 'Segur?',
-        topPlayers: 'Millors jugadors', summary: '{n} alumnes · {f} han acabat', summaryEnded: 'Partida acabada · {n} alumnes' }
+        topPlayers: 'Millors jugadors', hostScores: 'Mostra puntuacions i rànquing a l\'anfitrió', summary: '{n} alumnes · {f} han acabat', summaryEnded: 'Partida acabada · {n} alumnes' }
 };
 function t(key){
     var chain = lang === 'va' ? ['va', 'ca', 'es'] : [lang, 'es'];
@@ -34,7 +34,7 @@ var kickResetTimer = null;
 var app = Vue.createApp({
     template: '#host-sp-tpl',
     data: function(){
-        return { pin: '', quizName: '', list: [], ended: false, endConfirming: false, pendingKickId: null,
+        return { pin: '', quizName: '', list: [], ended: false, endConfirming: false, hostScores: false, pendingKickId: null,
             podium: { showPodium: true, num1: '', num2: '', num3: '', num4: '', num5: '' }, langTick: 0 };
     },
     computed: {
@@ -58,6 +58,12 @@ var app = Vue.createApp({
     methods: {
         t: function(key){ this.langTick; return t(key); },
         pct: function(p){ return p.total ? Math.min(100, Math.round((p.answered / p.total) * 100)) : 0; },
+        // Check «Mostrar puntuaciones y ranking en el anfitrión» (prova de concepte del mode a ritme).
+        setHostScores: function(ev){
+            var on = !!ev.target.checked;
+            this.hostScores = on;
+            socket.emit('spHostScores', { enabled: on });
+        },
         askEnd: function(){
             if(!this.endConfirming){
                 this.endConfirming = true;
@@ -113,6 +119,7 @@ socket.on('hostSession', function(d){
     if(d && d.pin) params.pin = d.pin;
 });
 socket.on('spProgress', function(list){ app.list = Array.isArray(list) ? list : []; });
+socket.on('spHostScoresState', function(d){ app.hostScores = !!(d && d.enabled); });
 // Entradas, salidas y expulsiones: se pide el progreso actualizado.
 socket.on('updatePlayerLobby', function(){ socket.emit('spProgressRequest'); });
 socket.on('GameOver', function(data){

@@ -192,7 +192,7 @@
             <div id="question-media" class="question-media" :class="{ hidden: !s.sharedMedia.has }">
               <img id="question-image" alt="" :src="s.sharedMedia.image || null" :style="{ display: s.sharedMedia.image ? 'block' : 'none' }">
               <video id="question-video" controls playsinline :src="s.sharedMedia.video || null" :style="{ display: s.sharedMedia.video ? 'block' : 'none' }"></video>
-              <iframe id="question-iframe" title="video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen :src="s.sharedMedia.iframe || null" :style="{ display: s.sharedMedia.iframe ? 'block' : 'none' }"></iframe>
+              <iframe referrerpolicy="strict-origin-when-cross-origin" id="question-iframe" title="video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen :src="s.sharedMedia.iframe || null" :style="{ display: s.sharedMedia.iframe ? 'block' : 'none' }"></iframe>
             </div>
           </div>
 
@@ -203,7 +203,7 @@
                 <div class="question-media" :class="{ hidden: !mediaFor(p).has }" data-player-media="1">
                   <img alt="" data-player-image="1" :src="mediaFor(p).image || null" :style="{ display: mediaFor(p).image ? 'block' : 'none' }">
                   <video controls playsinline data-player-video="1" :src="mediaFor(p).video || null" :style="{ display: mediaFor(p).video ? 'block' : 'none' }"></video>
-                  <iframe title="video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen data-player-iframe="1" :src="mediaFor(p).iframe || null" :style="{ display: mediaFor(p).iframe ? 'block' : 'none' }"></iframe>
+                  <iframe referrerpolicy="strict-origin-when-cross-origin" title="video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen data-player-iframe="1" :src="mediaFor(p).iframe || null" :style="{ display: mediaFor(p).iframe ? 'block' : 'none' }"></iframe>
                 </div>
               </div>
               <div class="player-header">

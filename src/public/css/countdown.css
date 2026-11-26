@@ -110,3 +110,6 @@
 .question-countdown.is-ticking .question-countdown__dial span{
     animation: countdownNumber 1s ease-out;
 }
+
+/* Text de la pregunta durant la compte arrere (opció «Mostrar pregunta durante la cuenta atrás»). */
+.question-countdown__preview{ margin: 12px auto 0; max-width: 90%; font-weight: 700; font-size: clamp(16px, 2.2vw, 24px); }

@@ -373,6 +373,7 @@ function renderSelectedMeta(){
                 if(!payload.ok){
                     // Si no carga, se vuelve a enseñar el catálogo.
                     document.body.classList.remove('playing');
+                    document.documentElement.classList.remove('quiz-from-url');
                     state.title = { key: 'startError' };
                     return;
                 }
@@ -387,6 +388,7 @@ function renderSelectedMeta(){
             })
             .catch(function(){
                 document.body.classList.remove('playing');
+                document.documentElement.classList.remove('quiz-from-url');
                 state.title = { key: 'startError' };
             });
     }

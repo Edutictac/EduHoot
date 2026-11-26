@@ -39,6 +39,7 @@ function startQuiz(){
     // Lectura en veu alta: la pregunta anterior no es llig sobre la nova.
     EduhootTTS.cancel();
     state.ttsSpeaking = false;
+    state.capturedImage = '';
         var questions = getQuestions();
         if(state.idx >= questions.length){
             finishQuiz();
@@ -65,16 +66,50 @@ function startQuiz(){
         // Compte arrere 3-2-1 (com en «Jugar a l'aula»): la pregunta, les
         // respostes i el temporitzador no comencen fins que acaba.
         state.locked = true;
-        runCountdown(SOLO_COUNTDOWN_SECONDS, function(){
-            state.locked = false;
-            startTimer(time);
-            if(meta.type === 'short-answer' || meta.type === 'numeric'){
-                setTimeout(function(){
-                    var input = document.getElementById('solo-free-input');
-                    try{ if(input) input.focus(); }catch(e){}
-                }, 50);
-            }
-        });
+        state.learning = false;
+        var startAnswering = function(){
+            runCountdown(SOLO_COUNTDOWN_SECONDS, function(){
+                state.locked = false;
+                startTimer(time);
+                if(meta.type === 'short-answer' || meta.type === 'numeric'){
+                    setTimeout(function(){
+                        var input = document.getElementById('solo-free-input');
+                        try{ if(input) input.focus(); }catch(e){}
+                    }, 50);
+                }
+            });
+        };
+        // Amb vídeo, primer es mira (sense pregunta ni temps); en acabar, comença el compte arrere.
+        if(q.video){
+            state.learning = true;
+            pendingLearnedStart = startAnswering;
+            return;
+        }
+        startAnswering();
+    }
+
+    // Fase de vídeo (feature 24): en acabar el vídeo (botó o final de l'arxiu) comencen la pregunta i el temps.
+    var pendingLearnedStart = null;
+    // Fotograma d'un vídeo de fitxer (JPEG), si el navegador el deixa dibuixar. Un vídeo d'un altre origen
+    // sense CORS no es pot exportar (toDataURL llança): aleshores no hi ha imatge. Amb YouTube no es pot.
+    function captureVideoFrame(v){
+        if(!v || !v.videoWidth || !v.videoHeight) return '';
+        try{
+            var scale = Math.min(1, 640 / v.videoWidth);
+            var c = document.createElement('canvas');
+            c.width = Math.round(v.videoWidth * scale);
+            c.height = Math.round(v.videoHeight * scale);
+            c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
+            return c.toDataURL('image/jpeg', 0.8);
+        }catch(e){ return ''; }
+    }
+    function finishLearningPhase(){
+        if(!state.learning) return;
+        state.learning = false;
+        state.capturedImage = captureVideoFrame(document.getElementById('solo-learn-video'));
+        var go = pendingLearnedStart;
+        pendingLearnedStart = null;
+        if(go) go();
     }
 
     var SOLO_COUNTDOWN_SECONDS = 3;
@@ -634,10 +669,17 @@ var soloPlay = {
             return this.question && !this.isFree ? getVisibleAnswers(this.question, this.meta.type) : [];
         },
         media: function(){
-            return mediaFor(this.question);
+            var m = mediaFor(this.question);
+            // La pregunta mostra una imatge: la miniatura de YouTube o el fotograma del vídeo; mai el vídeo.
+            if(!m.image){
+                var yt = parseYouTubeId(this.question && this.question.video);
+                if(yt) m.image = 'https://img.youtube.com/vi/' + yt + '/hqdefault.jpg';
+                else if(this.s.capturedImage) m.image = this.s.capturedImage;
+            }
+            return m;
         },
         hasMedia: function(){
-            return !!(this.media.image || this.media.youtube || this.media.video);
+            return !!this.media.image;
         },
         // Lectura en veu alta (proposta 13). Només amb la pregunta visible.
         ttsAvailable: function(){
@@ -744,6 +786,10 @@ var soloPlay = {
             this.s.timeInput = ev.target.value = String(v);
             this.s.desiredQuestionTime = v;
         },
+        onShowQuestionCountdownChange: function(ev){
+            this.s.showQuestionCountdown = !!ev.target.checked;
+            try{ localStorage.setItem('eduhoot-solo-show-question-countdown', ev.target.checked ? '1' : '0'); }catch(e){}
+        },
         onFeedbackSecondsInput: function(ev){
             var v = clampInt(ev.target.value, 1, 30);
             if(v == null) return;
@@ -773,6 +819,7 @@ var soloPlay = {
             return t(map[key] || key);
         },
         skip: function(){ skipQuestion(); },
+        finishLearning: function(){ finishLearningPhase(); },
         closeFeedback: function(){ hideFeedbackModal(); },
         closeRanking: function(){ hideRankingModal(); },
         saveName: function(){ saveNameAndSubmit(); },

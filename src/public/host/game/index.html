@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <link rel="icon" href="/icons/logo.svg" type="image/svg+xml">
         <meta charset="utf-8">
         <title>Game | EduHoot</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -55,7 +56,8 @@
             <button @click="skipQuestion" id="skipQButton" :style="{ display: skipVisible ? 'inline-block' : 'none' }" :disabled="skipDisabled">{{ t('skip') }}</button>
             <button type="button" id="cancelGameBtn" :class="{ 'is-confirming': cancelGameConfirming }" @click="gameOverMode ? goBackToLibrary() : askCancelGame()">{{ gameOverMode ? t('backToLibrary') : (cancelGameConfirming ? t('cancelConfirm') : t('cancelGame')) }}</button>
             <button type="button" @click="goNextQuestion" id="nextQButton">Next Question</button>
-            <button v-if="videoLearning" type="button" @click="finishVideo" id="finishVideoBtn" class="btn-finish-video">{{ t('finishVideo') }}</button>
+            <button v-if="videoLearning" type="button" @click="toggleVideoPlay" id="pauseVideoBtn" :class="videoPlaying ? 'is-playing' : 'is-stopped'">{{ videoPlaying ? t('pauseVideo') : t('playVideo') }}</button>
+            <button v-if="videoLearning" type="button" @click="finishVideo" id="finishVideoBtn">{{ t('finishVideo') }}</button>
             <button type="button" @click="showRankingToggle" id="showRanking" v-show="showRankingButton">{{ t('showRanking') }}</button>
             <button type="button" id="downloadReportBtn" @click="downloadReport" :style="{ display: downloadReportVisible ? 'inline-block' : 'none' }">{{ t('downloadReport') }}</button>
         </div>
@@ -70,7 +72,9 @@
             <button type="button" id="timerPauseBtn" @click="toggleTimerPause">{{ timerPaused ? t('timerResume') : t('timerPause') }}</button>
             <button type="button" id="timerAddBtn" @click="addTimerSeconds(15)">{{ t('timerAdd15') }}</button>
         </div>
-        <div id="questionCountdown" class="question-countdown" :class="{ 'is-visible': countdownVisible, 'is-ticking': countdownVisible }" aria-live="polite" :aria-hidden="!countdownVisible">
+        <div id="questionCountdown" class="question-countdown" :class="{ 'is-visible': countdownVisible, 'is-ticking': countdownVisible, 'has-preview': countdownVisible && !!countdownPreview }" aria-live="polite" :aria-hidden="!countdownVisible">
+            <!-- Amb la pregunta visible: l'enunciat a dalt i la compte arrere a sota. -->
+            <p v-if="countdownPreview" id="questionCountdownPreview" class="question-countdown__preview">{{ countdownPreview }}</p>
             <div class="question-countdown__label" id="questionCountdownLabel">{{ t('questionCountdown') }}</div>
             <div class="question-countdown__dial" :key="'dial-' + countdownSeconds">
                 <span id="questionCountdownNumber">{{ countdownSeconds > 0 ? countdownSeconds : '' }}</span>
@@ -88,7 +92,7 @@
         <div id="imageWrap">
             <img id="questionImage" alt="Question image">
             <video id="questionVideo" controls></video>
-            <iframe id="questionIframe" allowfullscreen loading="lazy"></iframe>
+            <iframe referrerpolicy="strict-origin-when-cross-origin" id="questionIframe" allowfullscreen loading="lazy"></iframe>
         </div>
         <div v-if="questionType === 'matching' && timerVisible" id="hostMatching" class="host-matching">
             <div class="host-matching-col">

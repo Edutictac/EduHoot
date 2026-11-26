@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <link rel="icon" href="/icons/logo.svg" type="image/svg+xml">
         <meta charset="utf-8">
         <title>Creator | EduHoot</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -164,7 +165,7 @@
                         <input :id="'vid' + (index + 1)" type="text" :placeholder="t('urlPlaceholder')" v-model="card.video" @input="onVideoInput(card)">
                         <div class="video-preview">
                             <video controls class="video-thumb" :class="{ hidden: !card.videoOk || !videoSrc(card) }" :src="videoSrc(card)" @loadeddata="card.videoOk = true" @error="card.videoOk = false"></video>
-                            <iframe class="video-thumb" :class="{ hidden: !youTubeEmbed(card) }" allowfullscreen loading="lazy" :src="youTubeEmbed(card)"></iframe>
+                            <iframe referrerpolicy="strict-origin-when-cross-origin" class="video-thumb" :class="{ hidden: !youTubeEmbed(card) }" allowfullscreen loading="lazy" :src="youTubeEmbed(card)"></iframe>
                         </div>
                     </div>
                 </div>

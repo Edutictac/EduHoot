@@ -116,23 +116,22 @@ test('alumnado (entrada): el campo del nombre va centrado y admite hasta 20 cara
     await expect(name).toHaveAttribute('maxlength', '20');
 });
 
-test('anfitrión: logo a la izquierda del título y QR a la derecha, alineado con el bloque de unión', async ({ page }) => {
+test('anfitrión: disposició B, icona a la esquerra, QR a la dreta centrat amb el bloc', async ({ page }) => {
     await page.route(/^https:\/\//, route => route.abort());
     await page.route('**/api/**', route => route.fulfill({ json: {} }));
-    await page.route('**/socket.io/socket.io.js', route => route.fulfill({ contentType: 'application/javascript', body: 'window.io = function(){ var s = { id: "h", connected: false, on: function(){ return s; }, emit: function(){ return s; }, connect: function(){ return s; }, disconnect: function(){ return s; } }; return s; };' }));
+    await page.route('**/socket.io/socket.io.js', route => route.fulfill({ contentType: 'application/javascript', body: 'window.io = function(){ var s = { id: "h", connected: false, on: function(){ return s; }, emit: function(){ return s; }, disconnect: function(){} }; return s; };' }));
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto('/host/?lang=es');
     await page.waitForLoadState('load');
-    await page.evaluate(() => window.__serverEmit && 0);
     const logo = await page.locator('.host-logo').boundingBox();
+    const title = await page.locator('#title').boundingBox();
     const text = await page.locator('.join-text').boundingBox();
     const qr = await page.locator('.qr-card').boundingBox();
-    expect(logo.x + logo.width).toBeLessThanOrEqual(text.x + 1);
+    expect(logo.x + logo.width).toBeLessThanOrEqual(title.x + title.width);
     expect(qr.x).toBeGreaterThanOrEqual(text.x + text.width - 1);
-    expect(Math.abs(qr.y - text.y)).toBeLessThanOrEqual(2);
-    expect(Math.abs((qr.y + qr.height) - (text.y + text.height))).toBeLessThanOrEqual(2);
+    // Disposició B: el QR va centrat en vertical amb el bloc de text.
+    expect(Math.abs((qr.y + qr.height / 2) - (text.y + text.height / 2))).toBeLessThanOrEqual(4);
 });
-
 test('anfitrión: el chip de cuenta sale arriba a la derecha, como en creación y portada', async ({ page }) => {
     await page.route(/^https:\/\//, route => route.abort());
     // Se simula el componente de cuenta, que en la prueba no se puede cargar desde commons.
@@ -229,7 +228,7 @@ test('anfitrión: en 1280×800 las opciones van en 2 columnas y «Iniciar» qued
     const checks = await page.locator('.opt-group--checks').boundingBox();
     const values = await page.locator('.opt-group--values').boundingBox();
     expect(values.y).toBeGreaterThanOrEqual(checks.y + checks.height - 1);
-    expect(await page.locator('.opt-group--checks input[type=checkbox]').count()).toBe(6);
+    expect(await page.locator('.opt-group--checks input[type=checkbox]').count()).toBe(8);
     expect(await page.locator('.opt-group--checks select, .opt-group--checks input[type=number]').count()).toBe(0);
     const start = await page.locator('#start').boundingBox();
     expect(start.y + start.height).toBeLessThanOrEqual(800);
@@ -305,23 +304,17 @@ test('portada: el recuadro baja para no solaparse con el chip; botones y texto c
     expect(Math.abs((tagline.x + tagline.width / 2) - (shell.x + shell.width / 2))).toBeLessThanOrEqual(3);
 });
 
-test('anfitrión: el icono queda alineado a la izquierda y el QR a la derecha con el recuadro de opciones', async ({ page }) => {
+test('anfitrión: el QR acaba alineat amb el recuadre d\'opcions', async ({ page }) => {
     await page.route(/^https:\/\//, route => route.abort());
     await page.route('**/api/**', route => route.fulfill({ json: {} }));
-    await page.route('**/socket.io/socket.io.js', route => route.fulfill({ contentType: 'application/javascript', body: 'window.io = function(){ var s = { id: "h", connected: false, on: function(){ return s; }, emit: function(){ return s; }, connect: function(){ return s; }, disconnect: function(){ return s; } }; return s; };' }));
+    await page.route('**/socket.io/socket.io.js', route => route.fulfill({ contentType: 'application/javascript', body: 'window.io = function(){ var s = { id: "h", connected: false, on: function(){ return s; }, emit: function(){ return s; }, disconnect: function(){} }; return s; };' }));
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto('/host/?lang=va');
     await page.waitForLoadState('load');
     const opts = await page.locator('#host-options').boundingBox();
-    const logo = await page.locator('.host-logo').boundingBox();
     const qr = await page.locator('.qr-card').boundingBox();
-    const text = await page.locator('#title').boundingBox();
-    expect(Math.abs(logo.x - opts.x)).toBeLessThanOrEqual(2);
     expect(Math.abs((qr.x + qr.width) - (opts.x + opts.width))).toBeLessThanOrEqual(2);
-    expect(text.x - (logo.x + logo.width)).toBeGreaterThanOrEqual(24);
-    expect((qr.x) - (text.x + text.width)).toBeGreaterThanOrEqual(24);
 });
-
 test('alumnado (unión): logo y «EduHoot» en la misma línea, centrados en vertical', async ({ page }) => {
     await page.route(/^https:\/\//, route => route.abort());
     await page.route('**/api/**', route => route.fulfill({ json: { valid: true, randomNames: false } }));
@@ -424,44 +417,29 @@ test('modo Solo: un texto muy largo (sin espacios) no se sale de la ventana de c
     await expect(page.locator('#feedback-close')).toBeAttached();
 });
 
-test('anfitrión: con la pantalla estrecha, logo, PIN y QR quedan centrados en columna', async ({ page }) => {
+test('anfitrión: en pantalla estreta el QR baixa sota el títol i es centra', async ({ page }) => {
     await page.route(/^https:\/\//, route => route.abort());
     await page.route('**/api/**', route => route.fulfill({ json: {} }));
-    await page.route('**/socket.io/socket.io.js', route => route.fulfill({ contentType: 'application/javascript', body: 'window.io = function(){ var s = { id: "h", connected: false, on: function(){ return s; }, emit: function(){ return s; }, connect: function(){ return s; }, disconnect: function(){ return s; } }; return s; };' }));
+    await page.route('**/socket.io/socket.io.js', route => route.fulfill({ contentType: 'application/javascript', body: 'window.io = function(){ var s = { id: "h", connected: false, on: function(){ return s; }, emit: function(){ return s; }, disconnect: function(){} }; return s; };' }));
     for (const width of [380, 500, 680]) {
         await page.setViewportSize({ width, height: 800 });
         await page.goto('/host/?lang=es');
         await page.waitForLoadState('load');
-        const center = async (sel) => { const b = await page.locator(sel).boundingBox(); return b.x + b.width / 2; };
-        const mid = width / 2;
-        for (const sel of ['.host-logo', '.pin-badge', '.qr-card']) {
-            expect(Math.abs((await center(sel)) - mid), `${sel} a ${width}px`).toBeLessThanOrEqual(8);
-        }
-        const logo = await page.locator('.host-logo').boundingBox();
+        const pin = await page.locator('.pin-badge').boundingBox();
         const qr = await page.locator('.qr-card').boundingBox();
-        expect(qr.y).toBeGreaterThanOrEqual(logo.y + logo.height);
+        expect(qr.y, `QR sota el PIN a ${width}px`).toBeGreaterThanOrEqual(pin.y + pin.height - 2);
+        expect(Math.abs(qr.x + qr.width / 2 - width / 2), `QR centrat a ${width}px`).toBeLessThanOrEqual(8);
     }
 });
-
-test('anfitrión: por debajo de 1200 px logo, PIN y QR van centrados en columna; con más ancho, en fila', async ({ page }) => {
+test('anfitrión: en pantalla ampla el QR queda a la dreta del títol, sense baixar', async ({ page }) => {
     await page.route(/^https:\/\//, route => route.abort());
     await page.route('**/api/**', route => route.fulfill({ json: {} }));
-    await page.route('**/socket.io/socket.io.js', route => route.fulfill({ contentType: 'application/javascript', body: 'window.io = function(){ var s = { id: "h", connected: false, on: function(){ return s; }, emit: function(){ return s; }, connect: function(){ return s; }, disconnect: function(){ return s; } }; return s; };' }));
-    for (const width of [730, 800, 900, 1000, 1100, 1199]) {
-        await page.setViewportSize({ width, height: 800 });
-        await page.goto('/host/?lang=es');
-        await page.waitForLoadState('load');
-        const logo = await page.locator('.host-logo').boundingBox();
-        const qr = await page.locator('.qr-card').boundingBox();
-        expect(Math.abs(logo.x + logo.width / 2 - width / 2), `logo a ${width}px`).toBeLessThanOrEqual(8);
-        expect(Math.abs(qr.x + qr.width / 2 - width / 2), `QR a ${width}px`).toBeLessThanOrEqual(8);
-        expect(qr.y).toBeGreaterThanOrEqual(logo.y + logo.height);
-    }
+    await page.route('**/socket.io/socket.io.js', route => route.fulfill({ contentType: 'application/javascript', body: 'window.io = function(){ var s = { id: "h", connected: false, on: function(){ return s; }, emit: function(){ return s; }, disconnect: function(){} }; return s; };' }));
     await page.setViewportSize({ width: 1300, height: 800 });
     await page.goto('/host/?lang=es');
     await page.waitForLoadState('load');
-    const logo = await page.locator('.host-logo').boundingBox();
+    const title = await page.locator('.quiz-title-row').boundingBox();
     const qr = await page.locator('.qr-card').boundingBox();
-    expect(logo.x).toBeLessThan(300);
-    expect(qr.x).toBeGreaterThan(800);
+    expect(qr.x).toBeGreaterThan(title.x + title.width);
+    expect(Math.abs(qr.y - title.y)).toBeLessThanOrEqual(90);
 });

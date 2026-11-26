@@ -236,6 +236,31 @@ function syncLangStorage(val){
 var kickResetTimer = null;
 
 // `lang` para que Vue sepa que debe repintar al cambiar de idioma.
+// Vista de les opcions de la partida: A (dos blocs) o B (targetes per tema). Es recorda en este dispositiu.
+var HOST_OPTIONS_VIEW_KEY = 'eduhoot-host-options-view';
+function readHostOptionsView(){
+    try{ return localStorage.getItem(HOST_OPTIONS_VIEW_KEY) === 'b' ? 'b' : 'a'; }catch(e){ return 'a'; }
+}
+// Mostrar la pregunta durant la compte arrere (partida en vivo): marcada per defecte; es recorda en este navegador.
+function readShowQuestionCountdownHost(){
+    try{
+        if(localStorage.getItem('eduhoot-host-show-question-countdown') === '0') return false;
+    }catch(e){}
+    return true;
+}
+function saveHostOptionsView(view){
+    try{ localStorage.setItem(HOST_OPTIONS_VIEW_KEY, view); }catch(e){}
+}
+// Con sesión, la vista también se guarda en la cuenta (/api/auth/preferences, igual que la biblioteca).
+function saveAccountOptionsView(view){
+    fetch('/api/auth/preferences', {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hostOptionsView: view })
+    }).catch(function(){});
+}
+
 var lobby = Vue.createApp({
     template: '#host-lobby-tpl',
     data: function(){
@@ -243,6 +268,9 @@ var lobby = Vue.createApp({
             lang: getHostLobbyLang(),
             // Clave de la ayuda «?» abierta (null = ninguna).
             helpOpen: null,
+            optionsView: readHostOptionsView(),
+            // true mientras se aplica la vista que llega de la cuenta (así no se vuelve a guardar).
+            optionsViewFromAccount: false,
             pin: '',
             players: [],
             // Alumno pendiente de confirmar la expulsión (dos pasos, issue #29).
@@ -285,9 +313,38 @@ var lobby = Vue.createApp({
                 timings: { hostReconnectSec: '', playerReconnectSec: '', cleanupSec: '', inactivityMin: '' },
                 time: '',
                 // Fase del vídeo: segon en què comença el vídeo (0 = des del principi).
-                videoStartSec: 0
+                videoStartSec: 0,
+                // Mostrar la pregunta durant la compte arrere: marcada per defecte; es recorda en este navegador.
+                showQuestionDuringCountdown: readShowQuestionCountdownHost()
             }
         };
+    },
+    watch: {
+        'options.showQuestionDuringCountdown': function(value){
+            try{ localStorage.setItem('eduhoot-host-show-question-countdown', value ? '1' : '0'); }catch(e){}
+        },
+        optionsView: function(view){
+            saveHostOptionsView(view);
+            if(this.optionsViewFromAccount){
+                this.optionsViewFromAccount = false;
+                return;
+            }
+            saveAccountOptionsView(view);
+        }
+    },
+    // Sin sesión la petición falla o no trae la vista: se queda la del dispositivo.
+    mounted: function(){
+        var app = this;
+        fetch('/api/auth/preferences', { credentials: 'include' })
+            .then(function(res){ return res.ok ? res.json() : null; })
+            .then(function(data){
+                var v = data && data.hostOptionsView;
+                if(v !== 'a' && v !== 'b') return;
+                if(app.optionsView === v) return;
+                app.optionsViewFromAccount = true;
+                app.optionsView = v;
+            })
+            .catch(function(){});
     },
     computed: {
         autoAdvanceChoices: function(){
@@ -489,6 +546,7 @@ function startGame(){
         showCorrectAnswers: !!options.showCorrectAnswers,
         streak: !!options.streak,
         ghostMode: !!options.ghostMode,
+        showQuestionDuringCountdown: !!options.showQuestionDuringCountdown,
         autoAdvanceSec: parseInt(options.autoAdvanceSec, 10) || 0,
         mode: options.mode === 'selfPaced' ? 'selfPaced' : 'live',
         pin: (function(){

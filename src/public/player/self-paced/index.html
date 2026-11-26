@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <link rel="icon" href="/icons/logo.svg" type="image/svg+xml">
         <meta charset="utf-8">
         <title>Game | EduHoot</title>
         <link rel="stylesheet" href="/css/answers.css">
@@ -79,7 +80,7 @@
             </section>
 
             <template v-else>
-                <h3 id="questionText" v-html="questionHtml"></h3>
+                <h3 id="questionText" v-if="state !== 'learning'" v-html="questionHtml"></h3>
                 <div id="playerStatusRow" v-show="state === 'question'">
                     <div class="tts-timer-wrap" :class="{ 'has-tts': ttsAvailable }">
                         <div id="playerTimer" class="game-timer">
@@ -92,7 +93,13 @@
                 <div id="playerImageWrap">
                     <img id="playerQuestionImage" alt="">
                     <video id="playerQuestionVideo" controls></video>
-                    <iframe id="playerQuestionIframe" allowfullscreen loading="lazy"></iframe>
+                    <iframe referrerpolicy="strict-origin-when-cross-origin" id="playerQuestionIframe" allowfullscreen loading="lazy"></iframe>
+                </div>
+
+                <!-- Fase de vídeo (feature 24): mira el vídeo; la pregunta comença en acabar-lo. -->
+                <div id="spLearning" class="sp-learning" v-if="state === 'learning'">
+                    <p class="sp-learning__hint">{{ t('sp_learn_watch') }}</p>
+                    <button type="button" id="spLearnedBtn" class="button sp-learning__btn" @click="finishLearning">{{ t('sp_learn_finish') }}</button>
                 </div>
 
                 <!-- Resultado de la pregunta -->

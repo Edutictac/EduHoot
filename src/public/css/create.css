@@ -773,6 +773,9 @@ details.panel[open] .panel-toggle__chevron{
     overflow: hidden;
     text-overflow: ellipsis;
 }
+/* El número de preguntas i la paraula, en el groc corporatiu d'EduTicTac (el mateix del peu comú), més grans. */
+.game-stats__item.game-stats__item--questions{ color: #ffe670; font-size: 15px; font-weight: 700; }
+.game-stats__num{ color: #ffe670; font-weight: 700; }
 .game-stats__item{
     padding: 4px 10px;
     border-radius: 999px;

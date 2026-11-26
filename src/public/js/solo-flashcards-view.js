@@ -234,9 +234,25 @@ var soloFlashcards = {
             var cur = this.cardsCurrent;
             return cur ? (cur.q.question || '') : '';
         },
+        // Al davant de la targeta només hi ha la imatge (o la miniatura de YouTube): el vídeo es mira abans (cardsLearning).
         cardsMedia: function(){
             var cur = this.cardsCurrent;
+            var m = mediaFor(cur ? cur.q : null);
+            if(!m.image && m.youtube){
+                m.image = 'https://img.youtube.com/vi/' + m.youtube.split('/embed/')[1] + '/hqdefault.jpg';
+            }
+            return { image: m.image, video: '', youtube: '' };
+        },
+        // El vídeo complet de la targeta actual (per a la fase de vídeo).
+        cardsVideoMedia: function(){
+            var cur = this.cardsCurrent;
             return mediaFor(cur ? cur.q : null);
+        },
+        // Fase «aprén i després respon»: amb vídeo, primer es mira; després es respon.
+        cardsLearning: function(){
+            var cur = this.cardsCurrent;
+            var c = this.s.cards;
+            return !!(cur && c && cur.q && cur.q.video && !(c.learned && c.learned[cur.idx]));
         },
         cardsHasMedia: function(){
             var m = this.cardsMedia;
@@ -415,15 +431,29 @@ var soloFlashcards = {
             c.typed = {};
             c.matches = {};
             c.picks = {};
+            // Fase de vídeo (feature 24): les targetes amb vídeo ja vistes en aquesta ronda.
+            c.learned = {};
+            // El clic que inicia la sessió no ha de tancar la fase del primer vídeo (és anterior a aquest instant).
+            c.learnFrom = performance.now();
             c.roundValidate = !!c.validate;
             snapCardFront(c);
             c.phase = deck.length ? 'card' : 'done';
         },
         // Clic de girar: espera FLIP_DELAY_MS i després gira. Si abans canvia la targeta, snapCardFront
         // incrementa turnId i el retard es descarta.
+        // Acaba la fase de vídeo de la targeta actual (botó o final del vídeo).
+        cardsFinishLearning: function(ev){
+            var cur = this.cardsCurrent;
+            var c = this.s.cards;
+            if(!cur || !c) return;
+            if(ev && ev.timeStamp && c.learnFrom && ev.timeStamp < c.learnFrom) return;
+            if(!c.learned) c.learned = {};
+            c.learned[cur.idx] = true;
+        },
         cardsFlip: function(){
             var c = this.s.cards;
             if(!c || c.turning) return;
+            if(this.cardsLearning) this.cardsFinishLearning();
             stopFlashcardsSpeech();
             c.turning = true;
             var self = this;
@@ -504,6 +534,8 @@ var soloFlashcards = {
             if(!this.s.cards.flipOnClick) return;
             // El vídeo i el YouTube tenen els seus propis controls: no giren la targeta. La imatge sí.
             if(ev.target.closest && ev.target.closest('video, iframe')) return;
+            // Durant la fase del vídeo, girar la targeta també la deixa com a vista (la fase acaba).
+            if(this.cardsLearning) this.cardsFinishLearning();
             var sel = window.getSelection ? window.getSelection() : null;
             if(sel && !sel.isCollapsed && String(sel).trim() !== '') return;
             this.cardsFlip();

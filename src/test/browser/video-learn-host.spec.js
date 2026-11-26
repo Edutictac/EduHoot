@@ -86,3 +86,63 @@ test('projector: la fase del vídeo mostra el botó per tancar-la, i la pregunta
     await serverEmit(page, 'gameQuestions', { q1: 'Pregunta després del vídeo', a1: 'a', a2: 'b', a3: 'c', a4: 'd', type: 'quiz', time: 20, questionNumber: 1, totalQuestions: 2, playersInGame: 2, showScores: true });
     await expect(page.locator('#finishVideoBtn')).toHaveCount(0);
 });
+
+// Pausar i reprendre el vídeo de la fase (projector).
+test('projector: el botó reprodueix o pausa el vídeo; l\'etiqueta segueix l\'estat del vídeo', async ({ page }) => {
+    await openGame(page);
+    await serverEmit(page, 'videoLearn', { questionNumber: 1, video: '/media/clip.mp4', image: '', startAt: 0 });
+    await expect(page.locator('#pauseVideoBtn')).toHaveText('Reproducir');
+    await page.evaluate(() => document.getElementById('questionVideo').dispatchEvent(new Event('play')));
+    await expect(page.locator('#pauseVideoBtn')).toHaveText('Pausar');
+    await page.evaluate(() => document.getElementById('questionVideo').dispatchEvent(new Event('pause')));
+    await expect(page.locator('#pauseVideoBtn')).toHaveText('Reproducir');
+});
+
+// YouTube: el iframe s'activa amb enablejsapi=1 i el segon d'inici; el final (estat 0) tanca la fase,
+// però només si el missatge ve de l'embed de YouTube.
+test('projector: YouTube s\'activa amb l\'API de missatges i el final del vídeo tanca la fase', async ({ page }) => {
+    await openGame(page);
+    await serverEmit(page, 'videoLearn', { questionNumber: 1, video: 'https://youtu.be/abc123', image: '', startAt: 7 });
+    const src = await page.locator('#questionIframe').getAttribute('src');
+    expect(src).toContain('https://www.youtube-nocookie.com/embed/abc123');
+    expect(src).toContain('enablejsapi=1');
+    expect(src).toContain('start=7');
+    // Un missatge d'un altre origen no tanca la fase.
+    await page.evaluate(() => window.dispatchEvent(new MessageEvent('message', { origin: 'https://evil.example', data: JSON.stringify({ event: 'infoDelivery', info: { playerState: 0 } }) })));
+    expect(await emitsNamed(page, 'finishVideoLearning')).toEqual([]);
+    // Un missatge de l'embed amb «ended» sí.
+    await page.evaluate(() => window.dispatchEvent(new MessageEvent('message', { origin: 'https://www.youtube-nocookie.com', data: JSON.stringify({ event: 'infoDelivery', info: { playerState: 0 } }) })));
+    await expect.poll(() => emitsNamed(page, 'finishVideoLearning')).toEqual([null]);
+});
+
+// Fi de partida: no es torna a veure la imatge de la pregunta.
+test('projector: al acabar la partida no queda la imatge de la pregunta', async ({ page }) => {
+    await openGame(page);
+    await serverEmit(page, 'gameQuestions', gameQuestionsPayload({ image: '/icons/logo.svg' }));
+    await expect(page.locator('#questionImage')).toBeVisible();
+    await serverEmit(page, 'GameOver', { num1: 'Ana', num2: '', num3: '', num4: '', num5: '', showPodium: false });
+    await expect(page.locator('#questionImage')).toBeHidden();
+});
+
+// Colors dels botons del vídeo: reproduir verd, pausar ambre i parar roig.
+test('projector: els botons del vídeo tenen colors diferents segons l\'estat', async ({ page }) => {
+    await openGame(page);
+    await serverEmit(page, 'videoLearn', { questionNumber: 1, video: '/media/clip.mp4', image: '', startAt: 0 });
+    const bg = (sel) => page.locator(sel).evaluate(el => getComputedStyle(el).backgroundColor);
+    expect(await bg('#pauseVideoBtn')).toBe('rgba(16, 185, 129, 0.22)');
+    expect(await bg('#finishVideoBtn')).toBe('rgba(218, 68, 83, 0.22)');
+    await page.evaluate(() => document.getElementById('questionVideo').dispatchEvent(new Event('play')));
+    expect(await bg('#pauseVideoBtn')).toBe('rgb(253, 188, 75)');
+});
+
+// Cuenta atrás con la pregunta: el enunciado arriba, la cuenta debajo, y el bloque ocupa buena parte de la pantalla.
+test('projector: la cuenta atrás amb la pregunta té l\'enunciat a dalt i la compte a sota', async ({ page }) => {
+    await openGame(page);
+    await serverEmit(page, 'questionCountdown', { seconds: 3, questionNumber: 2, totalQuestions: 5, preview: { question: 'Quina és la capital de França?' } });
+    await expect(page.locator('#questionCountdownPreview')).toHaveText('Quina és la capital de França?');
+    const preview = await page.locator('#questionCountdownPreview').boundingBox();
+    const dial = await page.locator('#questionCountdown .question-countdown__dial').boundingBox();
+    const box = await page.locator('#questionCountdown').boundingBox();
+    expect(preview.y + preview.height).toBeLessThanOrEqual(dial.y);
+    expect(box.height).toBeGreaterThanOrEqual(300);
+});

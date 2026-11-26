@@ -103,6 +103,8 @@ async function enterGame(pin, student, name) {
 test('partida completa a su ritmo: cada alumno con su reloj, resultado, cierre y informe', async () => {
   const { host, pin, students } = await lobby(['Ana', 'Bruno']);
   host.emit('startGame', { ...START_OPTS, mode: 'selfPaced', pin });
+  // L'anfitrió activa el check de la pantalla de progrés per a veure els punts.
+  host.emit('spHostScores', { enabled: true });
 
   // El servidor manda al alumnado a la pantalla de autoritme y no lanza cuenta atrás común.
   const modes = await Promise.all(students.map((s) => s.next('gameStartedPlayer')));
@@ -312,4 +314,77 @@ test('puntuaciones desactivadas: el anfitrión no recibe puntos y el alumno no r
   let [list] = await hostConn.next('spProgress');
   while (list[0].answered < 1) [list] = await hostConn.next('spProgress');
   assert.equal('score' in list[0], false);
+});
+
+// Fase de vídeo (feature 24) en el autoritme: el reloj de la pregunta no corre hasta que el alumno
+// acaba el vídeo (spLearned); antes no se acepta ninguna respuesta.
+test('autoritme con vídeo: el reloj empieza con spLearned y las respuestas se rechazan antes', async () => {
+  const VIDEO = 'https://example.com/clip-autoritme.mp4';
+  const create = await fetch(`${baseUrl}/api/quizzes/local`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: 'Autoritme amb vídeo',
+      tags: ['proves'],
+      visibility: 'unlisted',
+      questions: [
+        { question: 'Amb vídeo', answers: ['a', 'b', 'c', 'd'], correct: 1, time: 5, video: VIDEO },
+        { question: 'Sense vídeo', answers: ['a', 'b', 'c', 'd'], correct: 0, time: 5 }
+      ]
+    })
+  });
+  const { id } = await create.json();
+  const host = await connect();
+  host.emit('host-join', { id });
+  const [{ pin }] = await host.next('showGamePin');
+  const ana = await connect();
+  ana.emit('player-join', { pin: String(pin), name: 'Ana', icon: '🦊', token: `tok-learn-${pin}` });
+  await ana.next('playerJoinAck');
+  host.emit('startGame', { ...START_OPTS, mode: 'selfPaced', videoStartSec: 3, pin: String(pin) });
+  await ana.next('gameStartedPlayer');
+
+  ana.emit('spNext');
+  const [q] = await ana.next('spQuestion');
+  assert.equal(q.question, 'Amb vídeo');
+  assert.equal(q.learning, true);
+  assert.equal(q.videoStartSec, 3);
+
+  ana.emit('spAnswer', 1);
+  const [rejected] = await ana.next('answerRejected');
+  assert.equal(rejected.reason, 'learning');
+
+  ana.emit('spLearned');
+  const [ack] = await ana.next('spLearnedAck');
+  assert.equal(ack.timeTotal, 5);
+
+  ana.emit('spAnswer', 1);
+  const [result] = await ana.next('spResult');
+  assert.equal(result.outcome, 'correct');
+});
+
+// Prova de concepte: el check de la pantalla de progrés decideix si l'anfitrió veu els punts (i el Top 10).
+test('autoritme: el check de l\'anfitrió decideix si veu els punts; per defecte no', async () => {
+  const { host, pin, students } = await lobby(['Ana']);
+  host.emit('startGame', { ...START_OPTS, mode: 'selfPaced', pin });
+  await host.next('gameStarted');
+  const ana = await enterGame(pin, students[0], 'Ana');
+  await ana.next('spIdle');
+  ana.emit('spNext');
+  await ana.next('spQuestion');
+  ana.emit('spAnswer', 2);
+  await ana.next('spResult');
+
+  host.emit('spProgressRequest');
+  await new Promise((r) => setTimeout(r, 150));
+  const lastProgress = () => host.log.filter((e) => e.event === 'spProgress').pop().args[0];
+  assert.equal(lastProgress()[0].score, undefined, 'per defecte, l\'anfitrió no rep els punts');
+
+  host.emit('spHostScores', { enabled: true });
+  await host.next('spHostScoresState');
+  await new Promise((r) => setTimeout(r, 150));
+  assert.equal(typeof lastProgress()[0].score, 'number', 'amb el check, l\'anfitrió rep els punts');
+
+  host.emit('spHostScores', { enabled: false });
+  await new Promise((r) => setTimeout(r, 150));
+  assert.equal(lastProgress()[0].score, undefined, 'desactivat de nou, no els rep');
 });

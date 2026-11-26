@@ -27,7 +27,10 @@ function questionPayload(game, player, now, toStudent) {
     questionNumber: state.index,
     totalQuestions: sp.progressOf(game, player).total,
     timeTotal: questionTimeOf(game.gameData, q),
-    hand: !!state.hand
+    hand: !!state.hand,
+    // Fase de vídeo (feature 24): el alumnat mira el vídeo abans de la pregunta; el temps encara no corre.
+    learning: !!state.learning,
+    videoStartSec: Number(game.gameData.options && game.gameData.options.videoStartSec) || 0
   };
 }
 

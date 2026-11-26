@@ -87,6 +87,7 @@ var app = Vue.createApp({
             badgeKey: 0,
             countdownVisible: false,
             countdownSeconds: 0,
+            countdownPreview: '',
             timerLeft: 20,
             timerTotal: 20,
             answerStatusState: '',
@@ -964,6 +965,8 @@ function showQuestionCountdown(data){
     app.answersVisible = false;
 
     var seconds = Math.max(0, Math.ceil(Number(data && data.seconds) || 0));
+    // Opció de l'anfitrió: la pregunta es veu durant la compte arrere.
+    app.countdownPreview = (data && data.preview && data.preview.question) || '';
     app.questionText = '';
     showMessage('');
     app.answerStatusState = 'pending';

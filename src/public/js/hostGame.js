@@ -69,7 +69,9 @@ var i18n = {
         topPlayers: 'Top 5 jugadores',
         gameOver: 'FIN DE LA PARTIDA',
         bgMusicTitle: 'Música de fondo',
-        finishVideo: 'Finalitzar vídeo',
+        pauseVideo: 'Pausar',
+        playVideo: 'Reproducir',
+        finishVideo: 'Parar',
         bgMusicNone: 'Sin música',
         bgMusicChoose: 'Elige un tema',
         bgMusicPlay: 'Reproducir música',
@@ -144,7 +146,9 @@ var i18n = {
         topPlayers: 'Top 5 Players',
         gameOver: 'GAME OVER',
         bgMusicTitle: 'Background music',
-        finishVideo: 'Finish video',
+        pauseVideo: 'Pause',
+        playVideo: 'Play',
+        finishVideo: 'Stop',
         bgMusicNone: 'No music',
         bgMusicChoose: 'Choose a track',
         bgMusicPlay: 'Play music',
@@ -219,7 +223,9 @@ var i18n = {
         topPlayers: 'Top 5 jugadors',
         gameOver: 'FI DE LA PARTIDA',
         bgMusicTitle: 'Música de fons',
-        finishVideo: 'Finalitzar vídeo',
+        pauseVideo: 'Pausar',
+        playVideo: 'Reproduir',
+        finishVideo: 'Aturar',
         bgMusicNone: 'Sense música',
         bgMusicChoose: 'Tria un tema',
         bgMusicPlay: 'Reprodueix música',
@@ -323,6 +329,7 @@ var app = Vue.createApp({
             timerText: ' ' + time,
             countdownVisible: false,
             countdownSeconds: 0,
+            countdownPreview: '',
             questionText: '',
             answers: ['', '', '', ''],
             questionType: 'quiz',
@@ -339,6 +346,8 @@ var app = Vue.createApp({
             // Correspondencia: columnas en pantalla y resultados por pareja.
             matchLeft: [],
             videoLearning: false,
+            videoPlaying: false,
+            videoIsYoutube: false,
             matchRight: [],
             // Ordenar: la llista barrejada (durant la pregunta) i la solució (en mostrar el resultat).
             orderItems: [],
@@ -424,6 +433,17 @@ var app = Vue.createApp({
         toggleFullscreen: function(){ toggleHostFullscreen(); },
         goNextQuestion: function(){ nextQuestion(); },
         finishVideo: function(){ socket.emit('finishVideoLearning'); },
+        // Reprodueix o pausa el vídeo de la fase (arxiu: element <video>; YouTube: ordres a l'iframe).
+        toggleVideoPlay: function(){
+            if(this.videoIsYoutube){
+                youtubePost({ event: 'command', func: this.videoPlaying ? 'pauseVideo' : 'playVideo', args: '' });
+                this.videoPlaying = !this.videoPlaying;
+                return;
+            }
+            var v = document.getElementById('questionVideo');
+            if(!v) return;
+            if(v.paused) v.play().catch(function(){}); else v.pause();
+        },
         showRankingToggle: function(){ toggleRanking(); },
         // Expulsión en dos pasos desde la lista de respuestas (issue #29).
         askKick: function(player){
@@ -1110,6 +1130,8 @@ function clearQuestionCountdown(){
 
 function showQuestionCountdown(data){
     clearQuestionCountdown();
+    // Opció «Mostrar pregunta durante la cuenta atrás»: el text de la pregunta a la pantalla.
+    app.countdownPreview = (data && data.preview && data.preview.question) || '';
     clearInterval(timer);
     closeRankingModal();
     hideAnswerSquares();
@@ -1146,23 +1168,60 @@ function showQuestionCountdown(data){
 socket.on('questionCountdown', showQuestionCountdown);
 
 // Fase «aprén i després respon» (feature 24): el vídeo a la pantalla abans de les respostes.
+// YouTube: l'iframe s'activa amb enablejsapi=1 i es controla per missatges (postMessage), sense carregar
+// l'API de YouTube (la CSP no ho permet). Només s'accepta l'origen de l'embed.
+var YT_ORIGIN = 'https://www.youtube-nocookie.com';
+function youtubePost(payload){
+    var iframe = document.getElementById('questionIframe');
+    if(iframe && iframe.contentWindow) iframe.contentWindow.postMessage(JSON.stringify(payload), YT_ORIGIN);
+}
+var videoLearnEventsBound = false;
+function bindVideoLearnEvents(){
+    if(videoLearnEventsBound) return;
+    videoLearnEventsBound = true;
+    window.addEventListener('message', function(e){
+        if(e.origin !== YT_ORIGIN) return;
+        var d;
+        try{ d = typeof e.data === 'string' ? JSON.parse(e.data) : e.data; }catch(err){ return; }
+        if(!d) return;
+        var state = d.event === 'infoDelivery' && d.info ? d.info.playerState : (d.event === 'onStateChange' ? d.info : undefined);
+        if(state === 1) app.videoPlaying = true;
+        if(state === 2) app.videoPlaying = false;
+        // 0 = acabat: la fase es tanca, com amb un arxiu.
+        if(state === 0){
+            app.videoPlaying = false;
+            if(app.videoLearning) socket.emit('finishVideoLearning');
+        }
+    });
+}
+// Arxiu: en acabar, la fase es tanca sola; el estat de reproducció es segueix amb els esdeveniments del <video>.
+function bindFileVideoEvents(v){
+    if(v.dataset.learnBound) return;
+    v.dataset.learnBound = '1';
+    v.addEventListener('ended', function(){ if(app.videoLearning) socket.emit('finishVideoLearning'); });
+    v.addEventListener('play', function(){ app.videoPlaying = true; });
+    v.addEventListener('pause', function(){ app.videoPlaying = false; });
+}
+
+// Fase «aprén i després respon» (feature 24): el vídeo a la pantalla abans de les respostes.
 function startVideoLearning(data){
     app.videoLearning = true;
+    app.videoPlaying = false;
     var startAt = Number(data && data.startAt) || 0;
-    setMedia(null, (data && data.video) || '');
+    var video = (data && data.video) || '';
+    var ytId = parseYouTubeId(video);
+    app.videoIsYoutube = !!ytId;
+    setMedia(null, video);
     var v = document.getElementById('questionVideo');
     var iframe = document.getElementById('questionIframe');
-    var ytId = parseYouTubeId((data && data.video) || '');
-    if(ytId && startAt > 0 && iframe){
-        // YouTube: el segon d'inici va al paràmetre «start» de l'iframe.
-        iframe.src = 'https://www.youtube-nocookie.com/embed/' + ytId + '?start=' + startAt;
+    bindVideoLearnEvents();
+    if(ytId && iframe){
+        // El segon d'inici va al paràmetre «start»; enablejsapi=1 permet controlar-lo i rebre el final.
+        iframe.src = YT_ORIGIN + '/embed/' + ytId + '?enablejsapi=1' + (startAt > 0 ? '&start=' + startAt : '');
+        iframe.onload = function(){ youtubePost({ event: 'listening' }); };
     }
     if(v && !ytId){
-        // Arxiu: en acabar, la fase es tanca sola; el segon d'inici es posa en carregar el vídeo.
-        if(!v.dataset.learnBound){
-            v.dataset.learnBound = '1';
-            v.addEventListener('ended', function(){ if(app.videoLearning) socket.emit('finishVideoLearning'); });
-        }
+        bindFileVideoEvents(v);
         if(startAt > 0){
             var seek = function(){ try{ v.currentTime = startAt; }catch(e){} };
             if(v.readyState >= 1) seek(); else v.addEventListener('loadedmetadata', seek, { once: true });
@@ -1652,6 +1711,8 @@ socket.on('GameOver', function(data){
     app.answers = ['', '', '', ''];
     app.timerText = "";
     app.questionText = t('gameOver');
+    // Fi de partida: no es queda cap imatge ni vídeo de la darrera pregunta (ni de la primera).
+    setMedia(null, null);
     app.playersAnsweredText = "";
     updateQuestionPointsBadge(1);
 

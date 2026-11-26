@@ -106,7 +106,52 @@ test('fase del vídeo: l\'alumnat espera; les respostes comencen quan el profeso
   host.emit('finishVideoLearning');
   const [q] = await ana.next('playerQuestion', 5000);
   assert.equal(q.question, 'Què has vist?');
+  assert.equal(q.video, '', 'en directo, la pregunta de l\'alumnat no porta el vídeo');
   const [media] = await ana.next('questionMedia', 5000);
   assert.equal(media.video, '', 'l\'alumnat no rep el vídeo');
   await host.next('gameQuestions', 5000);
+});
+
+// Si el profesorado recarga la página durante la fase, vuelve a ver el vídeo, y el alumnado no recibe nada más.
+test('recargar el anfitrión durante la fase vuelve a mostrar el vídeo, sin filtrarlo al alumnado', async () => {
+  const create = await fetch(`${baseUrl}/api/quizzes/local`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: 'Vídeo recarga',
+      tags: ['proves'],
+      visibility: 'unlisted',
+      questions: [
+        { question: 'Amb vídeo', answers: ['a', 'b', 'c', 'd'], correct: 0, time: 20, video: VIDEO },
+        { question: 'Sense vídeo', answers: ['a', 'b', 'c', 'd'], correct: 1, time: 20 }
+      ]
+    })
+  });
+  const { id } = await create.json();
+
+  const host = await connect();
+  host.emit('host-join', { id });
+  const [{ pin }] = await host.next('showGamePin');
+  const ana = await connect();
+  ana.emit('player-join', { pin: String(pin), name: 'Ana', icon: '🦊', token: `tok-recarga-${pin}` });
+  await ana.next('playerJoinAck');
+  host.emit('startGame', {
+    randomQuestions: false, randomAnswers: false, sendToStudents: true, showScoresBetween: true,
+    showCorrectAnswers: true, streak: true, videoStartSec: 7, pin: String(pin)
+  });
+  await host.next('videoLearn', 15000);
+  await ana.next('videoLearnWait', 15000);
+
+  // El anfitrión recarga: una conexión nueva con la partida en marcha.
+  const reloaded = await connect();
+  reloaded.emit('host-join-game', { id: host.id, pin: String(pin) });
+  const [again] = await reloaded.next('videoLearn', 5000);
+  assert.equal(again.video, VIDEO);
+  assert.equal(again.startAt, 7);
+  assert.equal(reloaded.count('gameQuestions'), 0, 'el anfitrión no recibe la pregunta antes de tiempo');
+
+  await new Promise((r) => setTimeout(r, 300));
+  assert.equal(ana.count('playerQuestion'), 0, 'el alumnado no recibe la pregunta en la recarga');
+  const leaked = ana.log.filter((e) => e.event === 'questionMedia' && e.args[0] && e.args[0].video);
+  assert.equal(leaked.length, 0, 'el alumnado no recibe el vídeo en la recarga');
 });

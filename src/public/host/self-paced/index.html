@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <link rel="icon" href="/icons/logo.svg" type="image/svg+xml">
         <meta charset="utf-8">
         <title>Game | EduHoot</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -31,6 +32,7 @@
                 <button type="button" id="spDownloadBtn" class="sp-btn sp-btn--report" v-if="ended" @click="downloadReport">{{ t('downloadReport') }}</button>
                 <button type="button" id="spBackBtn" class="sp-btn" v-if="ended" @click="goBack">{{ t('backToLibrary') }}</button>
             </div>
+            <label class="sp-host-scores"><input type="checkbox" id="spHostScores" :checked="hostScores" @change="setHostScores"> <span>{{ t('hostScores') }}</span></label>
             <section id="spRanking" class="sp-ranking" v-if="top.length">
                 <h3>{{ t('topPlayers') }}</h3>
                 <ol><li v-for="p in top" :key="p.playerId">{{ (p.icon ? p.icon + ' ' : '') + p.name + ' - ' + p.score }}</li></ol>

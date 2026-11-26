@@ -1601,10 +1601,10 @@ body.playing #game-panel{
     min-width: 0;
 }
 /* El botó de jugar: a la columna de les opcions, alineat a la dreta, una mica separat de les opcions. */
-.start-form__options > #start-btn{ grid-column: 2; margin-top: 14px; }
+.start-form__options #start-btn{ grid-column: 2; margin-top: 14px; }
 /* Les caselles, apilades i alineades a l'esquerra amb les etiquetes de les opcions (columna 1). */
 .start-form__options > .solo-check{ grid-column: 1; justify-self: start; margin: 0; }
-.start-form__options > #start-btn{ justify-self: end; }
+.start-form__options #start-btn{ justify-self: end; }
 .start-form__options .question-count-controls input{ width: 120px; }
 @media (max-width: 760px){
     .start-form:not(.hidden){ display: flex; flex-direction: column; gap: 10px; }
@@ -1838,3 +1838,160 @@ body.playing .game-area .question-card > #solo-countdown{
 
 /* Resum del quiz a la pantalla inicial: preguntes i etiquetes, cadascuna en una línia. */
 .selected-meta__line{ display: block; }
+
+/* Fase de vídeo del mode solo (feature 24): el vídeo i el botó per acabar-la. */
+.solo-learning{ display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
+.solo-learning__hint{ margin: 0; font-weight: 600; }
+/* El vídeo de la fase ocupa la altura libre de la pantalla (sense tapar la barra ni el botó), en 16:9 i centrat. */
+#solo-learning .question-media{ width: 100%; }
+#solo-learning .question-media video,
+#solo-learning .question-media iframe{
+    height: clamp(260px, calc(100vh - 430px), 800px);
+    width: min(100%, calc(clamp(260px, calc(100vh - 430px), 800px) * 16 / 9));
+    max-height: none;
+    margin: 0 auto;
+}
+.solo-learning__btn{ min-width: 200px; }
+
+/* La pregunta dins de la compte arrere (opció «Mostrar pregunta durante la cuenta atrás»). */
+.solo-countdown-question{ margin-top: 14px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.solo-countdown-question img{ max-width: min(100%, 420px); max-height: 200px; object-fit: contain; border-radius: 12px; }
+
+/* Pantalla final: el mateix recuadre del quiz que a l'inici. */
+.result-area__info{ display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; margin-bottom: 10px; }
+
+/* Cuenta atrás de solo: la pregunta (si se muestra) arriba y la cuenta debajo, en columna. */
+.solo-countdown-wrap{ display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; width: 100%; min-height: clamp(300px, 62vh, 680px); }
+.solo-countdown-wrap .solo-countdown-question{ margin: 0; }
+.solo-countdown-wrap .question-countdown{ margin: 0; }
+/* La tarjeta de la pregunta es una columna: el contenidor de la compte arrere ocupa tota l'àrea i el conjunt queda centrat. */
+.question-card:has(> .solo-countdown-wrap){ display: flex; flex-direction: column; }
+.question-card > .solo-countdown-wrap{ flex: 1 1 auto; }
+
+/* Quiz des de la URL (/solo/?id=…): el catàleg no es pinta mentre es carrega (vore solo-early.js). */
+html.quiz-from-url #catalog-panel,
+html.quiz-from-url .hero,
+html.quiz-from-url .music-section{ display: none !important; }
+
+/* Pregunta durant la compte arrere: només el text, amb la mida que cap a la finestra (sense imatge). */
+.solo-countdown-question{ width: min(100%, 880px); }
+.solo-countdown-question .question-text{ margin: 0; font-size: clamp(18px, min(4.2vh, 3.4vw), 36px); line-height: 1.25; text-align: center; overflow-wrap: anywhere; }
+
+/* Flashcards amb les mateixes mides que la pregunta de solo: ample màxim i mitjans limitats per la finestra. */
+.flashcard-scene{ max-width: 860px; margin: 0 auto; width: 100%; }
+.flashcard{ height: auto; }
+.flashcard__media{ flex: 0 0 auto; height: min(260px, 32vh); }
+/* Fase de vídeo dins de la targeta: el vídeo ocupa l'alçada lliure, i les respostes no es veuen fins que acaba. */
+.flashcard.is-learning .flashcard__options,
+.flashcard.is-learning .flashcard__typed,
+.flashcard.is-learning .flashcard__answers,
+.flashcard.is-learning .order-board,
+.flashcard.is-learning .matching-board,
+.flashcard.is-learning .cards-match,
+.flashcard.is-learning .flashcard__order-list{ display: none !important; }
+.flashcard__learning{ grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
+.flashcard__learning .solo-learning__hint{ margin: 0; font-size: clamp(14px, 2.2vh, 17px); }
+.flashcard__learning .question-media{ width: 100%; }
+.flashcard__learning .question-media video,
+.flashcard__learning .question-media iframe{
+    height: clamp(200px, calc(100vh - 520px), 760px);
+    width: min(100%, calc(clamp(200px, calc(100vh - 520px), 760px) * 16 / 9));
+    max-height: none;
+    margin: 0 auto;
+}
+
+/* Opcions de la pantalla inicial: si no hi caben en dues columnes dins del recuadre, es posen en vertical
+   i el que no cap salta de línea. El panell de joc és el contenidor de la consulta. */
+#game-panel{ container-type: inline-size; }
+@container (max-width: 840px){
+    .start-form:not(.hidden){ grid-template-columns: minmax(0, 1fr); justify-content: stretch; }
+    .start-form__options{ display: flex; flex-direction: column; align-items: flex-start; gap: 10px; min-width: 0; }
+    .start-form__options > .solo-check,
+    .start-form__options #start-btn{ grid-column: auto; justify-self: start; margin-top: 0; }
+    .start-form__options .solo-check{ flex-wrap: wrap; }
+    .start-form__options .question-count-controls{ flex-wrap: wrap; }
+    .start-form__options > label{ flex-wrap: wrap; }
+}
+
+/* Pantalla inicial de solo, com la de flashcards: a l'esquerra el quiz (banner, resum i música);
+   a la dreta les opcions en llista vertical compacta, amb el botó de jugar al final. */
+.start-form:not(.hidden){ grid-template-rows: auto auto; }
+.start-form:not(.hidden) > .start-form__info{ grid-column: 1; grid-row: 1; }
+.start-form:not(.hidden) > .start-music{ grid-column: 1; grid-row: 2; width: 100%; align-self: start; }
+.start-form:not(.hidden) > .start-form__options{ grid-column: 2; grid-row: 1 / span 2; }
+.start-form__options{ gap: 6px 14px; }
+.start-form__options > .solo-check{ margin: 2px 0; }
+@container (max-width: 840px){
+    .start-form:not(.hidden) > .start-form__info,
+    .start-form:not(.hidden) > .start-music,
+    .start-form:not(.hidden) > .start-form__options{ grid-column: 1; grid-row: auto; }
+}
+
+/* Columna de la informació: fins a 300 px, perquè les dues columnes càpiguen en pantalles mitjanes. */
+.start-form:not(.hidden){ grid-template-columns: minmax(200px, 300px) auto; }
+@container (min-width: 920px){
+    .start-form:not(.hidden){ grid-template-columns: minmax(200px, 340px) auto; }
+}
+/* Pantalla inicial compacta: separacions més juntes a la columna de la música i entre files. */
+.start-form:not(.hidden) > .start-music{ gap: 4px; }
+.start-form:not(.hidden){ row-gap: 6px; }
+/* El botó de jugar: sota les opcions, alineat a l'esquerra, dins del recuadre (com a flashcards). */
+.start-form:not(.hidden) > .start-form__options #start-btn{ grid-column: 1 / -1; justify-self: start; margin-top: 12px; }
+
+/* Música de fons de la pantalla inicial: una única fila, sota de totes les altres seccions. */
+.start-form:not(.hidden) > .start-music{ grid-column: 1 / -1; grid-row: 3; width: 100%; gap: 6px; }
+.start-music .music-player{ flex-direction: row; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 8px 12px; }
+.start-music .music-player__label{ display: flex; align-items: center; gap: 8px; }
+.start-music .music-player__select{ width: auto; min-width: 200px; }
+.start-music .music-player__controls{ flex-direction: row; flex-wrap: wrap; }
+.start-music .music-player__volume{ width: 140px; }
+@container (max-width: 840px){
+    .start-form:not(.hidden) > .start-music{ grid-column: 1 / -1; grid-row: 3; }
+}
+
+/* Camps numèrics de la pantalla inicial (preguntes, temps i segons): amplada de 4 caràcters. */
+.start-form__options .question-count-controls input{ width: 5ch; min-width: 0; max-width: 5ch; padding: 6px 8px; box-sizing: content-box; }
+
+/* Pantalla inicial en columna: cada etiqueta va junta a su campo, a la mateixa línia; si no hi cap, salta de línia. */
+@container (max-width: 840px){
+    .start-form__options{ display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
+    .start-form__options > label.muted{ flex: 0 0 auto; }
+    .start-form__options > .question-count-controls{ flex: 0 0 auto; margin: 0; }
+    .start-form__options > .solo-check,
+    .start-form__options > .start-actions{ flex-basis: 100%; }
+    .start-form__options .start-actions{ display: flex; }
+    .start-form__options > .solo-check{ margin: 2px 0; }
+}
+@container (max-width: 840px){
+    .start-form__options{ width: 100%; }
+}
+/* Pantalla inicial en una columna (repetit al final perquè guanye a les regles de columnes d'amplada fixa). */
+@container (max-width: 840px){
+    .start-form:not(.hidden){ grid-template-columns: minmax(0, 1fr); }
+}
+/* Cada etiqueta de número va amb el seu camp com un bloc: en columna salten de línia junts. */
+.start-field{ display: contents; }
+@container (max-width: 840px){
+    .start-form__options .start-field{ display: flex; flex-wrap: nowrap; align-items: center; gap: 8px; }
+}
+
+/* El botó de jugar: en fila pròpia, amb la seua mida natural (no s'estira). */
+.start-actions{ display: contents; }
+
+/* Pantalla inicial de solo: les opcions es reparteixen en vertical segons l'alçada de la finestra;
+   el mínim entre elles és la separació actual. Si no caben, hi ha desplaçament. */
+.start-form:not(.hidden){ min-height: calc(100dvh - 250px); grid-template-rows: 1fr auto auto; }
+.start-form:not(.hidden) > .start-form__options{ align-self: stretch; align-content: space-evenly; }
+@container (max-width: 840px){
+    .start-form:not(.hidden){ grid-template-rows: auto 1fr auto; }
+    .start-form__options{ align-self: stretch; align-content: space-evenly; }
+}
+
+/* Pantalla inicial de flashcards: igual que la de solo, les opcions es reparteixen en vertical
+   segons l'alçada de la finestra, amb la separació actual com a mínim. */
+.cards-start{ min-height: calc(100dvh - 260px); grid-template-rows: 1fr; }
+.cards-start__options{ align-self: stretch; justify-content: space-evenly; }
+@media (max-width: 760px){
+    .cards-start{ min-height: 0; }
+    .cards-start__options{ justify-content: flex-start; }
+}

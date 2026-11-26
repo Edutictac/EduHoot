@@ -112,3 +112,43 @@ for (const env of ['development', 'staging']) {
         }
     });
 }
+
+// Mismo ancho en desarrollo y en stage, y una pista pequeña para ocultarlo con F9 o Alt+B.
+test('desarrollo y stage: el distintivo tiene el mismo ancho y muestra la pista de F9 / Alt+B', async ({ page }) => {
+    await openWithEnv(page, '/create/?lang=es', 'development');
+    await expect(badge(page)).toBeVisible();
+    const devWidth = (await badge(page).boundingBox()).width;
+    await expect(page.locator('.env-badge__hint')).toContainText('F9');
+    await expect(page.locator('.env-badge__hint')).toContainText('Alt+B');
+
+    await openWithEnv(page, '/create/?lang=es', 'staging');
+    await expect(badge(page)).toBeVisible();
+    const stageWidth = (await badge(page).boundingBox()).width;
+    expect(Math.round(stageWidth)).toBe(Math.round(devWidth));
+    await expect(page.locator('.env-badge__hint')).toContainText('F9');
+});
+
+test('el nombre de usuario largo se recorta y no ensancha el distintivo', async ({ page }) => {
+    await page.route(/^https:\/\//, route => route.abort());
+    await page.route('**/socket.io/socket.io.js', route => route.fulfill({
+        contentType: 'application/javascript',
+        body: 'window.io = function(){ var s = { on: function(){ return s; }, emit: function(){ return s; } }; return s; };'
+    }));
+    await page.route('**/api/**', route => route.fulfill({ json: {} }));
+    await page.route('**/api/env', route => route.fulfill({ json: { env: 'development' } }));
+    await page.route('**/api/auth/me', route => route.fulfill({ json: { nickname: 'usuario-con-un-nombre-muy-largo-para-probar-el-recorte-del-distintivo-ok' } }));
+    await page.goto('/create/?lang=es');
+    await page.waitForLoadState('load');
+    await expect(badge(page)).toBeVisible();
+    const w = (await badge(page).boundingBox()).width;
+    // 400 px en ventanas anchas; en una pantalla estrecha se encoge para no salirse de la pantalla.
+    expect(Math.round(w)).toBeLessThanOrEqual(400);
+    await expect(page.locator('.env-badge__user')).toHaveCSS('text-overflow', 'ellipsis');
+});
+
+// En las pantallas de partida el distintivo no captura clics (no puede tapar los botones del juego).
+test('en la pantalla del anfitrión el distintivo no recibe clics', async ({ page }) => {
+    await openWithEnv(page, '/host/game/?id=g1&pin=12345&lang=es', 'development');
+    await expect(badge(page)).toBeVisible();
+    await expect(badge(page)).toHaveCSS('pointer-events', 'none');
+});

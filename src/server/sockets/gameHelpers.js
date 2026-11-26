@@ -352,7 +352,8 @@ module.exports = function createGameHelpers({ io, games, players, cleanImportedT
         answers: [answer1, answer2, answer3, answer4],
         type: meta.type,
         image,
-        video,
+        // En directo l'alumnat no veu el vídeo (només el projector); a ritme propi i deures és un altre flux.
+        video: '',
         pointsMultiplier,
         time,
         originalIndex: current.originalIndex,
@@ -443,6 +444,16 @@ module.exports = function createGameHelpers({ io, games, players, cleanImportedT
     io.to(game.pin).emit('playerQuestion', buildStudentPlayerPayload(payload.playerPayload, game.gameData.options));
   }
 
+  // Opció «Mostrar pregunta durante la cuenta atrás»: el text de la pregunta que ve, o null si l'opció és inactiva.
+  function countdownPreviewOf(game) {
+    const options = game && game.gameData && game.gameData.options;
+    if (!options || options.showQuestionDuringCountdown !== true) return null;
+    const questions = (game.gameData && game.gameData.questions) || [];
+    const q = questions[(Number(game.gameData.question) || 1) - 1];
+    if (!q) return null;
+    return { question: String(q.question || '') };
+  }
+
   function scheduleQuestionCountdown(game, delaySeconds = QUESTION_COUNTDOWN_SECONDS) {
     if (!game || !game.gameData) return;
     clearQuestionStartTimer(game);
@@ -454,7 +465,8 @@ module.exports = function createGameHelpers({ io, games, players, cleanImportedT
     io.to(game.pin).emit('questionCountdown', {
       seconds,
       questionNumber: game.gameData.question,
-      totalQuestions: game.gameData.totalQuestions || (game.gameData.questions || []).length
+      totalQuestions: game.gameData.totalQuestions || (game.gameData.questions || []).length,
+      preview: countdownPreviewOf(game)
     });
     game.gameData.questionStartTimer = setTimeout(() => {
       startCurrentQuestion(game);
@@ -585,6 +597,7 @@ module.exports = function createGameHelpers({ io, games, players, cleanImportedT
   }
 
   return {
+    countdownPreviewOf,
     finishVideoLearning,
     timingsFor,
     stopAutoAdvance,

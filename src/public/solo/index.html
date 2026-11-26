@@ -3,6 +3,7 @@
     <head>
         <meta charset="utf-8">
         <title>Modo individual | EduHoot</title>
+        <script src="/js/solo-early.js"></script>
         <link rel="stylesheet" href="../css/solo.css">
         <link rel="stylesheet" href="/css/countdown.css">
         <link rel="stylesheet" href="/css/answers.css">
@@ -142,18 +143,24 @@
                                         </div>
 
                     <div class="start-form__options">
-                    <label for="question-count" class="muted">{{ t('questionCountLabel') }}<span class="help"><button type="button" class="help-btn" :aria-expanded="helpOpen==='count' ? 'true' : 'false'" :aria-label="t('helpAria')" @click.prevent.stop="toggleHelp('count')">?</button><span v-if="helpOpen==='count'" class="help-pop" role="note">{{ t('questionCountTip') }}</span></span></label>
-                    <div class="question-count-controls">
-                        <input id="question-count" type="number" min="1" step="1" inputmode="numeric" autocomplete="off" :max="quizTotal ? String(quizTotal) : ''" :disabled="!quizTotal" :value="s.countInput" @input="onCountInput">
-                        <span id="question-count-total" class="muted">{{ quizTotal ? format(t('questionCountTotal'), { total: quizTotal }) : '' }}</span>
+                    <div class="start-field">
+                        <label for="question-count" class="muted">{{ t('questionCountLabel') }}<span class="help"><button type="button" class="help-btn" :aria-expanded="helpOpen==='count' ? 'true' : 'false'" :aria-label="t('helpAria')" @click.prevent.stop="toggleHelp('count')">?</button><span v-if="helpOpen==='count'" class="help-pop" role="note">{{ t('questionCountTip') }}</span></span></label>
+                        <div class="question-count-controls">
+                            <input id="question-count" type="number" min="1" step="1" inputmode="numeric" autocomplete="off" :max="quizTotal ? String(quizTotal) : ''" :disabled="!quizTotal" :value="s.countInput" @input="onCountInput">
+                            <span id="question-count-total" class="muted">{{ quizTotal ? format(t('questionCountTotal'), { total: quizTotal }) : '' }}</span>
+                        </div>
                     </div>
-                    <label for="question-time" class="muted">{{ t('questionTimeLabel') }}<span class="help"><button type="button" class="help-btn" :aria-expanded="helpOpen==='time' ? 'true' : 'false'" :aria-label="t('helpAria')" @click.prevent.stop="toggleHelp('time')">?</button><span v-if="helpOpen==='time'" class="help-pop" role="note">{{ t('startTimeTip') }}</span></span></label>
-                    <div class="question-count-controls">
-                        <input id="question-time" type="number" min="5" max="120" step="1" inputmode="numeric" autocomplete="off" :placeholder="t('questionTimePlaceholder')" :value="s.timeInput" @input="onTimeInput">
+                    <div class="start-field">
+                        <label for="question-time" class="muted">{{ t('questionTimeLabel') }}<span class="help"><button type="button" class="help-btn" :aria-expanded="helpOpen==='time' ? 'true' : 'false'" :aria-label="t('helpAria')" @click.prevent.stop="toggleHelp('time')">?</button><span v-if="helpOpen==='time'" class="help-pop" role="note">{{ t('startTimeTip') }}</span></span></label>
+                        <div class="question-count-controls">
+                            <input id="question-time" type="number" min="5" max="120" step="1" inputmode="numeric" autocomplete="off" :placeholder="t('questionTimePlaceholder')" :value="s.timeInput" @input="onTimeInput">
+                        </div>
                     </div>
-                    <label for="feedback-seconds" class="muted">{{ t('feedbackSecondsLabel') }}<span class="help"><button type="button" class="help-btn" :aria-expanded="helpOpen==='feedback' ? 'true' : 'false'" :aria-label="t('helpAria')" @click.prevent.stop="toggleHelp('feedback')">?</button><span v-if="helpOpen==='feedback'" class="help-pop" role="note">{{ t('feedbackSecondsTip') }}</span></span></label>
-                    <div class="question-count-controls">
-                        <input id="feedback-seconds" type="number" min="1" max="30" step="1" inputmode="numeric" autocomplete="off" :value="s.feedbackSecondsInput" @input="onFeedbackSecondsInput">
+                    <div class="start-field">
+                        <label for="feedback-seconds" class="muted">{{ t('feedbackSecondsLabel') }}<span class="help"><button type="button" class="help-btn" :aria-expanded="helpOpen==='feedback' ? 'true' : 'false'" :aria-label="t('helpAria')" @click.prevent.stop="toggleHelp('feedback')">?</button><span v-if="helpOpen==='feedback'" class="help-pop" role="note">{{ t('feedbackSecondsTip') }}</span></span></label>
+                        <div class="question-count-controls">
+                            <input id="feedback-seconds" type="number" min="1" max="30" step="1" inputmode="numeric" autocomplete="off" :value="s.feedbackSecondsInput" @input="onFeedbackSecondsInput">
+                        </div>
                     </div>
                     <template v-if="hasComposite">
                         <label for="matching-extra" class="muted">{{ t('matchingExtraLabel') }}<span class="help"><button type="button" class="help-btn" :aria-expanded="helpOpen==='matching_extra' ? 'true' : 'false'" :aria-label="t('helpAria')" @click.prevent.stop="toggleHelp('matching_extra')">?</button><span v-if="helpOpen==='matching_extra'" class="help-pop" role="note">{{ t('matchingExtraTip') }}</span></span></label>
@@ -166,9 +173,12 @@
 
                     <label class="solo-check"><input type="checkbox" id="opt-shuffle-questions" v-model="s.shuffleQuestions"> <span>{{ t('optShuffleQuestions') }}</span><span class="help"><button type="button" class="help-btn" :aria-expanded="helpOpen==='shuffle' ? 'true' : 'false'" :aria-label="t('helpAria')" @click.prevent.stop="toggleHelp('shuffle')">?</button><span v-if="helpOpen==='shuffle'" class="help-pop" role="note">{{ t('optShuffleTip') }}</span></span></label>
                     <label class="solo-check"><input type="checkbox" id="opt-show-answers" v-model="s.showAnswers"> <span>{{ t('optShowAnswers') }}</span><span class="help"><button type="button" class="help-btn" :aria-expanded="helpOpen==='show_answers' ? 'true' : 'false'" :aria-label="t('helpAria')" @click.prevent.stop="toggleHelp('show_answers')">?</button><span v-if="helpOpen==='show_answers'" class="help-pop" role="note">{{ t('optShowAnswersTip') }}</span></span></label>
+                    <label class="solo-check"><input type="checkbox" id="opt-show-question-countdown" :checked="s.showQuestionCountdown" @change="onShowQuestionCountdownChange"> <span>{{ t('optShowQuestionCountdown') }}</span><span class="help"><button type="button" class="help-btn" :aria-expanded="helpOpen==='showQuestionCountdown' ? 'true' : 'false'" :aria-label="t('helpAria')" @click.prevent.stop="toggleHelp('showQuestionCountdown')">?</button><span v-if="helpOpen==='showQuestionCountdown'" class="help-pop" role="note">{{ t('optShowQuestionCountdownTip') }}</span></span></label>
                     <label class="solo-check"><input type="checkbox" id="opt-ghost" v-model="s.ghostEnabled"> <span>{{ t('optGhost') }}</span><span class="help"><button type="button" class="help-btn" :aria-expanded="helpOpen==='ghost' ? 'true' : 'false'" :aria-label="t('helpAria')" @click.prevent.stop="toggleHelp('ghost')">?</button><span v-if="helpOpen==='ghost'" class="help-pop" role="note">{{ t('optGhostTip') }}</span></span></label>
 
+                    <div class="start-actions">
                     <button id="start-btn" class="btn btn-primary" @click="start">{{ t('startButton') }}</button>
+                    </div>
                     </div>
                 <div class="start-music">
                 <p class="start-music__title muted">{{ t('bgMusicTitle') }}<span class="help"><button type="button" class="help-btn" :aria-expanded="helpOpen==='music' ? 'true' : 'false'" :aria-label="t('helpAria')" @click.prevent.stop="toggleHelp('music')">?</button><span v-if="helpOpen==='music'" class="help-pop" role="note">{{ t('startMusicTip') }}</span></span></p>
@@ -212,17 +222,32 @@
                     </div>
                     <div class="question-card" v-show="!s.paused">
                         <!-- Compte arrere 3-2-1 abans de cada pregunta (proposta 23). -->
-                        <div id="solo-countdown" class="question-countdown" :class="{ 'is-visible': s.countdown > 0, 'is-ticking': s.countdown > 0 }" aria-live="polite" v-if="s.countdown > 0">
-                            <div class="question-countdown__label">{{ t('countdownLabel') }}</div>
-                            <div class="question-countdown__dial" :key="'dial-' + s.countdown"><span>{{ s.countdown }}</span></div>
-                            <div class="question-countdown__hint">{{ t('countdownHint') }}</div>
+                        <!-- Fase de vídeo (feature 24): mira el vídeo; la pregunta comença en acabar-lo. -->
+                        <div id="solo-learning" class="solo-learning" role="status" v-if="s.learning">
+                            <p class="solo-learning__hint">{{ t('learnWatch') }}</p>
+                            <div class="question-media show">
+                                <video id="solo-learn-video" controls playsinline :src="media.video || null" :style="{ display: media.video ? 'block' : 'none' }" @ended="finishLearning"></video>
+                                <iframe referrerpolicy="strict-origin-when-cross-origin" v-if="media.youtube" id="solo-learn-iframe" title="video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen :src="media.youtube"></iframe>
+                            </div>
+                            <button id="solo-learn-finish" type="button" class="btn btn-primary solo-learning__btn" @click="finishLearning">{{ t('learnFinish') }}</button>
+                        </div>
+                        <div class="solo-countdown-wrap" v-else-if="s.countdown > 0">
+                            <!-- La pregunta, si l'opció està marcada, a dalt; la compte arrere, a sota. -->
+                            <div v-if="s.showQuestionCountdown && question" id="solo-countdown-question" class="solo-countdown-question">
+                                <p class="question-text">{{ question.question || '' }}</p>
+                            </div>
+                            <div id="solo-countdown" class="question-countdown" :class="{ 'is-visible': s.countdown > 0, 'is-ticking': s.countdown > 0 }" aria-live="polite">
+                                <div class="question-countdown__label">{{ t('countdownLabel') }}</div>
+                                <div class="question-countdown__dial" :key="'dial-' + s.countdown"><span>{{ s.countdown }}</span></div>
+                                <div class="question-countdown__hint">{{ t('countdownHint') }}</div>
+                            </div>
                         </div>
                         <template v-else>
                         <p id="question-text" class="question-text">{{ question ? (question.question || '') : '' }}</p>
                         <div id="question-media" class="question-media" :class="{ hidden: !hasMedia, show: hasMedia }">
                             <img id="question-image" alt="" :src="media.image || null" :style="{ display: media.image ? 'block' : 'none' }">
-                            <video id="question-video" controls playsinline :src="media.video || null" :style="{ display: media.video ? 'block' : 'none' }"></video>
-                            <iframe id="question-iframe" title="video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen :src="media.youtube || null" :style="{ display: media.youtube ? 'block' : 'none' }"></iframe>
+                            <video id="question-video" controls playsinline style="display: none"></video>
+                            <iframe referrerpolicy="strict-origin-when-cross-origin" id="question-iframe" title="video" frameborder="0" allowfullscreen style="display: none"></iframe>
                         </div>
                         <matching-board v-if="showMatching" :key="'match-' + s.idx" :left="question.matchLeft" :right="question.matchRight" :t="boardT" @submit="submitMatching"></matching-board>
                         <order-board v-if="showOrder" :key="'order-' + s.idx" :items="question.orderItems" :t="boardT" @submit="submitOrder"></order-board>
@@ -244,6 +269,14 @@
                 </div>
 
                 <div id="result-area" class="result-area" :class="{ hidden: s.view !== 'result' }">
+                    <!-- El mateix recuadre que a l'inici: logo de EduHoot o imatge del quiz, i el resum del quiz. -->
+                    <div class="result-area__info">
+                        <div class="quiz-banner" :class="{ 'quiz-banner--logo-only': !quizImage }">
+                            <img v-if="!quizImage" class="quiz-banner__logo" src="/icons/logo.svg" alt="EduHoot">
+                            <img v-if="quizImage" class="quiz-banner__cover" :src="quizImage" alt="" @error="$event.target.style.display = 'none'; $event.target.parentNode.classList.add('quiz-banner--logo-only')">
+                        </div>
+                        <p id="result-meta" class="muted"><span class="selected-meta__line">{{ selectedMetaCount }}</span> <span v-if="selectedMetaTags" class="selected-meta__line">{{ selectedMetaTags }}</span></p>
+                    </div>
                     <h3>{{ t('finishTitle') }}</h3>
                     <p id="result-summary" class="subtext">{{ resultSummary }}</p>
                     <p v-if="resultGhostText" id="result-ghost" class="subtext">{{ resultGhostText }}</p>
@@ -314,16 +347,25 @@
                     <div v-else class="flashcard-wrap">
                         <p id="cards-progress" class="cards-progress">{{ cardsProgressText }}</p>
                         <div class="flashcard-scene">
-                            <div id="flashcard" class="flashcard" :class="{ 'is-back': s.cards.flipped, 'is-contrast': s.cards.highContrast, 'is-tall': s.cards.oneColumn, 'no-flip-click': !s.cards.flipOnClick }" @click="cardsFlipFromCard">
+                            <div id="flashcard" class="flashcard" :class="{ 'is-learning': cardsLearning, 'is-back': s.cards.flipped, 'is-contrast': s.cards.highContrast, 'is-tall': s.cards.oneColumn, 'no-flip-click': !s.cards.flipOnClick }" @click="cardsFlipFromCard">
                                 <!-- Les dues cares són sempre al DOM; la que no toca queda oculta i inerta (ni teclat ni lector de pantalla). -->
                                 <div class="flashcard__face flashcard__face--front" :class="{ 'has-options': cardsHasOptionsBlock, 'has-media': cardsHasMedia }" :aria-hidden="s.cards.flipped ? 'true' : 'false'" :inert="s.cards.flipped || null">
                                     <p class="flashcard__label">{{ t('flashcardsFront') }}</p>
                                     <p id="flashcard-question" class="question-text">{{ cardsFrontText }}</p>
                                     <!-- El media es desmunta en girar perquè el vídeo o l'àudio no segueixin sonant de dors. Va sota l'enunciat i damunt de les opcions. -->
-                                    <div class="flashcard__media" v-if="!s.cards.flipped && (cardsMedia.image || cardsMedia.video || cardsMedia.youtube)">
+                                    <!-- Fase de vídeo (feature 24), dins de la targeta: primer es mira; després es respon. -->
+                                    <div v-if="cardsLearning && !s.cards.flipped" id="cards-learning" class="flashcard__learning" role="status">
+                                        <p class="solo-learning__hint">{{ t('learnWatch') }}</p>
+                                        <div class="question-media show">
+                                            <video v-if="cardsVideoMedia.video" id="cards-learn-video" controls playsinline :src="cardsVideoMedia.video" @ended="cardsFinishLearning" @click.stop></video>
+                                            <iframe v-if="cardsVideoMedia.youtube" id="cards-learn-iframe" referrerpolicy="strict-origin-when-cross-origin" title="video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen :src="cardsVideoMedia.youtube"></iframe>
+                                        </div>
+                                        <button id="cards-learn-finish" type="button" class="btn btn-primary solo-learning__btn" @click.stop="cardsFinishLearning">{{ t('learnFinish') }}</button>
+                                    </div>
+                                    <div class="flashcard__media" v-else-if="!s.cards.flipped && (cardsMedia.image || cardsMedia.video || cardsMedia.youtube)">
                                         <img v-if="cardsMedia.image" alt="" :src="cardsMedia.image">
                                         <video v-if="cardsMedia.video" controls playsinline :src="cardsMedia.video"></video>
-                                        <iframe v-if="cardsMedia.youtube" title="video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen :src="cardsMedia.youtube"></iframe>
+                                        <iframe referrerpolicy="strict-origin-when-cross-origin" v-if="cardsMedia.youtube" title="video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen :src="cardsMedia.youtube"></iframe>
                                     </div>
                                     <ul v-if="cardsOptions.length" class="flashcard__options" :class="{ 'flashcard__options--tf': cardsOptionsColumns === 'tf', 'flashcard__options--two': cardsOptionsColumns === 'two', 'flashcard__options--one': cardsOptionsColumns === 'one', 'flashcard__options--stacked': cardsOptionsStacked }" role="group" :aria-label="t('flashcardsOptions')">
                                         <li v-for="o in cardsOptions" :key="o.n">

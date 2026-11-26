@@ -36,8 +36,11 @@ var app = Vue.createApp({
     },
     data: function(){
         return {
-            // 'idle' | 'question' | 'result' | 'answered'
+            // 'idle' | 'learning' (fase de vídeo, feature 24) | 'question' | 'result' | 'answered'
             state: 'idle',
+            learnStartSec: 0,
+            learnImage: '',
+            learnVideo: '',
             quizName: '',
             playerName: '',
             playerScore: 0,
@@ -149,6 +152,11 @@ var app = Vue.createApp({
             socket.emit('spAnswer', payload);
         },
         next: function(){ socket.emit('spNext'); },
+        // Acaba la fase de vídeo: el servidor comença el temps de la pregunta (spLearnedAck).
+        finishLearning: function(){
+            if(this.state !== 'learning') return;
+            socket.emit('spLearned');
+        },
         // Deures con varios intentos: empieza otro; el servidor responde «spIdle» y se pide la primera pregunta.
         newAttempt: function(){ socket.emit('spNewAttempt'); },
         hwRecovery: function(){ return (window.EDUHOOT_HOMEWORK && window.EDUHOOT_HOMEWORK.recovery) || ''; },
@@ -270,7 +278,61 @@ socket.on('playerGameData', function(data){
         }
     }
 });
-socket.on('questionMedia', function(d){ setMedia(d && d.image, d && d.video); });
+// Fase de vídeo: el vídeo arriba després de la pregunta; cal posar-lo al segon d'inici quan es carregue.
+// En acabar l'arxiu la fase es tanca sola; amb YouTube, amb el botó.
+function prepareLearnVideo(){
+    var v = document.getElementById('playerQuestionVideo');
+    if(!v || !v.getAttribute('src')) return;
+    var start = Number(app.learnStartSec) || 0;
+    if(start > 0){
+        var seek = function(){ try{ v.currentTime = start; }catch(e){} };
+        if(v.readyState >= 1) seek(); else v.addEventListener('loadedmetadata', seek, { once: true });
+    }
+    if(!v.dataset.learnBound){
+        v.dataset.learnBound = '1';
+        v.addEventListener('ended', function(){ if(app.state === 'learning') app.finishLearning(); });
+    }
+}
+
+// Imatge de la pregunta (sense vídeo): la pròpia, la miniatura de YouTube o cap.
+function imageForQuestion(imageUrl, videoUrl){
+    if(imageUrl) return imageUrl;
+    var yt = parseYouTubeId(videoUrl);
+    return yt ? 'https://img.youtube.com/vi/' + yt + '/hqdefault.jpg' : '';
+}
+// Fotograma d'un vídeo de fitxer (JPEG), si el navegador el deixa dibuixar. Un vídeo d'un altre origen
+// sense CORS no es pot exportar (toDataURL llança): aleshores no hi ha imatge. Amb YouTube no es pot.
+function captureVideoFrame(v){
+    if(!v || !v.videoWidth || !v.videoHeight) return '';
+    try{
+        var scale = Math.min(1, 640 / v.videoWidth);
+        var c = document.createElement('canvas');
+        c.width = Math.round(v.videoWidth * scale);
+        c.height = Math.round(v.videoHeight * scale);
+        c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
+        return c.toDataURL('image/jpeg', 0.8);
+    }catch(e){ return ''; }
+}
+
+socket.on('questionMedia', function(d){
+    if(app.state === 'learning'){
+        setMedia(d && d.image, d && d.video);
+        prepareLearnVideo();
+        return;
+    }
+    // La pregunta ja no mostra el vídeo: només la imatge.
+    setMedia(imageForQuestion(d && d.image, d && d.video), '');
+});
+
+// El servidor ha començat el temps de la pregunta: ara sí es respon.
+socket.on('spLearnedAck', function(d){
+    if(app.state !== 'learning') return;
+    // En acabar la fase: la imatge és la pròpia, la miniatura de YouTube o un fotograma del vídeo (si el navegador el deixa).
+    var frame = app.learnImage || imageForQuestion('', app.learnVideo) ? '' : captureVideoFrame(document.getElementById('playerQuestionVideo'));
+    setMedia(app.learnImage || imageForQuestion('', app.learnVideo) || frame, '');
+    app.state = 'question';
+    startTick(Number(d && d.timeTotal) || app.timerTotal);
+});
 
 // Primera carga: aún sin pregunta, se pide la primera.
 socket.on('spIdle', function(){ socket.emit('spNext'); });
@@ -315,9 +377,18 @@ socket.on('spQuestion', function(d){
         lastAnswers = app.answers.slice();
     }
     app.timerTotal = Math.max(5, Number(d.timeTotal) || Number(d.time) || 20);
-    app.state = 'question';
-    startTick(Number(d.time) || app.timerTotal);
-    if(!d.blind) setMedia(d.image, d.video);
+    if(d.learning){
+        // Fase de vídeo: no hi ha temps ni respostes fins que acaba el vídeo.
+        app.state = 'learning';
+        app.learnStartSec = Number(d.videoStartSec) || 0;
+    }else{
+        app.state = 'question';
+        startTick(Number(d.time) || app.timerTotal);
+    }
+    app.learnImage = d.image || '';
+    app.learnVideo = d.video || '';
+    // Amb la fase, el vídeo es veu; després, només la imatge.
+    if(!d.blind) setMedia(d.learning ? d.image : imageForQuestion(d.image, d.video), d.learning ? d.video : '');
     if(d.type === 'short-answer' || d.type === 'numeric'){
         Vue.nextTick(function(){ try{ app.$refs.freeAnswerInput.focus(); }catch(e){} });
     }

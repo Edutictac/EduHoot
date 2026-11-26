@@ -38,7 +38,7 @@ function quiz(id, name, extra) {
 }
 
 const library = [
-    quiz('q1', 'Geografia', { tags: ['socials', 'mapes'], ownerId: 'u1', playsCount: 7, playersCount: 21, createdAt: '2026-03-01T00:00:00Z', ratingAvg: 4, ratingCount: 2, allowClone: true }),
+    quiz('q1', 'Geografia', { tags: ['socials', 'mapes'], ownerId: 'u1', questionCount: 4, playsCount: 7, playersCount: 21, createdAt: '2026-03-01T00:00:00Z', ratingAvg: 4, ratingCount: 2, allowClone: true }),
     quiz('q2', 'Àlgebra', { tags: ['mates'], ownerNickname: '', createdAt: '2026-01-01T00:00:00Z', ratingAvg: 5, ratingCount: 1 }),
     quiz('q3', 'Biologia', { tags: ['ciencies', 'socials'], visibility: 'private', createdAt: '2026-02-01T00:00:00Z', sourceQuizId: 'q1', sourceQuizName: 'Geografia', sourceOwnerNickname: 'Ana' })
 ];
@@ -131,7 +131,7 @@ test('biblioteca sin sesión: tarjetas, recuento, metadatos y permisos', async (
     const geo = card(page, 'Geografia');
     await expect(geo.locator('.badge')).toHaveText('ID q1');
     await expect(geo.locator('.game-meta')).toHaveText('Teacher · Público');
-    await expect(geo.locator('.game-stats__item')).toHaveText(['7 partidas', '21 jugadores']);
+    await expect(geo.locator('.game-stats__item')).toHaveText(['4 preguntas', '7 partidas', '21 jugadores']);
     await expect(geo.locator('.tag-wrap .tag')).toHaveText(['socials', 'mapes']);
     await expect(card(page, 'Àlgebra').locator('.game-meta')).toHaveText('Creador desconocido · Público');
     await expect(card(page, 'Biologia').locator('.game-meta')).toHaveText('Teacher · Solo yo (privado) · Basado en "Geografia" (ID q1) · de Ana');

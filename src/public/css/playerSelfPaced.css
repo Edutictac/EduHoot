@@ -53,3 +53,8 @@
     .hw-entry{ margin-top: 64px; }
     .hw-entry__card{ padding: 16px; }
 }
+
+/* Fase de vídeo («aprén i després respon», feature 24): el botó per acabar-la, sota el vídeo. */
+.sp-learning{ display: flex; flex-direction: column; align-items: center; gap: 12px; margin: 12px 0; text-align: center; }
+.sp-learning__hint{ margin: 0; font-weight: 600; }
+.sp-learning__btn{ min-width: 200px; }

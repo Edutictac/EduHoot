@@ -79,6 +79,7 @@ const ASSETS = [
   '/js/host.js',
   '/js/chip-align.js',
   '/js/env-badge.js',
+  '/js/solo-early.js',
   '/js/pwa-install.js',
   '/js/libs/jqueryLibrary.js',
   '/js/libs/deparam.js',

@@ -1,6 +1,13 @@
 // Modo individual: listado de quizzes públicos + juego auto-dirigido con ranking global
 // El estado es reactivo: la plantilla de Vue (#solo-tpl) lo lee directamente
 // (Subfase B); el resto de funciones solo lo modifican.
+// Mostrar la pregunta durant la compte arrere: marcada per defecte; es recorda en este navegador.
+function readShowQuestionCountdown(){
+        try{
+            if(localStorage.getItem('eduhoot-solo-show-question-countdown') === '0') return false;
+        }catch(e){}
+        return true;
+    }
 function readFeedbackSeconds(){
         try{
             var v = parseInt(localStorage.getItem('eduhoot-solo-feedback-seconds'), 10);
@@ -45,6 +52,8 @@ function readFeedbackSeconds(){
         timer: null,
         // Segons que queden del compte arrere 3-2-1 (0 = no se'n mostra cap).
         countdown: 0,
+        learning: false,
+        capturedImage: '',
         // Pausa de la partida (la pregunta y el tiempo quedan congelados) y
         // confirmación en dos pasos de «Cancelar partida».
         paused: false,
@@ -82,6 +91,7 @@ function readFeedbackSeconds(){
         feedbackModalOpen: false,
         // Mode fantasma: desactivat per defecte; només amb el check activat es compara i es guarda la marca.
         ghostEnabled: false,
+        showQuestionCountdown: readShowQuestionCountdown(),
         // Mode fantasma: marca anterior, diferència després de la pregunta i punts de la partida.
         ghost: null,
         ghostDiff: null,

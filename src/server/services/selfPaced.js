@@ -33,7 +33,9 @@ function currentQuestion(game, player) {
 }
 
 // Pasa a la pregunta siguiente (o a la primera). Devuelve null si ya no quedan: el alumno termina.
-function beginNext(game, player, now) {
+// Con opts.videoLearn (feature 24), una pregunta con vídeo empieza en fase de aprendizaje: el reloj
+// no corre hasta que el alumno acaba el vídeo (finishLearning).
+function beginNext(game, player, now, opts) {
   const sp = ensureState(player);
   if (sp.finished) return null;
   const next = sp.index + 1;
@@ -41,10 +43,13 @@ function beginNext(game, player, now) {
     sp.finished = true;
     sp.startedAt = 0;
     sp.hand = false;
+    sp.learning = false;
     return null;
   }
   sp.index = next;
-  sp.startedAt = now;
+  const learning = !!(opts && opts.videoLearn && questionsOf(game)[next - 1] && questionsOf(game)[next - 1].video);
+  sp.learning = learning;
+  sp.startedAt = learning ? 0 : now;
   sp.answered = false;
   sp.hand = false; // la mano alzada es de una pregunta
   return questionsOf(game)[next - 1];
@@ -68,6 +73,7 @@ function submitAnswer(game, player, submission, now) {
   const sp = ensureState(player);
   const q = currentQuestion(game, player);
   if (sp.finished || !q) return { ok: false, reason: 'no-question' };
+  if (sp.learning) return { ok: false, reason: 'learning' };
   if (sp.answered) return { ok: false, reason: 'already-answered' };
   const elapsed = Math.max(0, now - sp.startedAt);
   const limit = limitMsOf(game, q);
@@ -105,7 +111,7 @@ function submitAnswer(game, player, submission, now) {
 function expireQuestion(game, player, now) {
   const sp = ensureState(player);
   const q = currentQuestion(game, player);
-  if (sp.finished || !q || sp.answered) return false;
+  if (sp.finished || !q || sp.answered || sp.learning) return false;
   if (now - sp.startedAt < limitMsOf(game, q)) return false;
   const meta = getQuestionMeta(q);
   sp.answered = true;
@@ -114,6 +120,15 @@ function expireQuestion(game, player, now) {
     player.gameData.wrongCount = (Number(player.gameData.wrongCount) || 0) + 1;
     if (isStreakEnabled(game)) player.gameData.streak = 0;
   }
+  return true;
+}
+
+// Fin de la fase de vídeo (feature 24): el reloj de la pregunta empieza ahora. Devuelve false si no hay fase.
+function finishLearning(game, player, now) {
+  const sp = ensureState(player);
+  if (!sp.learning || sp.finished) return false;
+  sp.learning = false;
+  sp.startedAt = now;
   return true;
 }
 
@@ -139,6 +154,7 @@ module.exports = {
   currentQuestion,
   beginNext,
   remainingMs,
+  finishLearning,
   submitAnswer,
   expireQuestion,
   finishPlayer,

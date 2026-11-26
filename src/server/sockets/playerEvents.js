@@ -29,7 +29,8 @@ module.exports = function createPlayerEvents({
     emitQuestionOverPayloadDeferred,
     recordPlayerAnswerHistory,
     buildStudentPlayerPayload,
-    logGames
+    logGames,
+    countdownPreviewOf
   } = helpers;
 
   // Solo al anfitrión: estado de respuesta, mano levantada y pestaña de cada alumno.
@@ -229,7 +230,8 @@ module.exports = function createPlayerEvents({
             socket.emit('questionCountdown', {
               seconds: Math.max(0, Math.ceil(((game.gameData.questionCountdownEndsAt || Date.now()) - Date.now()) / 1000)),
               questionNumber: game.gameData.question,
-              totalQuestions: game.gameData.totalQuestions || questions.length
+              totalQuestions: game.gameData.totalQuestions || questions.length,
+              preview: countdownPreviewOf(game)
             });
             return;
           }
@@ -246,7 +248,7 @@ module.exports = function createPlayerEvents({
             answers: current.answers,
             type: current.type || 'quiz',
             image: current.image || '',
-            video: current.video || '',
+            video: '', // En directo l'alumnat no veu el vídeo.
             pointsMultiplier: Number(current.pointsMultiplier) > 1 ? 2 : 1,
             time: timeLeft,
             ...(current.type === 'matching' ? { matchLeft: current.matchLeft, matchRight: current.matchRight } : {}),

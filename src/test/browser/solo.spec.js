@@ -619,8 +619,17 @@ test('imagen y vídeo de YouTube de la pregunta', async ({ page }) => {
     await answerButtons(page).nth(0).click();
     await page.clock.runFor(5000 + 3000);
     await expect(page.locator('#question-image')).toBeHidden();
-    await expect(page.locator('#question-iframe')).toBeVisible();
-    await expect(page.locator('#question-iframe')).toHaveAttribute('src', 'https://www.youtube-nocookie.com/embed/abc123');
+    // Amb vídeo, primer es mira (feature 24): el vídeo de YouTube és a la fase, amb el seu botó.
+    await expect(page.locator('#solo-learn-iframe')).toHaveAttribute('src', 'https://www.youtube-nocookie.com/embed/abc123');
+    // YouTube no incrusta el vídeo sin referrer (error 153): el iframe ha de enviar-lo.
+    await expect(page.locator('#solo-learn-iframe')).toHaveAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+    await expect(answerButtons(page)).toHaveCount(0);
+    await page.locator('#solo-learn-finish').click();
+    await page.clock.runFor(3000);
+    // Després de la fase, la pregunta mostra la miniatura de YouTube; el vídeo no es torna a reproduir.
+    await expect(page.locator('#question-image')).toBeVisible();
+    await expect(page.locator('#question-image')).toHaveAttribute('src', 'https://img.youtube.com/vi/abc123/hqdefault.jpg');
+    await expect(page.locator('#question-iframe')).toBeHidden();
     await expect(answerButtons(page).nth(0)).toHaveText('Respuesta 1');
 });
 
@@ -658,12 +667,15 @@ test('compte arrere: queda centrat en vertical en l\'espai lliure sota la barra 
     await page.locator('#start-btn').click();
     await expect(page.locator('#solo-countdown span')).toHaveText('3');
     const m = await page.evaluate(() => {
-        const dial = document.querySelector('#solo-countdown').getBoundingClientRect();
-        const timer = document.querySelector('.solo-timer-row').getBoundingClientRect();
-        const panel = document.querySelector('#game-panel').getBoundingClientRect();
-        const style = getComputedStyle(document.querySelector('#game-panel'));
-        const free = { top: timer.bottom, bottom: panel.bottom - parseFloat(style.paddingBottom) };
-        return { above: dial.top - free.top, below: free.bottom - dial.bottom };
+        // El conjunto: la pregunta (si es mostra) i la compte arrere, juntes.
+        const first = (document.getElementById('solo-countdown-question') || document.getElementById('solo-countdown')).getBoundingClientRect();
+        const dial = document.getElementById('solo-countdown').getBoundingClientRect();
+        // L'espai útil és dins de la targeta de la pregunta (sense el seu farciment).
+        const card = document.querySelector('.solo-countdown-wrap').parentElement;
+        const cardBox = card.getBoundingClientRect();
+        const cs = getComputedStyle(card);
+        const free = { top: cardBox.top + parseFloat(cs.paddingTop), bottom: cardBox.bottom - parseFloat(cs.paddingBottom) };
+        return { above: first.top - free.top, below: free.bottom - dial.bottom };
     });
     // L'espai de dalt i el de baix són (quasi) iguals.
     expect(Math.abs(m.above - m.below)).toBeLessThan(6);

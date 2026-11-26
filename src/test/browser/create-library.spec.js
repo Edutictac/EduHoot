@@ -127,3 +127,24 @@ test('biblioteca: valorar un quiz público con cinco estrellas, como en el modo 
     expect(posts[0].rating).toBe(4);
     expect(typeof posts[0].deviceId).toBe('string');
 });
+
+// Cada quiz muestra el total de preguntas en su tarjeta, junto a partidas y jugadores.
+test('biblioteca de /create/: cada tarjeta muestra el total de preguntas', async ({ page }) => {
+    const state = {
+        quizzes: [
+            { ...quiz('q1', 'Informàtica', ['informatica']), questionCount: 3 },
+            { ...quiz('q2', 'Sense preguntes', ['informatica']), questionCount: 0 }
+        ],
+        deleted: []
+    };
+    await stubBackend(page, state);
+    await page.goto('/create/?lang=es');
+    const cards = page.locator('#game-list .game-card');
+    await expect(cards).toHaveCount(2);
+    await expect(cards.filter({ hasText: 'Informàtica' })).toContainText('3 preguntas');
+    await expect(cards.filter({ hasText: 'Sense preguntes' })).toContainText('0 preguntas');
+    // El número y la palabra, en el groc corporatiu (la regla base de la tarjeta no els ha de guanyar).
+    const qStat = cards.filter({ hasText: 'Informàtica' }).locator('.game-stats__item--questions');
+    await expect(qStat).toHaveCSS('color', 'rgb(255, 230, 112)');
+    await expect(qStat.locator('.game-stats__num')).toHaveCSS('color', 'rgb(255, 230, 112)');
+});
