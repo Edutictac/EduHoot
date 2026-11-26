@@ -9,22 +9,23 @@
         <link href="/css/fonts.css" rel="stylesheet">
         <link rel="stylesheet" href="/css/edutictac-footer.css">
         <link rel="stylesheet" href="/css/edutictac-shared.css">
+        <link rel="stylesheet" href="/css/listPages.css">
         <link rel="stylesheet" href="/css/homeworkManage.css">
         <script src="/js/edutictac-chip.js"></script>
         <script src="https://commons.edutictac.es/assets/account-widget.js" defer></script>
         <link rel="icon" href="/icons/logo.svg" type="image/svg+xml">
     </head>
-    <body>
+    <body class="lp-page">
         <!-- Deures asíncrons (feature 1), lado del docente: crear (?quiz=ID), lista y resultados (?code=). -->
-        <a id="back" href="/create/" data-hw="back"></a>
         <edutictac-account class="site-account site-account--top" data-base="https://commons.edutictac.es"></edutictac-account>
         <div id="hw-app"></div>
         <template id="hw-tpl">
         <div class="page-shell hw-shell">
             <div class="top-row">
-                <h1 id="hwPageTitle"><img class="title-logo" src="/icons/logo.svg" alt="" width="44" height="44"><span>{{ t('title') }}</span></h1>
+                <h1 id="hwPageTitle" class="lp-title"><img class="title-logo" src="/icons/logo.svg" alt="" width="56" height="56"><span>{{ t('title') }}</span></h1>
                 <div class="top-actions">
-                    <a v-if="view !== 'list'" id="hwMineLink" class="btn btn-small btn-ghost" href="/create/homework/">{{ t('myHomeworkLink') }}</a>
+                    <a id="hwBackLink" :title="t('back')" class="btn btn-ghost btn-small" href="/create/">{{ t('back') }}</a>
+                    <a id="hwGamesLink" :title="t('myGames')" class="btn btn-ghost btn-small" href="/create/partidas/">{{ t('myGames') }}</a>
                     <label class="lang-switch">
                         <span>{{ t('langLabel') }}</span>
                         <select id="lang-select" data-lang-options="name"></select>
@@ -124,29 +125,108 @@
                 </div>
             </section>
 
-            <!-- Lista -->
-            <section v-else id="hwList" class="hw-list">
-                <p v-if="error" class="hw-error" role="alert">{{ t(error) }}</p>
-                <p v-if="!list.length" id="hwEmpty" class="hw-muted">{{ t('empty') }}</p>
-                <article v-for="h in list" :key="h.code" class="hw-card hw-item" :data-code="h.code">
-                    <div class="hw-item__head">
-                        <h2>{{ h.title }}</h2>
-                        <span class="hw-badge" :class="'is-' + stateOf(h)">{{ statusText(h) }}</span>
+            <!-- Lista: tarjetes o detall, amb imatge de fons, paginador i barra flotant (com a la biblioteca). -->
+            <section v-else class="hw-list-wrap">
+                <div v-if="list.length" class="lp-toolbar">
+                    <div class="lp-view" role="group" :aria-label="t('viewLabel')">
+                        <button id="hwViewCards" :title="t('viewCards')" type="button" class="btn btn-ghost btn-small" :class="{ 'is-active': listView === 'cards' }" :aria-pressed="listView === 'cards' ? 'true' : 'false'" @click="setView('cards')">{{ t('viewCards') }}</button>
+                        <button id="hwViewDetail" :title="t('viewDetail')" type="button" class="btn btn-ghost btn-small" :class="{ 'is-active': listView === 'detail' }" :aria-pressed="listView === 'detail' ? 'true' : 'false'" @click="setView('detail')">{{ t('viewDetail') }}</button>
                     </div>
-                    <p class="hw-muted">{{ h.quizName }} · {{ deadlineText(h) }} · {{ fmt('studentsN', { n: h.students }) }} · {{ fmt('finishedN', { n: h.finishedAttempts }) }}</p>
-                    <p class="hw-link">{{ linkOf(h) }}</p>
-                    <div class="hw-actions">
-                        <button type="button" class="btn btn-primary hw-copy" @click="copy(h)">{{ copied === h.code ? t('copied') : t('copyLink') }}</button>
-                        <a class="btn btn-ghost hw-results" :href="'/create/homework/?code=' + h.code">{{ t('results') }}</a>
-                        <button type="button" class="btn btn-ghost hw-toggle" v-if="stateOf(h) === 'open'" @click="setStatus(h, 'closed')">{{ t('close') }}</button>
-                        <button type="button" class="btn btn-ghost hw-reopen" v-else @click="reopen(h)">{{ t('reopen') }}</button>
-                        <button type="button" class="btn btn-danger hw-delete" :class="{ 'is-confirming': deleting === h.code }" @click="askDelete(h)">{{ deleting === h.code ? t('deleteConfirm') : t('delete') }}</button>
+                    <label v-if="listView === 'cards'" class="lp-cover"><span>{{ t('coverLabel') }}</span>
+                        <select id="hwCoverLevel" :value="coverLevel" @change="setCoverLevel">
+                            <option :value="0">{{ t('coverNone') }}</option>
+                            <option :value="10">{{ t('cover10') }}</option>
+                            <option :value="20">{{ t('cover20') }}</option>
+                            <option :value="30">{{ t('cover30') }}</option>
+                        </select>
+                    </label>
+                </div>
+                <div id="lpArea">
+                    <p v-if="error" class="hw-error" role="alert">{{ t(error) }}</p>
+                    <p v-if="!list.length" id="hwEmpty" class="hw-muted">{{ t('empty') }}</p>
+
+                    <div v-else-if="listView === 'cards'" class="game-grid hw-list">
+                        <article v-for="h in pageItems" :key="h.code" class="game-card hw-item" :data-code="h.code">
+                            <img v-if="coverLevel > 0" class="game-card__cover" :style="{ '--cover-opacity': coverLevel / 100 }" :src="coverSrc(h)" alt="" aria-hidden="true" loading="lazy" decoding="async" @error="onCoverError($event)">
+                            <div class="game-card-head">
+                                <div class="game-title">{{ h.title }}</div>
+                                <span class="hw-badge" :class="'is-' + stateOf(h)">{{ statusText(h) }}</span>
+                            </div>
+                            <div class="game-meta">{{ h.quizName }} · {{ deadlineText(h) }}</div>
+                            <div class="game-meta">{{ fmt('studentsN', { n: h.students }) }} · {{ fmt('finishedN', { n: h.finishedAttempts }) }}</div>
+                            <div class="hw-link">{{ linkOf(h) }}</div>
+                            <div class="hw-actions">
+                                <button type="button" class="btn btn-primary hw-copy" :title="copied === h.code ? t('copied') : t('copyLink')" @click="copy(h)"><span class="lp-txt">{{ copied === h.code ? t('copied') : t('copyLink') }}</span><span class="lp-ico" aria-hidden="true">🔗</span></button>
+                                <a class="btn btn-ghost hw-results" :title="t('results')" :href="'/create/homework/?code=' + h.code"><span class="lp-txt">{{ t('results') }}</span><span class="lp-ico" aria-hidden="true">📊</span></a>
+                                <button type="button" class="btn btn-ghost hw-toggle" :title="t('close')" v-if="stateOf(h) === 'open'" @click="setStatus(h, 'closed')"><span class="lp-txt">{{ t('close') }}</span><span class="lp-ico" aria-hidden="true">⏸</span></button>
+                                <button type="button" class="btn btn-ghost hw-reopen" :title="t('reopen')" v-else @click="reopen(h)"><span class="lp-txt">{{ t('reopen') }}</span><span class="lp-ico" aria-hidden="true">↻</span></button>
+                                <button type="button" class="btn btn-danger hw-delete" :title="deleting === h.code ? t('deleteConfirm') : t('delete')" :class="{ 'is-confirming': deleting === h.code }" @click="askDelete(h)"><span class="lp-txt">{{ deleting === h.code ? t('deleteConfirm') : t('delete') }}</span><span class="lp-ico" aria-hidden="true">🗑</span></button>
+                            </div>
+                            <div v-if="reopening === h.code" class="hw-reopen-box">
+                                <label>{{ t('newDeadline') }}<input type="datetime-local" class="hw-new-deadline" v-model="newDeadline"></label>
+                                <button type="button" class="btn btn-primary hw-reopen-ok" @click="confirmReopen(h)">{{ t('reopenOk') }}</button>
+                            </div>
+                        </article>
                     </div>
-                    <div v-if="reopening === h.code" class="hw-reopen-box">
-                        <label>{{ t('newDeadline') }}<input type="datetime-local" class="hw-new-deadline" v-model="newDeadline"></label>
-                        <button type="button" class="btn btn-primary hw-reopen-ok" @click="confirmReopen(h)">{{ t('reopenOk') }}</button>
+
+                    <div v-else class="hw-card hw-detail-card">
+                        <div class="hw-table-wrap">
+                            <table class="hw-table hw-detail" id="hwDetail">
+                                <thead><tr>
+                                    <th>{{ t('colHwTitle') }}</th>
+                                    <th>{{ t('colQuiz') }}</th>
+                                    <th>{{ t('colStatus') }}</th>
+                                    <th>{{ t('colDeadline') }}</th>
+                                    <th>{{ t('colStudentsN') }}</th>
+                                    <th>{{ t('colFinishedN') }}</th>
+                                    <th></th>
+                                </tr></thead>
+                                <tbody>
+                                    <tr v-for="h in pageItems" :key="h.code" :data-code="h.code">
+                                        <td class="hw-d-title" :data-label="t('colHwTitle')">{{ h.title }}</td>
+                                        <td class="hw-d-quiz" :title="h.quizName || ''" :data-label="t('colQuiz')"><code class="hw-d-id">{{ h.quizId || '—' }}</code></td>
+                                        <td :data-label="t('colStatus')"><span class="hw-badge" :class="'is-' + stateOf(h)">{{ statusText(h) }}</span></td>
+                                        <td class="hw-d-date" :data-label="t('colDeadline')">{{ deadlineValue(h) }}</td>
+                                        <td :data-label="t('colStudentsN')">{{ h.students }}</td>
+                                        <td :data-label="t('colFinishedN')">{{ h.finishedAttempts }}</td>
+                                        <td class="hw-d-actions">
+                                            <button type="button" class="btn btn-primary btn-small hw-copy" :title="copied === h.code ? t('copied') : t('copyLink')" @click="copy(h)"><span class="lp-txt">{{ copied === h.code ? t('copied') : t('copyLink') }}</span><span class="lp-ico" aria-hidden="true">🔗</span></button>
+                                            <a class="btn btn-ghost btn-small hw-results" :title="t('results')" :href="'/create/homework/?code=' + h.code"><span class="lp-txt">{{ t('results') }}</span><span class="lp-ico" aria-hidden="true">📊</span></a>
+                                            <button type="button" class="btn btn-ghost btn-small hw-toggle" :title="t('close')" v-if="stateOf(h) === 'open'" @click="setStatus(h, 'closed')"><span class="lp-txt">{{ t('close') }}</span><span class="lp-ico" aria-hidden="true">⏸</span></button>
+                                            <button type="button" class="btn btn-ghost btn-small hw-reopen" :title="t('reopen')" v-else @click="reopen(h)"><span class="lp-txt">{{ t('reopen') }}</span><span class="lp-ico" aria-hidden="true">↻</span></button>
+                                            <button type="button" class="btn btn-danger btn-small hw-delete" :title="deleting === h.code ? t('deleteConfirm') : t('delete')" :class="{ 'is-confirming': deleting === h.code }" @click="askDelete(h)"><span class="lp-txt">{{ deleting === h.code ? t('deleteConfirm') : t('delete') }}</span><span class="lp-ico" aria-hidden="true">🗑</span></button>
+                                            <div v-if="reopening === h.code" class="hw-reopen-box">
+                                                <label>{{ t('newDeadline') }}<input type="datetime-local" class="hw-new-deadline" v-model="newDeadline"></label>
+                                                <button type="button" class="btn btn-primary hw-reopen-ok" @click="confirmReopen(h)">{{ t('reopenOk') }}</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                </article>
+                </div>
+
+                <div v-if="list.length" id="lpPager" ref="pager" class="pagination hw-pager">
+                    <button id="hwPrev" :title="t('paginationPrev')" class="btn btn-ghost" v-show="totalPages > 1" :disabled="currentPage <= 1" @click="prevPage">{{ t('paginationPrev') }}</button>
+                    <select id="hwPageInfo" class="page-select" v-show="totalPages > 1" :value="currentPage" :aria-label="pageInfo" @change="onPage">
+                        <option v-for="n in pageNumbers" :key="n" :value="n">{{ pageLabel(n) }}</option>
+                    </select>
+                    <button id="hwNext" :title="t('paginationNext')" class="btn btn-ghost" v-show="totalPages > 1" :disabled="currentPage >= totalPages" @click="nextPage">{{ t('paginationNext') }}</button>
+                    <label class="page-size"><span>{{ t('pageSizeLabel') }}</span>
+                        <select id="hwPageSize" :value="pageSizeChoice" @change="onPageSize">
+                            <option value="auto">{{ t('pageSizeAuto') }}</option>
+                            <option v-for="n in sizes" :key="n" :value="String(n)">{{ n }}</option>
+                        </select>
+                    </label>
+                </div>
+                <div v-if="list.length" id="lpFixed" class="pagination-fixed" :class="{ 'is-visible': showFixed }" :inert="!showFixed || null">
+                    <button class="btn btn-ghost" :title="t('paginationPrev')" :disabled="currentPage <= 1" @click="prevPage">{{ t('paginationPrev') }}</button>
+                    <select class="page-select" :value="currentPage" :aria-label="pageInfo" @change="onPage">
+                        <option v-for="n in pageNumbers" :key="n" :value="n">{{ pageLabel(n) }}</option>
+                    </select>
+                    <button class="btn btn-ghost" :title="t('paginationNext')" :disabled="currentPage >= totalPages" @click="nextPage">{{ t('paginationNext') }}</button>
+                </div>
             </section>
         </div>
         </template>
@@ -154,6 +234,7 @@
         <script src="/js/languages.js"></script>
         <script src="/js/chip-align.js"></script>
         <script src="/js/env-badge.js"></script>
+        <script src="/js/listPageCommon.js"></script>
         <script src="/js/homeworkManage.js"></script>
     </body>
 </html>

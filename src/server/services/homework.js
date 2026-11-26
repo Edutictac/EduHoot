@@ -176,6 +176,7 @@ module.exports = function createHomeworkService({ getHomeworksCollection, getHom
     return {
       code: hw.code,
       title: hw.title,
+      quizId: hw.quizId,
       quizName: hw.quizName,
       totalQuestions: hw.totalQuestions,
       maxAttempts: hw.maxAttempts,

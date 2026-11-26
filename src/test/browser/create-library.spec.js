@@ -208,7 +208,7 @@ test('biblioteca de /create/: el desplegable «Imagen de fondo» tiene 20 % por 
 });
 
 // «Imagen de fondo» va justo sota del text de visibilitat, amb l'estil del selector d'elements per pàgina.
-test('biblioteca de /create/: «Imagen de fondo» va just sota del texto de visibilidad, con el estilo del selector de página', async ({ page }) => {
+test('biblioteca de /create/: «Imagen de fondo» va just sota del text de visibilitat, a la dreta de la fila de vista, amb el mateix estil que el selector de pàgina', async ({ page }) => {
     const state = { quizzes: [quiz('q1', 'Geografia', [])], deleted: [] };
     await stubBackend(page, state);
     await page.goto('/create/?lang=es');
@@ -224,12 +224,13 @@ test('biblioteca de /create/: «Imagen de fondo» va just sota del texto de visi
         return { radius: cover.borderRadius === pageSize.borderRadius, weight: cover.fontWeight === pageSize.fontWeight };
     });
     expect(styles).toEqual({ radius: true, weight: true });
-    // Alineada a la izquierda del text i amb text més petit que el selector d'elements per pàgina.
-    const sub = await page.locator('.library-main p.subtext').boundingBox();
-    const label = await page.locator('.cover-pagination .page-size').boundingBox();
-    expect(Math.abs(label.x - sub.x)).toBeLessThanOrEqual(2);
+    // A la dreta de la fila (el borde dret coincideix amb el de la barra) i amb text més petit que el selector d'elements per pàgina.
+    const bar = await page.locator('.cover-pagination').boundingBox();
+    const label = await page.locator('.cover-pagination .lp-cover').boundingBox();
+    // En móvil la fila se apila y el selector va bajo los botones de vista.
+    if (page.viewportSize().width > 760) expect(Math.abs((label.x + label.width) - (bar.x + bar.width))).toBeLessThanOrEqual(16);
     const sizes = await page.evaluate(() => ({
-        cover: parseFloat(getComputedStyle(document.querySelector('.cover-pagination .page-size')).fontSize),
+        cover: parseFloat(getComputedStyle(document.querySelector('.cover-pagination .lp-cover')).fontSize),
         pageSize: parseFloat(getComputedStyle(document.querySelector('#library-page-size').closest('.page-size')).fontSize)
     }));
     expect(sizes.cover).toBeLessThan(sizes.pageSize);

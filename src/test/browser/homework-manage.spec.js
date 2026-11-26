@@ -69,6 +69,8 @@ test('crear: el error del servidor se muestra y se puede corregir', async ({ pag
 
 test('lista: estados, cerrar, reabrir vencido con fecha nueva y borrar en dos pasos', async ({ page }) => {
     let list = [HW(), HW({ code: 'ZZZZ2222', title: 'Vencido', deadline: Date.now() - DAY, open: false })];
+    // Tots els deures en una mateixa pàgina (en mòbil el paginador automàtic en mostraria menys).
+    await page.addInitScript(() => localStorage.setItem('eduhoot-pagesize-deberes', '24'));
     await setup(page, {
         routes: async (p) => {
             await p.route('**/api/homeworks', route => route.fulfill({ json: list }));
@@ -203,9 +205,9 @@ test('nuevo deber: tarjeta centrada, «Biblioteca», enlace a «Mis deberes», 1
         }
     });
     await page.goto('/create/homework/?quiz=7&lang=es');
-    await expect(page.locator('#back')).toHaveText('Biblioteca');
-    await expect(page.locator('#hwMineLink')).toHaveText('Mis deberes');
-    await expect(page.locator('#hwMineLink')).toHaveAttribute('href', '/create/homework/');
+    await expect(page.locator('#hwBackLink')).toHaveText('Biblioteca');
+    // Estando en «Mis deberes», su propio enlace no se muestra.
+    await expect(page.locator('#hwMineLink')).toHaveCount(0);
     // La tarjeta ocupa todo el ancho del recuadro (como en Solo): mismo borde izquierdo y derecho que la cabecera.
     const m = await page.evaluate(() => { const c = document.querySelector('#hwNew').getBoundingClientRect(); const s = document.querySelector('.hw-shell').getBoundingClientRect(); return { left: c.left - s.left, right: s.right - c.right }; });
     expect(Math.abs(m.left)).toBeLessThan(2);
@@ -266,7 +268,7 @@ for (const width of [360, 700, 1000, 1400, 1920]) {
         });
         await page.setViewportSize({ width, height: 800 });
         await page.goto('/create/homework/?quiz=7&lang=es');
-        await expect(page.locator('#hwMineLink')).toBeVisible();
+        await expect(page.locator('#hwGamesLink')).toBeVisible();
         await expect(page.locator('edutictac-account nav')).toBeVisible();
         // Con el chip de cuenta pintado, el selector de idioma propio se oculta (lo lleva el chip).
         await page.evaluate(() => document.documentElement.classList.add('has-account-chip'));
@@ -275,13 +277,12 @@ for (const width of [360, 700, 1000, 1400, 1920]) {
         const gutter = Math.min(Math.max(0.05 * width, 0.05 * width + (width - 600) * 0.175), 0.15 * width);
         expect(Math.abs(shell.x - gutter), 'ancho como en Solo').toBeLessThanOrEqual(2);
         expect(Math.abs(shell.x + shell.width - (width - gutter))).toBeLessThanOrEqual(2);
-        const back = await box('#back');
+        const back = await box('#hwBackLink');
         const title = await box('#hwPageTitle');
-        const mine = await box('#hwMineLink');
+        const mine = await box('#hwGamesLink');
         const chip = await box('edutictac-account');
-        expect(Math.abs(back.x - shell.x), '«Biblioteca» al borde izquierdo').toBeLessThanOrEqual(2);
         expect(Math.abs(title.x - shell.x), 'título al borde izquierdo').toBeLessThanOrEqual(2);
-        expect(Math.abs(mine.x + mine.width - (shell.x + shell.width)), '«Mis deberes» al borde derecho').toBeLessThanOrEqual(2);
+        expect(Math.abs(mine.x + mine.width - (shell.x + shell.width)), '«Mis partidas» al borde derecho').toBeLessThanOrEqual(2);
         expect(Math.abs(chip.x + chip.width - (shell.x + shell.width)), 'chip al borde derecho').toBeLessThanOrEqual(2);
     });
 }

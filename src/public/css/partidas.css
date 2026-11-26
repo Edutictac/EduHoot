@@ -1,13 +1,16 @@
-/* Mis partidas (docente): mateixa estructura que «Mis deberes» (homeworkManage.css), en tons verds.
-   La taula cabe en la finestra: files de mida fixa i sense scroll dins de la targeta; el paginador passa les pàgines. */
+/* Mis partidas: tipografia, mides i controls com a la biblioteca (listPages.css); colors propis: verd.
+   Fons de pàgina una mica més clar que les targetes. */
 #pt-app{ display: contents; }
-body{ padding-top: var(--env-badge-space, 0px); }
+body{ background: linear-gradient(120deg, #22714c, #1b5f3e 50%, #15502f); }
 
-#ptPageTitle{ color: #86efac; margin: 0; font-size: 40px; display: flex; align-items: center; gap: 0.28em; }
-#ptPageTitle span{ min-width: 0; }
-#ptPageTitle .title-logo{ height: 1.1em; width: auto; border-radius: 0.18em; flex: none; }
+#ptPageTitle{ color: #86efac; }
 
+.pt-game{ background: rgba(12, 52, 36, 0.92); border: 1px solid #fde68a; border-radius: 16px; }
+.pt-game .game-title{ color: #86efac; }
+.pt-game .hw-actions{ margin-top: auto; }
 .pt-shell .hw-card{ background: rgba(12, 52, 36, 0.92); border-color: rgba(134, 239, 172, 0.28); }
+/* Llistat en detall: mateix recuadre que Mis deberes (reborde de 1 px, radi i ombra), amb reborde groc. */
+.pt-shell .pt-card{ border: 1px solid #fde68a; border-radius: 16px; padding: 16px 20px; box-sizing: border-box; box-shadow: 0 10px 30px rgba(0,0,0,0.25); }
 .pt-shell .hw-notice a{ color: #86efac; }
 .pt-table-area{ overflow: visible; }
 .pt-table th{ color: #bbf7d0; }
@@ -16,6 +19,7 @@ body{ padding-top: var(--env-badge-space, 0px); }
 .pt-table .btn{ white-space: nowrap; }
 .pt-name{ max-width: 210px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pt-date{ white-space: nowrap; font-size: 0.86em; }
+.pt-table th:last-child, .pt-table td:last-child{ width: 132px; }
 
 /* Modes: «En directo» en blanc amb lletra verda; «A su ritmo» en verd fosc amb lletra groga clara (com la pàgina). */
 .pt-badge{ padding: 2px 10px; border-radius: 999px; font-size: .85em; font-weight: 700; white-space: nowrap; border: 1px solid transparent; }
@@ -23,15 +27,12 @@ body{ padding-top: var(--env-badge-space, 0px); }
 .pt-badge.is-selfPaced{ background: #0b3b26; color: #fef08a; border-color: rgba(254, 240, 138, 0.45); }
 
 .pt-csv{ background: #15803d; border-color: #15803d; color: #fff; text-decoration: none; }
-.pt-csv-short{ display: none; }
 .pt-csv:hover{ background: #166534; border-color: #166534; }
 
 .pt-pager{ margin: 14px 0 0; }
 .pt-pager .page-size select{ font-size: 13px; }
 
-/* Ventanas estrechas (menos de 760 px): cada partida es un bloque; el título ocupa la primera fila
-   y el resto de datos y el botón van debajo, en una fila que se parte si no cabe. */
-@media (max-width: 760px){
+@container lpdetail (max-width: 939px){
     .pt-table thead{ display: none; }
     .pt-table, .pt-table tbody{ display: block; width: 100%; }
     .pt-table tr{ display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.12); }
@@ -40,9 +41,22 @@ body{ padding-top: var(--env-badge-space, 0px); }
     .pt-table td.pt-name{ flex: 0 0 100%; max-width: none; width: 100%; font-weight: 700; white-space: normal; overflow-wrap: anywhere; }
     .pt-table td.pt-date{ white-space: nowrap; font-size: 0.9em; }
     .pt-table .pt-csv{ padding: 6px 12px; font-size: 14px; white-space: nowrap; }
-    .pt-csv-long{ display: inline; }
-    .pt-csv-short{ display: none; }
+    .pt-table th:last-child, .pt-table td:last-child{ width: auto; }
 }
 
-/* Columna del botón CSV con ancho fijo en escritorio (el botón no se sale del recuadro). */
-.pt-table th:last-child, .pt-table td:last-child{ width: 132px; }
+/* Escriptori: el nom del quiz ocupa tot l'ample que sobra; les altres columnes tenen amplada fixa. */
+@container lpdetail (min-width: 940px){
+    .pt-table, .pt-table tbody{ width: 100%; }
+    .pt-table th:nth-child(2), .pt-table td:nth-child(2){ width: 90px; }
+    .pt-table th:nth-child(3), .pt-table td:nth-child(3){ width: 120px; }
+    .pt-table th:nth-child(4), .pt-table td:nth-child(4){ width: 96px; }
+    .pt-table th:nth-child(5), .pt-table td:nth-child(5),
+    .pt-table th:nth-child(6), .pt-table td:nth-child(6){ width: 150px; }
+    .pt-name{ max-width: none; }
+}
+
+/* Botó «Descarregar CSV» alineat a la dreta de cada fila (taula i vista de files). */
+.pt-table td:last-child{ text-align: right; padding-right: 10px; }
+@container lpdetail (max-width: 939px){
+    .pt-table td:last-child{ margin-left: auto; }
+}

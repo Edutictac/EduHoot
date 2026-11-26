@@ -13,19 +13,19 @@
         <script src="https://commons.edutictac.es/assets/account-widget.js" defer></script>
         <link rel="icon" href="/icons/logo.svg" type="image/svg+xml">
     </head>
-    <body>
+    <body class="lp-page lp-has-back">
         <a id = "back"href = "../" data-i18n="back">Inicio</a>
         <edutictac-account class="site-account site-account--top" data-base="https://commons.edutictac.es"></edutictac-account>
         <div class="page-shell">
             <div class="top-row">
                 <h1 id = "title"><img class="title-logo" src="/icons/logo.svg" alt="" width="56" height="56"><span data-i18n="title">Crea y lanza tu EduHoot</span></h1>
                 <div class="top-actions">
+                    <a id="my-games" :title="t('myGames')" class="btn btn-ghost btn-small hidden" href="partidas/" data-i18n="myGames">Mis partidas</a>
+                    <a id="my-homework" :title="t('myHomework')" class="btn btn-ghost btn-small" href="homework/" data-i18n="myHomework">Mis deberes</a>
                     <label class="lang-switch">
                         <span data-i18n="langLabel">Idioma</span>
                         <select id="lang-select" data-lang-options="name"></select>
                     </label>
-                    <a id="my-homework" class="btn btn-ghost btn-small" href="homework/" data-i18n="myHomework">Mis deberes</a>
-                    <a id="my-games" class="btn btn-ghost btn-small hidden" href="partidas/" data-i18n="myGames">Mis partidas</a>
                     <button id="open-account" type="button" class="btn btn-ghost btn-small hidden" data-i18n="btnAccount">Preferencias</button>
                 </div>
             </div>
@@ -331,8 +331,12 @@
                         <!-- visibilityHelp es texto propio del diccionario i18n (con <strong> y <br>). -->
                         <p class="subtext" v-html="t('visibilityHelp')"></p>
                         <!-- Imatge de fons de les targetes: sota el text de visibilitat, amb l'estil del selector de pàgina. -->
-                        <div class="pagination cover-pagination">
-                            <label class="page-size"><span>{{ t('filterCovers') }}</span>
+                        <div class="pagination cover-pagination lp-toolbar">
+                            <div class="lp-view" role="group" :aria-label="t('libViewLabel')">
+                                <button id="libViewCards" :title="t('libViewCards')" type="button" class="btn btn-ghost btn-small" :class="{ 'is-active': listView === 'cards' }" :aria-pressed="listView === 'cards' ? 'true' : 'false'" @click="setListView('cards')">{{ t('libViewCards') }}</button>
+                                <button id="libViewDetail" :title="t('libViewDetail')" type="button" class="btn btn-ghost btn-small" :class="{ 'is-active': listView === 'detail' }" :aria-pressed="listView === 'detail' ? 'true' : 'false'" @click="setListView('detail')">{{ t('libViewDetail') }}</button>
+                            </div>
+                            <label v-if="listView === 'cards'" class="lp-cover"><span>{{ t('filterCovers') }}</span>
                                 <select id="library-cover-level" v-model.number="lib.coverLevel" @change="onCoverLevel">
                                     <option :value="0">{{ t('coverNone') }}</option>
                                     <option :value="10">{{ t('cover10') }}</option>
@@ -341,7 +345,7 @@
                                 </select>
                             </label>
                         </div>
-                        <div id="game-list" class="game-grid">
+                        <div id="game-list" class="game-grid" v-if="listView === 'cards'">
                             <div v-if="!sortedQuizzes.length" class="empty-state"><p>{{ t('noGames') }}</p><p>{{ t('noGamesHint') }}</p></div>
                             <div v-for="quiz in pageQuizzes" :key="quiz.id" class="game-card">
                                 <img v-if="lib.coverLevel > 0" class="game-card__cover" :style="{ '--cover-opacity': lib.coverLevel / 100 }" :src="coverSrc(quiz)" alt="" aria-hidden="true" loading="lazy" decoding="async" @error="onCoverError($event)">
@@ -386,8 +390,8 @@
                                     </div>
                                 </div>
                                 <div class="game-actions">
-                                    <button v-if="perms(quiz).canSaveToAccount" class="btn btn-primary" @click="saveToAccount(quiz)">{{ t('saveToAccount') }}</button>
-                                    <button class="btn btn-primary" :title="perms(quiz).canStart ? null : t('cannotStartPrivate')" :disabled="!perms(quiz).canStart" @click="launch(quiz, 'host')">{{ t('play') }}</button>
+                                    <button v-if="perms(quiz).canSaveToAccount" class="btn btn-primary icon-only" :title="t('saveToAccount')" :aria-label="t('saveToAccount')" @click="saveToAccount(quiz)">💾</button>
+                                    <button class="btn btn-primary icon-only" :title="perms(quiz).canStart ? t('play') : t('cannotStartPrivate')" :aria-label="t('play')" :disabled="!perms(quiz).canStart" @click="launch(quiz, 'host')">▶️</button>
                                     <button class="btn btn-ghost icon-only" :title="perms(quiz).canStart ? t('playSolo') : t('cannotStartPrivate')" :aria-label="t('playSolo')" :disabled="!perms(quiz).canStart" @click="launch(quiz, 'solo')">👤</button>
                                     <button class="btn btn-ghost icon-only" :title="perms(quiz).canStart ? t('reviewCards') : t('cannotStartPrivate')" :aria-label="t('reviewCards')" :disabled="!perms(quiz).canStart" @click="launch(quiz, 'cards')">🔁</button>
                                     <button class="btn btn-ghost icon-only" :title="perms(quiz).canStart ? t('playMultiplayer') : t('cannotStartPrivate')" :aria-label="t('playMultiplayer')" :disabled="!perms(quiz).canStart" @click="launch(quiz, 'multiplayer')">👥</button>
@@ -406,10 +410,48 @@
                                 </div>
                             </div>
                         </div>
+                        <div v-else id="library-detail" class="hw-card lib-detail-card">
+                            <div v-if="!sortedQuizzes.length" class="empty-state"><p>{{ t('noGames') }}</p><p>{{ t('noGamesHint') }}</p></div>
+                            <div v-else class="hw-table-wrap">
+                                <table class="hw-table lib-detail" id="libDetail">
+                                    <thead><tr>
+                                        <th>{{ t('libColName') }}</th>
+                                        <th>{{ t('libColQuestions') }}</th>
+                                        <th>{{ t('libColPlays') }}</th>
+                                        <th>{{ t('libColPlayers') }}</th>
+                                        <th>{{ t('libColVisibility') }}</th>
+                                        <th>{{ t('libColActions') }}</th>
+                                    </tr></thead>
+                                    <tbody>
+                                        <tr v-for="quiz in pageQuizzes" :key="quiz.id" :data-id="quiz.id">
+                                            <td class="lib-d-name" :data-label="t('libColName')"><span class="lib-d-title">{{ quiz.name || 'Quiz sin nombre' }}</span><span class="lib-d-meta">{{ metaText(quiz) }}</span></td>
+                                            <td :data-label="t('libColQuestions')">{{ quiz.questionCount || 0 }}</td>
+                                            <td :data-label="t('libColPlays')">{{ quiz.playsCount || 0 }}</td>
+                                            <td :data-label="t('libColPlayers')">{{ quiz.playersCount || 0 }}</td>
+                                            <td :data-label="t('libColVisibility')">{{ quiz.visibility === 'private' ? t('visibilityPrivate') : (quiz.visibility === 'unlisted' ? t('visibilityUnlisted') : t('visibilityPublic')) }}</td>
+                                            <td class="lib-d-actions" :data-label="t('libColActions')">
+                                        <button v-if="perms(quiz).canSaveToAccount" class="btn btn-primary icon-only" :title="t('saveToAccount')" :aria-label="t('saveToAccount')" @click="saveToAccount(quiz)">💾</button>
+                                        <button class="btn btn-primary icon-only" :title="perms(quiz).canStart ? t('play') : t('cannotStartPrivate')" :aria-label="t('play')" :disabled="!perms(quiz).canStart" @click="launch(quiz, 'host')">▶️</button>
+                                        <button class="btn btn-ghost icon-only" :title="perms(quiz).canStart ? t('playSolo') : t('cannotStartPrivate')" :aria-label="t('playSolo')" :disabled="!perms(quiz).canStart" @click="launch(quiz, 'solo')">👤</button>
+                                        <button class="btn btn-ghost icon-only" :title="perms(quiz).canStart ? t('reviewCards') : t('cannotStartPrivate')" :aria-label="t('reviewCards')" :disabled="!perms(quiz).canStart" @click="launch(quiz, 'cards')">🔁</button>
+                                        <button class="btn btn-ghost icon-only" :title="perms(quiz).canStart ? t('playMultiplayer') : t('cannotStartPrivate')" :aria-label="t('playMultiplayer')" :disabled="!perms(quiz).canStart" @click="launch(quiz, 'multiplayer')">👥</button>
+                                        <button class="btn btn-ghost icon-only" :title="perms(quiz).canStart ? t('assignHomework') : t('cannotStartPrivate')" :aria-label="t('assignHomework')" :disabled="!perms(quiz).canStart" @click="launch(quiz, 'homework')">📚</button>
+                                        <button class="btn btn-ghost icon-only" :title="t('download')" @click="downloadCsv(quiz)">⬇️</button>
+                                        <button class="btn btn-ghost icon-only" :title="t('exportMoodleXml')" @click="downloadMoodle(quiz)"><img src="/icons/moodle.png" alt="Moodle" class="moodle-icon-img"></button>
+                                        <button class="btn btn-ghost icon-only" :title="perms(quiz).canEdit ? t('edit') : t('cannotEditNotOwner')" :disabled="!perms(quiz).canEdit" @click="edit(quiz)">✏️</button>
+                                        <button class="btn btn-ghost icon-only" :title="perms(quiz).canClone ? t('clone') : t('cannotCloneNotOwner')" :disabled="!perms(quiz).canClone" @click="clone(quiz)">📄</button>
+                                        <button class="btn btn-danger icon-only" :title="perms(quiz).canEdit ? t('delete') : t('cannotDeleteNotOwner')" :disabled="!perms(quiz).canEdit" @click="remove(quiz)">🗑️</button>
+    
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                         <div id="library-pagination" ref="pagerBottom" class="pagination" :class="{ hidden: !showPager }">
-                            <button id="library-pagination-prev" v-show="totalPages > 1" class="btn btn-ghost" :disabled="currentPage <= 1" @click="prevPage">{{ t('paginationPrev') }}</button>
+                            <button id="library-pagination-prev" :title="t('paginationPrev')" v-show="totalPages > 1" class="btn btn-ghost" :disabled="currentPage <= 1" @click="prevPage">{{ t('paginationPrev') }}</button>
                             <select id="library-pagination-info" class="page-select" v-show="totalPages > 1" :value="currentPage" :aria-label="paginationInfo" @change="onPageChange"><option v-for="p in pageOptions" :key="p.n" :value="p.n">{{ p.label }}</option></select>
-                            <button id="library-pagination-next" v-show="totalPages > 1" class="btn btn-ghost" :disabled="currentPage >= totalPages" @click="nextPage">{{ t('paginationNext') }}</button>
+                            <button id="library-pagination-next" :title="t('paginationNext')" v-show="totalPages > 1" class="btn btn-ghost" :disabled="currentPage >= totalPages" @click="nextPage">{{ t('paginationNext') }}</button>
                             <label class="page-size"><span>{{ t('pageSizeLabel') }}</span>
                                 <select id="library-page-size" :value="lib.pageSize" @change="onPageSize">
                                     <option v-for="n in pageSizes" :key="n" :value="n">{{ n }}</option>
@@ -417,9 +459,9 @@
                             </label>
                         </div>
                         <div id="library-pagination-fixed" class="pagination-fixed" :class="{ 'is-visible': showFixedPager }" :inert="!showFixedPager || null">
-                            <button id="library-pagination-fixed-prev" class="btn btn-ghost" :disabled="currentPage <= 1" @click="prevPage">{{ t('paginationPrev') }}</button>
+                            <button id="library-pagination-fixed-prev" :title="t('paginationPrev')" class="btn btn-ghost" :disabled="currentPage <= 1" @click="prevPage">{{ t('paginationPrev') }}</button>
                             <select id="library-pagination-fixed-info" class="page-select" :value="currentPage" :aria-label="paginationInfo" @change="onPageChange"><option v-for="p in pageOptions" :key="p.n" :value="p.n">{{ p.label }}</option></select>
-                            <button id="library-pagination-fixed-next" class="btn btn-ghost" :disabled="currentPage >= totalPages" @click="nextPage">{{ t('paginationNext') }}</button>
+                            <button id="library-pagination-fixed-next" :title="t('paginationNext')" class="btn btn-ghost" :disabled="currentPage >= totalPages" @click="nextPage">{{ t('paginationNext') }}</button>
                             <label class="page-size"><span>{{ t('pageSizeLabel') }}</span>
                                 <select id="library-page-size-fixed" :value="lib.pageSize" @change="onPageSize">
                                     <option v-for="n in pageSizes" :key="n" :value="n">{{ n }}</option>

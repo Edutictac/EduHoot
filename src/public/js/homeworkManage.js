@@ -40,6 +40,22 @@ function t(key){
     }
     return key;
 }
+// Textos de la llista (vista, paginador i columnes del detall), compartits amb les altres pàgines de llista.
+(function(){
+    var extra = {
+        es: { myGames: 'Mis partidas', viewLabel: 'Vista', viewCards: 'Tarjetas', viewDetail: 'Detalle', coverLabel: 'Imagen de fondo', coverNone: 'Sin imagen', cover10: 'Imagen al 10 %', cover20: 'Imagen al 20 %', cover30: 'Imagen al 30 %',
+            paginationPrev: 'Anterior', paginationNext: 'Siguiente', paginationPageInfo: 'Página {current} de {total}', pageSizeLabel: 'Por página', pageSizeAuto: 'Ajustar a la ventana',
+            colHwTitle: 'Título', colQuiz: 'Quiz', colStatus: 'Estado', colDeadline: 'Límite', colStudentsN: 'Alum', colFinishedN: 'Term' },
+        en: { myGames: 'My games', viewLabel: 'View', viewCards: 'Cards', viewDetail: 'Detail', coverLabel: 'Background image', coverNone: 'No image', cover10: 'Image at 10 %', cover20: 'Image at 20 %', cover30: 'Image at 30 %',
+            paginationPrev: 'Previous', paginationNext: 'Next', paginationPageInfo: 'Page {current} of {total}', pageSizeLabel: 'Per page', pageSizeAuto: 'Fit to window',
+            colHwTitle: 'Title', colQuiz: 'Quiz', colStatus: 'Status', colDeadline: 'Deadline', colStudentsN: 'Stud', colFinishedN: 'Fin' },
+        ca: { myGames: 'Les meves partides', viewLabel: 'Vista', viewCards: 'Targetes', viewDetail: 'Detall', coverLabel: 'Imatge de fons', coverNone: 'Sense imatge', cover10: 'Imatge al 10 %', cover20: 'Imatge al 20 %', cover30: 'Imatge al 30 %',
+            paginationPrev: 'Anterior', paginationNext: 'Següent', paginationPageInfo: 'Pàgina {current} de {total}', pageSizeLabel: 'Per pàgina', pageSizeAuto: 'Ajustar a la finestra',
+            colHwTitle: 'Títol', colQuiz: 'Quiz', colStatus: 'Estat', colDeadline: 'Límit', colStudentsN: 'Alum', colFinishedN: 'Acab' }
+    };
+    Object.keys(extra).forEach(function(l){ i18n[l] = Object.assign({}, i18n[l] || {}, extra[l]); });
+})();
+
 function fmt(key, vars){
     return t(key).replace(/\{(\w+)\}/g, function(_, k){ return String(vars[k]); });
 }
@@ -64,11 +80,14 @@ var deleteTimer = null;
 
 var app = Vue.createApp({
     template: '#hw-tpl',
+    mixins: [EduhootListMixin],
     data: function(){
         var quizId = params.get('quiz');
         var code = params.get('code');
         return {
             loading: true, user: null, langTick: 0,
+            // Llista: vista (tarjetes o detall), preferències compartides amb «Mis partidas» i paginador.
+            listKey: 'deberes', listView: eduhootReadView('deberes'), pageSizeChoice: eduhootReadSizeChoice('deberes'), coverLevel: eduhootReadCoverLevel(),
             view: quizId ? 'new' : (code ? 'results' : 'list'),
             quizId: quizId, quizName: '', code: code,
             form: { title: '', deadline: defaultDeadline(), maxAttempts: '1', attemptScoring: 'best', timePerQuestion: '', showCorrectAnswers: true, randomAnswers: true },
@@ -95,6 +114,7 @@ var app = Vue.createApp({
     mounted: function(){
         var self = this;
         EduhootLang.render();
+        window.addEventListener('resize', function(){ self.measure(); });
         fetch('/api/auth/me', { credentials: 'include' })
             .then(function(res){ return res.ok ? res.json() : null; })
             .then(function(user){ self.user = user; return user ? self.load() : null; })
@@ -121,7 +141,11 @@ var app = Vue.createApp({
         },
         statusText: function(h){ return t('status_' + this.stateOf(h)); },
         deadlineText: function(h){
-            return fmt('deadlineAt', { d: new Date(h.deadline).toLocaleString(lang, { dateStyle: 'medium', timeStyle: 'short' }) });
+            return fmt('deadlineAt', { d: this.deadlineValue(h) });
+        },
+        // Només la data (la taula de detall ja té l'etiqueta de la columna).
+        deadlineValue: function(h){
+            return new Date(h.deadline).toLocaleString(lang, { dateStyle: 'medium', timeStyle: 'short' });
         },
         load: function(){
             if(this.view === 'new') return this.loadQuiz();
@@ -137,7 +161,8 @@ var app = Vue.createApp({
         loadList: function(){
             var self = this;
             return fetch('/api/homeworks', { credentials: 'include' }).then(function(res){ return res.ok ? res.json() : []; })
-                .then(function(list){ self.list = list; });
+                .then(function(list){ self.list = list; })
+                .then(function(){ self.$nextTick(function(){ self.measure(); self.observePager(); }); });
         },
         loadResults: function(){
             var self = this;

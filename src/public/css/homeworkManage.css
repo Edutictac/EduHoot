@@ -1,7 +1,6 @@
 /* Deures (docente): crear, lista y resultados. Reutiliza create.css (botones, page-shell con el margen del 10 %).
    Se distingue de la biblioteca por el fondo azul; tarjetas azules oscuras y títulos en amarillo. */
 #hw-app{ display: contents; }
-body{ padding-top: var(--env-badge-space, 0px); }
 
 /* Ancho del recuadro igual que en Solo y Flashcards: 70 % de la ventana en pantallas grandes (≥1400 px),
    más ancho al estrecharse y solo 5 % de margen a cada lado en móvil (≤600 px). */
@@ -16,7 +15,7 @@ body{ padding-top: var(--env-badge-space, 0px); }
     .hw-shell .top-row{ flex-direction: row; align-items: center; justify-content: space-between; }
     .hw-shell .top-actions{ width: auto; justify-content: flex-end; }
 }
-#hwPageTitle{ color: #ffc800; margin: 0; font-size: 40px; display: flex; align-items: center; gap: 0.28em; }
+#hwPageTitle{ color: #ffc800; }
 #hwPageTitle span{ min-width: 0; }
 #hwPageTitle .title-logo{ height: 1.1em; width: auto; border-radius: 0.18em; flex: none; }
 .hw-shell .top-row{ margin-bottom: 18px; }
@@ -41,7 +40,7 @@ body{ padding-top: var(--env-badge-space, 0px); }
 .hw-error{ background: rgba(255,80,80,0.16); border-color: rgba(255,80,80,0.4); color: #ffdede; }
 
 /* Lista: 1, 2 o 3 columnas según el ancho, como las tarjetas de la biblioteca. */
-.hw-list{ display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); align-items: start; }
+.hw-list{ margin-top: 0; }
 .hw-list > .hw-notice, .hw-list > .hw-error, .hw-list > .hw-muted{ grid-column: 1 / -1; }
 
 /* Formulario */
@@ -60,9 +59,10 @@ body{ padding-top: var(--env-badge-space, 0px); }
 
 /* Botones: todos en una fila (con ajuste en pantallas estrechas), «Eliminar» al final. */
 .hw-actions{ display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 4px; align-items: center; }
+.hw-d-actions{ flex-wrap: wrap !important; }
 .hw-actions .btn, .hw-form .btn, .hw-reopen-box .btn{
-    font: inherit; font-size: 14px; font-weight: 700; text-decoration: none;
-    padding: 8px 14px; border-radius: 999px; line-height: 1.2; min-height: 38px;
+    font: inherit; font-size: 13px; font-weight: 700; text-decoration: none; white-space: nowrap;
+    padding: 6px 12px; border-radius: 999px; line-height: 1.2; min-height: 34px;
     display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box;
 }
 .hw-actions .hw-delete{ margin-left: auto; }
@@ -93,7 +93,6 @@ body{ padding-top: var(--env-badge-space, 0px); }
 #hwNoStudents{ padding: 14px; border-radius: 12px; background: rgba(255,255,255,0.06); text-align: center; }
 
 @media (max-width: 599px){
-    #hwPageTitle{ font-size: 30px; }
     .hw-card{ padding: 14px; }
     .hw-actions .hw-delete{ margin-left: 0; }
 }
@@ -106,3 +105,39 @@ body{ padding-top: var(--env-badge-space, 0px); }
     #hwNew .hw-form .hw-check, #hwNew .hw-form .hw-error, #hwNew .hw-form .btn-primary{ grid-column: 1 / -1; }
 }
 .hw-shell .top-actions .btn{ text-decoration: none; border-radius: 999px; font-family: inherit; font-weight: 700; }
+
+/* Deures: tarjetes com les de la biblioteca (amb la imatge de fons), en tons blaus; i la vista de detall. */
+.hw-item.game-card{ background: rgba(16, 30, 62, 0.92); border-color: rgba(255,255,255,0.16); }
+.hw-item .game-title{ color: #fdbc4b; }
+.hw-badge.is-open{ background: #bbf7d0; }
+.hw-detail{ table-layout: fixed; }
+.hw-detail th, .hw-detail td{ height: 52px; padding: 0 10px; vertical-align: middle; }
+.hw-detail th:last-child, .hw-detail td:last-child{ width: 560px; }
+.hw-d-title{ overflow-wrap: anywhere; }
+.hw-d-quiz{ max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hw-d-id{ font-size: 12px; opacity: 0.85; }
+.hw-d-date{ white-space: nowrap; font-size: 0.86em; }
+.hw-d-actions{ display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: flex-end; height: auto !important; padding: 8px 10px !important; }
+.hw-d-actions .hw-reopen-box{ flex: 0 0 100%; width: 100%; margin-top: 4px; }
+@container lpdetail (max-width: 1089px){
+    .hw-detail thead{ display: none; }
+    .hw-detail, .hw-detail tbody{ display: block; width: 100%; }
+    .hw-detail tr{ display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.12); }
+    .hw-detail td{ display: flex; align-items: center; gap: 4px; height: auto; padding: 0; border: 0; white-space: normal; width: auto; }
+    .hw-detail td[data-label]::before{ content: attr(data-label) ":"; opacity: 0.7; font-size: 0.8em; }
+    .hw-detail td.hw-d-title{ flex: 0 0 100%; max-width: none; width: 100%; font-weight: 700; white-space: normal; overflow-wrap: anywhere; }
+    .hw-detail th:last-child, .hw-detail td:last-child{ width: auto; }
+    .hw-detail td.hw-d-actions{ width: 100%; }
+}
+
+/* Escriptori: el quiz ocupa tot l'ample que sobra; el títol del deure i la resta de columnes tenen amplada fixa. */
+@container lpdetail (min-width: 1090px){
+    .hw-detail, .hw-detail tbody{ width: 100%; }
+    .hw-detail th:nth-child(2), .hw-detail td:nth-child(2){ width: 130px; }
+    .hw-detail th:nth-child(3), .hw-detail td:nth-child(3){ width: 90px; }
+    .hw-detail th:nth-child(4), .hw-detail td:nth-child(4){ width: 140px; }
+    .hw-detail th:nth-child(5), .hw-detail td:nth-child(5),
+    .hw-detail th:nth-child(6), .hw-detail td:nth-child(6){ width: 84px; }
+    .hw-detail th:last-child, .hw-detail td:last-child{ width: 360px; }
+    .hw-d-title, .hw-d-quiz{ max-width: none; }
+}

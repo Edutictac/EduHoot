@@ -25,6 +25,7 @@ async function stubBackend(page, { loggedIn }) {
 
 test('Mis partidas: con sesión, lista las partidas con su modo y el enlace al CSV', async ({ page }) => {
     await stubBackend(page, { loggedIn: true });
+    await page.addInitScript(() => localStorage.setItem('eduhoot-view-partidas', 'detail'));
     await page.goto('/create/partidas/?lang=es');
     const rows = page.locator('#ptGames tbody tr');
     await expect(rows).toHaveCount(2);
@@ -56,6 +57,7 @@ test('biblioteca: «Mis partidas» aparece junto a «Mis deberes» solo con sesi
 });
 
 test('Mis partidas: con muchas partidas, el paginador reparte las filas y la página no hace scroll', async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem('eduhoot-view-partidas', 'detail'));
     const many = Array.from({ length: 30 }, (_, i) => ({ ...GAMES[0], id: 'm' + i, pin: String(10000 + i) }));
     await page.route(/^https:\/\//, route => route.abort());
     await page.route('**/socket.io/socket.io.js', route => route.fulfill({ contentType: 'application/javascript', body: 'window.io=function(){return {on:function(){},emit:function(){},disconnect:function(){},connect:function(){}};};' }));
@@ -73,6 +75,6 @@ test('Mis partidas: con muchas partidas, el paginador reparte las filas y la pá
     await expect(page.locator('#ptNext')).toBeEnabled();
     await page.locator('#ptNext').click();
     await expect(page.locator('#ptPageInfo')).toHaveValue('2');
-    const fits = await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight + 1 && document.getElementById('ptList').scrollHeight <= document.getElementById('ptList').clientHeight + 1);
+    const fits = await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight + 1 && document.getElementById('lpArea').scrollHeight <= document.getElementById('lpArea').clientHeight + 1);
     expect(fits).toBe(true);
 });

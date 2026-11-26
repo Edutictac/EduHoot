@@ -1353,3 +1353,94 @@ select.page-select option{ color: #14101f; background: #fff; }
 .cover-pagination .page-size{ margin-left: 0; font-size: 13px; }
 .cover-pagination .page-size select{ font-size: 13px; padding: 4px 10px; }
 /* Paginador superior: separació pròpia de les targetes (ja no és el primer fill de la columna, pel selector d'imatge de fons). */
+
+/* Biblioteca: selector de vista (targetes o detall) i la taula de detall. */
+.lp-view{ display: inline-flex; gap: 6px; }
+.lp-view .btn.is-active{ background: rgba(255,255,255,0.22); border-color: rgba(255,255,255,0.45); color: #fff; }
+.lib-detail-card{ padding: 8px 12px; }
+.lib-detail th, .lib-detail td{ padding: 8px 8px; vertical-align: middle; }
+.lib-detail th{ color: #ffdb70; white-space: nowrap; }
+.lib-detail td.lib-d-actions{ white-space: nowrap; width: 1%; }
+.lib-detail td.lib-d-actions .btn{ margin: 0 2px 2px 0; }
+.lib-d-title{ display: block; font-weight: 700; color: #fdbc4b; overflow-wrap: anywhere; }
+.lib-d-meta{ display: block; font-size: 12px; opacity: 0.8; overflow-wrap: anywhere; }
+.lib-d-date{ font-size: 12px; white-space: nowrap; }
+@container lpdetail (max-width: 959px){
+    .lib-detail thead{ display: none; }
+    .lib-detail, .lib-detail tbody{ display: block; width: 100%; }
+    .lib-detail tr{ display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.12); }
+    .lib-detail td{ display: flex; align-items: center; gap: 4px; padding: 0; border: 0; white-space: normal; width: auto; }
+    .lib-detail td[data-label]::before{ content: attr(data-label) ":"; opacity: 0.7; font-size: 0.8em; }
+    .lib-detail td.lib-d-name{ flex: 0 0 100%; }
+    .lib-detail td.lib-d-actions{ flex-wrap: wrap; width: 100%; }
+}
+/* Detall de la biblioteca en escriptori: taula amb amplada fixa; les accions, totes en una línia. */
+@container lpdetail (min-width: 960px){
+    .lib-detail{ table-layout: fixed; width: 100%; }
+    .lib-detail th:last-child, .lib-detail td.lib-d-actions{ width: 440px; }
+    .lib-detail td.lib-d-actions .btn{ padding: 5px 7px; min-width: 0; }
+    .lib-detail td.lib-d-actions .moodle-icon-img{ width: 16px; height: 16px; }
+    .lib-d-title, .lib-d-meta{ overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
+.lib-detail td.lib-d-actions .btn{ display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; }
+
+/* Escriptori: el nom del quiz ocupa tot l'ample que sobra; les altres columnes tenen amplada fixa. */
+@media (min-width: 1101px){
+    .lib-detail th:nth-child(2), .lib-detail td:nth-child(2){ width: 70px; }
+    .lib-detail th:nth-child(3), .lib-detail td:nth-child(3){ width: 70px; }
+    .lib-detail th:nth-child(4), .lib-detail td:nth-child(4){ width: 70px; }
+    .lib-detail th:nth-child(5), .lib-detail td:nth-child(5){ width: 110px; }
+}
+
+/* Les tres pàgines de llista: el contingut comença sempre a dalt (sense centrat vertical), amb el mateix espai al títol. */
+body.lp-page{ justify-content: flex-start; }
+body.lp-page .page-shell{ margin-top: 81px; }
+@media (max-width: 760px){
+    body.lp-page .page-shell{ margin-top: 63px; }
+}
+
+/* La biblioteca té el enllaç «Inicio» (#back) just a dalt: el contenidor comença 30 px més avall, com abans. */
+@media (min-width: 761px){
+    body.lp-has-back .page-shell{ margin-top: 30px; }
+}
+@media (max-width: 760px){
+    body.lp-has-back .page-shell{ margin-top: 16px; }
+}
+
+/* Els recuadres de les taules de llista mesuren la taula: la vista de detall es mostra només si hi cap (no segons la finestra). */
+.hw-table-wrap{ container: lpdetail / inline-size; }
+
+/* Enllaços de navegació de la capçalera (Biblioteca, Mis partidas, Mis deberes): mateix aspecte a les tres pàgines. */
+.top-actions .btn{ text-decoration: none; border-radius: 999px; font-weight: 700; }
+
+/* Escriptori: els enllaços de la capçalera en una sola línia, alineats a la dreta (sota el títol si no hi caben al costat). */
+@media (min-width: 761px){
+    .top-actions{ flex-wrap: nowrap; margin-left: auto; justify-content: flex-end; }
+    .top-actions .btn{ white-space: nowrap; }
+}
+
+/* Preferències: fons una mica més clar (mateix to blau que la biblioteca) i la mateixa tipografia. */
+.modal .panel{ background: #1e2d4f; }
+.modal button, .modal input, .modal select{ font-family: inherit; }
+.modal .btn{ font-size: 14px; font-weight: 700; }
+.modal .auth-grid label{ font-size: 15px; font-weight: 600; }
+.modal input[type="text"], .modal input:not([type]){
+    font-size: 15px;
+    color: #fff;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.28);
+    border-radius: 12px;
+    padding: 9px 12px;
+}
+
+
+/* Biblioteca: fila de vista i imatge de fons com a Mis partidas i Mis deberes (vista a l'esquerra, selector a la dreta). */
+.cover-pagination.lp-toolbar{ justify-content: space-between; margin: 6px 0 14px; }
+.lp-cover{ display: inline-flex; align-items: center; gap: 8px; font-weight: 600; }
+.lp-cover select{
+    padding: 6px 12px; border-radius: 999px; font: inherit; font-weight: 600;
+    border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.08); color: #fff;
+}
+.lp-cover select option{ color: #14101f; background: #fff; }
+.cover-pagination .lp-cover{ font-size: 13px; }
+.cover-pagination .lp-cover select{ font-size: 13px; padding: 4px 10px; }

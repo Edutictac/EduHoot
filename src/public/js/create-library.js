@@ -6,6 +6,11 @@ var LIBRARY_PAGE_SIZE_KEY = 'eduhoot-library-page-size';
 // Transparència de la imatge de fons de les targetes: 0 (sense imatge), 10, 20 (per defecte) o 30 %. Amb sessió, es guarda a la cuenta.
 var LIBRARY_COVERS_KEY = 'eduhoot-library-cover-level';
 var LIBRARY_COVER_LEVELS = [0, 10, 20, 30];
+// Vista de la biblioteca: targetes (per defecte) o detall; es recorda al navegador.
+var LIBRARY_VIEW_KEY = 'eduhoot-view-biblioteca';
+function readLibraryView(){
+    try{ return localStorage.getItem(LIBRARY_VIEW_KEY) === 'detail' ? 'detail' : 'cards'; }catch(e){ return 'cards'; }
+}
 function readLibraryCoverLevel(){
     try{
         var v = parseInt(localStorage.getItem(LIBRARY_COVERS_KEY), 10);
@@ -452,6 +457,7 @@ var libraryApp = {
     template: '#library-tpl',
     data: function(){
         return {
+            listView: readLibraryView(),
             lib: libState,
             filters: currentFilters,
             auth: authState,
@@ -645,6 +651,14 @@ var libraryApp = {
             if(ev.target.getAttribute('src') !== '/icons/logo.svg') ev.target.src = '/icons/logo.svg';
         },
         // Línia discreta sota les estadístiques: «Creat … · Modificat …».
+        // Només les dates (a la taula de detall la columna ja té l'etiqueta).
+        datesValue: function(quiz){
+            this.lib.lang;
+            var created = formatQuizDate(quiz.createdAt);
+            if(!created) return '';
+            var updated = formatQuizDate(quiz.updatedAt);
+            return updated ? created + ' · ' + t('updatedAtLabel') + ' ' + updated : created;
+        },
         datesText: function(quiz){
             this.lib.lang;
             var created = formatQuizDate(quiz.createdAt);
@@ -691,6 +705,10 @@ var libraryApp = {
             this.lib.page = 1;
             try{ localStorage.setItem(LIBRARY_PAGE_SIZE_KEY, String(v)); }catch(e){}
             if(authState.user) saveUserLibraryPageSize(v);
+        },
+        setListView: function(v){
+            this.listView = v === 'detail' ? 'detail' : 'cards';
+            try{ localStorage.setItem(LIBRARY_VIEW_KEY, this.listView); }catch(e){}
         },
         onCoverLevel: function(){
             var v = Number(this.lib.coverLevel);

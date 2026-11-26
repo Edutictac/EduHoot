@@ -39,6 +39,8 @@ function ownsLocal(id){
 }
 
 function openAuthModal(){
+    // El apodo ya guardado es el que se muestra al abrir las preferencias.
+    accountState.nick = (authState.user && authState.user.nickname) || '';
     accountState.modalOpen = true;
     document.body.classList.add('modal-open');
     Vue.nextTick(function(){

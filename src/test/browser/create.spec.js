@@ -147,13 +147,13 @@ test('biblioteca sin sesión: tarjetas, recuento, metadatos y permisos', async (
     await expect(geo.locator('.share-controls input[type="checkbox"]')).toBeDisabled();
     await expect(geo.locator('.tag-editor')).toHaveCount(0);
     await expect(geo.locator('.tag-remove')).toHaveCount(0);
-    await expect(geo.locator('button', { hasText: 'Guardar en mi cuenta' })).toHaveCount(0);
-    await expect(geo.locator('.game-actions > button.btn-primary')).toHaveText('Jugar');
-    await expect(geo.locator('.game-actions > button')).toHaveText(['Jugar', '👤', '🔁', '👥', '📚', '⬇️', '', '✏️', '📄', '🗑️']);
+    await expect(geo.locator('button[title="Guardar en mi cuenta"]')).toHaveCount(0);
+    await expect(geo.locator('.game-actions > button.btn-primary')).toHaveText('▶️');
+    await expect(geo.locator('.game-actions > button')).toHaveText(['▶️', '👤', '🔁', '👥', '📚', '⬇️', '', '✏️', '📄', '🗑️']);
 
     // Privado de otro: no se puede lanzar.
     const bio = card(page, 'Biologia');
-    for (const label of ['Jugar', '👥', '👤', '🔁']) {
+    for (const label of ['▶️', '👥', '👤', '🔁']) {
         await expect(bio.locator('.game-actions > button', { hasText: label })).toBeDisabled();
         await expect(bio.locator('.game-actions > button', { hasText: label })).toHaveAttribute('title', 'Solo el propietario puede usar un quiz privado.');
     }
@@ -176,7 +176,7 @@ test('sin sesión, un quiz anónimo propio (localQuizzes) se puede editar y «Gu
     // Clonar exige sesión aunque sea propio.
     await expect(alg.locator('button', { hasText: '📄' })).toBeDisabled();
 
-    await alg.locator('.game-actions > button', { hasText: 'Guardar en mi cuenta' }).click();
+    await alg.locator('.game-actions > button[title="Guardar en mi cuenta"]').click();
     // requireLogin() pone «Entra con tu cuenta…», pero sin el xip de Commons
     // (aquí no se carga) openCentralAccountMenu() lo sustituye por este aviso.
     await expect(page.locator('#auth-message')).toHaveText('No se puede conectar con la cuenta EduTicTac. Vuelve a intentarlo en un momento.');
@@ -470,7 +470,7 @@ test('rechazar el borrado no borra', async ({ page }) => {
 test('botones de jugar y editar llevan a su pantalla', async ({ page }) => {
     await mockBackend(page, { user: TEACHER });
     await openCreate(page);
-    for (const [label, re] of [['Jugar', /\/host\/\?id=q1$/], ['👥', /\/multiplayer\/\?id=q1$/], ['👤', /\/solo\/\?id=q1&from=library$/], ['🔁', /\/solo\/\?id=q1&mode=cards&from=library$/], ['✏️', /\/create\/quiz-creator\/\?id=q1$/]]) {
+    for (const [label, re] of [['▶️', /\/host\/\?id=q1$/], ['👥', /\/multiplayer\/\?id=q1$/], ['👤', /\/solo\/\?id=q1&from=library$/], ['🔁', /\/solo\/\?id=q1&mode=cards&from=library$/], ['✏️', /\/create\/quiz-creator\/\?id=q1$/]]) {
         await card(page, 'Geografia').locator('.game-actions > button', { hasText: label }).click();
         await expect(page).toHaveURL(re);
         await openCreate(page);
@@ -522,7 +522,7 @@ test('cambiar de idioma traduce las tarjetas y las carpetas', async ({ page }) =
     // Las tarjetas se repintan cuando el servidor responde a requestDbNames.
     expect(await page.evaluate(() => window.__emits.filter(n => n === 'requestDbNames').length)).toBeGreaterThan(0);
     await page.evaluate(() => window.__serverEmit('gameNamesData', []));
-    await expect(card(page, 'Geografia').locator('.game-actions > button.btn-primary')).toHaveText('Play');
+    await expect(card(page, 'Geografia').locator('.game-actions > button.btn-primary')).toHaveText('▶️');
     await expect(page.locator('#title')).toHaveText('Create and launch your EduHoot');
     await expect(page.locator('#tag-mode-toggle')).toHaveText('Match all tags');
     await expect(page.locator('#game-count')).toHaveText(/^3 /);
