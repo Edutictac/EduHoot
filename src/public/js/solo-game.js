@@ -806,6 +806,12 @@ var soloPlay = {
         start: function(){ startQuiz(); },
         playAgain: function(){ if(this.s.quizData) startQuiz(); },
         pickAnother: function(){ resetSelection(); },
+        // Sortir del repàs: si s'va entrar des de la biblioteca (?from=library), es torna a la biblioteca; si no, al catàleg.
+        exitCards: function(){
+            var fromLibrary = new URLSearchParams(window.location.search || '').get('from') === 'library';
+            resetSelection();
+            if(fromLibrary) window.location.href = '/create/';
+        },
         answer: function(n){ handleSoloAnswerInteraction(n); },
         submitFree: function(){ submitSoloFreeAnswer(); },
         submitMulti: function(){ submitSoloMultiAnswers(); },

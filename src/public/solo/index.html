@@ -419,7 +419,7 @@
                         <div class="cards-tools">
                             <button v-if="cardsTtsAvailable" id="cards-tts" type="button" class="tts-btn" :aria-pressed="s.ttsSpeaking ? 'true' : 'false'" :aria-label="s.ttsSpeaking ? t('ttsStop') : t('ttsListen')" :title="s.ttsSpeaking ? t('ttsStop') : t('ttsListen')" @click="cardsSpeak"><span aria-hidden="true">{{ s.ttsSpeaking ? '⏹' : '🔊' }}</span></button>
                             <button id="cards-shuffle-now" class="card-link" @click="cardsShuffleNow">{{ t('flashcardsShuffleNow') }}</button>
-                            <button id="cards-exit" class="card-link" @click="pickAnother">{{ t('flashcardsExit') }}</button>
+                            <button id="cards-exit" class="card-link" @click="exitCards">{{ t('flashcardsExit') }}</button>
                             <span class="muted cards-counts">{{ cardsCountsText }}</span>
                         </div>
                     </div>

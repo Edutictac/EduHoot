@@ -18,3 +18,6 @@ src/logs/
 # Directorios y ficheros para trabajar en local
 .local
 AGENTS.md
+
+# Imatges pujades (importades de Kahoot o de stage): no es versionen, creixen amb cada importació.
+src/public/uploads/
