@@ -1,5 +1,7 @@
 # Plan: Estabilidad de sesión en modo aula
 
+> **Arxivat (26-11-2026).** Document històric, no es manté al dia. Pla ja implementat (10-11-2026). Per al comportament actual, vore `ARCHITECTURE.md`.
+
 **Objetivo:** Reducir al mínimo las caídas de alumnos durante una partida en modo aula.  
 **Estimación total:** ~3-4 horas de desarrollo.
 

@@ -1,5 +1,7 @@
 # Es poden automatitzar les proves de caixa negra?
 
+> **Arxivat (26-11-2026).** Document històric, no es manté al dia. Anàlisi d'octubre de 2026. Per a les proves actuals, vore `TESTING.md`.
+
 El "Recorregut complet" de `TESTING.md`
 (proves fetes "des de fora", com ho faria una persona usuària real, sense
 mirar el codi) es pot automatitzar? Amb què, i amb quin esforç.

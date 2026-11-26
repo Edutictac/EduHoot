@@ -1,5 +1,7 @@
 # Revision de la aplicacion y propuestas de mejora
 
+> **Archivado (26-11-2026).** Documento histórico, no se mantiene al día. Documento de abril de 2026. Para el estado actual, ver `docs/POPULAR_FEATURES.md`.
+
 Fecha: 2026-04-29
 Proyecto: EduHoot
 

@@ -3,6 +3,8 @@
 
 ## Per al professorat
 
+- **Vídeos «aprén i després respon»**: pots posar un vídeo abans d'una pregunta perquè l'alumnat el mire abans de respondre. Tries des de quin segon comença («Inici del vídeo»).
+- **Puntuacions a l'autoritme**: decideixes si veus els punts i el Top 10 durant la partida (casella a la pantalla de progrés).
 - **Preguntes d'ordenar**: l'alumnat posa uns elements en l'ordre correcte (de 2 a 8). Funciona en partida, a l'autoritme, als deures, en solo, a les flashcards i en multijugador local. Es poden importar i exportar en Moodle XML i CSV, i exportar a PDF, DOCX i ODT. Pots triar la puntuació (proporcional o tot o res) i la disposició (vertical o horitzontal).
 - **Més temps per a reconnectar-te**: si la teua pantalla es desconnecta, la partida espera 2 minuts (abans 30 segons) perquè tornes. A la configuració de la partida pots ampliar-ho fins a 5 minuts.
 - **Data de creació i de modificació a la biblioteca**: cada quiz mostra quan es va crear i quan es va modificar per última vegada, en una línia discreta.
@@ -176,8 +178,6 @@
 
 ### Noves maneres de jugar
 
-- **Vídeos «aprén i després respon»**: preguntes precedides d'un vídeo
-  explicatiu, per a introduir contingut nou dins de la mateixa partida.
 - **Mode fantasma**: competeix contra la teua pròpia millor marca, no
   contra els teus companys: motivació sense la pressió del rànquing.
 - **Time Attack**: respon el màxim de preguntes possible dins d'un temps
@@ -189,6 +189,8 @@
 
 ## Para el profesorado
 
+- **Vídeos «aprende y después responde»**: puedes poner un vídeo antes de una pregunta para que el alumnado lo vea antes de responder. Eliges desde qué segundo empieza («Inicio del vídeo»).
+- **Puntuaciones en el autoritmo**: decides si ves los puntos y el Top 10 durante la partida (casilla en la pantalla de progreso).
 - **Más tiempo para volver a conectarte**: si tu pantalla se desconecta, la partida espera 2 minutos (antes 30 segundos) a que vuelvas. En la configuración de la partida puedes ampliarlo hasta 5 minutos.
 - **Fecha de creación y de modificación en la biblioteca**: cada quiz muestra cuándo se creó y cuándo se modificó por última vez, en una línea discreta.
 
@@ -326,9 +328,6 @@
 
 ### Nuevas maneras de jugar
 
-- **Vídeos «aprende y después responde»**: preguntas precedidas de un
-  vídeo explicativo, para introducir contenido nuevo dentro de la misma
-  partida.
 - **Modo fantasma**: compite contra tu propia mejor marca, no contra tus
   compañeros: motivación sin la presión del ranking.
 - **Time Attack**: responde al máximo de preguntas posible dentro de un
@@ -340,6 +339,8 @@
 
 ## For teachers
 
+- **"Learn then answer" videos**: you can put a video before a question so students watch it before answering. You choose the second it starts (video start option).
+- **Self-paced scores**: you decide whether you see the scores and the top 10 during the game (checkbox on the progress screen).
 - **More time to reconnect**: if your screen disconnects, the game waits 2 minutes (it was 30 seconds) for you to come back. In the game settings you can extend this up to 5 minutes.
 - **Creation and last-edit dates in the library**: each quiz shows when it was created and last modified, in a discreet line.
 
@@ -448,8 +449,6 @@
 
 ### New ways to play
 
-- **"Learn then answer" videos**: questions preceded by an explainer
-  video, to introduce new content within the game itself.
 - **Ghost mode**: compete against your own personal best, not your
   classmates: motivation without the pressure of a ranking.
 - **Time Attack**: answer as many questions as you can within a time

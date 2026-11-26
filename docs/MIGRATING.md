@@ -1,5 +1,7 @@
 # Proposta: separar responsabilitats i avaluar un framework de frontend
 
+> **Arxivat (26-11-2026).** Document històric, no es manté al dia. Proposta de migració a Vue ja executada: Subfase A (v1.1.0) i Subfase B (acabada el 12-11-2026). Per a l'arquitectura actual, vore `ARCHITECTURE.md`.
+
 Document de treball per a migrar a un sistema més mantenible. Resumix el
 deute tècnic actual d'EduHoot (monòlit sense separació de
 responsabilitats) i si tindria sentit, una vegada resolt eixe deute,

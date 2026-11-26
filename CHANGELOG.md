@@ -23,6 +23,15 @@ fitxers corresponents, i els originals es van eliminar.
 - **Música a solo**: selector de tema a la pantalla inicial, amb l'opció «Sense música» (també al lobby de l'anfitrió i a la vista de juego).
 - **Ajudes «?»** a les opcions de la pantalla inicial de solo.
 - **Tiempo extra en preguntes compostes**: el marge de temps de la correspondència també s'aplica a ordenar.
+- **Vídeos «aprén i després respon»** (feature 24): una pregunta pot anar precedida d'un vídeo que l'alumnat mira abans de respondre. Funciona a l'aula (el vídeo es reprodueix a la pantalla de l'anfitrió), a l'autoritme, a solo i a les flashcards. Al lobby, «Inici del vídeo (s)» només apareix si el quiz té alguna pregunta amb vídeo.
+- **Autoritme: puntuacions a l'anfitrió**: la pantalla de progrés té la casella «Mostra puntuacions i rànquing a l'anfitrió» (desactivada per defecte). Activada, l'anfitrió veu els punts, el Top 10 i el podi final. Els alumnes segueixen la casella «Puntuacions i rànquing» del lobby.
+
+### Canviat
+- **Lobby**: les opcions de «Mode de partida» són «En directe» i «A su ritmo» (sense la descripció entre parèntesis, en els tres idiomes).
+- **Lobby**: l'icona d'EduHoot va a l'esquerra del títol del quiz, i el PIN i el QR a la dreta; en pantalles estretes, tot en una columna.
+- **Autoritme**: els botons tenen els colors, l'ombra i l'efecte en passar el ratolí dels del lobby.
+- **Solo**: la pantalla inicial reparteix els controls verticalment, com les flashcards, i les etiquetes són «Ver pregunta en cuenta atrás», «Segundos para ver el resultado» i «Segundos por cada pregunta».
+- **Icona**: el logo d'EduHoot és el favicon de totes les pàgines.
 
 ## [1.2.0] - 2026-11-23
 

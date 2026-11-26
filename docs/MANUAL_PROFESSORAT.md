@@ -18,8 +18,7 @@ L'alumnat sempre juga des del seu mòbil, tauleta o ordinador.
 ### Preparar la partida
 
 1. A la biblioteca, prem **Jugar** en el quiz que vulgues.
-2. Al lobby, en **Mode de partida**, tria **Al seu ritme (cada alumne avança
-   sol)**.
+2. Al lobby, en **Mode de partida**, tria **Al seu ritme**: cada alumne avança sol.
 3. Ajusta, si vols, el **Temps per pregunta**, **Mostrar respostes**,
    **Puntuacions i rànquing** i **Ratxa d'encerts**. L'**Avanç automàtic** no
    s'aplica en este mode i s'amaga.
@@ -28,6 +27,8 @@ L'alumnat sempre juga des del seu mòbil, tauleta o ordinador.
 5. L'alumnat s'uneix amb el PIN o el QR, com sempre. Quan estiguen tots,
    prem **Iniciar**.
 
+Si alguna pregunta du vídeo, apareix **Inici del vídeo (s)** al lobby: cada alumne veu el vídeo des d'eixe segon abans de la pregunta, al seu dispositiu, i el temps no corre fins que acaba.
+
 ### Mentre juguen
 
 Veuràs una llista amb cada alumne, una barra de progrés i «respostes / total».
@@ -35,8 +36,7 @@ Qui acaba apareix com **Acabat**.
 
 - ✋ al costat del nom: eixe alumne ha alçat la mà.
 - **Expulsar**: cal prémer dos voltes (la segona demana «Segur?»).
-- Si has marcat **Puntuacions i rànquing**, també veus un **Top 10** en viu.
-  Si no, ningú veu punts ni rànquing.
+- Per veure els punts i el **Top 10** en viu, marca **Mostra puntuacions i rànquing a l'anfitrió** en esta pantalla (desactivada per defecte). La casella **Puntuacions i rànquing** del lobby decideix el que veu l'alumnat.
 - Qui s'incorpora tard comença en la primera pregunta.
 - Si a un alumne se li talla la connexió, en tornar continua on estava i el
   temps de la pregunta no s'ha aturat.
@@ -56,7 +56,7 @@ seu lloc, si les puntuacions estan activades).
 
 La partida no acaba sola: **Acabar partida** (dos clics). Qui anava a mitges
 acaba amb els punts que portava. Després pots vore el **podi** (si has
-marcat les puntuacions), **descarregar l'informe (CSV)** i **tornar a la
+marcat la casella de l'anfitrió), **descarregar l'informe (CSV)** i **tornar a la
 biblioteca**.
 
 ---

@@ -32,6 +32,7 @@ funcionament del projecte.
 - [Logs del servidor (/admin/logs)](#logs-del-servidor-adminlogs)
 - [Lectura en veu alta (TTS)](#lectura-en-veu-alta-tts)
 - [Pantalla completa de la partida](#pantalla-completa-de-la-partida)
+- [Vídeos «aprén i després respon»](#vídeos-aprén-i-després-respon)
 - [Modes de joc](#modes-de-joc)
 - [Flashcards: comprovació de respostes](#flashcards-comprovació-de-respostes)
 - [Avanç de pregunta: automàtic o manual?](#avanç-de-pregunta-automàtic-o-manual)
@@ -1033,6 +1034,21 @@ de 12 px (`--fit-margin`, a `css/answers.css`).
   (`sticky` i `height: fit-content`), que feien que la partida es quedés a dalt.
 - Test: `test/browser/fullscreen.spec.js` (PC, mòbil i mòbil horitzontal).
 
+## Vídeos «aprén i després respon»
+
+Una pregunta pot portar un vídeo (`question.video`) que es veu abans de la pregunta. Durant la fase, les respostes no compten i el temps no corre.
+
+| Mode | Com funciona |
+|---|---|
+| Aula (`gameHelpers.js`) | Estat `questionLearning`. `beginVideoLearning` envia el vídeo només a l'amfitrió (`videoLearn`); l'alumnat rep `videoLearnWait` i no veu res. `finishVideoLearning` inicia la pregunta quan acaba el vídeo, quan l'anfitrió prem «Finalitzar vídeo» o en una reconnexió. |
+| Autoritme (`selfPaced.js`) | `beginNext` amb `videoLearn`: el servidor no inicia el temps fins a `spLearned`, i rebutja respostes i caducitat durant la fase. Cada alumne veu el vídeo al seu dispositiu. |
+| Solo i flashcards | El vídeo es veu a la pròpia pantalla abans del compte arrere (`solo-game.js`, `solo-flashcards-view.js`). |
+| Deures | Sense fase d'aprenentatge (no canvia). |
+
+YouTube: l'embed és `youtube-nocookie.com` amb `enablejsapi=1`, i el final es detecta amb els missatges de l'embed, sense carregar l'API (la CSP no ho permet). A l'aula, el projector envia les ordres amb `postMessage`. Al lobby, «Inici del vídeo (s)» només apareix si alguna pregunta té vídeo (`hasVideo`).
+
+Pendent: el final de YouTube amb un vídeo real (les proves el simulen).
+
 ## Modes de joc
 
 Al crear o llançar un qüestionari des de la biblioteca
@@ -1110,6 +1126,8 @@ correspondència i la casella està desmarcada, el lobby mostra el selector
 per defecte), `select` (desplegables) o `steps` (pas a pas).
 
 ## Mode autoritme i deures asíncrons
+
+Puntuacions a la pantalla de l'anfitrió: el check «Mostrar puntuaciones y ranking en el anfitrión» (`options.selfPacedHostScores`, `hostScoresOf` a `selfPacedEvents.js`) decideix si l'anfitrió veu els punts, el Top 10 i el podi (`hostPodium`). Els alumnes segueixen la casella «Puntuacions i rànquing» del lobby (`showScoresBetween`).
 
 Dos maneres de deixar que cada alumne vaja al seu ritme. Les dues usen el
 mateix motor, `services/selfPaced.js`: un mòdul **pur** (sense sockets ni
