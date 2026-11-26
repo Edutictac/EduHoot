@@ -78,3 +78,33 @@ test('Mis partidas: con muchas partidas, el paginador reparte las filas y la pá
     const fits = await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight + 1 && document.getElementById('lpArea').scrollHeight <= document.getElementById('lpArea').clientHeight + 1);
     expect(fits).toBe(true);
 });
+
+test('Mis partidas: borrar una partida con dos clics (emoticona amb títol), i desapareix del llistat', async ({ page }) => {
+    let list = GAMES.map(g => ({ ...g }));
+    const deleted = [];
+    await page.route(/^https:\/\//, route => route.abort());
+    await page.route('**/socket.io/socket.io.js', route => route.fulfill({ contentType: 'application/javascript', body: 'window.io=function(){return {on:function(){},emit:function(){},disconnect:function(){},connect:function(){}};};' }));
+    await page.route('**/api/**', route => {
+        const req = route.request();
+        const { pathname } = new URL(req.url());
+        if (pathname === '/api/auth/me') return route.fulfill({ json: TEACHER });
+        if (pathname === '/api/partidas' && req.method() === 'GET') return route.fulfill({ json: list });
+        if (pathname.startsWith('/api/partidas/') && req.method() === 'DELETE') {
+            const id = pathname.split('/')[3];
+            deleted.push(id);
+            list = list.filter(g => g.id !== id);
+            return route.fulfill({ json: { ok: true } });
+        }
+        return route.fulfill({ json: [] });
+    });
+    await page.addInitScript(() => localStorage.setItem('eduhoot-view-partidas', 'detail'));
+    await page.goto('/create/partidas/?lang=es');
+    const btn = page.locator('#ptGames tbody tr').first().locator('.pt-delete-btn');
+    await expect(btn).toHaveAttribute('title', 'Borrar');
+    await btn.click();
+    await expect(btn).toHaveClass(/is-confirming/);
+    expect(deleted).toEqual([]);
+    await btn.click();
+    await expect(page.locator('#ptGames tbody tr')).toHaveCount(GAMES.length - 1);
+    expect(deleted).toEqual(['g1']);
+});

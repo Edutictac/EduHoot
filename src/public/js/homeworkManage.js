@@ -43,13 +43,13 @@ function t(key){
 // Textos de la llista (vista, paginador i columnes del detall), compartits amb les altres pàgines de llista.
 (function(){
     var extra = {
-        es: { myGames: 'Mis partidas', viewLabel: 'Vista', viewCards: 'Tarjetas', viewDetail: 'Detalle', coverLabel: 'Imagen de fondo', coverNone: 'Sin imagen', cover10: 'Imagen al 10 %', cover20: 'Imagen al 20 %', cover30: 'Imagen al 30 %',
+        es: { myGames: 'Mis partidas', viewLabel: 'Vista', viewCards: 'Tarjetas', viewDetail: 'Lista', coverLabel: 'Imagen de fondo', coverNone: 'Sin imagen', cover10: 'Imagen al 10 %', cover20: 'Imagen al 20 %', cover30: 'Imagen al 30 %',
             paginationPrev: 'Anterior', paginationNext: 'Siguiente', paginationPageInfo: 'Página {current} de {total}', pageSizeLabel: 'Por página', pageSizeAuto: 'Ajustar a la ventana',
             colHwTitle: 'Título', colQuiz: 'Quiz', colStatus: 'Estado', colDeadline: 'Límite', colStudentsN: 'Alum', colFinishedN: 'Term' },
-        en: { myGames: 'My games', viewLabel: 'View', viewCards: 'Cards', viewDetail: 'Detail', coverLabel: 'Background image', coverNone: 'No image', cover10: 'Image at 10 %', cover20: 'Image at 20 %', cover30: 'Image at 30 %',
+        en: { myGames: 'My games', viewLabel: 'View', viewCards: 'Cards', viewDetail: 'List', coverLabel: 'Background image', coverNone: 'No image', cover10: 'Image at 10 %', cover20: 'Image at 20 %', cover30: 'Image at 30 %',
             paginationPrev: 'Previous', paginationNext: 'Next', paginationPageInfo: 'Page {current} of {total}', pageSizeLabel: 'Per page', pageSizeAuto: 'Fit to window',
             colHwTitle: 'Title', colQuiz: 'Quiz', colStatus: 'Status', colDeadline: 'Deadline', colStudentsN: 'Stud', colFinishedN: 'Fin' },
-        ca: { myGames: 'Les meves partides', viewLabel: 'Vista', viewCards: 'Targetes', viewDetail: 'Detall', coverLabel: 'Imatge de fons', coverNone: 'Sense imatge', cover10: 'Imatge al 10 %', cover20: 'Imatge al 20 %', cover30: 'Imatge al 30 %',
+        ca: { myGames: 'Les meves partides', viewLabel: 'Vista', viewCards: 'Targetes', viewDetail: 'Llista', coverLabel: 'Imatge de fons', coverNone: 'Sense imatge', cover10: 'Imatge al 10 %', cover20: 'Imatge al 20 %', cover30: 'Imatge al 30 %',
             paginationPrev: 'Anterior', paginationNext: 'Següent', paginationPageInfo: 'Pàgina {current} de {total}', pageSizeLabel: 'Per pàgina', pageSizeAuto: 'Ajustar a la finestra',
             colHwTitle: 'Títol', colQuiz: 'Quiz', colStatus: 'Estat', colDeadline: 'Límit', colStudentsN: 'Alum', colFinishedN: 'Acab' }
     };

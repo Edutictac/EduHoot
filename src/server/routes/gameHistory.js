@@ -37,5 +37,16 @@ module.exports = function createGameHistoryRouter({ gameHistory }) {
     }
   });
 
+  router.delete('/api/partidas/:id', async (req, res) => {
+    if (!req.user) return res.status(401).json({ error: 'No autorizado.' });
+    try {
+      const done = await gameHistory.deleteForOwner(req.user.id, req.params.id);
+      if (!done) return res.status(404).json({ error: 'Partida no encontrada.' });
+      return res.json({ ok: true });
+    } catch (err) {
+      return res.status(500).json({ error: 'No se pudo borrar la partida.' });
+    }
+  });
+
   return router;
 };

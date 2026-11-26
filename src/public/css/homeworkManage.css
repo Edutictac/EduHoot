@@ -127,7 +127,7 @@
     .hw-detail td[data-label]::before{ content: attr(data-label) ":"; opacity: 0.7; font-size: 0.8em; }
     .hw-detail td.hw-d-title{ flex: 0 0 100%; max-width: none; width: 100%; font-weight: 700; white-space: normal; overflow-wrap: anywhere; }
     .hw-detail th:last-child, .hw-detail td:last-child{ width: auto; }
-    .hw-detail td.hw-d-actions{ width: 100%; }
+    .hw-detail td.hw-d-actions{ width: 100%; gap: 6px; }
 }
 
 /* Escriptori: el quiz ocupa tot l'ample que sobra; el títol del deure i la resta de columnes tenen amplada fixa. */

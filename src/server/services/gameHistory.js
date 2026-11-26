@@ -78,5 +78,13 @@ module.exports = function createGameHistoryService({ getGameHistoryCollection })
     };
   }
 
-  return { RETENTION_DAYS, recordFinishedGame, listForOwner, csvForOwner, resultsForOwner };
+  // Esborra una partida del propi usuari; retorna true si existia.
+  async function deleteForOwner(ownerId, id) {
+    if (!ObjectId.isValid(id)) return false;
+    const collection = await getGameHistoryCollection();
+    const res = await collection.deleteOne({ _id: new ObjectId(id), ownerId: String(ownerId) });
+    return res.deletedCount === 1;
+  }
+
+  return { RETENTION_DAYS, recordFinishedGame, listForOwner, csvForOwner, resultsForOwner, deleteForOwner };
 };

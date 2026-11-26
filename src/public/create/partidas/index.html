@@ -108,7 +108,7 @@
                         <div class="game-meta">PIN {{ g.pin }} · {{ t('colStudents') }}: {{ g.playersCount }}</div>
                         <div class="game-meta">{{ t('colFinished') }}: {{ dateText(g.finishedAt) }}</div>
                         <div class="game-meta">{{ t('colExpires') }}: {{ dateText(g.expiresAt) }}</div>
-                        <div class="hw-actions"><button type="button" class="btn btn-ghost pt-results-btn" :title="t('results')" @click="openResults(g)"><span class="lp-txt">{{ t('results') }}</span><span class="lp-ico" aria-hidden="true">📊</span></button><a class="btn btn-primary pt-csv" :title="t('downloadCsv')" :href="'/api/partidas/' + encodeURIComponent(g.id) + '/report.csv'"><span class="lp-txt">{{ t('downloadCsv') }}</span><span class="lp-ico" aria-hidden="true">⬇</span></a></div>
+                        <div class="hw-actions"><button type="button" class="btn btn-ghost pt-results-btn" :title="t('results')" @click="openResults(g)"><span class="lp-txt">{{ t('results') }}</span><span class="lp-ico" aria-hidden="true">📊</span></button><a class="btn btn-primary pt-csv" :title="t('downloadCsv')" :href="'/api/partidas/' + encodeURIComponent(g.id) + '/report.csv'"><span class="lp-txt">{{ t('downloadCsv') }}</span><span class="lp-ico" aria-hidden="true">⬇</span></a><button type="button" class="btn btn-danger pt-delete-btn" :class="{ 'is-confirming': deleting === g.id }" :title="deleting === g.id ? t('deleteConfirm') : t('delete')" @click="askDelete(g)"><span class="lp-txt">{{ deleting === g.id ? t('deleteConfirm') : t('delete') }}</span><span class="lp-ico" aria-hidden="true">🗑️</span></button></div>
                     </article>
                 </div>
 
@@ -132,7 +132,7 @@
                                     <td :data-label="t('colStudents')">{{ g.playersCount }}</td>
                                     <td class="pt-date" :data-label="t('colFinished')">{{ dateText(g.finishedAt) }}</td>
                                     <td class="pt-col-wide pt-date" :data-label="t('colExpires')">{{ dateText(g.expiresAt) }}</td>
-                                    <td><div class="pt-actions"><button type="button" class="btn btn-ghost pt-results-btn" :title="t('results')" @click="openResults(g)"><span class="lp-txt">{{ t('results') }}</span><span class="lp-ico" aria-hidden="true">📊</span></button><a class="btn btn-primary pt-csv" :title="t('downloadCsv')" :href="'/api/partidas/' + encodeURIComponent(g.id) + '/report.csv'"><span class="lp-txt">{{ t('downloadCsv') }}</span><span class="lp-ico" aria-hidden="true">⬇</span></a></div></td>
+                                    <td><div class="pt-actions"><button type="button" class="btn btn-ghost pt-results-btn" :title="t('results')" @click="openResults(g)"><span class="lp-txt">{{ t('results') }}</span><span class="lp-ico" aria-hidden="true">📊</span></button><a class="btn btn-primary pt-csv" :title="t('downloadCsv')" :href="'/api/partidas/' + encodeURIComponent(g.id) + '/report.csv'"><span class="lp-txt">{{ t('downloadCsv') }}</span><span class="lp-ico" aria-hidden="true">⬇</span></a><button type="button" class="btn btn-danger pt-delete-btn" :class="{ 'is-confirming': deleting === g.id }" :title="deleting === g.id ? t('deleteConfirm') : t('delete')" @click="askDelete(g)"><span class="lp-txt">{{ deleting === g.id ? t('deleteConfirm') : t('delete') }}</span><span class="lp-ico" aria-hidden="true">🗑️</span></button></div></td>
                                 </tr>
                             </tbody>
                         </table>

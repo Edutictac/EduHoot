@@ -3,23 +3,23 @@
 var lang = EduhootLang.init({ preferKey: 'lang' });
 
 var i18n = {
-    es: { resultsClose: 'Cerrar', results: 'Resultados', resultsLoading: 'Cargando resultados…', resultsError: 'No se pudieron cargar los resultados.', resPlayers: 'Clasificación', resQuestions: 'Aciertos por pregunta', colPos: 'Pos.', colStudent: 'Alumno', colPoints: 'Puntos', colCorrect: 'Aciertos', colWrong: 'Fallos', colPartial: 'Parciales', colNoAnswer: 'Sin resp.', colQ: 'Nº', colQText: 'Pregunta', colOkPct: '% acierto', title: 'Mis partidas', langLabel: 'Idioma', loading: 'Cargando…', needLogin: 'Inicia sesión para ver tus partidas.', goLogin: 'Ir a iniciar sesión',
+    es: { delete: 'Borrar', deleteConfirm: 'Pulsa otra vez para borrar', resultsClose: 'Cerrar', results: 'Resultados', resultsLoading: 'Cargando resultados…', resultsError: 'No se pudieron cargar los resultados.', resPlayers: 'Clasificación', resQuestions: 'Aciertos por pregunta', colPos: 'Pos.', colStudent: 'Alumno', colPoints: 'Puntos', colCorrect: 'Aciertos', colWrong: 'Fallos', colPartial: 'Parciales', colNoAnswer: 'Sin resp.', colQ: 'Nº', colQText: 'Pregunta', colOkPct: '% acierto', title: 'Mis partidas', langLabel: 'Idioma', loading: 'Cargando…', needLogin: 'Inicia sesión para ver tus partidas.', goLogin: 'Ir a iniciar sesión',
         back: 'Biblioteca', myGames: 'Mis partidas', myHomework: 'Mis deberes', empty: 'Aún no has terminado ninguna partida. Las partidas que acabes con tu cuenta aparecen aquí durante 90 días.',
         colQuiz: 'Quiz', colMode: 'Modo', colStudents: 'Alum', colFinished: 'Finalizada', colExpires: 'Caduca', downloadCsv: 'Descargar CSV',
         mode_selfPaced: 'A su ritmo', mode_live: 'En directo', error_load: 'No se han podido cargar las partidas.',
-        viewLabel: 'Vista', viewCards: 'Tarjetas', viewDetail: 'Detalle', coverLabel: 'Imagen de fondo', coverNone: 'Sin imagen', cover10: 'Imagen al 10 %', cover20: 'Imagen al 20 %', cover30: 'Imagen al 30 %',
+        viewLabel: 'Vista', viewCards: 'Tarjetas', viewDetail: 'Lista', coverLabel: 'Imagen de fondo', coverNone: 'Sin imagen', cover10: 'Imagen al 10 %', cover20: 'Imagen al 20 %', cover30: 'Imagen al 30 %',
         paginationPrev: 'Anterior', paginationNext: 'Siguiente', paginationPageInfo: 'Página {current} de {total}', pageSizeLabel: 'Por página', pageSizeAuto: 'Ajustar a la ventana' },
-    en: { resultsClose: 'Close', results: 'Results', resultsLoading: 'Loading results…', resultsError: 'Could not load the results.', resPlayers: 'Ranking', resQuestions: 'Correct answers per question', colPos: 'Pos.', colStudent: 'Student', colPoints: 'Points', colCorrect: 'Correct', colWrong: 'Wrong', colPartial: 'Partial', colNoAnswer: 'No answer', colQ: 'No.', colQText: 'Question', colOkPct: '% correct', title: 'My games', langLabel: 'Language', loading: 'Loading…', needLogin: 'Sign in to see your games.', goLogin: 'Go to sign in',
+    en: { delete: 'Delete', deleteConfirm: 'Press again to delete', resultsClose: 'Close', results: 'Results', resultsLoading: 'Loading results…', resultsError: 'Could not load the results.', resPlayers: 'Ranking', resQuestions: 'Correct answers per question', colPos: 'Pos.', colStudent: 'Student', colPoints: 'Points', colCorrect: 'Correct', colWrong: 'Wrong', colPartial: 'Partial', colNoAnswer: 'No answer', colQ: 'No.', colQText: 'Question', colOkPct: '% correct', title: 'My games', langLabel: 'Language', loading: 'Loading…', needLogin: 'Sign in to see your games.', goLogin: 'Go to sign in',
         back: 'Library', myGames: 'My games', myHomework: 'My homework', empty: 'You have not finished any game yet. Games you finish with your account appear here for 90 days.',
         colQuiz: 'Quiz', colMode: 'Mode', colStudents: 'Stud', colFinished: 'Finished', colExpires: 'Expires', downloadCsv: 'Download CSV',
         mode_selfPaced: 'Self-paced', mode_live: 'Live', error_load: 'The games could not be loaded.',
-        viewLabel: 'View', viewCards: 'Cards', viewDetail: 'Detail', coverLabel: 'Background image', coverNone: 'No image', cover10: 'Image at 10 %', cover20: 'Image at 20 %', cover30: 'Image at 30 %',
+        viewLabel: 'View', viewCards: 'Cards', viewDetail: 'List', coverLabel: 'Background image', coverNone: 'No image', cover10: 'Image at 10 %', cover20: 'Image at 20 %', cover30: 'Image at 30 %',
         paginationPrev: 'Previous', paginationNext: 'Next', paginationPageInfo: 'Page {current} of {total}', pageSizeLabel: 'Per page', pageSizeAuto: 'Fit to window' },
-    ca: { resultsClose: 'Tancar', results: 'Resultats', resultsLoading: 'Carregant resultats…', resultsError: 'No s\'han pogut carregar els resultats.', resPlayers: 'Classificació', resQuestions: 'Encerts per pregunta', colPos: 'Pos.', colStudent: 'Alumne', colPoints: 'Punts', colCorrect: 'Encerts', colWrong: 'Errors', colPartial: 'Parcials', colNoAnswer: 'Sense resp.', colQ: 'Nº', colQText: 'Pregunta', colOkPct: '% encert', title: 'Les meves partides', langLabel: 'Idioma', loading: 'Carregant…', needLogin: 'Inicia sessió per a veure les teues partides.', goLogin: 'Anar a iniciar sessió',
+    ca: { delete: 'Esborrar', deleteConfirm: 'Torna a premre per a esborrar', resultsClose: 'Tancar', results: 'Resultats', resultsLoading: 'Carregant resultats…', resultsError: 'No s\'han pogut carregar els resultats.', resPlayers: 'Classificació', resQuestions: 'Encerts per pregunta', colPos: 'Pos.', colStudent: 'Alumne', colPoints: 'Punts', colCorrect: 'Encerts', colWrong: 'Errors', colPartial: 'Parcials', colNoAnswer: 'Sense resp.', colQ: 'Nº', colQText: 'Pregunta', colOkPct: '% encert', title: 'Les meves partides', langLabel: 'Idioma', loading: 'Carregant…', needLogin: 'Inicia sessió per a veure les teues partides.', goLogin: 'Anar a iniciar sessió',
         back: 'Biblioteca', myGames: 'Mis partidas', myHomework: 'Els meus deures', empty: 'Encara no has acabat cap partida. Les partides que acabes amb el teu compte apareixen ací durant 90 dies.',
         colQuiz: 'Quiz', colMode: 'Mode', colStudents: 'Alum', colFinished: 'Finalitzada', colExpires: 'Caduca', downloadCsv: 'Descarregar CSV',
         mode_selfPaced: 'Al seu ritme', mode_live: 'En directe', error_load: 'No s\'han pogut carregar les partides.',
-        viewLabel: 'Vista', viewCards: 'Targetes', viewDetail: 'Detall', coverLabel: 'Imatge de fons', coverNone: 'Sense imatge', cover10: 'Imatge al 10 %', cover20: 'Imatge al 20 %', cover30: 'Imatge al 30 %',
+        viewLabel: 'Vista', viewCards: 'Targetes', viewDetail: 'Llista', coverLabel: 'Imatge de fons', coverNone: 'Sense imatge', cover10: 'Imatge al 10 %', cover20: 'Imatge al 20 %', cover30: 'Imatge al 30 %',
         paginationPrev: 'Anterior', paginationNext: 'Següent', paginationPageInfo: 'Pàgina {current} de {total}', pageSizeLabel: 'Per pàgina', pageSizeAuto: 'Ajustar a la finestra' }
 };
 
@@ -38,7 +38,7 @@ var app = Vue.createApp({
     data: function(){
         return {
             listKey: 'partidas', loading: true, user: null, list: [], error: '', langTick: 0,
-            results: null, resultsGame: '', resultsLoading: false, resultsError: '',
+            results: null, resultsGame: '', resultsLoading: false, resultsError: '', deleting: '',
             listView: eduhootReadView('partidas'), pageSizeChoice: eduhootReadSizeChoice('partidas'), coverLevel: eduhootReadCoverLevel()
         };
     },
@@ -89,6 +89,24 @@ var app = Vue.createApp({
                 });
         },
         closeResults: function(){ this.results = null; this.resultsError = ''; },
+        // Esborrar una partida: primer clic demana confirmació (4 s), el segon l'esborra.
+        askDelete: function(g){
+            var self = this;
+            if(this.deleting !== g.id){
+                this.deleting = g.id;
+                clearTimeout(deleteTimer);
+                deleteTimer = setTimeout(function(){ self.deleting = ''; }, 4000);
+                return;
+            }
+            this.deleting = '';
+            fetch('/api/partidas/' + encodeURIComponent(g.id), { method: 'DELETE', credentials: 'include' })
+                .then(function(res){ if(!res.ok) throw new Error('delete'); return res.json(); })
+                .then(function(){
+                    self.list = self.list.filter(function(x){ return x.id !== g.id; });
+                    if(self.results && self.results.id === g.id) self.closeResults();
+                })
+                .catch(function(){ self.error = 'error_delete'; });
+        },
         // Percentatge d'aciertos sobre les respostes de la pregunta (les enquestes no compten).
         pct: function(q){
             var total = q.correct + q.partial + q.wrong + q.unanswered;
@@ -100,6 +118,8 @@ var app = Vue.createApp({
         }
     }
 }).mount('#pt-app');
+
+var deleteTimer = null;
 
 function bindLangSelect(){
     var select = document.getElementById('lang-select');
