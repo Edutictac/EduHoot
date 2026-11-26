@@ -1,6 +1,7 @@
 // Registre de partides per usuari. Es guarda l'informe de cada partida acabada només quan la crea un usuari
 // amb compte (les partides anònimes no es guarden). Retenció: 90 dies (índex TTL a data/db.js).
 const { ObjectId } = require('mongodb');
+const { parseReportResults } = require('./reportResults');
 
 const RETENTION_DAYS = 90;
 const LIST_LIMIT = 200;
@@ -60,5 +61,22 @@ module.exports = function createGameHistoryService({ getGameHistoryCollection })
     return { csv: doc.csv, fileName: `partida-${pinSafe}-${stamp}.csv` };
   }
 
-  return { RETENTION_DAYS, recordFinishedGame, listForOwner, csvForOwner };
+  // Classificació i aciertos per pregunta de la partida (només les pròpies).
+  async function resultsForOwner(ownerId, id) {
+    if (!ObjectId.isValid(id)) return null;
+    const collection = await getGameHistoryCollection();
+    const doc = await collection.findOne({ _id: new ObjectId(id), ownerId: String(ownerId) }, { projection: { csv: 1, quizName: 1, pin: 1, mode: 1, finishedAt: 1, playersCount: 1 } });
+    if (!doc) return null;
+    return {
+      id: String(doc._id),
+      pin: doc.pin,
+      quizName: doc.quizName,
+      mode: doc.mode,
+      finishedAt: new Date(doc.finishedAt).toISOString(),
+      playersCount: doc.playersCount,
+      ...parseReportResults(doc.csv)
+    };
+  }
+
+  return { RETENTION_DAYS, recordFinishedGame, listForOwner, csvForOwner, resultsForOwner };
 };

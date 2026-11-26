@@ -3,19 +3,19 @@
 var lang = EduhootLang.init({ preferKey: 'lang' });
 
 var i18n = {
-    es: { title: 'Mis partidas', langLabel: 'Idioma', loading: 'Cargando…', needLogin: 'Inicia sesión para ver tus partidas.', goLogin: 'Ir a iniciar sesión',
+    es: { resultsClose: 'Cerrar', results: 'Resultados', resultsLoading: 'Cargando resultados…', resultsError: 'No se pudieron cargar los resultados.', resPlayers: 'Clasificación', resQuestions: 'Aciertos por pregunta', colPos: 'Pos.', colStudent: 'Alumno', colPoints: 'Puntos', colCorrect: 'Aciertos', colWrong: 'Fallos', colPartial: 'Parciales', colNoAnswer: 'Sin resp.', colQ: 'Nº', colQText: 'Pregunta', colOkPct: '% acierto', title: 'Mis partidas', langLabel: 'Idioma', loading: 'Cargando…', needLogin: 'Inicia sesión para ver tus partidas.', goLogin: 'Ir a iniciar sesión',
         back: 'Biblioteca', myGames: 'Mis partidas', myHomework: 'Mis deberes', empty: 'Aún no has terminado ninguna partida. Las partidas que acabes con tu cuenta aparecen aquí durante 90 días.',
         colQuiz: 'Quiz', colMode: 'Modo', colStudents: 'Alum', colFinished: 'Finalizada', colExpires: 'Caduca', downloadCsv: 'Descargar CSV',
         mode_selfPaced: 'A su ritmo', mode_live: 'En directo', error_load: 'No se han podido cargar las partidas.',
         viewLabel: 'Vista', viewCards: 'Tarjetas', viewDetail: 'Detalle', coverLabel: 'Imagen de fondo', coverNone: 'Sin imagen', cover10: 'Imagen al 10 %', cover20: 'Imagen al 20 %', cover30: 'Imagen al 30 %',
         paginationPrev: 'Anterior', paginationNext: 'Siguiente', paginationPageInfo: 'Página {current} de {total}', pageSizeLabel: 'Por página', pageSizeAuto: 'Ajustar a la ventana' },
-    en: { title: 'My games', langLabel: 'Language', loading: 'Loading…', needLogin: 'Sign in to see your games.', goLogin: 'Go to sign in',
+    en: { resultsClose: 'Close', results: 'Results', resultsLoading: 'Loading results…', resultsError: 'Could not load the results.', resPlayers: 'Ranking', resQuestions: 'Correct answers per question', colPos: 'Pos.', colStudent: 'Student', colPoints: 'Points', colCorrect: 'Correct', colWrong: 'Wrong', colPartial: 'Partial', colNoAnswer: 'No answer', colQ: 'No.', colQText: 'Question', colOkPct: '% correct', title: 'My games', langLabel: 'Language', loading: 'Loading…', needLogin: 'Sign in to see your games.', goLogin: 'Go to sign in',
         back: 'Library', myGames: 'My games', myHomework: 'My homework', empty: 'You have not finished any game yet. Games you finish with your account appear here for 90 days.',
         colQuiz: 'Quiz', colMode: 'Mode', colStudents: 'Stud', colFinished: 'Finished', colExpires: 'Expires', downloadCsv: 'Download CSV',
         mode_selfPaced: 'Self-paced', mode_live: 'Live', error_load: 'The games could not be loaded.',
         viewLabel: 'View', viewCards: 'Cards', viewDetail: 'Detail', coverLabel: 'Background image', coverNone: 'No image', cover10: 'Image at 10 %', cover20: 'Image at 20 %', cover30: 'Image at 30 %',
         paginationPrev: 'Previous', paginationNext: 'Next', paginationPageInfo: 'Page {current} of {total}', pageSizeLabel: 'Per page', pageSizeAuto: 'Fit to window' },
-    ca: { title: 'Les meves partides', langLabel: 'Idioma', loading: 'Carregant…', needLogin: 'Inicia sessió per a veure les teues partides.', goLogin: 'Anar a iniciar sessió',
+    ca: { resultsClose: 'Tancar', results: 'Resultats', resultsLoading: 'Carregant resultats…', resultsError: 'No s\'han pogut carregar els resultats.', resPlayers: 'Classificació', resQuestions: 'Encerts per pregunta', colPos: 'Pos.', colStudent: 'Alumne', colPoints: 'Punts', colCorrect: 'Encerts', colWrong: 'Errors', colPartial: 'Parcials', colNoAnswer: 'Sense resp.', colQ: 'Nº', colQText: 'Pregunta', colOkPct: '% encert', title: 'Les meves partides', langLabel: 'Idioma', loading: 'Carregant…', needLogin: 'Inicia sessió per a veure les teues partides.', goLogin: 'Anar a iniciar sessió',
         back: 'Biblioteca', myGames: 'Mis partidas', myHomework: 'Els meus deures', empty: 'Encara no has acabat cap partida. Les partides que acabes amb el teu compte apareixen ací durant 90 dies.',
         colQuiz: 'Quiz', colMode: 'Mode', colStudents: 'Alum', colFinished: 'Finalitzada', colExpires: 'Caduca', downloadCsv: 'Descarregar CSV',
         mode_selfPaced: 'Al seu ritme', mode_live: 'En directe', error_load: 'No s\'han pogut carregar les partides.',
@@ -38,6 +38,7 @@ var app = Vue.createApp({
     data: function(){
         return {
             listKey: 'partidas', loading: true, user: null, list: [], error: '', langTick: 0,
+            results: null, resultsGame: '', resultsLoading: false, resultsError: '',
             listView: eduhootReadView('partidas'), pageSizeChoice: eduhootReadSizeChoice('partidas'), coverLevel: eduhootReadCoverLevel()
         };
     },
@@ -67,6 +68,31 @@ var app = Vue.createApp({
             var d = new Date(iso);
             if(isNaN(d.getTime())) return '—';
             return d.toLocaleString(lang === 'va' ? 'ca' : lang, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        },
+        // Resultats d'una partida: classificació i aciertos per pregunta (com a Mis deberes).
+        openResults: function(g){
+            var self = this;
+            this.resultsGame = g.quizName || '';
+            this.results = null;
+            this.resultsError = '';
+            this.resultsLoading = true;
+            fetch('/api/partidas/' + encodeURIComponent(g.id) + '/results', { credentials: 'include' })
+                .then(function(res){ if(!res.ok) throw new Error('results'); return res.json(); })
+                .then(function(data){ self.results = data; })
+                .catch(function(){ self.resultsError = 'error'; })
+                .then(function(){
+                    self.resultsLoading = false;
+                    self.$nextTick(function(){
+                        var el = document.getElementById('ptResults');
+                        if(el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    });
+                });
+        },
+        closeResults: function(){ this.results = null; this.resultsError = ''; },
+        // Percentatge d'aciertos sobre les respostes de la pregunta (les enquestes no compten).
+        pct: function(q){
+            var total = q.correct + q.partial + q.wrong + q.unanswered;
+            return total ? Math.round(100 * q.correct / total) + '%' : '—';
         },
         // La portada és la del quiz de la partida (si ja no existeix, el logo).
         coverSrc: function(g){

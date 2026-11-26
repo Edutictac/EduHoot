@@ -53,7 +53,50 @@
 
             <div v-else id="lpArea" class="pt-area">
                 <p v-if="error" class="hw-error" role="alert">{{ t(error) }}</p>
-                <p v-if="!list.length" id="ptEmpty" class="hw-muted">{{ t('empty') }}</p>
+                <section v-if="results || resultsLoading || resultsError" id="ptResults" class="hw-card pt-results" aria-live="polite">
+                <div class="pt-results__head">
+                    <h2>{{ resultsGame }}</h2>
+                    <button type="button" class="btn btn-ghost btn-small" @click="closeResults">{{ t('resultsClose') }}</button>
+                </div>
+                <p v-if="resultsLoading" class="hw-muted">{{ t('resultsLoading') }}</p>
+                <p v-else-if="resultsError" class="hw-notice">{{ t('resultsError') }}</p>
+                <template v-else-if="results">
+                    <h3>{{ t('resPlayers') }}</h3>
+                    <div class="hw-table-wrap">
+                        <table class="hw-table pt-res-table" id="ptResPlayers">
+                            <thead><tr><th>{{ t('colPos') }}</th><th>{{ t('colStudent') }}</th><th>{{ t('colPoints') }}</th><th>{{ t('colCorrect') }}</th><th>{{ t('colWrong') }}</th><th>{{ t('colNoAnswer') }}</th></tr></thead>
+                            <tbody>
+                                <tr v-for="p in results.players" :key="p.position + '-' + p.name">
+                                    <td :data-label="t('colPos')">{{ p.position }}</td>
+                                    <td :data-label="t('colStudent')">{{ p.name }}</td>
+                                    <td :data-label="t('colPoints')">{{ p.score }}</td>
+                                    <td :data-label="t('colCorrect')">{{ p.correct }}</td>
+                                    <td :data-label="t('colWrong')">{{ p.wrong }}</td>
+                                    <td :data-label="t('colNoAnswer')">{{ p.unanswered }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <h3>{{ t('resQuestions') }}</h3>
+                    <div class="hw-table-wrap">
+                        <table class="hw-table pt-res-table" id="ptResQuestions">
+                            <thead><tr><th>{{ t('colQ') }}</th><th>{{ t('colQText') }}</th><th>{{ t('colCorrect') }}</th><th>{{ t('colPartial') }}</th><th>{{ t('colWrong') }}</th><th>{{ t('colNoAnswer') }}</th><th>{{ t('colOkPct') }}</th></tr></thead>
+                            <tbody>
+                                <tr v-for="q in results.questions" :key="q.number">
+                                    <td :data-label="t('colQ')">{{ q.number }}</td>
+                                    <td class="pt-res-text" :data-label="t('colQText')">{{ q.text || '—' }}</td>
+                                    <td :data-label="t('colCorrect')">{{ q.correct }}</td>
+                                    <td :data-label="t('colPartial')">{{ q.partial }}</td>
+                                    <td :data-label="t('colWrong')">{{ q.wrong }}</td>
+                                    <td :data-label="t('colNoAnswer')">{{ q.unanswered }}</td>
+                                    <td :data-label="t('colOkPct')">{{ pct(q) }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </template>
+            </section>
+            <p v-if="!list.length" id="ptEmpty" class="hw-muted">{{ t('empty') }}</p>
 
                 <div v-else-if="listView === 'cards'" id="ptCards" class="game-grid">
                     <article v-for="g in pageItems" :key="g.id" class="game-card pt-game">
@@ -65,7 +108,7 @@
                         <div class="game-meta">PIN {{ g.pin }} · {{ t('colStudents') }}: {{ g.playersCount }}</div>
                         <div class="game-meta">{{ t('colFinished') }}: {{ dateText(g.finishedAt) }}</div>
                         <div class="game-meta">{{ t('colExpires') }}: {{ dateText(g.expiresAt) }}</div>
-                        <div class="hw-actions"><a class="btn btn-primary pt-csv" :title="t('downloadCsv')" :href="'/api/partidas/' + encodeURIComponent(g.id) + '/report.csv'"><span class="lp-txt">{{ t('downloadCsv') }}</span><span class="lp-ico" aria-hidden="true">⬇</span></a></div>
+                        <div class="hw-actions"><button type="button" class="btn btn-ghost pt-results-btn" :title="t('results')" @click="openResults(g)"><span class="lp-txt">{{ t('results') }}</span><span class="lp-ico" aria-hidden="true">📊</span></button><a class="btn btn-primary pt-csv" :title="t('downloadCsv')" :href="'/api/partidas/' + encodeURIComponent(g.id) + '/report.csv'"><span class="lp-txt">{{ t('downloadCsv') }}</span><span class="lp-ico" aria-hidden="true">⬇</span></a></div>
                     </article>
                 </div>
 
@@ -89,7 +132,7 @@
                                     <td :data-label="t('colStudents')">{{ g.playersCount }}</td>
                                     <td class="pt-date" :data-label="t('colFinished')">{{ dateText(g.finishedAt) }}</td>
                                     <td class="pt-col-wide pt-date" :data-label="t('colExpires')">{{ dateText(g.expiresAt) }}</td>
-                                    <td><a class="btn btn-primary pt-csv" :title="t('downloadCsv')" :href="'/api/partidas/' + encodeURIComponent(g.id) + '/report.csv'"><span class="lp-txt">{{ t('downloadCsv') }}</span><span class="lp-ico" aria-hidden="true">⬇</span></a></td>
+                                    <td><div class="pt-actions"><button type="button" class="btn btn-ghost pt-results-btn" :title="t('results')" @click="openResults(g)"><span class="lp-txt">{{ t('results') }}</span><span class="lp-ico" aria-hidden="true">📊</span></button><a class="btn btn-primary pt-csv" :title="t('downloadCsv')" :href="'/api/partidas/' + encodeURIComponent(g.id) + '/report.csv'"><span class="lp-txt">{{ t('downloadCsv') }}</span><span class="lp-ico" aria-hidden="true">⬇</span></a></div></td>
                                 </tr>
                             </tbody>
                         </table>

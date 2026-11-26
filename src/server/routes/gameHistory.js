@@ -26,5 +26,16 @@ module.exports = function createGameHistoryRouter({ gameHistory }) {
     }
   });
 
+  router.get('/api/partidas/:id/results', async (req, res) => {
+    if (!req.user) return res.status(401).json({ error: 'No autorizado.' });
+    try {
+      const found = await gameHistory.resultsForOwner(req.user.id, req.params.id);
+      if (!found) return res.status(404).json({ error: 'Partida no encontrada.' });
+      return res.json(found);
+    } catch (err) {
+      return res.status(500).json({ error: 'No se pudieron cargar los resultados.' });
+    }
+  });
+
   return router;
 };
