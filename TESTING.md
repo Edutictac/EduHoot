@@ -102,6 +102,8 @@ problemes d'estil, variables sense usar, etc.
   recuperació, partida completa, intents, dos dispositius alhora, data límit,
   resultats i CSV, força bruta; el temps es controla movent la data límit en
   la BD).
+  Informe de partides i esborrat de partides en el servidor (`reportResults.test.js`,
+  `gameHistoryDelete.test.js`).
 - **`test/browser/`** — tests de navegador amb Playwright:
   `language.spec.js` (canvi d'idioma), `auth-state.spec.js` (estat de sessió
   i pont amb el xip), `player-game.spec.js` (joc de l'alumnat des del PIN a
@@ -141,7 +143,10 @@ problemes d'estil, variables sense usar, etc.
   l'API sempre es simula amb `page.route`; les rutes més recents tenen
   prioritat.
   A més, `solo-pause.spec.js` (pausar i cancel·lar en Solo) i
-  `long-text.spec.js` (el text llarg sense espais no se n'ix del requadre).
+  `long-text.spec.js` (el text llarg sense espais no se n'ix del requadre),
+  `music-blocks.spec.js` (la música de fons de solo, l'anfitrió i multijugador:
+  reproduir, parar i canviar de pista amb botons i selector) i
+  `library-view.spec.js` (la biblioteca en targetes o en detall).
 
 ### Scripts puntuals que NO són part del flux de test estàndard
 

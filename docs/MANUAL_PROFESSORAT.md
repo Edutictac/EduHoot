@@ -24,7 +24,7 @@ L'alumnat sempre juga des del seu mòbil, tauleta o ordinador.
    s'aplica en este mode i s'amaga.
 4. Deixa marcada **Mostra les preguntes**: sense pantalla comuna, l'alumnat
    necessita vore-les al seu dispositiu.
-5. L'alumnat s'uneix amb el PIN o el QR, com sempre. Quan estiguen tots,
+5. L'alumnat s'uneix amb el PIN, el QR o l'enllaç de sota el PIN i el QR (el pots copiar amb el botó 🔗). Quan estiguen tots,
    prem **Iniciar**.
 
 Si alguna pregunta du vídeo, apareix **Inici del vídeo (s)** al lobby: cada alumne veu el vídeo des d'eixe segon abans de la pregunta, al seu dispositiu, i el temps no corre fins que acaba.
@@ -131,6 +131,14 @@ En **Resultats** veus:
 - **Descarregar CSV**: el mateix informe que una partida en directe, amb la
   resposta de cada alumne a cada pregunta i el temps que va tardar.
 - **Actualitzar** per a vore les dades més noves.
+
+### Les meues partides
+
+Amb el botó **Mis partidas** (dalt de la biblioteca) veus les partides que has acabat amb el teu compte, durant 90 dies. Per a cada partida:
+
+- **Resultats**: la classificació de l'alumnat i, per a cada pregunta, els encerts, els fallos, les parcials i les que no es van respondre.
+- **Descarregar CSV**: l'informe complet, com en una partida en directe.
+- **Esborrar** (la papelera): demana confirmació en prémer-la una segona vegada.
 
 ### Com es puntua
 

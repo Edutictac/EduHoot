@@ -84,9 +84,11 @@
         '<div class="join-text"><p class="quiz-name">' + t('quizName') + '</p><h2>' + t('joinTitle') + '</h2>' +
           '<div class="pin"><small>PIN</small><b>48213</b></div></div>' +
         '<div class="qr">' + t('scanQr') + '<div class="code"></div>eduhoot.edutictac.es</div></div>' +
-      optionsHTML() +
-      '<button type="button" class="ghost btn-sim" id="btn-join">' + t('simJoin') + '</button>' +
+          '<div class="join-url-row"><code class="join-url">' + esc(JOIN_URL) + '</code>' +
+          '<button type="button" class="copy-url" id="btn-copy-url" title="' + t('copyUrl') + '" aria-label="' + t('copyUrl') + '"><span class="cu-ico" aria-hidden="true">🔗</span><span class="cu-txt">' + t('copyUrl') + '</span></button></div>' +
       '<div class="players">' + pl + '</div>' +
+      '<button type="button" class="ghost btn-sim" id="btn-join">' + t('simJoin') + '</button>' +
+      optionsHTML() +
       '<div class="actions"><button type="button" class="btn-cancel">' + t('cancel') + '</button><button type="button" class="btn-start" id="btn-start">' + t('start') + '</button></div></div>';
   }
 
@@ -127,6 +129,7 @@
   stage.addEventListener('click', function(e){
     var el = e.target.closest('button'); if(!el) return;
     if(el.getAttribute('data-help')){ e.preventDefault(); toggleHelp(el); return; }
+    if(el.id === 'btn-copy-url'){ copyJoinUrl(el); return; }
     if(el.id === 'btn-join'){ players.push({ name: NAMES[nameSeq % NAMES.length], icon: ICONS[nameSeq % ICONS.length] }); nameSeq++; render(); return; }
     if(el.hasAttribute('data-kick')){
       var i = parseInt(el.getAttribute('data-kick'), 10);
@@ -136,6 +139,23 @@
     if(el.id === 't-pause'){ game.paused = !game.paused; render(); return; }
     if(el.id === 't-add'){ game.left += 15; render(); return; }
   });
+  var JOIN_URL = 'https://eduhoot.edutictac.es/join.html?pin=48213';
+  var copyTimer = null;
+  // Icona i text separats: en mòbil i tauleta només es veu la icona; el text queda al títol.
+  function setCopyState(btn, done){
+    btn.querySelector('.cu-ico').textContent = done ? '✅' : '🔗';
+    btn.querySelector('.cu-txt').textContent = done ? t('copyUrlDone') : t('copyUrl');
+    btn.title = done ? t('copyUrlDone') : t('copyUrl');
+    btn.setAttribute('aria-label', done ? t('copyUrlDone') : t('copyUrl'));
+  }
+  function copyJoinUrl(btn){
+    var done = function(){
+      setCopyState(btn, true);
+      clearTimeout(copyTimer);
+      copyTimer = setTimeout(function(){ setCopyState(btn, false); }, 2000);
+    };
+    if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(JOIN_URL).then(done, done); } else { done(); }
+  }
   function closeHelp(){ stage.querySelectorAll('.help > button[aria-expanded="true"]').forEach(function(b){ b.setAttribute('aria-expanded','false'); b.nextElementSibling.hidden = true; }); }
   function toggleHelp(btn){
     var open = btn.getAttribute('aria-expanded') === 'true'; closeHelp();

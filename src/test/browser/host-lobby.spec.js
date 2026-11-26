@@ -226,9 +226,9 @@ test('la sala de espera muestra la URL completa con el PIN, y el botón la copia
     await openLobby(page, '?id=q1&lang=es');
     await page.evaluate(() => window.__serverEmit('showGamePin', { pin: '12345' }));
     const input = page.locator('#join-url-text');
-    await expect(input).toHaveValue(/\/join\.html\?pin=12345&lang=es$/);
-    await expect(input).toHaveAttribute('readonly', '');
+    await expect(input).toHaveText(/\/join\.html\?pin=12345&lang=es$/);
     await page.locator('#join-url-copy').click();
-    await expect(page.locator('#join-url-copy')).toContainText('Enlace copiado');
+    await expect(page.locator('#join-url-copy')).toContainText('✅');
+    await expect(page.locator('#join-url-copy')).toHaveAttribute('title', 'Enlace copiado');
     expect(await page.evaluate(() => navigator.clipboard.readText())).toMatch(/\/join\.html\?pin=12345&lang=es$/);
 });

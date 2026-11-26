@@ -19,6 +19,8 @@ fitxers corresponents, i els originals es van eliminar.
 ## [Sense publicar]
 
 ### Afegit
+- **Enllaç d'entrada a la sala de l'anfitrió**: sota el PIN i el QR, l'enllaç complet amb el PIN i un botó per copiar-lo (icona 🔗; durant 2 s canvia a ✅). El text es pot seleccionar per copiar-lo a mà.
+- **Paginador del catàleg de solo i multijugador**: el mateix que el de la biblioteca (Anterior, selector de pàgina, Següent i mida de pàgina), amb una barra flotant quan el paginador de baix no es veu.
 - **Resultats de cada partida a Mis partidas**: botó «Resultats» (📊) a les targetes i al detall. Mostra la classificació per alumne i els aciertos, fallos, parcials i sense respondre per pregunta. Llig l'informe guardat (`GET /api/partidas/:id/results`, només les pròpies).
 - **Esborrar partides**: botó 🗑️ a Mis partidas (targetes i detall), amb confirmació en dos clics (`DELETE /api/partidas/:id`, només les pròpies).
 - **Vista de llista o de targetes** a la biblioteca, Mis partidas i Mis deberes. Es recorda al navegador; el desplegable d'imatge de fons només apareix en targetes.
@@ -31,6 +33,11 @@ fitxers corresponents, i els originals es van eliminar.
 - **Autoritme: puntuacions a l'anfitrió**: la pantalla de progrés té la casella «Mostra puntuacions i rànquing a l'anfitrió» (desactivada per defecte). Activada, l'anfitrió veu els punts, el Top 10 i el podi final. Els alumnes segueixen la casella «Puntuacions i rànquing» del lobby.
 
 ### Canviat
+- **Tipografia i botons comuns**: totes les pantalles (excepte la portada `/`) usen Raleway, i els botons amb classe `btn` tenen els mateixos radis (10 px). Fitxer `css/brand-unify.css`.
+- **Sala de l'anfitrió**: la llista de jugadors va just sota el PIN i el QR, abans de les opcions de partida; Iniciar i Cancelar tenen la forma i els colors de la biblioteca.
+- **Multijugador**: la capçalera i el catàleg tenen la mateixa disposició que solo; el catàleg usa tons blaus i l'epígraf és «Multijugador local».
+- **Partida de l'anfitrió**: el botó de reproduir/pausar al costat del temps restant és el doble de gran i està centrat amb els segons.
+- **Mis partidas**: la fila de botons de cada targeta va en flex, amb la papelera a la dreta (com a Mis deberes).
 - **Capçalera i controls unificats** a biblioteca, Mis partidas i Mis deberes: mateixos enllaços, mides i paginador. El botó «Detalle» diu ara «Lista» (Llista, List).
 - **Taules de detall**: les columnes secundàries tenen amplada fixa i el nom del quiz ocupa la resta. Canvien a files segons l'amplada del recuadre, no de la finestra.
 - **Mis deberes**: títols complets, id del quiz a la columna Quiz (el nom al tooltip), columnes abreujades (Alum, Term, Acab) i botons amb emoticona i tooltip.

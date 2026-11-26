@@ -18,6 +18,7 @@ var baseJoinUrl = (function(){
     return 'https://eduhoot.edutictac.es/join.html';
 })();
 var hostErrorTimeout = null;
+var copyUrlTimer = null;
 var hostStartClicked = false;
 var hostStartGameEmitted = false;
 var hostStartWatchdog = null;
@@ -268,6 +269,8 @@ var lobby = Vue.createApp({
             lang: getHostLobbyLang(),
             // Clave de la ayuda «?» abierta (null = ninguna).
             helpOpen: null,
+            // Estat del botó «Copiar enlace» (copiat, no copiat o res): nivell superior, no és una opció de partida.
+            copyState: '',
             optionsView: readHostOptionsView(),
             // true mientras se aplica la vista que llega de la cuenta (así no se vuelve a guardar).
             optionsViewFromAccount: false,
@@ -303,7 +306,6 @@ var lobby = Vue.createApp({
                 streak: true,
                 // Mode fantasma en aula (opcional): cada alumne compara amb la seua millor marca, al seu navegador.
                 ghostMode: false,
-                copiedUrl: false,
                 // Avance automático entre preguntas: 0 = manual; 3–20 s.
                 autoAdvanceSec: 0,
                 // Modo de la partida: 'live' (en directo) o 'selfPaced' (cada alumno a su ritmo).
@@ -373,26 +375,6 @@ var lobby = Vue.createApp({
             }
         },
         // Copia l'enllaç d'entrada complet (amb el PIN); si el navegador no té el portapapers, selecciona el camp.
-        copyJoinUrl: function(){
-            var self = this;
-            var done = function(){
-                self.copiedUrl = true;
-                clearTimeout(self._copyTimer);
-                self._copyTimer = setTimeout(function(){ self.copiedUrl = false; }, 2000);
-            };
-            var fallback = function(){
-                var input = document.getElementById('join-url-text');
-                if(!input) return;
-                input.focus();
-                input.select();
-                try{ if(document.execCommand('copy')) done(); }catch(e){}
-            };
-            if(navigator.clipboard && navigator.clipboard.writeText){
-                navigator.clipboard.writeText(this.joinUrl).then(done, fallback);
-            }else{
-                fallback();
-            }
-        },
         qrSrc: function(){
             var qrSize = 240;
             return 'https://api.qrserver.com/v1/create-qr-code/?size=' + qrSize + 'x' + qrSize + '&data=' + encodeURIComponent(this.joinUrl);
@@ -408,6 +390,37 @@ var lobby = Vue.createApp({
         }
     },
     methods: {
+        // Igual que a deures: el botó canvia d'estat en fer clic (copiada o no) i torna al text normal als 2 s.
+        // Selecciona tot el text de l'enllaç (per copiar-lo a mà).
+        selectJoinUrl: function(){
+            var el = document.getElementById('join-url-text');
+            if(!el || !window.getSelection) return;
+            var range = document.createRange();
+            range.selectNodeContents(el);
+            var sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+        },
+        copyJoinUrl: function(){
+            var self = this;
+            var link = this.joinUrl;
+            var done = function(state){
+                self.copyState = state;
+                clearTimeout(copyUrlTimer);
+                copyUrlTimer = setTimeout(function(){ self.copyState = ''; }, 2000);
+            };
+            var fallback = function(){
+                var ok = false;
+                self.selectJoinUrl();
+                try{ ok = document.execCommand('copy'); }catch(e){}
+                done(ok ? 'copied' : 'failed');
+            };
+            if(navigator.clipboard && navigator.clipboard.writeText){
+                navigator.clipboard.writeText(link).then(function(){ done('copied'); }, fallback);
+            }else{
+                fallback();
+            }
+        },
         toggleHelp: function(key){ this.helpOpen = (this.helpOpen === key) ? null : key; },
         // Expulsión en dos pasos: el primer toque pide confirmación durante unos segundos.
         askKick: function(player){

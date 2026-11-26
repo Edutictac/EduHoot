@@ -48,10 +48,25 @@
                         <img id="join-qr" :src="qrSrc" :aria-label="joinUrl" alt="QR eduhoot.edutictac.es" loading="lazy">
                     </div>
                     <a id="join-url" class="qr-url" :href="joinUrl" target="_blank" rel="noopener">{{ joinLabel }}</a>
-                    <div class="join-url-box">
-                        <input id="join-url-text" class="join-url-input" type="text" readonly :value="joinUrl" :aria-label="joinUrl" @focus="$event.target.select()">
-                        <button id="join-url-copy" type="button" class="btn btn-ghost btn-small" :title="t('copy_url')" @click="copyJoinUrl">📋 {{ copiedUrl ? t('url_copied') : t('copy_url') }}</button>
-                    </div>
+                </div>
+                <div class="join-url-row">
+                    <span id="join-url-text" class="join-url-text" :title="joinUrl" @click="selectJoinUrl">{{ joinUrl }}</span>
+                    <button id="join-url-copy" type="button" class="btn btn-primary join-copy-btn" :class="{ 'is-copied': copyState === 'copied', 'is-failed': copyState === 'failed' }" :title="copyState === 'copied' ? t('url_copied') : (copyState === 'failed' ? t('url_copy_failed') : t('copy_url'))" :aria-label="copyState === 'copied' ? t('url_copied') : (copyState === 'failed' ? t('url_copy_failed') : t('copy_url'))" @click="copyJoinUrl"><span class="join-copy-btn__icon" aria-hidden="true">{{ copyState === 'copied' ? '✅' : (copyState === 'failed' ? '⚠️' : '🔗') }}</span></button>
+                </div>
+            </div>
+            <div id="players" class="players-list">
+                <div class="player-item" v-for="(player, index) in players" :key="index">
+                    <span class="player-icon">{{ player.icon || '' }}</span>
+                    <span class="player-name">{{ player.name || '' }}</span>
+                    <button v-if="pendingKickId !== player.playerId" type="button" class="kick-btn" @click="askKick(player)">{{ t('kick_btn') }}</button>
+                    <button v-else type="button" class="kick-btn kick-btn--confirm" @click="confirmKick(player)">{{ t('kick_confirm') }}</button>
+                </div>
+            </div>
+            <div v-if="kickedList.length" id="kicked-list" class="kicked-list">
+                <p class="kicked-title">{{ t('kicked_title') }}</p>
+                <div class="kicked-item" v-for="k in kickedList" :key="k.id">
+                    <span class="kicked-name">{{ k.name }}</span>
+                    <button type="button" class="unkick-btn" @click="unkick(k)">{{ t('unkick_btn') }}</button>
                 </div>
             </div>
             <div id="host-options" :class="optionsView === 'b' ? 'host-options--cards' : ''">
@@ -196,21 +211,6 @@
                         <input type="number" id="opt-t-inactivity" :min="30" :max="60" placeholder="30" v-model="options.timings.inactivityMin" @change="emitGameTimings"><span class="help"><button type="button" class="help-btn" :aria-expanded="helpOpen==='t_inactivity' ? 'true' : 'false'" :aria-label="t('help_aria')" @click.prevent.stop="toggleHelp('t_inactivity')">?</button><span v-if="helpOpen==='t_inactivity'" class="help-pop" role="note">{{ t('tip_t_inactivity') }}</span></span></label>
                     <small>{{ t('opt_t_help') }}</small>
                 </details>
-            </div>
-            <div id="players" class="players-list">
-                <div class="player-item" v-for="(player, index) in players" :key="index">
-                    <span class="player-icon">{{ player.icon || '' }}</span>
-                    <span class="player-name">{{ player.name || '' }}</span>
-                    <button v-if="pendingKickId !== player.playerId" type="button" class="kick-btn" @click="askKick(player)">{{ t('kick_btn') }}</button>
-                    <button v-else type="button" class="kick-btn kick-btn--confirm" @click="confirmKick(player)">{{ t('kick_confirm') }}</button>
-                </div>
-            </div>
-            <div v-if="kickedList.length" id="kicked-list" class="kicked-list">
-                <p class="kicked-title">{{ t('kicked_title') }}</p>
-                <div class="kicked-item" v-for="k in kickedList" :key="k.id">
-                    <span class="kicked-name">{{ k.name }}</span>
-                    <button type="button" class="unkick-btn" @click="unkick(k)">{{ t('unkick_btn') }}</button>
-                </div>
             </div>
             <br>
             <div class="start-row">

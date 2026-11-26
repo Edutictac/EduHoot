@@ -171,6 +171,12 @@ panells `/admin-*`),
 `music-player.js`, `app-version.js`, `pwa-install.js`, i `js/libs/`
 (jQuery, deparam, Vue).
 
+Fulls d'estil compartits per la maquetació (es carreguen després de la resta, excepte a `/`):
+- `css/brand-unify.css`: tipografia Raleway i radis dels botons `btn` comuns a totes les pantalles.
+- `css/pager.css` + `js/catalogPager.js`: paginador del catàleg de solo i multijugador (barra inferior i barra flotant).
+- `css/listPages.css` + `js/listPageCommon.js`: llistes de Mis partidas i Mis deberes (vista de targetes o de detall i paginador).
+- Sala de l'anfitrió (`/host/`): la fila de l'enllaç d'entrada (`.join-url-row`) va sota el bloc del PIN i el QR.
+
 ## Model de dades (MongoDB)
 
 Huit col·leccions, totes en la mateixa base de dades: `kahootDB` per

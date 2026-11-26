@@ -932,9 +932,12 @@ h3[id^="answer"]::before{
 /* Símbolo de estado junto al tiempo: pausa (⏸) si el profesor ha pausado; reproducción (▶) si la partida sigue. */
 .timer-state{
     display: inline-flex;
+    align-items: center;
+    line-height: 1;
     vertical-align: middle;
-    margin-left: 10px;
-    font-size: 1.1em;
+    margin-left: 14px;
+    /* El doble que abans (1.1em -> 2.2em), centrat amb els segundes que queden. */
+    font-size: 2.2em;
 }
 .timer-state svg{ fill: currentColor; }
 .timer-state.is-paused{ color: #ffee70; }
@@ -981,3 +984,9 @@ h3[id^="answer"]::before{
 #pauseVideoBtn.is-stopped{ background: rgba(16,185,129,0.22); }
 #pauseVideoBtn.is-playing{ background: #fdbc4b; color: #4d4d4d; }
 #finishVideoBtn{ background: rgba(218,68,83,0.22); }
+
+/* Tiempo restante: el icono de pausa/reproducción y los segundos comparten el mismo centro vertical. */
+#timerText{ display: flex; align-items: center; justify-content: center; flex-wrap: wrap; column-gap: 0; }
+#timerText > span{ display: inline-flex; align-items: center; }
+#timerText .timer-state{ margin-left: 14px; }
+#timerText > span:first-child{ margin-right: 0.3em; }

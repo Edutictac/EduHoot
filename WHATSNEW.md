@@ -3,6 +3,9 @@
 
 ## Per al professorat
 
+- **Enllaç per entrar**: a la sala d'espera, sota el PIN, veus l'enllaç complet amb el PIN i el pots copiar amb un clic.
+- **Llista de jugadors a dalt**: a la sala d'espera, l'alumnat que es connecta apareix just sota el PIN, abans de les opcions.
+
 - **Resultats de les partides**: a Mis partidas, cada partida té un botó «Resultats» amb la classificació de l'alumnat i els aciertos per pregunta.
 - **Esborrar partides**: a Mis partidas pots esborrar una partida amb la papelera (demana confirmació).
 - **Vista de llista o de targetes**: la biblioteca, Mis partidas i Mis deberes es poden veure en targetes o en llista. La tria es recorda.
@@ -201,6 +204,9 @@
 
 ## Para el profesorado
 
+- **Enlace para entrar**: en la sala de espera, bajo el PIN, ves el enlace completo con el PIN y lo puedes copiar con un clic.
+- **Lista de jugadores arriba**: en la sala de espera, el alumnado que se conecta aparece justo bajo el PIN, antes de las opciones.
+
 - **Resultados de las partidas**: en Mis partidas, cada partida tiene un botón «Resultados» con la clasificación del alumnado y los aciertos por pregunta.
 - **Borrar partidas**: en Mis partidas puedes borrar una partida con la papelera (pide confirmación).
 - **Vista de lista o de tarjetas**: la biblioteca, Mis partidas y Mis deberes se pueden ver en tarjetas o en lista. La elección se recuerda.
@@ -362,6 +368,9 @@
 # What's new under development?
 
 ## For teachers
+
+- **Join link**: in the waiting room, under the PIN, you see the full link with the PIN and can copy it with one click.
+- **Players list on top**: in the waiting room, students who connect appear just under the PIN, before the options.
 
 - **Game results**: in My games, each game has a "Results" button with the student ranking and the correct answers per question.
 - **Delete games**: in My games you can delete a game with the bin button (it asks for confirmation).
