@@ -15,7 +15,9 @@
     <script src="https://commons.edutictac.es/assets/account-widget.js" defer></script>
     <link rel="icon" href="/icons/logo.svg" type="image/svg+xml">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  </head>
+      <link href="/css/brand-unify.css" rel="stylesheet">
+        <link href="/css/pager.css" rel="stylesheet">
+</head>
   <body>
     <a class="back-link" href="/" data-i18n="back">← Inicio</a>
     <edutictac-account class="site-account site-account--top" data-home-only data-base="https://commons.edutictac.es"></edutictac-account>
@@ -23,7 +25,7 @@
     <header class="hero">
       <img class="hero__logo" src="/icons/logo.svg" alt="EduHoot logo">
       <div class="hero__text">
-        <p class="eyebrow" data-i18n="eyebrow">Multiplayer</p>
+        <p class="eyebrow"><span class="mode-icon" aria-hidden="true">👥</span><span data-i18n="eyebrow">Multijugador local</span></p>
         <h1 data-i18n="title">Juega en la misma pantalla</h1>
         <p class="subtext" data-i18n="subtitle">Elige un quiz público, selecciona 2–4 jugadores y responde en pantalla dividida.</p>
       </div>
@@ -114,14 +116,24 @@
           </div>
         </div>
         <p id="public-empty" class="muted">{{ loading ? '…' : '' }}</p>
-        <div id="public-pagination" class="pagination" :class="{ hidden: totalPages <= 1 }">
-          <template v-if="totalPages > 1">
-            <button :disabled="currentPage === 0" @click="page = currentPage - 1">&lt;</button>
-            <span>{{ (currentPage + 1) + ' / ' + totalPages }}</span>
-            <button :disabled="currentPage >= totalPages - 1" @click="page = currentPage + 1">&gt;</button>
-          </template>
-        </div>
+        
       </section>
+      <div id="public-pagination" ref="pagerBottom" class="pagination" :class="{ hidden: totalPages <= 1 }">
+        <template v-if="totalPages > 1">
+            <button class="btn btn-ghost" :title="pagerT('prev')" :disabled="currentPage <= 0" @click="setPage(currentPage - 1)">{{ pagerT('prev') }}</button>
+            <select class="page-select" :value="currentPage" :aria-label="pagerT('info', { page: currentPage + 1, total: totalPages })" @change="setPage(Number($event.target.value))"><option v-for="p in totalPages" :key="p" :value="p - 1">{{ pagerT('info', { page: p, total: totalPages }) }}</option></select>
+            <button class="btn btn-ghost" :title="pagerT('next')" :disabled="currentPage >= totalPages - 1" @click="setPage(currentPage + 1)">{{ pagerT('next') }}</button>
+        </template>
+        <label class="page-size"><span>{{ pagerT('size') }}</span><select :value="pageSize" @change="setPageSize"><option v-for="n in [6, 12, 24, 48]" :key="n" :value="n">{{ n }}</option></select></label>
+        </div>
+        <div id="public-pagination-fixed" class="pagination-fixed" :class="{ 'is-visible': showFixedPager }" :inert="!showFixedPager || null">
+        <template v-if="totalPages > 1">
+            <button class="btn btn-ghost" :title="pagerT('prev')" :disabled="currentPage <= 0" @click="setPage(currentPage - 1)">{{ pagerT('prev') }}</button>
+            <select class="page-select" :value="currentPage" :aria-label="pagerT('info', { page: currentPage + 1, total: totalPages })" @change="setPage(Number($event.target.value))"><option v-for="p in totalPages" :key="p" :value="p - 1">{{ pagerT('info', { page: p, total: totalPages }) }}</option></select>
+            <button class="btn btn-ghost" :title="pagerT('next')" :disabled="currentPage >= totalPages - 1" @click="setPage(currentPage + 1)">{{ pagerT('next') }}</button>
+        </template>
+        <label class="page-size"><span>{{ pagerT('size') }}</span><select :value="pageSize" @change="setPageSize"><option v-for="n in [6, 12, 24, 48]" :key="n" :value="n">{{ n }}</option></select></label>
+        </div>
 
       <section id="game-panel" class="panel play-panel" :class="{ hidden: !s.quizData }">
         <div class="panel__header">
@@ -276,6 +288,7 @@
     <script src="../js/libs/vue.global.prod.js"></script>
     <script src="../js/matchingBoard.js"></script>
     <script src="../js/orderBoard.js"></script>
+    <script src="../js/catalogPager.js"></script>
     <script src="../js/multiplayer.js"></script>
       <script src="/js/app-version.js"></script>
     </body>

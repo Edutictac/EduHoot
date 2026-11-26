@@ -1,0 +1,15 @@
+/* Tipografia i formes de botons comunes a totes les pantalles (com la biblioteca).
+   Es carrega l'última en cada HTML: no canvia els fons ni els colors de cada pantalla.
+   Excepcions: la capçalera en píldora de la biblioteca i les ajudes «?» rodones. */
+body{ font-family: 'Raleway', sans-serif; }
+button, input, select, textarea{ font-family: inherit; }
+button.btn, a.btn, button[class*="btn-"], a[class*="btn-"]{ border-radius: 10px; }
+.top-actions .btn, .help-btn{ border-radius: 999px; }
+.help-btn{ border-radius: 50%; }
+
+/* Botons rectangulars que encara tenien 8, 12 o 14 px: 10 px, com la biblioteca. */
+.music-player__nav, .music-player__toggle, .fullscreen-toggle, #cancelGameBtn, #showRanking, #raiseHandBtn,
+.pin-modal__submit, button.selected, #logs-settings-save, #logs-filter-apply, #logs-filter-refresh{ border-radius: 10px; }
+#cancelGameBtn, #showRanking, #raiseHandBtn, .fullscreen-toggle{ font-family: 'Raleway', sans-serif !important; }
+.pin-modal button.pin-modal__submit, button.selected, #logs-export-csv, #logs-export-ndjson{ border-radius: 10px; }
+#timerPauseBtn, #timerAddBtn{ font-family: 'Raleway', sans-serif !important; }

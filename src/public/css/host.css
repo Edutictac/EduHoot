@@ -461,3 +461,27 @@ body.host-game-embedded > *:not(#host-game-frame){
 #host-options .opt-card .opt-group__title{ margin: 0; }
 @media (max-width: 600px){ #host-options .opt-cards{ grid-template-columns: minmax(0, 1fr); } }
 
+
+/* Enllaç d'entrada amb el PIN: camp de només lectura i botó de copiar, sota el QR. */
+.join-url-box{ display: flex; gap: 8px; align-items: center; margin-top: 8px; max-width: 100%; }
+.join-url-input{ flex: 1 1 auto; min-width: 0; padding: 8px 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.3); background: rgba(0,0,0,0.25); color: #fff; font: inherit; font-size: 13px; }
+.join-url-box .btn{ flex: none; white-space: nowrap; }
+
+/* Sala d'espera: tipografia i formes de botons de la biblioteca (els fons no canvien). */
+body{ font-family: 'Raleway', sans-serif; }
+#start, #cancel{ font-family: 'Raleway', sans-serif; border-radius: 10px; font-size: 18px; }
+#start{
+    background: linear-gradient(135deg, #ffee70, #ffb347);
+    border: none;
+    color: #1b1b1b;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+}
+#start:hover{ filter: brightness(1.04); }
+#cancel{
+    background: rgba(255,80,80,0.14);
+    border: 1px solid rgba(255,80,80,0.35);
+    color: #ffdede;
+}
+#cancel.is-confirming{ background: #da4453; border-color: #da4453; color: #fff; }
+.join-url-box .btn, .join-url-input{ font-family: 'Raleway', sans-serif; border-radius: 10px; }
+.join-url-box .btn{ background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.16); color: #fff; }

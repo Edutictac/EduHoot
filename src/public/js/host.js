@@ -303,6 +303,7 @@ var lobby = Vue.createApp({
                 streak: true,
                 // Mode fantasma en aula (opcional): cada alumne compara amb la seua millor marca, al seu navegador.
                 ghostMode: false,
+                copiedUrl: false,
                 // Avance automático entre preguntas: 0 = manual; 3–20 s.
                 autoAdvanceSec: 0,
                 // Modo de la partida: 'live' (en directo) o 'selfPaced' (cada alumno a su ritmo).
@@ -369,6 +370,27 @@ var lobby = Vue.createApp({
                 return new URL(this.joinUrl).host + (this.pin ? (' · PIN ' + this.pin) : '');
             }catch(e){
                 return this.pin ? ('PIN ' + this.pin) : 'Unirse';
+            }
+        },
+        // Copia l'enllaç d'entrada complet (amb el PIN); si el navegador no té el portapapers, selecciona el camp.
+        copyJoinUrl: function(){
+            var self = this;
+            var done = function(){
+                self.copiedUrl = true;
+                clearTimeout(self._copyTimer);
+                self._copyTimer = setTimeout(function(){ self.copiedUrl = false; }, 2000);
+            };
+            var fallback = function(){
+                var input = document.getElementById('join-url-text');
+                if(!input) return;
+                input.focus();
+                input.select();
+                try{ if(document.execCommand('copy')) done(); }catch(e){}
+            };
+            if(navigator.clipboard && navigator.clipboard.writeText){
+                navigator.clipboard.writeText(this.joinUrl).then(done, fallback);
+            }else{
+                fallback();
             }
         },
         qrSrc: function(){
@@ -621,11 +643,11 @@ socket.on('gameStarted', function(id){
 // Carga la vista de juego en un iframe sin salir de esta página. Así la música y el
 // gong siguen siendo los <audio> que desbloqueó el clic en "Iniciar partida" y el
 // navegador no vuelve a bloquear el autoplay al cambiar de página.
-// Títol de la pàgina durant una partida a su ritmo: «Eduhoot | <títol del quiz>». Buit en els altres casos.
+// Títol de la pàgina durant una partida a su ritmo: «EduHoot | <títol del quiz>». Buit en els altres casos.
 function hostEmbeddedTitle(){
     if(lobby.options.mode !== 'selfPaced') return '';
     var name = (lobby.quizName || '').trim();
-    return name ? 'Eduhoot | ' + name : 'Eduhoot';
+    return name ? 'EduHoot | ' + name : 'EduHoot';
 }
 
 function openEmbeddedHostGame(url){

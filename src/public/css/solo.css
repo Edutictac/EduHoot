@@ -282,33 +282,6 @@ input[type="text"]::placeholder{
     margin-top: 12px;
 }
 
-.pagination{
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
-    margin: 12px 0 6px;
-}
-.pagination button{
-    border: none;
-    background: rgba(255,255,255,0.12);
-    color: #fff;
-    padding: 8px 12px;
-    border-radius: 10px;
-    cursor: pointer;
-    box-shadow: var(--shadow);
-}
-.pagination button:disabled{
-    opacity: 0.4;
-    cursor: not-allowed;
-    box-shadow: none;
-}
-.pagination#public-pagination{
-    width: 100%;
-}
-.pagination#public-pagination.hidden{
-    display: none;
-}
 body.playing #public-pagination{
     display: none !important;
 }
@@ -2088,3 +2061,11 @@ html.quiz-from-url .music-section{ display: none !important; }
 }
 /* El bloc de la fase de vídeo té l'alçada del seu contingut (text, vídeo i botó): la targeta creix i res no se solapa. */
 .flashcard.is-learning .flashcard__face--front > .flashcard__learning{ flex: 0 0 auto; min-height: auto; }
+
+/* Paginador del catàleg: fons taronja més fosc que la pàgina (també la barra flotant). */
+#public-pagination, #public-pagination-fixed{ background: #c2410c; color: #fff; }
+#public-pagination{ border-radius: 14px; padding: 8px 14px; box-shadow: 0 8px 22px rgba(0,0,0,0.2); }
+#public-pagination-fixed{ border-top: 1px solid rgba(0,0,0,0.25); box-shadow: 0 -8px 24px rgba(0,0,0,0.3); }
+
+/* Panell de joc: 2 px de marge superior sobre el chip de compte (la tipografia Raleway canvia l'alçada de la capçalera). */
+section#game-panel.panel{ margin-top: 2px; }

@@ -34,7 +34,6 @@
   var USER_RATING_STORAGE_KEY = 'eduhoot-user-ratings';
   var DEVICE_ID_STORAGE_KEY = 'eduhoot-device-id';
   var deviceId = '';
-  var PAGE_SIZE = 12;
 
   function loadFavorites(){
     try{
@@ -119,7 +118,7 @@
       footerPrivacy: 'Privacidad',
       footerCookies: 'Cookies',
       footerSource: 'Código fuente',
-      eyebrow: 'Multiplayer local',
+      eyebrow: 'Multijugador local',
       title: 'Juega en la misma pantalla',
       subtitle: 'Elige un quiz público, selecciona 2–4 jugadores y responde por turnos en pantalla dividida.',
       langLabel: 'Idioma',
@@ -283,7 +282,7 @@
       footerPrivacy: 'Privacitat',
       footerCookies: 'Galetes',
       footerSource: 'Codi font',
-      eyebrow: 'Multiplayer local',
+      eyebrow: 'Multijugador local',
       title: 'Juga a la mateixa pantalla',
       subtitle: 'Tria un quiz públic, selecciona 2–4 jugadors i respon en una pantalla dividida.',
       langLabel: 'Idioma',
@@ -1507,6 +1506,7 @@
         loading: true,
         quizzes: [],
         page: 0,
+        pageSize: 12,
         sortOrder: 'plays',
         search: '',
         filters: { tags: [], minQuestions: '', maxQuestions: '', onlyImage: false },
@@ -1577,18 +1577,36 @@
         var rest = list.filter(function(q){ return !favorites.has(String(q.id)); });
         return sortPublicQuizzes(favs, this.sortOrder).concat(sortPublicQuizzes(rest, this.sortOrder));
       },
+      // Barra flotant: quan el paginador de baix no es veu (com a la biblioteca).
+      showFixedPager: function(){
+        return catalogFixedPager.ready && this.totalPages > 1 && !catalogFixedPager.bottomVisible;
+      },
       totalPages: function(){
-        return Math.max(1, Math.ceil(this.filteredQuizzes.length / PAGE_SIZE));
+        return Math.max(1, Math.ceil(this.filteredQuizzes.length / this.pageSize));
       },
       currentPage: function(){
         return Math.min(this.page, this.totalPages - 1);
       },
       pageItems: function(){
-        var start = this.currentPage * PAGE_SIZE;
-        return this.filteredQuizzes.slice(start, start + PAGE_SIZE).map(function(q){ return Vue.reactive(q); });
+        var start = this.currentPage * this.pageSize;
+        return this.filteredQuizzes.slice(start, start + this.pageSize).map(function(q){ return Vue.reactive(q); });
       }
     },
+    mounted: function(){
+      var self = this;
+      this.$nextTick(function(){ watchCatalogPager(self.$refs.pagerBottom); });
+    },
     methods: {
+      pagerT: function(key, vars){
+        return catalogPagerT(key, vars);
+      },
+      setPage: function(n){
+        this.page = n;
+      },
+      setPageSize: function(ev){
+        this.pageSize = Number(ev.target.value);
+        this.page = 0;
+      },
       t: function(key){
         this.lang;
         return t(key);

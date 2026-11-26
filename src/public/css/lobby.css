@@ -227,3 +227,8 @@ body{
     box-shadow: 0 4px 14px rgba(0,0,0,0.25);
 }
 .leave-game-btn.is-confirming{ box-shadow: 0 0 0 3px #fff, 0 4px 14px rgba(0,0,0,0.35); }
+
+/* Sala d'espera de l'alumnat: tipografia i formes de botons de la biblioteca (els fons no canvien). */
+body, #title1, #title2, .lobby-name, .lobby-card button{ font-family: 'Raleway', sans-serif; }
+#lang-switcher button[data-lang]{ font-family: 'Raleway', sans-serif; border-radius: 10px; }
+.leave-game-btn{ font-family: 'Raleway', sans-serif; border-radius: 10px; }

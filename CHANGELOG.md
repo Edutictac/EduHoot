@@ -19,6 +19,10 @@ fitxers corresponents, i els originals es van eliminar.
 ## [Sense publicar]
 
 ### Afegit
+- **Resultats de cada partida a Mis partidas**: botó «Resultats» (📊) a les targetes i al detall. Mostra la classificació per alumne i els aciertos, fallos, parcials i sense respondre per pregunta. Llig l'informe guardat (`GET /api/partidas/:id/results`, només les pròpies).
+- **Esborrar partides**: botó 🗑️ a Mis partidas (targetes i detall), amb confirmació en dos clics (`DELETE /api/partidas/:id`, només les pròpies).
+- **Vista de llista o de targetes** a la biblioteca, Mis partidas i Mis deberes. Es recorda al navegador; el desplegable d'imatge de fons només apareix en targetes.
+- **Imatges dels quizzes fora del projecte**: `QUIZ_IMAGES_DIR` tria la carpeta on es guarden. En dev és un volum de Docker (`eduhoot_quiz_images`); stage i producció no canvien.
 - **Preguntes d'ordenar** (feature 7): el tipus `order`, amb editor, partida en viu, solo, flashcards, multijugador local, autoritme, deures, exportació a documents, Moodle XML i CSV.
 - **Música a solo**: selector de tema a la pantalla inicial, amb l'opció «Sense música» (també al lobby de l'anfitrió i a la vista de juego).
 - **Ajudes «?»** a les opcions de la pantalla inicial de solo.
@@ -27,6 +31,11 @@ fitxers corresponents, i els originals es van eliminar.
 - **Autoritme: puntuacions a l'anfitrió**: la pantalla de progrés té la casella «Mostra puntuacions i rànquing a l'anfitrió» (desactivada per defecte). Activada, l'anfitrió veu els punts, el Top 10 i el podi final. Els alumnes segueixen la casella «Puntuacions i rànquing» del lobby.
 
 ### Canviat
+- **Capçalera i controls unificats** a biblioteca, Mis partidas i Mis deberes: mateixos enllaços, mides i paginador. El botó «Detalle» diu ara «Lista» (Llista, List).
+- **Taules de detall**: les columnes secundàries tenen amplada fixa i el nom del quiz ocupa la resta. Canvien a files segons l'amplada del recuadre, no de la finestra.
+- **Mis deberes**: títols complets, id del quiz a la columna Quiz (el nom al tooltip), columnes abreujades (Alum, Term, Acab) i botons amb emoticona i tooltip.
+- **Biblioteca (detall)**: sense columna de creació i modificació; columnes abreujades.
+- **Preferències**: el panell és més clar, mostra el nom visible desat en obrir-les, i el botó «Tancar» va a sota, centrat.
 - **Lobby**: les opcions de «Mode de partida» són «En directe» i «A su ritmo» (sense la descripció entre parèntesis, en els tres idiomes).
 - **Lobby**: l'icona d'EduHoot va a l'esquerra del títol del quiz, i el PIN i el QR a la dreta; en pantalles estretes, tot en una columna.
 - **Autoritme**: els botons tenen els colors, l'ombra i l'efecte en passar el ratolí dels del lobby.

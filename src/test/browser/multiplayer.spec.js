@@ -194,12 +194,12 @@ test('paginación de 12 en 12', async ({ page }) => {
     await expect(cards(page)).toHaveCount(12);
     await expect(cardTitles(page).first()).toHaveText('Quiz 01');
     await expect(pagination).toBeVisible();
-    await expect(pagination.locator('span')).toHaveText('1 / 2');
+    await expect(pagination.locator('select.page-select')).toHaveValue('0');
     await expect(pagination.locator('button').first()).toBeDisabled();
 
     await pagination.locator('button').last().click();
     await expect(cardTitles(page)).toHaveText(['Quiz 13', 'Quiz 14']);
-    await expect(pagination.locator('span')).toHaveText('2 / 2');
+    await expect(pagination.locator('select.page-select')).toHaveValue('1');
     await expect(pagination.locator('button').last()).toBeDisabled();
 
     await pagination.locator('button').first().click();

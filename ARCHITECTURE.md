@@ -80,6 +80,8 @@ src/
 │   │   ├── scoring.js         # càlcul de puntuació
 │   │   ├── moodleExport.js    # quiz -> Moodle XML
 │   │   ├── sessionReport.js   # informe CSV de partida (memòria + disc)
+│   │   ├── gameHistory.js     # registre de partides d'usuaris (90 dies): llistat, resultats, CSV i esborrat
+│   │   ├── reportResults.js   # llegeix l'informe CSV guardat: classificació i aciertos per pregunta
 │   │   ├── sessions.js        # sessions HTTP en memòria i cookies
 │   │   ├── passwords.js       # hash/verificació de contrasenyes
 │   │   ├── oauth.js           # login Google i Authentik (OIDC)
@@ -96,6 +98,7 @@ src/
 │   ├── routes/
 │   │   ├── quizzes.js         # /api/quizzes..., /api/public-quizzes, /api/tags
 │   │   ├── games.js           # validate-pin, validate-name, report.csv
+│   │   ├── gameHistory.js     # /api/partidas: llistat, /results, report.csv i esborrar (només les pròpies)
 │   │   ├── auth.js            # /api/auth/... (login, Google, Authentik, usuaris)
 │   │   ├── playerAuth.js      # /api/player-auth/... (Edutictac ID)
 │   │   ├── admin.js           # /api/admin/..., /admin

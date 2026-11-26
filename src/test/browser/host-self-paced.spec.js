@@ -205,7 +205,7 @@ test('pantalla del anfitrión en autoritme: el check de puntuaciones envía la o
     expect(await emitsNamed(page, 'spHostScores')).toEqual([{ enabled: true }, { enabled: false }]);
 });
 
-test('lobby: con una partida a su ritmo en marcha, el título de la página es «Eduhoot | <título del quiz>»', async ({ page }) => {
+test('lobby: con una partida a su ritmo en marcha, el título de la página es «EduHoot | <título del quiz>»', async ({ page }) => {
     await setup(page);
     await page.goto('/host/?lang=es');
     await page.waitForLoadState('load');
@@ -215,7 +215,7 @@ test('lobby: con una partida a su ritmo en marcha, el título de la página es �
     await page.locator('#start').click();
     await expect.poll(async () => (await emitsNamed(page, 'startGame')).length, { timeout: 8000 }).toBe(1);
     await serverEmit(page, 'gameStarted', 'g1');
-    await expect(page).toHaveTitle('Eduhoot | Repàs de física');
+    await expect(page).toHaveTitle('EduHoot | Repàs de física');
 });
 
 test('autoritme: la música de fons es una fila inferior con els mateixos controls que el lobby', async ({ page }) => {

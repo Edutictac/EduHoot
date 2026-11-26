@@ -16,6 +16,7 @@
         <script src="https://commons.edutictac.es/assets/account-widget.js" defer></script>
         <link rel="icon" href="/icons/logo.svg" type="image/svg+xml">
             <link rel="stylesheet" href="/css/page-fit.css">
+        <link href="/css/brand-unify.css" rel="stylesheet">
     </head>
     <body>
         <div class="host-top-row">
@@ -47,6 +48,10 @@
                         <img id="join-qr" :src="qrSrc" :aria-label="joinUrl" alt="QR eduhoot.edutictac.es" loading="lazy">
                     </div>
                     <a id="join-url" class="qr-url" :href="joinUrl" target="_blank" rel="noopener">{{ joinLabel }}</a>
+                    <div class="join-url-box">
+                        <input id="join-url-text" class="join-url-input" type="text" readonly :value="joinUrl" :aria-label="joinUrl" @focus="$event.target.select()">
+                        <button id="join-url-copy" type="button" class="btn btn-ghost btn-small" :title="t('copy_url')" @click="copyJoinUrl">📋 {{ copiedUrl ? t('url_copied') : t('copy_url') }}</button>
+                    </div>
                 </div>
             </div>
             <div id="host-options" :class="optionsView === 'b' ? 'host-options--cards' : ''">

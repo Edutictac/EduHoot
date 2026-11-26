@@ -146,7 +146,7 @@ initSpMusicPlayer();
 
 socket.on('connect', function(){ socket.emit('host-join-game', params); });
 socket.on('noGameFound', leaveToLibrary);
-socket.on('gamePin', function(d){ app.pin = d.pin || ''; app.quizName = d.quizName || ''; if(app.quizName) document.title = 'Eduhoot | ' + app.quizName; });
+socket.on('gamePin', function(d){ app.pin = d.pin || ''; app.quizName = d.quizName || ''; if(app.quizName) document.title = 'EduHoot | ' + app.quizName; });
 socket.on('hostSession', function(d){
     // El anfitrión puede cambiar de conexión: se guarda el id nuevo para el informe.
     if(d && d.hostId) params.id = d.hostId;

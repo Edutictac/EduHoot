@@ -43,7 +43,7 @@ function emitsNamed(page, name) {
     return page.evaluate(n => window.__emits.filter(e => e.name === n).map(e => e.data), name);
 }
 
-test('lobby: cancelar está junto a iniciar, y iniciar es verde', async ({ page }) => {
+test('lobby: cancelar está junto a iniciar, e iniciar usa el primario de la biblioteca (degradat groc)', async ({ page }) => {
     await openLobby(page);
     const cancel = await page.locator('#cancel').boundingBox();
     const start = await page.locator('#start').boundingBox();
@@ -51,7 +51,8 @@ test('lobby: cancelar está junto a iniciar, y iniciar es verde', async ({ page 
     if (page.viewportSize().width >= 600) {
         expect(Math.abs(cancel.y - start.y)).toBeLessThanOrEqual(2);
     }
-    await expect(page.locator('#start')).toHaveCSS('background-color', 'rgb(21, 128, 61)');
+    await expect(page.locator('#start')).toHaveCSS('color', 'rgb(27, 27, 27)');
+    expect(await page.locator('#start').evaluate(el => getComputedStyle(el).backgroundImage)).toContain('linear-gradient');
 });
 
 test('lobby: cancelar pide confirmación y luego cierra la partida', async ({ page }) => {

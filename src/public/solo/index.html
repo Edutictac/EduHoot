@@ -18,7 +18,9 @@
         <script src="https://commons.edutictac.es/assets/account-widget.js" defer></script>
         <link rel="icon" href="/icons/logo.svg" type="image/svg+xml">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    </head>
+        <link href="/css/brand-unify.css" rel="stylesheet">
+        <link href="/css/pager.css" rel="stylesheet">
+</head>
     <body>
         <!-- «Biblioteca» solo aparece si se llegó desde la biblioteca (?from=library). -->
         <nav class="back-links">
@@ -426,12 +428,21 @@
                 </div>
             </section>
         </main>
-        <div id="public-pagination" class="pagination" :class="{ hidden: totalPages <= 1 }">
-            <template v-if="totalPages > 1">
-                <button :disabled="currentPage === 0" @click="s.page = currentPage - 1">&lt;</button>
-                <span>{{ (currentPage + 1) + ' / ' + totalPages }}</span>
-                <button :disabled="currentPage >= totalPages - 1" @click="s.page = currentPage + 1">&gt;</button>
-            </template>
+        <div id="public-pagination" ref="pagerBottom" class="pagination" :class="{ hidden: totalPages <= 1 }">
+        <template v-if="totalPages > 1">
+            <button class="btn btn-ghost" :title="pagerT('prev')" :disabled="currentPage <= 0" @click="setSoloPage(currentPage - 1)">{{ pagerT('prev') }}</button>
+            <select class="page-select" :value="currentPage" :aria-label="pagerT('info', { page: currentPage + 1, total: totalPages })" @change="setSoloPage(Number($event.target.value))"><option v-for="p in totalPages" :key="p" :value="p - 1">{{ pagerT('info', { page: p, total: totalPages }) }}</option></select>
+            <button class="btn btn-ghost" :title="pagerT('next')" :disabled="currentPage >= totalPages - 1" @click="setSoloPage(currentPage + 1)">{{ pagerT('next') }}</button>
+        </template>
+        <label class="page-size"><span>{{ pagerT('size') }}</span><select :value="s.pageSize" @change="setPageSize"><option v-for="n in [6, 12, 24, 48]" :key="n" :value="n">{{ n }}</option></select></label>
+        </div>
+        <div id="public-pagination-fixed" class="pagination-fixed" :class="{ 'is-visible': showFixedPager }" :inert="!showFixedPager || null">
+        <template v-if="totalPages > 1">
+            <button class="btn btn-ghost" :title="pagerT('prev')" :disabled="currentPage <= 0" @click="setSoloPage(currentPage - 1)">{{ pagerT('prev') }}</button>
+            <select class="page-select" :value="currentPage" :aria-label="pagerT('info', { page: currentPage + 1, total: totalPages })" @change="setSoloPage(Number($event.target.value))"><option v-for="p in totalPages" :key="p" :value="p - 1">{{ pagerT('info', { page: p, total: totalPages }) }}</option></select>
+            <button class="btn btn-ghost" :title="pagerT('next')" :disabled="currentPage >= totalPages - 1" @click="setSoloPage(currentPage + 1)">{{ pagerT('next') }}</button>
+        </template>
+        <label class="page-size"><span>{{ pagerT('size') }}</span><select :value="s.pageSize" @change="setPageSize"><option v-for="n in [6, 12, 24, 48]" :key="n" :value="n">{{ n }}</option></select></label>
         </div>
         <div id="feedback-modal" class="solo-modal" :class="{ show: s.feedbackModalOpen }" @click.self="closeFeedback">
             <div class="solo-modal__content" :class="'is-' + feedbackKind">
@@ -493,6 +504,7 @@
         <script src="../js/orderBoard.js"></script>
         <script src="../js/solo-ghost.js"></script>
         <script src="../js/solo-questions.js"></script>
+        <script src="../js/catalogPager.js"></script>
         <script src="../js/solo-library.js"></script>
         <script src="../js/solo-music.js"></script>
         <script src="../js/viewport-fit.js"></script>

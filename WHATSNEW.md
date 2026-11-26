@@ -3,6 +3,10 @@
 
 ## Per al professorat
 
+- **Resultats de les partides**: a Mis partidas, cada partida té un botó «Resultats» amb la classificació de l'alumnat i els aciertos per pregunta.
+- **Esborrar partides**: a Mis partidas pots esborrar una partida amb la papelera (demana confirmació).
+- **Vista de llista o de targetes**: la biblioteca, Mis partidas i Mis deberes es poden veure en targetes o en llista. La tria es recorda.
+
 - **Mode fantasma a l'aula**: a l'amfitrió, la casella «Mode fantasma» (desactivada per defecte). L'alumnat compara la seua partida amb la millor marca del quiz, pregunta a pregunta, sense competir pel rànquing.
 - **Imatge de fons a la biblioteca**: a `/create/`, el desplegable «Imatge de fons» tria si les targetes mostren la portada del quiz (sense imatge, 10 %, 20 % o 30 %; per defecte, 20 %). Amb compte, es guarda al teu usuari.
 - **Estrelles i ordenació per «Més jugats»**: a la biblioteca pots valorar els quizzes públics amb estrelles i ordenar-los pels més jugats.
@@ -197,6 +201,10 @@
 
 ## Para el profesorado
 
+- **Resultados de las partidas**: en Mis partidas, cada partida tiene un botón «Resultados» con la clasificación del alumnado y los aciertos por pregunta.
+- **Borrar partidas**: en Mis partidas puedes borrar una partida con la papelera (pide confirmación).
+- **Vista de lista o de tarjetas**: la biblioteca, Mis partidas y Mis deberes se pueden ver en tarjetas o en lista. La elección se recuerda.
+
 - **Modo fantasma en el aula**: en el anfitrión, la casilla «Modo fantasma» (desactivada por defecto). El alumnado compara su partida con la mejor marca del quiz, pregunta a pregunta, sin competir por el ranking.
 - **Imagen de fondo en la biblioteca**: en `/create/`, el desplegable «Imagen de fondo» elige si las tarjetas muestran la portada del quiz (sin imagen, 10 %, 20 % o 30 %; por defecto, 20 %). Con cuenta, se guarda en tu usuario.
 - **Estrellas y orden por «Más jugados»**: en la biblioteca puedes valorar los quizzes públicos con estrellas y ordenarlos por los más jugados.
@@ -354,6 +362,10 @@
 # What's new under development?
 
 ## For teachers
+
+- **Game results**: in My games, each game has a "Results" button with the student ranking and the correct answers per question.
+- **Delete games**: in My games you can delete a game with the bin button (it asks for confirmation).
+- **List or card view**: the library, My games and My homework can be shown as cards or as a list. Your choice is remembered.
 
 - **Ghost mode in class**: on the host screen, the "Ghost mode" checkbox (off by default). Students compare their game with the quiz's best score, question by question, without competing for the ranking.
 - **Background image in the library**: on `/create/`, the "Background image" dropdown chooses whether cards show the quiz cover (no image, 10%, 20% or 30%; default 20%). With an account, it is saved to your user.

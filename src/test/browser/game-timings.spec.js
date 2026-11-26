@@ -52,7 +52,7 @@ test('anfitrión: las opciones avanzadas están plegadas y tienen valores normal
 
 test('anfitrión: ampliar un tiempo envía solo ese ajuste al servidor', async ({ page }) => {
     await openHost(page);
-    await page.locator('#opt-advanced summary').click();
+    await page.locator('#opt-advanced summary').click({ position: { x: 20, y: 14 } });
     await page.locator('#opt-t-inactivity').fill('45');
     await page.locator('#opt-t-inactivity').dispatchEvent('change');
     const emits = await emitsNamed(page, 'setGameTimings');
@@ -61,7 +61,7 @@ test('anfitrión: ampliar un tiempo envía solo ese ajuste al servidor', async (
 
 test('anfitrión: las opciones avanzadas empiezan en línea nueva y cada tiempo va en su propia línea', async ({ page }) => {
     await openHost(page);
-    await page.locator('#opt-advanced summary').click();
+    await page.locator('#opt-advanced summary').click({ position: { x: 20, y: 14 } });
     // Espera a que el desplegable termine de abrirse antes de medir.
     await expect(page.locator('#opt-t-inactivity')).toBeVisible();
     await page.waitForTimeout(300);

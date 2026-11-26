@@ -1,0 +1,60 @@
+/* Paginador del catàleg (solo i multijugador): el mateix que el de la biblioteca (create.css).
+   Barra inferior, selector de pàgina i d'elements per pàgina, i la barra flotant quan la inferior no es veu. */
+.pagination{
+    margin-top: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
+}
+.pagination span{
+    font-weight: 600;
+    color: #fff;
+}
+.pagination .page-size{ display: inline-flex; align-items: center; gap: 8px; margin-left: 8px; font-weight: 600; }
+.pagination .page-size select{
+    padding: 6px 12px; border-radius: 999px; font: inherit; font-weight: 600;
+    border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.08); color: #fff;
+}
+.pagination .page-size select option{ color: #14101f; background: #fff; }
+.pagination .btn{ font-family: inherit; font-weight: 700; }
+.pagination button:disabled{
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.pagination.hidden{ display: none; }
+
+/* Paginador flotant: apareix quan el de baix no es veu. */
+.pagination-fixed{
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 50;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
+    background: #0f162a;
+    border-top: 1px solid rgba(255,255,255,0.18);
+    box-shadow: 0 -8px 24px rgba(0,0,0,0.35);
+    transform: translateY(100%);
+    visibility: hidden;
+    transition: transform 0.2s ease, visibility 0.2s ease;
+}
+.pagination-fixed.is-visible{ transform: none; visibility: visible; }
+.pagination-fixed span{ font-weight: 600; color: #fff; }
+.pagination-fixed .btn{ font-family: inherit; font-weight: 700; }
+.pagination-fixed .page-size{ display: inline-flex; align-items: center; gap: 8px; font-weight: 600; }
+.pagination-fixed .page-size select{
+    padding: 6px 12px; border-radius: 999px; font: inherit; font-weight: 600;
+    border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.08); color: #fff;
+}
+.pagination-fixed .page-size select option{ color: #14101f; background: #fff; }
+select.page-select{
+    padding: 6px 12px; border-radius: 999px; font: inherit; font-weight: 600;
+    border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.08); color: #fff;
+}
+select.page-select option{ color: #14101f; background: #fff; }
+@media (prefers-reduced-motion: reduce){ .pagination-fixed{ transition: none; } }

@@ -258,6 +258,7 @@ function setLang(newLang){
         mixins: [soloCatalog, soloPlay, soloFlashcards],
         mounted: function(){
             EduhootTTS.watchAvailability(document.documentElement.lang, function(ok){ state.ttsReady = ok; });
+            watchCatalogPager(this.$refs.pagerBottom);
             var vm = this;
             document.addEventListener('click', function(e){
                 if(vm.helpOpen && !e.target.closest('.help')) vm.helpOpen = null;

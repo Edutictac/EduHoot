@@ -228,6 +228,10 @@ var soloCatalog = {
             var rest = list.filter(function(q){ return !favorites.has(String(q.id)); });
             return sortPublicQuizzes(favs).concat(sortPublicQuizzes(rest));
         },
+        // Barra flotant: quan el paginador de baix no es veu (com a la biblioteca).
+        showFixedPager: function(){
+            return catalogFixedPager.ready && this.totalPages > 1 && !catalogFixedPager.bottomVisible;
+        },
         totalPages: function(){
             return Math.max(1, Math.ceil(this.filteredQuizzes.length / this.s.pageSize));
         },
@@ -255,6 +259,16 @@ var soloCatalog = {
         }
     },
     methods: {
+        pagerT: function(key, vars){
+            return catalogPagerT(key, vars);
+        },
+        setSoloPage: function(n){
+            this.s.page = n;
+        },
+        setPageSize: function(ev){
+            this.s.pageSize = Number(ev.target.value);
+            this.s.page = 0;
+        },
         resetPage: function(){
             this.s.page = 0;
         },
