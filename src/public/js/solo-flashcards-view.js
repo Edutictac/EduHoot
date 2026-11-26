@@ -331,6 +331,10 @@ var soloFlashcards = {
         },
         // Opcions que el alumnat veu en el anverso, si la casella de l'inici està activada: en les
         // preguntes de opcions (resposta única, múltiple i vertader/fals). En vertader/fals, només les dues primeres.
+        // Respostes llargues: el text dels botons es fa més petit (la targeta pot passar de la finestra).
+        cardsLongAnswers: function(){
+            return this.cardsOptions.some(function(o){ return o.text.length > 40; });
+        },
         cardsOptions: function(){
             var cur = this.cardsCurrent;
             if(!cur || !this.s.cards.showOptions) return [];

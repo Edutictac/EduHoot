@@ -350,7 +350,7 @@
                             <div id="flashcard" class="flashcard" :class="{ 'is-learning': cardsLearning, 'is-back': s.cards.flipped, 'is-contrast': s.cards.highContrast, 'is-tall': s.cards.oneColumn, 'no-flip-click': !s.cards.flipOnClick }" @click="cardsFlipFromCard">
                                 <!-- Les dues cares són sempre al DOM; la que no toca queda oculta i inerta (ni teclat ni lector de pantalla). -->
                                 <div class="flashcard__face flashcard__face--front" :class="{ 'has-options': cardsHasOptionsBlock, 'has-media': cardsHasMedia }" :aria-hidden="s.cards.flipped ? 'true' : 'false'" :inert="s.cards.flipped || null">
-                                    <p class="flashcard__label">{{ t('flashcardsFront') }}</p>
+                                    <p class="flashcard__label sr-only">{{ t('flashcardsFront') }}</p>
                                     <p id="flashcard-question" class="question-text">{{ cardsFrontText }}</p>
                                     <!-- El media es desmunta en girar perquè el vídeo o l'àudio no segueixin sonant de dors. Va sota l'enunciat i damunt de les opcions. -->
                                     <!-- Fase de vídeo (feature 24), dins de la targeta: primer es mira; després es respon. -->
@@ -367,7 +367,7 @@
                                         <video v-if="cardsMedia.video" controls playsinline :src="cardsMedia.video"></video>
                                         <iframe referrerpolicy="strict-origin-when-cross-origin" v-if="cardsMedia.youtube" title="video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen :src="cardsMedia.youtube"></iframe>
                                     </div>
-                                    <ul v-if="cardsOptions.length" class="flashcard__options" :class="{ 'flashcard__options--tf': cardsOptionsColumns === 'tf', 'flashcard__options--two': cardsOptionsColumns === 'two', 'flashcard__options--one': cardsOptionsColumns === 'one', 'flashcard__options--stacked': cardsOptionsStacked }" role="group" :aria-label="t('flashcardsOptions')">
+                                    <ul v-if="cardsOptions.length" class="flashcard__options" :class="{ 'is-long-answers': cardsLongAnswers, 'flashcard__options--tf': cardsOptionsColumns === 'tf', 'flashcard__options--two': cardsOptionsColumns === 'two', 'flashcard__options--one': cardsOptionsColumns === 'one', 'flashcard__options--stacked': cardsOptionsStacked }" role="group" :aria-label="t('flashcardsOptions')">
                                         <li v-for="o in cardsOptions" :key="o.n">
                                             <button type="button" class="flashcard__option answer-shape" :class="['answer-shape--' + o.shape, { 'is-picked': isCardPicked(o.n) }]" :aria-pressed="isCardPicked(o.n) ? 'true' : 'false'" @click.stop="cardsPick(o.n)">{{ o.text }}</button>
                                         </li>

@@ -225,7 +225,7 @@ test('correspondencia: con la casilla desactivada, solo sale la columna izquierd
     await expect(page.locator('.flashcard__match-left li')).toHaveText(['França', 'Espanya', 'Itàlia']);
 });
 
-test('correspondencia en pantalla ancha con imagen: la tabla va a la derecha de la imagen', async ({ page }) => {
+test('correspondencia en pantalla ancha con imagen: la tabla va debajo de la imagen', async ({ page }) => {
     const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==';
     await page.setViewportSize({ width: 1280, height: 800 });
     await mockBackend(page);
@@ -236,10 +236,10 @@ test('correspondencia en pantalla ancha con imagen: la tabla va a la derecha de 
     await page.locator('#cards-start-all').click();
     const img = await page.locator('.flashcard__media img').boundingBox();
     const table = await page.locator('.flashcard__pairs').boundingBox();
-    expect(img.x + img.width).toBeLessThanOrEqual(table.x);
+    expect(img.y + img.height).toBeLessThanOrEqual(table.y + 1);
 });
 
-test('en pantalla ancha, con imagen las opciones van a la derecha; sin imagen, centradas', async ({ page }) => {
+test('en pantalla ancha, con imagen las opciones van debajo de la imagen; sin imagen, centradas', async ({ page }) => {
     const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==';
     await page.setViewportSize({ width: 1280, height: 800 });
     await mockBackend(page);
@@ -251,7 +251,7 @@ test('en pantalla ancha, con imagen las opciones van a la derecha; sin imagen, c
     await page.locator('#cards-start-all').click();
     const img = await page.locator('.flashcard__media img').boundingBox();
     const options = await page.locator('.flashcard__options').boundingBox();
-    expect(img.x + img.width).toBeLessThanOrEqual(options.x);
+    expect(img.y + img.height).toBeLessThanOrEqual(options.y + 1);
 
     // Sin imagen: el bloque de opciones queda centrado en la cara de la pregunta.
     await page.route('**/api/quizzes/q1', route => route.fulfill({ json: { ...quiz, questions: [
@@ -451,7 +451,7 @@ test('respuesta múltiple: una palabra que no cabe en el botón pasa a una colum
     expect(lines).toBe(1);
 });
 
-test('quiz de una correcta con imagen y cuatro opciones: 2×2 a la derecha de la imagen, nunca en fila', async ({ page }) => {
+test('quiz de una correcta con imagen y cuatro opciones: 2×2 debajo de la imagen, nunca en fila', async ({ page }) => {
     const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==';
     await page.setViewportSize({ width: 1920, height: 921 });
     await mockBackend(page);
@@ -464,12 +464,12 @@ test('quiz de una correcta con imagen y cuatro opciones: 2×2 a la derecha de la
     const img = await page.locator('.flashcard__media img').boundingBox();
     const boxes = [];
     for (let i = 0; i < 4; i++) boxes.push(await page.locator('.flashcard__option').nth(i).boundingBox());
-    expect(img.x + img.width).toBeLessThanOrEqual(Math.min(...boxes.map(b => b.x)));
+    expect(img.y + img.height).toBeLessThanOrEqual(Math.min(...boxes.map(b => b.y)) + 1);
     expect(Math.abs(boxes[0].y - boxes[1].y)).toBeLessThan(1);
     expect(boxes[2].y).toBeGreaterThan(boxes[0].y + boxes[0].height - 1);
 });
 
-test('respuesta múltiple con imagen: 2×2 a la derecha de la imagen en pantalla ancha', async ({ page }) => {
+test('respuesta múltiple con imagen: 2×2 debajo de la imagen en pantalla ancha', async ({ page }) => {
     const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==';
     await page.setViewportSize({ width: 1280, height: 800 });
     await mockBackend(page);
@@ -482,7 +482,7 @@ test('respuesta múltiple con imagen: 2×2 a la derecha de la imagen en pantalla
     const img = await page.locator('.flashcard__media img').boundingBox();
     const boxes = [];
     for (let i = 0; i < 4; i++) boxes.push(await page.locator('.flashcard__option').nth(i).boundingBox());
-    expect(img.x + img.width).toBeLessThanOrEqual(Math.min(...boxes.map(b => b.x)));
+    expect(img.y + img.height).toBeLessThanOrEqual(Math.min(...boxes.map(b => b.y)) + 1);
     expect(Math.abs(boxes[0].y - boxes[1].y)).toBeLessThan(1);
     expect(boxes[2].y).toBeGreaterThan(boxes[0].y + boxes[0].height - 1);
 });

@@ -1879,7 +1879,11 @@ html.quiz-from-url .music-section{ display: none !important; }
 
 /* Flashcards amb les mateixes mides que la pregunta de solo: ample màxim i mitjans limitats per la finestra. */
 .flashcard-scene{ max-width: 860px; margin: 0 auto; width: 100%; }
-.flashcard{ height: auto; }
+/* Repàs: targeta + controls ocupen el 90 % de l'alçada lliure de la finestra (des del costat superior de la targeta; ~254 px de capçalera i ~114 px de controls). */
+/* Repàs: la targeta ocupa com a mínim el 90 % de l'alçada lliure; si el text no hi cap, creix i la pàgina fa scroll (sense scroll dins de la targeta). */
+.flashcard{ height: auto; min-height: clamp(260px, calc(100vh * 0.9 - 343px), 900px); min-height: clamp(260px, calc(100dvh * 0.9 - 343px), 900px); }
+/* Respostes llargues: lletra més petita perquè es lligen bé dins de la targeta. */
+.flashcard__options.is-long-answers .flashcard__option{ font-size: clamp(0.8rem, 1.9vh, 1rem); }
 .flashcard__media{ flex: 0 0 auto; height: min(260px, 32vh); }
 /* Fase de vídeo dins de la targeta: el vídeo ocupa l'alçada lliure, i les respostes no es veuen fins que acaba. */
 .flashcard.is-learning .flashcard__options,
@@ -1892,13 +1896,19 @@ html.quiz-from-url .music-section{ display: none !important; }
 .flashcard__learning{ grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
 .flashcard__learning .solo-learning__hint{ margin: 0; font-size: clamp(14px, 2.2vh, 17px); }
 .flashcard__learning .question-media{ width: 100%; }
+.flashcard__learning .question-media{ flex: 1 1 0; min-height: 0; }
+/* El vídeo ocupa l'espai que sobra dins de la targeta (no té alçada fixa), així que no fa scroll en cap mida. */
 .flashcard__learning .question-media video,
 .flashcard__learning .question-media iframe{
-    height: clamp(200px, calc(100vh - 520px), 760px);
-    width: min(100%, calc(clamp(200px, calc(100vh - 520px), 760px) * 16 / 9));
+    height: 100%;
+    min-height: 120px;
+    width: auto;
+    max-width: 100%;
+    aspect-ratio: 16 / 9;
     max-height: none;
     margin: 0 auto;
 }
+/* Ajuda: la fase de vídeo ocupa el mateix alt que la targeta. */
 
 /* Opcions de la pantalla inicial: si no hi caben en dues columnes dins del recuadre, es posen en vertical
    i el que no cap salta de línea. El panell de joc és el contenidor de la consulta. */
@@ -1995,3 +2005,86 @@ html.quiz-from-url .music-section{ display: none !important; }
     .cards-start{ min-height: 0; }
     .cards-start__options{ justify-content: flex-start; }
 }
+
+/* Fase de vídeo a la targeta: la cara és una columna; l'enunciat va a dalt i el vídeo ocupa la resta sense fer scroll. */
+.flashcard.is-learning .flashcard__face--front{ display: flex; flex-direction: column; justify-content: flex-start; min-height: 0; overflow: hidden; }
+.flashcard.is-learning .flashcard__face--front > .flashcard__learning{ flex: 1 1 0; min-height: 0; width: 100%; }
+.flashcard.is-learning .flashcard__learning .question-media{ flex: 1 1 0; min-height: 0; width: 100%; display: flex; align-items: center; justify-content: center; }
+.flashcard.is-learning .flashcard__learning .question-media video,
+.flashcard.is-learning .flashcard__learning .question-media iframe{ height: 100%; min-height: 0; width: 100%; max-width: 100%; object-fit: contain; }
+
+/* Imatge o vídeo de la targeta, sempre damunt de les opcions. La targeta creix si cal i la pàgina fa scroll.
+   Els vídeos i els iframes mantenen la relació 16:9 (sense franges ni estirats); la imatge conserva la seua proporció. */
+.flashcard__face--front.has-media{ display: flex; flex-direction: column; align-items: center; justify-content: flex-start; }
+.flashcard__face--front.has-media.has-options{ display: flex; }
+.flashcard__face--front.has-media > .flashcard__label,
+.flashcard__face--front.has-media > #flashcard-question{ grid-area: auto; flex: none; }
+.flashcard__face--front.has-media > .flashcard__media{
+    grid-area: auto;
+    flex: none;
+    align-self: center;
+    position: relative;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    margin: 0;
+}
+.flashcard__face--front.has-media > .flashcard__media:has(> video),
+.flashcard__face--front.has-media > .flashcard__media:has(> iframe){
+    width: min(100%, calc(40vh * 16 / 9));
+    aspect-ratio: 16 / 9;
+}
+.flashcard__face--front.has-media > .flashcard__media > video,
+.flashcard__face--front.has-media > .flashcard__media > iframe{
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+}
+.flashcard__face--front.has-media > .flashcard__media > img{
+    position: static;
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 30vh;
+    margin: 0 auto;
+    inset: auto;
+}
+.flashcard__face--front.has-media > .flashcard__options,
+.flashcard__face--front.has-media > .flashcard__match{ grid-area: auto; width: min(100%, 720px); margin: 0 auto; }
+
+/* Sense scroll dins de la targeta: el contingut la fa créixer (la pàgina fa scroll) i no es talla ni té barra pròpia. */
+.flashcard{ grid-template-rows: auto; }
+.flashcard__face,
+.flashcard__face--front,
+.flashcard__face--back{ height: auto; min-height: 0; overflow: visible; }
+.flashcard.is-learning .flashcard__face--front{ overflow: visible; }
+/* Pantalla ancha (regla anterior amb altura del 100 %): el medi també és automàtic amb opcions. */
+.flashcard__face--front.has-media.has-options > .flashcard__media{ grid-area: auto; height: auto; min-height: 0; }
+.flashcard__face--front.has-media.has-options > .flashcard__options,
+.flashcard__face--front.has-media.has-options > .flashcard__match{ grid-area: auto; }
+/* Vídeo de la fase d'aprendre: caixa 16:9 (mai estirat); l'amplària es limita per l'alçada de la finestra. Si no cap, la targeta creix. */
+.flashcard.is-learning .flashcard__learning .question-media{ flex: none; height: auto; }
+.flashcard.is-learning .flashcard__learning .question-media video,
+.flashcard.is-learning .flashcard__learning .question-media iframe{
+    height: auto;
+    width: min(100%, calc(40vh * 16 / 9));
+    aspect-ratio: 16 / 9;
+    max-height: none;
+    min-height: 0;
+    margin: 0 auto;
+}
+/* Fase de vídeo: tot ha de cabre a la finestra (text, vídeo i botó). El vídeo té una alçada que depén de la finestra
+   i la seua amplària surt de la relació 16:9. La targeta creix amb el contingut, sense solapaments. */
+.flashcard.is-learning .flashcard__face--front{ --frame-h: clamp(140px, calc(100vh * 0.62 - 300px), 600px); --frame-h: clamp(140px, calc(100dvh * 0.62 - 300px), 600px); }
+.flashcard.is-learning .flashcard__learning{ flex: 0 0 auto; min-height: auto; }
+.flashcard.is-learning .flashcard__learning .question-media video,
+.flashcard.is-learning .flashcard__learning .question-media iframe{
+    width: min(100%, calc(var(--frame-h) * 16 / 9));
+    height: auto;
+    aspect-ratio: 16 / 9;
+}
+/* El bloc de la fase de vídeo té l'alçada del seu contingut (text, vídeo i botó): la targeta creix i res no se solapa. */
+.flashcard.is-learning .flashcard__face--front > .flashcard__learning{ flex: 0 0 auto; min-height: auto; }
