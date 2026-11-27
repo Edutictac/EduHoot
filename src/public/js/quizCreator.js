@@ -963,7 +963,7 @@ Vue.createApp({
         },
         removeCard: function(index){
             var l = this.ui.lang;
-            var msg = l === 'en' ? 'Delete this question?' : { fr: 'Supprimer cette question ?', de: 'Diese Frage löschen?', it: 'Eliminare questa domanda?', pt: 'Eliminar esta pergunta?', bg: 'Да се изтрие ли този въпрос?' }[l] || (l === 'va' ? 'Eliminar esta pregunta?' : (l === 'ca' ? 'Eliminar aquesta pregunta?' : '¿Eliminar esta pregunta?'));
+            var msg = l === 'en' ? 'Delete this question?' : { fr: 'Supprimer cette question ?', de: 'Diese Frage löschen?', it: 'Eliminare questa domanda?', pt: 'Eliminar esta pergunta?', bg: 'Да се изтрие ли този въпрос?', ar: 'هل تريد حذف هذا السؤال؟' }[l] || (l === 'va' ? 'Eliminar esta pregunta?' : (l === 'ca' ? 'Eliminar aquesta pregunta?' : '¿Eliminar esta pregunta?'));
             if(window.confirm(msg)){
                 this.cards.splice(index, 1);
             }

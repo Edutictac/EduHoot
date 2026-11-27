@@ -11,7 +11,8 @@ var CATALOG_PAGER_I18N = {
     de: { prev: 'Zurück', next: 'Weiter', info: 'Seite {page} von {total}', size: 'Pro Seite' },
     it: { prev: 'Precedente', next: 'Successivo', info: 'Pagina {page} di {total}', size: 'Per pagina' },
     pt: { prev: 'Anterior', next: 'Seguinte', info: 'Página {page} de {total}', size: 'Por página' },
-    bg: { prev: 'Назад', next: 'Напред', info: 'Страница {page} от {total}', size: 'На страница' }
+    bg: { prev: 'Назад', next: 'Напред', info: 'Страница {page} от {total}', size: 'На страница' },
+    ar: { prev: 'السابق', next: 'التالي', info: 'الصفحة {page} من {total}', size: 'لكل صفحة' }
 };
 
 function catalogPagerT(key, vars){

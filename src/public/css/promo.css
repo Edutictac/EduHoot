@@ -21,7 +21,7 @@ main,.top,.foot{max-width:1100px;margin-inline:auto}
 .top{display:flex;align-items:center;gap:1.25rem;padding-block:.9rem;margin-top:max(64px,var(--env-badge-space,0px))}
 .brand{display:flex;align-items:center;gap:.5rem;font-weight:800;font-size:1.3rem;text-decoration:none}
 .brand img{width:36px;height:36px;border-radius:.18em}
-.top nav{display:flex;gap:1.25rem;margin-left:auto}
+.top nav{display:flex;gap:1.25rem;margin-inline-start:auto}
 .top nav a{text-decoration:none;font-weight:600;color:var(--muted)}
 .top nav a:hover{color:#fff;text-decoration:underline}
 .top nav a.nav-ett{color:var(--yellow);font-weight:800}
@@ -87,7 +87,7 @@ p{margin-top:0}
   text-decoration:none;border:1px solid #fff;background:var(--glass);box-shadow:0 14px 30px rgba(0,0,0,.22);transition:transform .2s,box-shadow .2s}
 .tile>*{position:relative}
 .tile::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(160deg,var(--c),rgba(15,23,42,.85));opacity:.5;transition:opacity .3s}
-.tile::after{content:"→";position:absolute;top:1rem;right:1.2rem;font-size:2rem;font-weight:800;color:var(--yellow);opacity:0;transform:translateX(-14px);transition:.3s}
+.tile::after{content:"→";position:absolute;top:1rem;inset-inline-end:1.2rem;font-size:2rem;font-weight:800;color:var(--yellow);opacity:0;transform:translateX(-14px);transition:.3s}
 .tile span{font-size:1.5rem;font-weight:800;color:var(--yellow)}
 .tile small{color:var(--muted);font-size:1rem;transition:transform .3s}
 .tile:hover{transform:translateY(-4px);box-shadow:0 22px 40px rgba(0,0,0,.4)}
@@ -158,13 +158,13 @@ p{margin-top:0}
 }
 
 /* Emoticonos: los mismos que la biblioteca, las partidas y los deberes. Van por CSS para no pisar las traducciones. */
-[data-ic]::before{content:attr(data-ic) " ";font-style:normal;display:inline-block;margin-right:.3em;transition:transform .3s cubic-bezier(.3,1.8,.5,1)}
+[data-ic]::before{content:attr(data-ic) " ";font-style:normal;display:inline-block;margin-inline-end:.3em;transition:transform .3s cubic-bezier(.3,1.8,.5,1)}
 .chips span.on::before{content:"✓ "}
 .chips span.on[data-ic]::before{content:"✓ " attr(data-ic) " "}
 .btn:hover[data-ic]::before,.link:hover[data-ic]::before,.tile:hover span::before,.chips span:hover::before{transform:scale(1.3) rotate(-10deg)}
-.tag[data-ic]::before{margin-right:.25em}
+.tag[data-ic]::before{margin-inline-end:.25em}
 .card.done i::before{content:"✓ "}
-.top nav a[data-ic]::before{margin-right:.2em}
+.top nav a[data-ic]::before{margin-inline-end:.2em}
 .extras{padding:1rem 0 3.5rem;text-align:center}
 .extras ul{list-style:none;margin:1.25rem 0 0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
 .extras li{background:var(--glass);border:1px solid var(--line);border-radius:14px;padding:1rem;font-weight:700;display:flex;align-items:center;justify-content:center;gap:.5rem;
@@ -195,3 +195,12 @@ p{margin-top:0}
 .tile:hover span[data-ic]::before{ scale: 1.2; rotate: -8deg; filter: drop-shadow(0 12px 16px rgba(0,0,0,.45)); }
 .tile:active span[data-ic]::before{ scale: .9; rotate: 0deg; }
 @media(prefers-reduced-motion:reduce){ .tile span[data-ic]::before{ animation: none; } .tile:hover span[data-ic]::before{ scale: 1; rotate: 0deg; } }
+
+/* Idiomas de derecha a izquierda (árabe): las flechas y los desplazamientos miran al otro lado. */
+[dir="rtl"] .tile::after{ content: "←"; transform: translateX(14px); }
+[dir="rtl"] .tile:hover::after{ transform: none; }
+[dir="rtl"] .link:hover{ transform: translateX(-6px); }
+[dir="rtl"] .card:hover i{ transform: translateX(-6px); }
+[dir="rtl"] .slide{ transform: translateX(-24px); }
+[dir="rtl"] .slide.is-active{ transform: none; }
+[dir="rtl"] .foot a:hover{ padding-left: 0; padding-right: 6px; }

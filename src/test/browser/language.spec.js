@@ -11,7 +11,7 @@ test.beforeEach(async ({ page }) => {
 
 // Botones CA VA ES EN y, a su derecha, un desplegable con el resto de idiomas.
 const PRIMARY = ['ca', 'va', 'es', 'en'];
-const MORE = ['fr', 'de', 'it', 'pt', 'bg'];
+const MORE = ['fr', 'de', 'it', 'pt', 'bg', 'ar'];
 const ALL = [...PRIMARY, ...MORE];
 
 async function chooseLang(page, lang) {
@@ -34,13 +34,15 @@ for (const lang of ALL) {
         await page.goto('/inicio/?lang=va');
         await chooseLang(page, lang);
         await expect(page.locator('html')).toHaveAttribute('lang', lang);
+        // El árabe escribe de derecha a izquierda: el documento cambia de sentido.
+        await expect(page.locator('html')).toHaveAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
         await page.reload();
         await expectActiveLang(page, lang);
         await page.goto('/create/quiz-creator/');
         await expect(page.locator('#lang-select')).toHaveValue(lang);
         expect(await page.locator('#lang-select option').evaluateAll(options => options.map(option => option.value))).toEqual(ALL);
         // Los idiomas sin diccionario propio en el creador caen en inglés.
-        const playLocal = { ca: 'Jugar sense desar', va: 'Jugar sense guardar', es: 'Jugar sin guardar', en: 'Play without saving', fr: 'Jouer sans enregistrer', de: 'Play without saving', it: 'Play without saving', pt: 'Play without saving', bg: 'Play without saving' };
+        const playLocal = { ca: 'Jugar sense desar', va: 'Jugar sense guardar', es: 'Jugar sin guardar', en: 'Play without saving', fr: 'Jouer sans enregistrer', de: 'Play without saving', it: 'Play without saving', pt: 'Play without saving', bg: 'Play without saving', ar: 'Play without saving' };
         await expect(page.locator('[data-i18n="btnPlayLocal"]')).toHaveText(playLocal[lang]);
     });
 
@@ -64,8 +66,8 @@ for (const lang of ALL) {
 }
 
 const LANG_CODES = ALL;
-const LANG_NAMES = ['Català', 'Valencià', 'Español', 'English', 'Français', 'Deutsch', 'Italiano', 'Português', 'Български'];
-const LANG_SHORT = ['CA', 'VA', 'ES', 'EN', 'FR', 'DE', 'IT', 'PT', 'BG'];
+const LANG_NAMES = ['Català', 'Valencià', 'Español', 'English', 'Français', 'Deutsch', 'Italiano', 'Português', 'Български', 'العربية (المغرب)'];
+const LANG_SHORT = ['CA', 'VA', 'ES', 'EN', 'FR', 'DE', 'IT', 'PT', 'BG', 'AR'];
 
 for (const [route, selector, labels] of [
     ['/create/', '#lang-select', LANG_NAMES],

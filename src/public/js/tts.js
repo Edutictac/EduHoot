@@ -73,6 +73,7 @@
         if(l.indexOf('it') === 0) return 'it-IT';
         if(l.indexOf('pt') === 0) return 'pt-PT';
         if(l.indexOf('bg') === 0) return 'bg-BG';
+        if(l.indexOf('ar') === 0) return 'ar-MA';
         return 'es-ES';
     }
 

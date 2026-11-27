@@ -69,7 +69,7 @@ var QUIZ_DATE_MIN_MS = Date.UTC(2000, 0, 1);
 function formatQuizDate(value){
     var ms = Date.parse(value);
     if(!(ms > QUIZ_DATE_MIN_MS)) return '';
-    var locale = lang === 'en' ? 'en-GB' : { fr: 'fr-FR', de: 'de-DE', it: 'it-IT', pt: 'pt-PT', bg: 'bg-BG' }[lang] || (lang === 'ca' || lang === 'va' ? 'ca-ES' : 'es-ES');
+    var locale = lang === 'en' ? 'en-GB' : { fr: 'fr-FR', de: 'de-DE', it: 'it-IT', pt: 'pt-PT', bg: 'bg-BG', ar: 'ar-MA' }[lang] || (lang === 'ca' || lang === 'va' ? 'ca-ES' : 'es-ES');
     return new Date(ms).toLocaleString(locale, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
@@ -673,7 +673,7 @@ var libraryApp = {
             var visibilityLabel = quiz.visibility === 'private' ? t('visibilityPrivate') : (quiz.visibility === 'unlisted' ? t('visibilityUnlisted') : t('visibilityPublic'));
             var text = (quiz.ownerNickname ? quiz.ownerNickname : t('creatorUnknown')) + ' · ' + visibilityLabel;
             if(quiz.sourceQuizId){
-                var basedOnLabel = (lang === 'en' ? 'Based on ' : { fr: 'Basé sur ', de: 'Basierend auf ', it: 'Basato su ', pt: 'Baseado em ', bg: 'Базиран на ' }[lang] || (lang === 'ca' || lang === 'va' ? 'Basat en ' : 'Basado en '));
+                var basedOnLabel = (lang === 'en' ? 'Based on ' : { fr: 'Basé sur ', de: 'Basierend auf ', it: 'Basato su ', pt: 'Baseado em ', bg: 'Базиран на ', ar: 'مبني على ' }[lang] || (lang === 'ca' || lang === 'va' ? 'Basat en ' : 'Basado en '));
                 var fromName = (quiz.sourceQuizName || '').trim();
                 var sourceText = fromName ? ('"' + fromName + '"') : ('ID ' + quiz.sourceQuizId);
                 if(fromName && quiz.sourceQuizId){

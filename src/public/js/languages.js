@@ -12,7 +12,9 @@
         { code: 'de', name: 'Deutsch', short: 'DE' },
         { code: 'it', name: 'Italiano', short: 'IT' },
         { code: 'pt', name: 'Português', short: 'PT' },
-        { code: 'bg', name: 'Български', short: 'BG' }
+        { code: 'bg', name: 'Български', short: 'BG' },
+        // Árabe de Marruecos: escritura de derecha a izquierda (ver applyDir).
+        { code: 'ar', name: 'العربية (المغرب)', short: 'AR', rtl: true }
     ];
     var CODES = LANGUAGES.map(function(l){ return l.code; });
     // Totes les claus s'escriuen sempre juntes; l'ordre només decidix
@@ -59,6 +61,14 @@
         }
     }
 
+    // Idiomas de derecha a izquierda: el documento entero cambia de sentido.
+    function applyDir(lang){
+        var rtl = LANGUAGES.some(function(l){ return l.rtl && l.code === lang; });
+        try{
+            document.documentElement.setAttribute('dir', rtl ? 'rtl' : 'ltr');
+        }catch(e){}
+    }
+
     function init(opts){
         opts = opts || {};
         var lang = fromQuery()
@@ -67,6 +77,7 @@
             || opts.fallback
             || 'es';
         persist(lang);
+        applyDir(lang);
         return lang;
     }
 
@@ -153,6 +164,7 @@
         init: init,
         render: render,
         syncMore: syncMore,
+        applyDir: applyDir,
         current: current
     };
 
