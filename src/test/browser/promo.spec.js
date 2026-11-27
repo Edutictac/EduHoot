@@ -81,6 +81,7 @@ test('los bloques de modos de juego llevan el emoticono grande y centrado; los c
         return { size: parseFloat(style.fontSize), content: style.content, align: style.textAlign };
     });
     expect(emoji.size).toBeGreaterThanOrEqual(48);
+    expect(await tile.locator('span').evaluate(el => getComputedStyle(el, '::before').animationName)).toBe('tile-bob');
     expect(emoji.align).toBe('center');
     expect(box.height).toBeGreaterThan(240);
     await expect(page.locator('.chips span', { hasText: 'Match' })).toBeVisible();
