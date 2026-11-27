@@ -1,0 +1,161 @@
+@import url('/css/fonts.css');
+/* Mismo lenguaje visual que la portada (landing.css) y la biblioteca (create.css):
+   fondo azul marino, Raleway, botones amarillos, tarjetas de cristal con borde blanco,
+   títulos en amarillo del logo y píldoras. */
+:root{
+  color-scheme:dark;
+  --yellow:#fdbc4b;--yellow-1:#ffee70;--yellow-2:#ffb347;
+  --text:#f7f9ff;--muted:rgba(247,249,255,.8);
+  --glass:rgba(255,255,255,.06);--glass-2:rgba(255,255,255,.08);--line:rgba(255,255,255,.16);
+  --blue:#45a3e5;--green:#66bf39;--orange:#eb670f;--red:#f35;--purple:#864cbf;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:'Raleway',system-ui,sans-serif;color:var(--text);line-height:1.5;min-height:100vh;
+  background:linear-gradient(145deg,#0f162a,#1a2662 60%,#1f3d71) fixed;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+a{color:inherit}
+main,.top,.foot{max-width:1100px;margin-inline:auto}
+
+/* Cabecera */
+.top{display:flex;align-items:center;gap:1.25rem;padding-block:.9rem;margin-top:max(64px,var(--env-badge-space,0px))}
+.brand{display:flex;align-items:center;gap:.5rem;font-weight:800;font-size:1.3rem;text-decoration:none}
+.brand img{width:36px;height:36px;border-radius:.18em}
+.top nav{display:flex;gap:1.25rem;margin-left:auto}
+.top nav a{text-decoration:none;font-weight:600;color:var(--muted)}
+.top nav a:hover{color:#fff;text-decoration:underline}
+.top-actions{display:flex;gap:.6rem;align-items:center}
+.lang{display:inline-flex;gap:4px;align-items:center;background:var(--glass-2);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:3px 6px}
+.lang button{width:32px;height:32px;border-radius:999px;border:none;background:transparent;color:var(--text);font:inherit;font-weight:700;font-size:.78rem;cursor:pointer}
+.lang button:hover{background:rgba(255,255,255,.14)}
+.lang button.active{background:var(--yellow);color:#1b1b1b}
+
+/* Botones: los de la portada (píldora, mayúsculas, amarillo con degradado) */
+.btn{display:inline-flex;justify-content:center;align-items:center;padding:12px 18px;line-height:1.25;border-radius:999px;border:1px solid transparent;
+  text-decoration:none;font-weight:700;letter-spacing:.04em;text-transform:uppercase;font-size:.85rem;cursor:pointer;
+  transition:transform .18s ease,box-shadow .18s ease,background .18s ease}
+.btn.primary{background:linear-gradient(135deg,var(--yellow-1),var(--yellow-2));color:#1b1b1b;box-shadow:0 12px 24px rgba(255,183,71,.4)}
+.btn.ghost{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.35);color:#fefefe}
+.btn.big{padding:16px 30px;font-size:1rem}
+.btn:hover{transform:translateY(-2px);box-shadow:0 18px 30px rgba(0,0,0,.35)}
+.btn:active{transform:translateY(1px) scale(.97)}
+a:focus-visible,button:focus-visible,.card:focus-visible{outline:3px solid var(--yellow);outline-offset:3px}
+
+/* Hero */
+.hero{text-align:center;padding:3.5rem 0 1.5rem}
+.eyebrow{font-weight:700;text-transform:uppercase;letter-spacing:.18em;color:var(--yellow);margin:0;font-size:.85rem}
+h1{font-size:clamp(2.6rem,8vw,5.2rem);line-height:1.04;margin:.6rem 0 1.75rem;font-weight:800;white-space:pre-line;text-wrap:balance}
+.cards{display:flex;justify-content:center;gap:1.25rem;margin-top:3.5rem;padding:1rem}
+
+/* Tarjetas del hero: cristal con borde blanco, como las de la biblioteca, con el color de cada tipo de respuesta */
+.card{position:relative;isolation:isolate;overflow:hidden;width:clamp(150px,22vw,230px);aspect-ratio:3/4;min-width:0;border-radius:14px;padding:1rem;
+  display:flex;flex-direction:column;justify-content:space-between;text-align:left;border:1px solid #fff;
+  background:var(--glass);box-shadow:0 14px 30px rgba(0,0,0,.3);animation:float 6s ease-in-out infinite;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;transition:transform .3s cubic-bezier(.3,1.6,.5,1),box-shadow .3s,filter .3s}
+.card::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(160deg,var(--c),rgba(15,23,42,.8));opacity:.55}
+.card b{font-size:1.1rem;line-height:1.25;color:var(--yellow);font-weight:800}
+.card i{font-style:normal;font-size:1.5rem;font-weight:800;transition:transform .3s cubic-bezier(.3,1.6,.5,1)}
+.tag{align-self:flex-start;background:rgba(255,255,255,.12);border-radius:999px;padding:6px 10px;font-size:.72rem;letter-spacing:.5px;font-weight:700}
+.c1{--c:var(--blue);transform:rotate(-5deg)}
+.c2{--c:var(--green);animation-delay:-1.5s;margin-top:2rem}
+.c3{--c:var(--red);animation-delay:-3s;transform:rotate(4deg)}
+.c4{--c:var(--purple);animation-delay:-4.5s;margin-top:2rem}
+@keyframes float{50%{translate:0 -14px}}
+.card:hover{animation-play-state:paused;transform:rotate(0) scale(1.06) translateY(-8px);box-shadow:0 30px 50px rgba(0,0,0,.45)}
+.card:active{transform:scale(.97)}
+.card:hover i{transform:translateX(6px)}
+.card.done{filter:saturate(1.3) brightness(1.15);animation:pop .45s}
+.card.done::before{opacity:.9}
+.card.done i::before{content:"✓ ";color:var(--yellow-1)}
+@keyframes pop{40%{scale:1.1}}
+
+/* Titulares y textos */
+.manifesto,.cta{padding:4.5rem 0;text-align:center;max-width:820px;margin-inline:auto}
+h2{font-size:clamp(1.8rem,4.5vw,2.8rem);line-height:1.12;margin:0 0 1rem;text-wrap:balance}
+.manifesto p,.cta p{font-size:1.15rem;margin:0 0 1.75rem;color:var(--muted)}
+h3{font-size:1.5rem;margin:0 0 .5rem;color:var(--yellow);font-weight:800}
+p{margin-top:0}
+.link{display:inline-block;font-weight:700;color:var(--yellow);text-decoration:none;transition:transform .25s}
+.link:hover{transform:translateX(6px);text-decoration:underline}
+
+/* Modos de juego: tarjetas de cristal con un halo de color */
+.strip{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.tile{position:relative;isolation:isolate;overflow:hidden;min-height:240px;border-radius:14px;padding:1.4rem;display:flex;flex-direction:column;justify-content:flex-end;
+  text-decoration:none;border:1px solid #fff;background:var(--glass);box-shadow:0 14px 30px rgba(0,0,0,.22);transition:transform .2s,box-shadow .2s}
+.tile>*{position:relative}
+.tile::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(160deg,var(--c),rgba(15,23,42,.85));opacity:.5;transition:opacity .3s}
+.tile::after{content:"→";position:absolute;top:1rem;right:1.2rem;font-size:2rem;font-weight:800;color:var(--yellow);opacity:0;transform:translateX(-14px);transition:.3s}
+.tile span{font-size:1.5rem;font-weight:800;color:var(--yellow)}
+.tile small{color:var(--muted);font-size:1rem;transition:transform .3s}
+.tile:hover{transform:translateY(-4px);box-shadow:0 22px 40px rgba(0,0,0,.4)}
+.tile:hover::before{opacity:.8}.tile:hover::after{opacity:1;transform:none}.tile:hover small{transform:translateY(-4px)}
+.tile:active{transform:scale(.98)}
+.t1{--c:var(--blue)}.t2{--c:var(--green)}.t3{--c:var(--orange)}
+
+/* Tipos de pregunta */
+.split,.duo{padding:4.5rem 0;display:grid;grid-template-columns:1fr 1fr;gap:2.5rem;align-items:center}
+.split>*,.duo>*{min-width:0}
+.split p,.duo p{color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:.6rem}
+.chips span{background:var(--glass-2);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:8px 16px;font-weight:700;cursor:pointer;user-select:none;
+  transition:transform .25s cubic-bezier(.3,1.8,.5,1),background .2s,color .2s}
+.chips span:hover{transform:translateY(-4px) rotate(-3deg);background:rgba(255,255,255,.18)}
+.chips span:active{transform:scale(.92)}
+.chips span.on{background:linear-gradient(135deg,var(--yellow-1),var(--yellow-2));color:#1b1b1b;border-color:transparent;animation:pop .4s}
+.chips span.on::before{content:"✓ "}
+
+/* Importar y deberes: tarjetas como las de la biblioteca */
+.duo{padding-top:0;align-items:stretch}
+.duo article{background:var(--glass);border:1px solid #fff;border-radius:14px;padding:1.5rem;box-shadow:0 14px 30px rgba(0,0,0,.22);transition:transform .3s,box-shadow .3s}
+.duo article:hover{transform:translateY(-6px);box-shadow:0 22px 40px rgba(0,0,0,.4)}
+
+/* Testimonio */
+.quote{margin:1rem 0;padding:3.5rem 1.5rem;text-align:center;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.05)}
+.quote blockquote{margin:0 auto;max-width:760px;transition:transform .4s}
+.quote:hover blockquote{transform:scale(1.02)}
+.quote p{font-size:clamp(1.4rem,3.2vw,2.1rem);font-weight:700;line-height:1.3;margin:0 0 1rem}
+.quote footer{color:var(--yellow);font-weight:700}
+.quote small{color:var(--muted);font-weight:400}
+.cta-actions{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap}
+
+/* Pie: enlaces de la app y el pie común de EduTicTac (el mismo de la portada) */
+.foot{margin-top:2rem;padding:2rem 0 .5rem;border-top:1px solid var(--line)}
+.foot-nav{display:flex;flex-wrap:wrap;gap:.5rem 1.5rem;justify-content:center;margin-bottom:1rem;font-weight:700}
+.foot-nav a{text-decoration:none;color:var(--muted);transition:color .2s}
+.foot-nav a:hover{color:#fff;text-decoration:underline}
+.foot .ett-footer{margin-top:0;border-top:1px solid var(--line)}
+
+/* Confeti del clic */
+.burst{position:fixed;width:10px;height:10px;border-radius:2px;pointer-events:none;z-index:50;animation:burst .8s ease-out forwards}
+@keyframes burst{to{transform:translate(var(--dx),var(--dy)) rotate(var(--r));opacity:0}}
+.brand img{transition:transform .5s}.brand:hover img{transform:rotate(360deg)}
+
+@media(max-width:800px){
+  .top{flex-wrap:wrap}.top nav{display:none}
+  .top-actions{width:100%;justify-content:space-between;flex-wrap:wrap}
+  .strip,.split,.duo{grid-template-columns:1fr}
+  .cards{gap:.6rem}.c3,.c4{display:none}.card{width:44vw}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  html{scroll-behavior:auto}
+  .card:hover,.tile:hover,.duo article:hover,.chips span:hover{transform:none}
+}
+
+/* Emoticonos: los mismos que la biblioteca, las partidas y los deberes. Van por CSS para no pisar las traducciones. */
+[data-ic]::before{content:attr(data-ic) " ";font-style:normal;display:inline-block;margin-right:.3em;transition:transform .3s cubic-bezier(.3,1.8,.5,1)}
+.chips span.on::before{content:"✓ "}
+.chips span.on[data-ic]::before{content:"✓ " attr(data-ic) " "}
+.btn:hover[data-ic]::before,.link:hover[data-ic]::before,.tile:hover span::before,.chips span:hover::before{transform:scale(1.3) rotate(-10deg)}
+.tag[data-ic]::before{margin-right:.25em}
+.card.done i::before{content:"✓ "}
+.top nav a[data-ic]::before{margin-right:.2em}
+.extras{padding:1rem 0 3.5rem;text-align:center}
+.extras ul{list-style:none;margin:1.25rem 0 0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.extras li{background:var(--glass);border:1px solid var(--line);border-radius:14px;padding:1rem;font-weight:700;display:flex;align-items:center;justify-content:center;gap:.5rem;
+  transition:transform .25s cubic-bezier(.3,1.6,.5,1),background .2s,border-color .2s;cursor:default}
+.extras li::before{font-size:1.5rem;margin:0;transition:transform .3s cubic-bezier(.3,1.8,.5,1)}
+.extras li:hover{transform:translateY(-4px);background:rgba(255,255,255,.12);border-color:#fff}
+.extras li:hover::before{transform:scale(1.35) rotate(-12deg)}
+@media(max-width:800px){.extras ul{grid-template-columns:repeat(2,1fr)}}
+@media(prefers-reduced-motion:reduce){.extras li:hover,.extras li:hover::before{transform:none}}
