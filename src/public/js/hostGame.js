@@ -213,8 +213,8 @@ var i18n = {
         groupAllWrong: 'Nobody got it this time'
     },
     fr: {
-        questionXofY: 'function(n, t){ return \'Question \' + n + \' / \' + t; }',
-        playersAnswered: 'function(ans, total){ return \'Players Answered \' + ans + \' / \' + total; }',
+        questionXofY: function(n, t){ return 'Question ' + n + ' / ' + t; },
+        playersAnswered: function(ans, total){ return 'Ont répondu ' + ans + ' / ' + total; },
         timeLeft: 'Temps restant :',
         skip: 'Passer la question',
         next: 'Question suivante',
@@ -270,7 +270,7 @@ var i18n = {
         unkickBtn: 'Autoriser le retour',
         kickBtn: 'Exclure',
         kickConfirm: 'Confirmer',
-        freeAnswersReceived: 'function(ans, total){ return \'Answers received \' + ans + \' / \' + total; }',
+        freeAnswersReceived: function(ans, total){ return 'Réponses reçues ' + ans + ' / ' + total; },
         correctAnswerLabel: 'Bonne réponse :',
         matchingResultsHint: 'Part des élèves qui ont bien associé chaque paire',
         matchingSummary: 'Tout juste : {f} · en partie : {p} · aucun : {n} (sur {t})',
