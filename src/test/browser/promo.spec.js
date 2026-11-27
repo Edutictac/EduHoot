@@ -71,3 +71,18 @@ test('Inicio rápido lleva a la portada de siempre, con enlaces de vuelta a la p
     await expect(page.locator('.landing-actions a')).toHaveCount(4);
     await expect(page.locator('.logo-link')).toHaveAttribute('href', '/');
 });
+
+test('los bloques de modos de juego llevan el emoticono grande y centrado; los chips de tipo se traducen', async ({ page }) => {
+    await page.goto('/?lang=en');
+    const tile = page.locator('a.tile[href="/solo/"]');
+    const box = await tile.boundingBox();
+    const emoji = await tile.locator('span').evaluate(el => {
+        const style = getComputedStyle(el, '::before');
+        return { size: parseFloat(style.fontSize), content: style.content, align: style.textAlign };
+    });
+    expect(emoji.size).toBeGreaterThanOrEqual(48);
+    expect(emoji.align).toBe('center');
+    expect(box.height).toBeGreaterThan(240);
+    await expect(page.locator('.chips span', { hasText: 'Match' })).toBeVisible();
+    await expect(page.locator('.chips span', { hasText: 'Order' })).toBeVisible();
+});

@@ -173,3 +173,18 @@ p{margin-top:0}
 .extras li:hover::before{transform:scale(1.35) rotate(-12deg)}
 @media(max-width:800px){.extras ul{grid-template-columns:repeat(2,1fr)}}
 @media(prefers-reduced-motion:reduce){.extras li:hover,.extras li:hover::before{transform:none}}
+
+/* Bloques de modos de juego: el emoticono va grande, en la parte central del bloque. */
+.tile{ min-height: 290px; }
+.tile > span{ position: static; }
+.tile span[data-ic]::before{
+  content: attr(data-ic);
+  position: absolute; left: 0; right: 0; top: 34%;
+  translate: 0 -50%;
+  margin: 0; text-align: center;
+  font-size: clamp(3.5rem, 7vw, 5rem); line-height: 1;
+  filter: drop-shadow(0 6px 10px rgba(0,0,0,.35));
+  transition: scale .3s cubic-bezier(.3,1.8,.5,1), rotate .3s cubic-bezier(.3,1.8,.5,1);
+}
+.tile:hover span[data-ic]::before{ transform: none; scale: 1.18; rotate: -6deg; }
+@media(prefers-reduced-motion:reduce){ .tile:hover span[data-ic]::before{ scale: 1; rotate: 0deg; } }
