@@ -18,6 +18,8 @@ fitxers corresponents, i els originals es van eliminar.
 
 ## [Sense publicar]
 
+## [2.0.0] - 2026-11-27
+
 ### Afegit
 - **Titular de la portada**: una frase motivadora diferent en cada recàrrega, en gran i al mateix lloc on abans anava «Que l'aula no es quede sense ganes». Són 11 frases (10 originals i el titular de sempre) per a l'alumnat i el professorat, en els 10 idiomes, sense punt final i de longitud semblant; mai repeteix la de la vegada anterior i, en canviar d'idioma, es manté la frase i es tradueix.
 - **Promo, «I a més…»**: 9 característiques a la quadrícula i el botó **«Totes les característiques»**, que desplega les altres fins a 33 (en els 10 idiomes).
@@ -778,6 +780,7 @@ migrar la base `kahootDB`.
   d'imatge/vídeo en preguntes.
 - Estadístiques bàsiques de partides i modes de joc preferits.
 
+[2.0.0]: https://github.com/Edutictac/EduHoot/compare/v1.2.0...v2.0.0
 [1.2.0]: https://github.com/Edutictac/EduHoot/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/Edutictac/EduHoot/compare/v1.0.13...v1.1.0
 [1.0.7]: https://github.com/Edutictac/EduHoot/compare/v1.0.5...v1.0.7
