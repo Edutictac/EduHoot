@@ -181,10 +181,13 @@ test('en árabe la promo se muestra de derecha a izquierda y vuelve a izquierda 
     await expect(page.locator('html')).toHaveAttribute('dir', 'ltr');
 });
 
-test('«Y además…» muestra 9 características y «Todas las características» despliega hasta 33', async ({ page }) => {
+test('«Y además…»: 12 características en PC, 6 en móvil y tablet, y «Todas las características» despliega hasta 33', async ({ page }) => {
     await page.goto('/?lang=es');
-    const visible = page.locator('.extras ul:not(.extras-more) li');
-    await expect(visible).toHaveCount(9);
+    const wide = page.viewportSize().width > 1024;
+    const mainItems = page.locator('.extras ul:not(.extras-more) li');
+    await expect(mainItems).toHaveCount(12);
+    // Las 6 primeras (las más importantes) se ven siempre; de la 7 a la 12, solo en PC.
+    await expect(page.locator('.extras ul:not(.extras-more) li:visible')).toHaveCount(wide ? 12 : 6);
     const more = page.locator('#all-features');
     await expect(more).toBeHidden();
     const btn = page.locator('#all-features-btn');
@@ -192,13 +195,21 @@ test('«Y además…» muestra 9 características y «Todas las características
     await expect(btn).toHaveAttribute('aria-expanded', 'false');
     await btn.click();
     await expect(more).toBeVisible();
-    await expect(more.locator('li')).toHaveCount(24);
+    await expect(more.locator('li')).toHaveCount(21);
     await expect(btn).toHaveAttribute('aria-expanded', 'true');
     await expect(btn).toHaveText('Menos características');
     await expect(page.locator('.extras li:visible')).toHaveCount(33);
     await btn.click();
     await expect(more).toBeHidden();
+    await expect(page.locator('.extras ul:not(.extras-more) li:visible')).toHaveCount(wide ? 12 : 6);
     await expect(btn).toHaveText('Todas las características');
+});
+
+test('las 6 más importantes son las mismas en todas las pantallas y van primero', async ({ page }) => {
+    await page.goto('/?lang=es');
+    const keys = await page.locator('.extras ul:not(.extras-more) li').evaluateAll(els => els.map(e => ({ k: e.getAttribute('data-i18n'), pc: e.classList.contains('pc-only') })));
+    expect(keys.slice(0, 6).every(x => !x.pc)).toBe(true);
+    expect(keys.slice(6).every(x => x.pc)).toBe(true);
 });
 
 test('las características se traducen (también el botón) y el idioma se conserva al desplegar', async ({ page }) => {

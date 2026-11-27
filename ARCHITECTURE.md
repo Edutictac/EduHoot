@@ -151,7 +151,7 @@ JS d'orquestració amb `<script>` clàssics (sense build step):
 
 | Pantalla | JS principal | Per a què servix |
 |---|---|---|
-| `/` (`index.html`) | `promo.js`, `home-pref.js` (+ `languages.js`, `pwa-install.js`, `app-version.js`) | Portada de presentació (promo): titular amb una frase motivadora diferent en cada recàrrega, botons (Inici ràpid, Jugar, Solo, Multijugador, Professorat), tipus de pregunta, testimonis en carrusel, característiques (9 a la vista i «Totes les característiques»), xip de compte, peu comú. Diccionari propi (10 idiomes). Si s'ha triat «Inici ràpid», redirigix a `/inicio/` |
+| `/` (`index.html`) | `promo.js`, `home-pref.js` (+ `languages.js`, `pwa-install.js`, `app-version.js`) | Portada de presentació (promo): titular amb una frase motivadora diferent en cada recàrrega, botons (Inici ràpid, Jugar, Solo, Multijugador, Professorat), tipus de pregunta, testimonis en carrusel, característiques (12 a la vista en PC, 6 en mòbil i tauleta, i «Totes les característiques»), xip de compte, peu comú. Diccionari propi (10 idiomes). Si s'ha triat «Inici ràpid», redirigix a `/inicio/` |
 | `/inicio/` (`inicio/index.html`) | *(sense JS propi; usa `i18n-player.js`, `home-pref.js`, `pwa-install.js`)* | Inici ràpid: la portada de sempre (aula / multijugador / solo, accés professorat, instal·lar com a PWA) amb l'aspecte de la promo; el caixet d'EduHoot torna la promo com a pàgina inicial |
 | `/join.html` | `join.js` (ja amb Vue) | Alumnat: PIN + nom (o login EduTicTac) per a unir-se a una partida del mode "Jugar a l'aula" |
 | `/player/` | `lobby.js` (ja amb Vue) | Alumnat: sala d'espera des que s'uneix fins que el professorat inicia la partida |

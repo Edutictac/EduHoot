@@ -1333,6 +1333,9 @@
     btn.addEventListener('click', function(){
         var open = more.hasAttribute('hidden');
         if(open) more.removeAttribute('hidden'); else more.setAttribute('hidden', '');
+        // En móvil y tablet, las características 7 a 12 solo se ven al desplegar (en PC se ven siempre).
+        var section = document.getElementById('extras');
+        if(section) section.classList.toggle('is-open', open);
         btn.setAttribute('aria-expanded', open ? 'true' : 'false');
         btn.setAttribute('data-i18n', open ? 'x_less' : 'x_all');
         if(window.promoApplyTexts) window.promoApplyTexts();

@@ -210,3 +210,8 @@ p{margin-top:0}
 .extras #all-features-btn{ margin-top: 1.5rem; }
 .extras li{ text-align: center; }
 
+
+/* En PC se ven las 12 más importantes; en móvil y tablet, las 6 primeras. «Todas las características» muestra el resto. */
+@media (max-width: 1024px){
+  .extras:not(.is-open) .pc-only{ display: none; }
+}
