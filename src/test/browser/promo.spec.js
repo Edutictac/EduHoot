@@ -64,7 +64,7 @@ test('los testimonios van en carrusel y se avisa de que son de ejemplo', async (
 test('el selector de idioma incluye el francés y traduce la promo', async ({ page }) => {
     await page.goto('/?lang=es');
     expect(await page.locator('#promo-lang button').evaluateAll(b => b.map(x => x.dataset.lang))).toEqual(['ca', 'va', 'es', 'en']);
-    expect(await page.locator('#promo-lang select.lang-more option').evaluateAll(o => o.map(x => x.value))).toEqual(['', 'fr', 'de', 'it', 'pt', 'bg']);
+    expect(await page.locator('#promo-lang select.lang-more option').evaluateAll(o => o.map(x => x.value))).toEqual(['', 'fr', 'de', 'it', 'pt', 'bg', 'ar']);
     await page.locator('#promo-lang select.lang-more').selectOption('fr');
     await expect(page.locator('html')).toHaveAttribute('lang', 'fr');
     await expect(page.locator('.hero-actions a.primary')).toContainText('Jouer maintenant');
@@ -155,7 +155,7 @@ test('botonera del titular en valenciano: Inici ràpid, Jugar ara, A soles, Mult
 
 test('los idiomas nuevos (alemán, italiano, portugués y búlgaro) traducen la promo desde el desplegable', async ({ page }) => {
     await page.goto('/?lang=es');
-    const expected = { de: 'Jetzt spielen', it: 'Gioca ora', pt: 'Jogar agora', bg: 'Играй сега' };
+    const expected = { de: 'Jetzt spielen', it: 'Gioca ora', pt: 'Jogar agora', bg: 'Играй сега', ar: 'العب الآن' };
     for (const [lang, text] of Object.entries(expected)) {
         await page.locator('#promo-lang select.lang-more').selectOption(lang);
         await expect(page.locator('html')).toHaveAttribute('lang', lang);
@@ -167,7 +167,16 @@ test('los idiomas nuevos (alemán, italiano, portugués y búlgaro) traducen la 
 
 test('el desplegable de más idiomas muestra las dos iniciales en mayúsculas, no el nombre', async ({ page }) => {
     await page.goto('/?lang=es');
-    expect(await page.locator('#promo-lang select.lang-more option').evaluateAll(o => o.map(x => x.textContent.trim()))).toEqual(['🌐', 'FR', 'DE', 'IT', 'PT', 'BG']);
+    expect(await page.locator('#promo-lang select.lang-more option').evaluateAll(o => o.map(x => x.textContent.trim()))).toEqual(['🌐', 'FR', 'DE', 'IT', 'PT', 'BG', 'AR']);
     await page.locator('#promo-lang select.lang-more').selectOption('de');
     await expect(page.locator('#promo-lang select.lang-more option:checked')).toHaveText('DE');
+});
+
+test('en árabe la promo se muestra de derecha a izquierda y vuelve a izquierda a derecha al cambiar', async ({ page }) => {
+    await page.goto('/?lang=ar');
+    await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
+    await expect(page.locator('html')).toHaveAttribute('lang', 'ar');
+    await expect(page.locator('#promo-lang select.lang-more option:checked')).toHaveText('AR');
+    await page.locator('#promo-lang [data-lang="es"]').click();
+    await expect(page.locator('html')).toHaveAttribute('dir', 'ltr');
 });
