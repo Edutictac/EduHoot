@@ -14,12 +14,17 @@ test('la portada (/) es la promo y reúne los enlaces de la antigua portada', as
     }
     await expect(page.locator('a.tile[href="/create/"]')).toContainText('Acceso profesorado');
     await expect(page.locator('.hero-actions a[href="/inicio/"]')).toContainText('Inicio rápido');
+    await expect(page.locator('.hero-actions a[href="/create/"]')).toContainText('Profesorado');
+    await expect(page.locator('.hero-actions a[href="/join.html"]')).toHaveCount(2);
+    await expect(page.locator('.top a.btn')).toHaveCount(0);
+    await expect(page.locator('h1')).not.toContainText('.');
 });
 
 test('muestra la versión en el pie y los enlaces comunes', async ({ page }) => {
     await page.goto('/?lang=es');
     await expect(page.locator('#app-version')).toHaveText(/v1\.2\.0/);
-    await expect(page.locator('footer a[href="https://edutictac.es/"]')).toBeVisible();
+    await expect(page.locator('footer a[href="https://edutictac.es/"]')).toHaveCount(0);
+    await expect(page.locator('footer a[href*="privacitat"]')).toBeVisible();
     await expect(page.locator('footer a[href*="LICENSE"]')).toHaveText('AGPL-3.0');
 });
 
@@ -45,7 +50,7 @@ test('el selector de idioma incluye el francés y traduce la promo', async ({ pa
     expect(await page.locator('#promo-lang button').evaluateAll(b => b.map(x => x.dataset.lang))).toEqual(['ca', 'va', 'es', 'en', 'fr']);
     await page.locator('#promo-lang [data-lang="fr"]').click();
     await expect(page.locator('html')).toHaveAttribute('lang', 'fr');
-    await expect(page.locator('.top-actions a.primary')).toContainText('Jouer maintenant');
+    await expect(page.locator('.hero-actions a.primary')).toContainText('Jouer maintenant');
     await expect(page.locator('.hero-actions a[href="/inicio/"]')).toContainText('Démarrage rapide');
     await expect(page.locator('.quote-note')).toContainText('exemple');
 });

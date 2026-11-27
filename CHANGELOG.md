@@ -19,6 +19,7 @@ fitxers corresponents, i els originals es van eliminar.
 ## [Sense publicar]
 
 ### Afegit
+- **Selector d'idioma propi sempre visible**: el xip de Commons només ofereix ca, va, es i en, així que ja no amaga el selector de cada pantalla (si és fix dalt a la dreta, baixa per sota del xip). A la promo, `#promo-lang`.
 - **La portada (`/`) és ara la promo**, amb els enllaços de l'antiga portada (jugar a l'aula, multijugador, jugar sol, accés professorat i instal·lar l'app), testimonis en carrusel (3, marcats com a exemple) i l'opció **Inici ràpid**. L'antiga portada viu a `/inicio/` amb l'aspecte de la promo (targeta de vidre, botons amb emoticones i els mateixos efectes). Tornar d'Authentik porta a la promo.
 - **Francés (`fr`) a tota la interfície**: alumnat, anfitrió, solo, multijugador, biblioteca, creador, deures, partides i promo; també la veu (`fr-FR`), les dates, el paginador, el xip i l'opció «Francés» del generador d'IA. Les traduccions estan sense revisar per una persona nativa.
 - **Vertader/Fals en l'idioma de qui juga**: les dues opcions es mostren en l'idioma de la interfície a l'alumnat, l'anfitrió, l'autoritme, solo i multijugador (`js/tfLabels.js`), encara que el quiz tinga «true/false» o el text buit. Un text propi (p. ex. «Cierto») es respecta.
