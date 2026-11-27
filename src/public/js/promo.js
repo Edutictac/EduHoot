@@ -81,7 +81,8 @@
   "q5_p": "«Con las preguntas de ordenar, la línea del tiempo de Historia la ordena el alumnado, no yo.»",
   "q5_w": "Docente de Ciencias Sociales",
   "q6_p": "«Las preguntas de correspondencia me permiten unir conceptos y definiciones sin inventar trucos.»",
-  "q6_w": "Profesor de Lengua"
+  "q6_w": "Profesor de Lengua",
+  "hero_solo": "Solo"
  },
  "ca": {
   "nav_modes": "Modes de joc",
@@ -162,7 +163,8 @@
   "q5_p": "«Amb les preguntes d'ordenar, la línia del temps d'Història l'ordena l'alumnat, no jo.»",
   "q5_w": "Docent de Ciències Socials",
   "q6_p": "«Les preguntes de correspondència em permeten unir conceptes i definicions sense inventar trucs.»",
-  "q6_w": "Professor de Llengua"
+  "q6_w": "Professor de Llengua",
+  "hero_solo": "En solitari"
  },
  "va": {
   "nav_modes": "Modes de joc",
@@ -243,7 +245,8 @@
   "q5_p": "«Amb les preguntes d'ordenar, la línia del temps d'Història l'ordena l'alumnat, no jo.»",
   "q5_w": "Docent de Ciències Socials",
   "q6_p": "«Les preguntes de correspondència em permeten unir conceptes i definicions sense inventar trucs.»",
-  "q6_w": "Professor de Llengua"
+  "q6_w": "Professor de Llengua",
+  "hero_solo": "A soles"
  },
  "en": {
   "nav_modes": "Game modes",
@@ -324,7 +327,8 @@
   "q5_p": "\"With ordering questions, the students put the History timeline in order, not me.\"",
   "q5_w": "Social studies teacher",
   "q6_p": "\"Matching questions let me pair concepts and definitions without inventing workarounds.\"",
-  "q6_w": "Language teacher"
+  "q6_w": "Language teacher",
+  "hero_solo": "Solo"
  },
  "fr": {
   "nav_modes": "Modes de jeu",
@@ -405,7 +409,8 @@
   "q5_p": "« Avec les questions d'ordre, ce sont les élèves qui remettent la frise chronologique d'Histoire dans l'ordre, pas moi. »",
   "q5_w": "Enseignant d'histoire-géographie",
   "q6_p": "« Les questions d'association me permettent de relier notions et définitions sans bricoler. »",
-  "q6_w": "Professeur de lettres"
+  "q6_w": "Professeur de lettres",
+  "hero_solo": "Seul"
  }
 };
     var lang = 'es';

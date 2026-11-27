@@ -15,7 +15,8 @@ test('la portada (/) es la promo y reúne los enlaces de la antigua portada', as
     await expect(page.locator('a.tile[href="/create/"]')).toContainText('Acceso profesorado');
     await expect(page.locator('.hero-actions a[href="/inicio/"]')).toContainText('Inicio rápido');
     await expect(page.locator('.hero-actions a[href="/create/"]')).toContainText('Profesorado');
-    await expect(page.locator('.hero-actions a[href="/join.html"]')).toHaveCount(2);
+    await expect(page.locator('.hero-actions a[href="/join.html"]')).toHaveCount(1);
+    expect(await page.locator('.hero-actions a').evaluateAll(a => a.map(x => x.getAttribute('href')))).toEqual(['/inicio/', '/join.html', '/solo/', '/multiplayer/', '/create/']);
     await expect(page.locator('.top a.btn')).toHaveCount(0);
     await expect(page.locator('h1')).not.toContainText('.');
 });
@@ -132,4 +133,10 @@ test.describe('página inicial elegida (promo o inicio rápido)', () => {
         expect(sel.y + sel.height).toBeLessThan(shell.y + 80);
         expect(shell.x + shell.width - (sel.x + sel.width)).toBeLessThan(30);
     });
+});
+
+test('botonera del titular en valenciano: Inici ràpid, Jugar ara, A soles, Multijugador, Professorat', async ({ page }) => {
+    await page.goto('/?lang=va');
+    expect((await page.locator('.hero-actions a').allInnerTexts()).map(t => t.trim()))
+        .toEqual(['Inici ràpid', 'Jugar ara', 'A soles', 'Multijugador', 'Professorat']);
 });
