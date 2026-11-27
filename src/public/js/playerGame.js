@@ -1042,8 +1042,9 @@ socket.on('playerQuestion', function(data){
     }else{
         app.blind = false;
         app.blindActiveCount = 0;
-        app.answers = (data.answers || []).slice(0, 4);
-        lastAnswers = (data.answers || []).slice(0, 4);
+        var shown = window.EduhootTf ? window.EduhootTf.localize(data.type, (data.answers || []).slice(0, 4)) : (data.answers || []).slice(0, 4);
+        app.answers = shown;
+        lastAnswers = shown.slice();
     }
     if(typeof data.time === 'number'){
         app.timerTotal = Math.max(5, Math.min(120, data.time));

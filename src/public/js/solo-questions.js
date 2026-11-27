@@ -261,6 +261,7 @@
         var newAnswers = answerOrder.map(function(idx){ return answers[idx]; });
         if(meta.type === 'true-false'){
             while(newAnswers.length < 4) newAnswers.push('');
+            if(window.EduhootTf) newAnswers = window.EduhootTf.localize('true-false', newAnswers);
         }
         var newCorrectAnswers = [];
         meta.correctAnswers.forEach(function(orig){

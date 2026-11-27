@@ -373,7 +373,7 @@ socket.on('spQuestion', function(d){
     }else{
         app.blind = false;
         app.blindActiveCount = 0;
-        app.answers = (d.answers || []).slice(0, 4);
+        app.answers = window.EduhootTf ? window.EduhootTf.localize(d.type, (d.answers || []).slice(0, 4)) : (d.answers || []).slice(0, 4);
         lastAnswers = app.answers.slice();
     }
     app.timerTotal = Math.max(5, Number(d.timeTotal) || Number(d.time) || 20);

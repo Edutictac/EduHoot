@@ -695,7 +695,7 @@
     var answers = Array.isArray(q && q.answers) ? q.answers.slice(0, 4) : ['', '', '', ''];
     while(answers.length < 4) answers.push('');
     if(type === 'true-false'){
-      return answers.slice(0, 2);
+      return window.EduhootTf ? window.EduhootTf.localize(type, answers).slice(0, 2) : answers.slice(0, 2);
     }
     return answers;
   }

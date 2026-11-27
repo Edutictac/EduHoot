@@ -1258,7 +1258,7 @@ socket.on('gameQuestions', function(data){
     currentPointsMultiplier = Number(data && data.pointsMultiplier) > 1 ? Number(data.pointsMultiplier) : 1;
     updateQuestionPointsBadge(currentPointsMultiplier);
     app.questionText = data.q1 || '';
-    setCurrentAnswerTexts([data.a1, data.a2, data.a3, data.a4]);
+    setCurrentAnswerTexts(window.EduhootTf ? window.EduhootTf.localize(currentQuestionType, [data.a1, data.a2, data.a3, data.a4]) : [data.a1, data.a2, data.a3, data.a4]);
     app.matchLeft = currentQuestionType === 'matching' ? (data.matchLeft || []).slice() : [];
     app.matchRight = currentQuestionType === 'matching' ? (data.matchRight || []).slice() : [];
     app.orderItems = currentQuestionType === 'order' ? (data.orderItems || []).slice() : [];
