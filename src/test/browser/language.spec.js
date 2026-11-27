@@ -65,13 +65,13 @@ for (const [route, selector, labels] of [
     });
 }
 
-for (const route of ['/', '/join.html']) {
+for (const [route, id] of [['/', 'promo-lang'], ['/inicio/', 'lang-switcher'], ['/join.html', 'lang-switcher']]) {
     test(`botons d'idioma de ${route}: llista comuna i botó actiu`, async ({ page }) => {
         for (const lang of LANG_CODES) {
             await page.goto(`${route}?lang=${lang}`);
-            const buttons = page.locator('#lang-switcher button[data-lang]');
+            const buttons = page.locator(`#${id} button[data-lang]`);
             expect(await buttons.evaluateAll(els => els.map(el => el.textContent.trim()))).toEqual(LANG_SHORT);
-            await expect(page.locator(`#lang-switcher [data-lang="${lang}"]`)).toHaveClass(/active/);
+            await expect(page.locator(`#${id} [data-lang="${lang}"]`)).toHaveClass(/active/);
         }
     });
 }

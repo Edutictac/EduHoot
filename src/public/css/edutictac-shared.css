@@ -33,12 +33,18 @@ edutictac-account.site-account--start {
   left: 16px;
 }
 
-/* Quan el xip complet ja s'ha pintat, porta el selector d'idioma i els propis fan
- * de respost. Amb data-home-only (alumnat, joc públic) només hi ha «Inici», i el
- * selector propi es queda. */
-html.has-account-chip:not(.account-home-only) .lang-switch,
-html.has-account-chip:not(.account-home-only) .lang-switcher,
-html.has-account-chip:not(.account-home-only) #lang-switcher {
+/* El selector d'idioma propi de cada pantalla es veu sempre: el xip de Commons només
+ * ofereix els idiomes de la seua taula (ca, va, es, en), i EduHoot en té més (fr...).
+ * Si el selector és fix a dalt a la dreta, baixa per sota del xip perquè no es tapen.
+ * Amb data-home-only (alumnat, joc públic) el xip és a l'esquerra i no cal moure'l. */
+html.has-account-chip:not(.account-home-only) #lang-switcher,
+html.has-account-chip:not(.account-home-only) .lang-switcher {
+  top: 64px;
+}
+
+/* Cap enllaç directe a edutictac.es al xip («Inici»), excepte quan és l'únic que hi ha
+ * (data-home-only): sense ell el xip quedaria buit. */
+html.has-account-chip:not(.account-home-only) edutictac-account a.eta-home {
   display: none !important;
 }
 

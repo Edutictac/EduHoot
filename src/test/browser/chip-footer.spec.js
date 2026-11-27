@@ -48,7 +48,7 @@ test.describe('peu comú', () => {
 });
 
 test.describe('xip de compte', () => {
-    test('amb Commons, el xip substitueix el selector propi i canvia l’idioma', async ({ page }) => {
+    test('amb Commons, el selector propi es manté i el xip canvia l’idioma', async ({ page }) => {
         await page.route(/^https:\/\//, route => route.abort());
         await stubBase(page);
         await stubCommons(page);
@@ -57,7 +57,7 @@ test.describe('xip de compte', () => {
         await expect(page.locator('html')).toHaveClass(/has-account-chip/);
         await expect(page.locator('html')).toHaveAttribute('lang', 'es');
         await expect(page.locator('edutictac-account')).toBeVisible();
-        await expect(page.locator('.top-actions .lang-switch')).toBeHidden();
+        await expect(page.locator('.top-actions .lang-switch')).toBeVisible();
         await expect(page.locator('#lang-select')).toHaveValue('es');
 
         expect(await page.evaluate(() => window.edutictacLanguage.languages)).toEqual(['ca', 'va', 'es', 'en', 'fr']);
@@ -91,7 +91,7 @@ test.describe('xip de compte', () => {
         });
     }
 
-    test('/solo/: chip completo de la cuenta; el selector de idioma lo lleva el chip', async ({ page }) => {
+    test('/solo/: chip completo de la cuenta; el selector de idioma propio se mantiene', async ({ page }) => {
         await page.route(/^https:\/\//, route => route.abort());
         await stubBase(page);
         await stubCommons(page);
@@ -99,7 +99,7 @@ test.describe('xip de compte', () => {
 
         await expect(page.locator('edutictac-account')).not.toHaveAttribute('data-home-only', /.*/);
         await expect(page.locator('html')).not.toHaveClass(/account-home-only/);
-        await expect(page.locator('.hero__lang .lang-switch')).toBeHidden();
+        await expect(page.locator('.hero__lang .lang-switch')).toBeVisible();
     });
 });
 
