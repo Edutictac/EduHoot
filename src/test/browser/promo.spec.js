@@ -21,6 +21,17 @@ test('la portada (/) es la promo y reúne los enlaces de la antigua portada', as
     await expect(page.locator('h1')).not.toContainText('.');
 });
 
+test('la cabecera lleva un enlace visible a edutictac.es, también en móvil', async ({ page }) => {
+    await page.goto('/?lang=va');
+    const link = page.locator('header a.nav-ett');
+    await expect(link).toBeVisible();
+    await expect(link).toHaveText('EduTicTac');
+    await expect(link).toHaveAttribute('href', 'https://edutictac.es/');
+    await expect(link).toHaveAttribute('target', '_blank');
+    // Va justo después de «Programari lliure».
+    expect(await page.locator('header nav a').evaluateAll(a => a.map(x => x.textContent.trim()).slice(-2))).toEqual(['Programari lliure', 'EduTicTac']);
+});
+
 test('muestra la versión en el pie y los enlaces comunes', async ({ page }) => {
     await page.goto('/?lang=es');
     await expect(page.locator('#app-version')).toHaveText(/v1\.2\.0/);

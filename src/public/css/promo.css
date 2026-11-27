@@ -24,6 +24,7 @@ main,.top,.foot{max-width:1100px;margin-inline:auto}
 .top nav{display:flex;gap:1.25rem;margin-left:auto}
 .top nav a{text-decoration:none;font-weight:600;color:var(--muted)}
 .top nav a:hover{color:#fff;text-decoration:underline}
+.top nav a.nav-ett{color:var(--yellow);font-weight:800}
 .top-actions{display:flex;gap:.6rem;align-items:center}
 .lang{display:inline-flex;gap:4px;align-items:center;background:var(--glass-2);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:3px 6px}
 .lang button{width:32px;height:32px;border-radius:999px;border:none;background:transparent;color:var(--text);font:inherit;font-weight:700;font-size:.78rem;cursor:pointer}
@@ -141,9 +142,9 @@ p{margin-top:0}
 .brand img{transition:transform .5s}.brand:hover img{transform:rotate(360deg)}
 
 @media(max-width:1000px){.strip{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:1100px){.top nav{display:none}.top{flex-wrap:wrap}}
+@media(max-width:1100px){.top nav a:not(.nav-ett){display:none}.top{flex-wrap:wrap}}
 @media(max-width:800px){
-  .top{flex-wrap:wrap}.top nav{display:none}
+  .top{flex-wrap:wrap}
   .top-actions{width:100%;justify-content:space-between;flex-wrap:wrap}
   .strip,.split,.duo{grid-template-columns:1fr}
   .quote{padding-inline:1rem}
