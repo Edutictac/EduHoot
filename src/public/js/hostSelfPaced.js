@@ -34,7 +34,7 @@ var i18n = {
         topPlayers: 'Millors jugadors', hostScores: 'Mostra puntuacions i rànquing a l\'anfitrió', summary: '{n} alumnes · {f} han acabat', summaryEnded: 'Partida acabada · {n} alumnes' }
 };
 function t(key){
-    var chain = lang === 'va' ? ['va', 'ca', 'es'] : [lang, 'es'];
+    var chain = lang === 'va' ? ['va', 'ca', 'es'] : [lang, 'en', 'es'];
     for(var i = 0; i < chain.length; i++){
         var d = i18n[chain[i]];
         if(d && d[key]) return d[key];

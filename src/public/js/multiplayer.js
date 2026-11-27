@@ -451,7 +451,7 @@
   deviceId = getDeviceId();
 
   function t(key){
-    var chain = lang === 'va' ? ['va', 'ca', 'es'] : [lang, 'es'];
+    var chain = lang === 'va' ? ['va', 'ca', 'es'] : [lang, 'en', 'es'];
     for(var i = 0; i < chain.length; i++){
       var dict = i18n[chain[i]];
       if(dict && dict[key]) return dict[key];

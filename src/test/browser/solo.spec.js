@@ -450,9 +450,10 @@ test('partida completa: tipos de pregunta, puntos, avisos y resultado', async ({
 
     // 3. Verdadero/falso: solo dos botones; fallo con el modal y el texto correcto.
     await expect(page.locator('#question-progress')).toHaveText('Pregunta 3 de 5');
-    await expect(answerButtons(page)).toHaveText(['Cert', 'Fals']);
+    // El quiz guarda «Cert/Fals» (catalán) pero la interfaz va en castellano: se muestra en el idioma de quien juega.
+    await expect(answerButtons(page)).toHaveText(['Verdadero', 'Falso']);
     await answerButtons(page).nth(1).click();
-    await expect(page.locator('#feedback')).toHaveText('Respuesta incorrecta · Respuesta correcta: Cert');
+    await expect(page.locator('#feedback')).toHaveText('Respuesta incorrecta · Respuesta correcta: Verdadero');
     await expect(page.locator('#feedback')).toHaveClass(/feedback--error/);
     await expect(answerButtons(page).nth(1)).toHaveClass(/\bwrong\b/);
     expect(await answerButtons(page).nth(1).evaluate(el => getComputedStyle(el, '::after').content)).toBe('"✕"');

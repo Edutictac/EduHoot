@@ -7,10 +7,14 @@
         ca: ['Vertader', 'Fals'],
         va: ['Vertader', 'Fals'],
         en: ['True', 'False'],
-        fr: ['Vrai', 'Faux']
+        fr: ['Vrai', 'Faux'],
+        de: ['Wahr', 'Falsch'],
+        it: ['Vero', 'Falso'],
+        pt: ['Verdadeiro', 'Falso'],
+        bg: ['Вярно', 'Грешно']
     };
-    var TRUE_WORDS = ['true', 'vrai', 'verdadero', 'vertader', 'vertadero', 'verdader', 'cierto', 'cert', 'v', 't'];
-    var FALSE_WORDS = ['false', 'faux', 'falso', 'fals', 'f'];
+    var TRUE_WORDS = ['true', 'wahr', 'vero', 'verdadeiro', 'вярно', 'vrai', 'verdadero', 'vertader', 'vertadero', 'verdader', 'cierto', 'cert', 'v', 't'];
+    var FALSE_WORDS = ['false', 'falsch', 'falso', 'грешно', 'невярно', 'faux', 'falso', 'fals', 'f'];
 
     function currentLang(){
         var lang = '';

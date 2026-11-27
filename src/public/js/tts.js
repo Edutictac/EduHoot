@@ -69,6 +69,10 @@
         if(l.indexOf('es') === 0) return 'es-ES';
         if(l.indexOf('en') === 0) return 'en-US';
         if(l.indexOf('fr') === 0) return 'fr-FR';
+        if(l.indexOf('de') === 0) return 'de-DE';
+        if(l.indexOf('it') === 0) return 'it-IT';
+        if(l.indexOf('pt') === 0) return 'pt-PT';
+        if(l.indexOf('bg') === 0) return 'bg-BG';
         return 'es-ES';
     }
 

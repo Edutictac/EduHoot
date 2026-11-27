@@ -17,8 +17,8 @@ function saveFlashcardsProgress(all){
 
 // Vertader/fals: «Verdadero/Falso» (o la traducció de la interfície) encara que el quiz tinga el text
 // guardat en un altre idioma. Si el text és un altre (p. ex. «Cierto»), es mostra tal com està.
-var TF_TRUE_WORDS = ['true', 'vrai', 'verdadero', 'vertader', 'vertadero', 'cierto', 'verdader'];
-var TF_FALSE_WORDS = ['false', 'faux', 'falso', 'fals'];
+var TF_TRUE_WORDS = ['true', 'wahr', 'vero', 'verdadeiro', 'вярно', 'vrai', 'verdadero', 'vertader', 'vertadero', 'cierto', 'verdader'];
+var TF_FALSE_WORDS = ['false', 'falsch', 'грешно', 'невярно', 'faux', 'falso', 'fals'];
 function trueFalseText(stored, index, t){
     var key = String(stored === null || stored === undefined ? '' : stored).trim().toLowerCase();
     if(index === 0 && (key === '' || TF_TRUE_WORDS.indexOf(key) !== -1)) return t('flashcardsTrue');

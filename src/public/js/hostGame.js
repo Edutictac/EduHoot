@@ -373,7 +373,7 @@ var i18n = {
 
 function t(key, langOverride){
     var l = langOverride || lang;
-    var chain = l === 'va' ? ['va', 'ca', 'es'] : [l, 'es'];
+    var chain = l === 'va' ? ['va', 'ca', 'es'] : [l, 'en', 'es'];
     for(var i = 0; i < chain.length; i++){
         var dict = i18n[chain[i]];
         if(dict && dict[key]) return dict[key];

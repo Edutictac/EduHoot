@@ -9,17 +9,38 @@ test.beforeEach(async ({ page }) => {
     await page.route('**/api/**', route => route.fulfill({ json: { tags: [], quizzes: [], enabled: false } }));
 });
 
-for (const lang of ['ca', 'va', 'es', 'en', 'fr']) {
+// Botones CA VA ES EN y, a su derecha, un desplegable con el resto de idiomas.
+const PRIMARY = ['ca', 'va', 'es', 'en'];
+const MORE = ['fr', 'de', 'it', 'pt', 'bg'];
+const ALL = [...PRIMARY, ...MORE];
+
+async function chooseLang(page, lang) {
+    if (PRIMARY.includes(lang)) await page.locator(`#lang-switcher [data-lang="${lang}"]`).click();
+    else await page.locator('#lang-switcher select.lang-more').selectOption(lang);
+}
+
+async function expectActiveLang(page, lang, scope = '#lang-switcher') {
+    if (PRIMARY.includes(lang)) {
+        await expect(page.locator(`${scope} [data-lang="${lang}"]`)).toHaveClass(/active/);
+        await expect(page.locator(`${scope} select.lang-more`)).not.toHaveClass(/active/);
+    } else {
+        await expect(page.locator(`${scope} select.lang-more`)).toHaveValue(lang);
+        await expect(page.locator(`${scope} select.lang-more`)).toHaveClass(/active/);
+    }
+}
+
+for (const lang of ALL) {
     test(`${lang}: seleccio, recarrega i navegacio des de Commons`, async ({ page }) => {
         await page.goto('/inicio/?lang=va');
-        await page.locator(`[data-lang="${lang}"]`).click();
-        await expect(page.locator(`[data-lang="${lang}"]`)).toHaveClass(/active/);
+        await chooseLang(page, lang);
+        await expect(page.locator('html')).toHaveAttribute('lang', lang);
         await page.reload();
-        await expect(page.locator(`[data-lang="${lang}"]`)).toHaveClass(/active/);
+        await expectActiveLang(page, lang);
         await page.goto('/create/quiz-creator/');
         await expect(page.locator('#lang-select')).toHaveValue(lang);
-        expect(await page.locator('#lang-select option').evaluateAll(options => options.map(option => option.value))).toEqual(['ca', 'va', 'es', 'en', 'fr']);
-        const playLocal = { ca: 'Jugar sense desar', va: 'Jugar sense guardar', es: 'Jugar sin guardar', en: 'Play without saving', fr: 'Jouer sans enregistrer' };
+        expect(await page.locator('#lang-select option').evaluateAll(options => options.map(option => option.value))).toEqual(ALL);
+        // Los idiomas sin diccionario propio en el creador caen en inglés.
+        const playLocal = { ca: 'Jugar sense desar', va: 'Jugar sense guardar', es: 'Jugar sin guardar', en: 'Play without saving', fr: 'Jouer sans enregistrer', de: 'Play without saving', it: 'Play without saving', pt: 'Play without saving', bg: 'Play without saving' };
         await expect(page.locator('[data-i18n="btnPlayLocal"]')).toHaveText(playLocal[lang]);
     });
 
@@ -42,9 +63,9 @@ for (const lang of ['ca', 'va', 'es', 'en', 'fr']) {
     });
 }
 
-const LANG_CODES = ['ca', 'va', 'es', 'en', 'fr'];
-const LANG_NAMES = ['Català', 'Valencià', 'Español', 'English', 'Français'];
-const LANG_SHORT = ['CA', 'VA', 'ES', 'EN', 'FR'];
+const LANG_CODES = ALL;
+const LANG_NAMES = ['Català', 'Valencià', 'Español', 'English', 'Français', 'Deutsch', 'Italiano', 'Português', 'Български'];
+const LANG_SHORT = ['CA', 'VA', 'ES', 'EN', 'FR', 'DE', 'IT', 'PT', 'BG'];
 
 for (const [route, selector, labels] of [
     ['/create/', '#lang-select', LANG_NAMES],
@@ -70,8 +91,10 @@ for (const [route, id] of [['/', 'promo-lang'], ['/inicio/', 'lang-switcher'], [
         for (const lang of LANG_CODES) {
             await page.goto(`${route}?lang=${lang}`);
             const buttons = page.locator(`#${id} button[data-lang]`);
-            expect(await buttons.evaluateAll(els => els.map(el => el.textContent.trim()))).toEqual(LANG_SHORT);
-            await expect(page.locator(`#${id} [data-lang="${lang}"]`)).toHaveClass(/active/);
+            expect(await buttons.evaluateAll(els => els.map(el => el.textContent.trim()))).toEqual(['CA', 'VA', 'ES', 'EN']);
+            // El resto de idiomas van en un desplegable a la derecha de los botones.
+            expect(await page.locator(`#${id} select.lang-more option`).evaluateAll(o => o.map(x => x.value))).toEqual(['', ...MORE]);
+            await expectActiveLang(page, lang, `#${id}`);
         }
     });
 }

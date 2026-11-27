@@ -433,7 +433,7 @@ var i18n = {
 };
 
 function t(key){
-    var chain = ui.lang === 'va' ? ['va', 'ca', 'es'] : [ui.lang, 'es'];
+    var chain = ui.lang === 'va' ? ['va', 'ca', 'es'] : [ui.lang, 'en', 'es'];
     for(var i = 0; i < chain.length; i++){
         var dict = i18n[chain[i]];
         if(dict && dict[key]) return dict[key];
@@ -963,7 +963,7 @@ Vue.createApp({
         },
         removeCard: function(index){
             var l = this.ui.lang;
-            var msg = l === 'en' ? 'Delete this question?' : l === 'fr' ? 'Supprimer cette question ?' : (l === 'va' ? 'Eliminar esta pregunta?' : (l === 'ca' ? 'Eliminar aquesta pregunta?' : '¿Eliminar esta pregunta?'));
+            var msg = l === 'en' ? 'Delete this question?' : { fr: 'Supprimer cette question ?', de: 'Diese Frage löschen?', it: 'Eliminare questa domanda?', pt: 'Eliminar esta pergunta?', bg: 'Да се изтрие ли този въпрос?' }[l] || (l === 'va' ? 'Eliminar esta pregunta?' : (l === 'ca' ? 'Eliminar aquesta pregunta?' : '¿Eliminar esta pregunta?'));
             if(window.confirm(msg)){
                 this.cards.splice(index, 1);
             }

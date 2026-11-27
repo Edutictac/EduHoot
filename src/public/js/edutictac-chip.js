@@ -7,7 +7,7 @@
 (function () {
   'use strict';
 
-  var LANGS = ['ca', 'va', 'es', 'en', 'fr'];
+  var LANGS = ['ca', 'va', 'es', 'en', 'fr', 'de', 'it', 'pt', 'bg'];
   var LANG_KEYS = ['lang', 'lang-player', 'lang-host', 'edutictac-portal-lang', 'edutictac-lang'];
   var ACCOUNT_TIMEOUT_MS = 5000;
 

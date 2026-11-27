@@ -7,7 +7,11 @@ var CATALOG_PAGER_I18N = {
     en: { prev: 'Previous', next: 'Next', info: 'Page {page} of {total}', size: 'Per page' },
     ca: { prev: 'Anterior', next: 'Següent', info: 'Pàgina {page} de {total}', size: 'Per pàgina' },
     va: { prev: 'Anterior', next: 'Següent', info: 'Pàgina {page} de {total}', size: 'Per pàgina' },
-    fr: { prev: 'Précédent', next: 'Suivant', info: 'Page {page} sur {total}', size: 'Par page' }
+    fr: { prev: 'Précédent', next: 'Suivant', info: 'Page {page} sur {total}', size: 'Par page' },
+    de: { prev: 'Zurück', next: 'Weiter', info: 'Seite {page} von {total}', size: 'Pro Seite' },
+    it: { prev: 'Precedente', next: 'Successivo', info: 'Pagina {page} di {total}', size: 'Per pagina' },
+    pt: { prev: 'Anterior', next: 'Seguinte', info: 'Página {page} de {total}', size: 'Por página' },
+    bg: { prev: 'Назад', next: 'Напред', info: 'Страница {page} от {total}', size: 'На страница' }
 };
 
 function catalogPagerT(key, vars){
