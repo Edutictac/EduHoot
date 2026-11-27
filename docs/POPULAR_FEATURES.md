@@ -699,12 +699,15 @@ la numeració 1-32 de dalt.
   interfície (amfitrió, jugador, creació de quiz) després d'un estudi
   dedicat, no lligada a cap funcionalitat concreta de la llista
   anterior.
-- **W3 — Internacionalització a més idiomes.** Ja hi ha
-  **10 idiomes** (català, valencià, castellà, anglés, francés, alemany,
-  italià, portugués, búlgar i àrab del Marroc, este últim de dreta a
-  esquerra). Els sis últims només estan traduïts a la portada, l'alumnat
-  i Solo; la resta cau en anglés. Esta proposta és completar-los a les
-  pantalles del professorat i afegir-ne més (holandés i altres a decidir).
+- ✅ **W3 — Internacionalització a més idiomes.** Implementada (2026-11-27):
+  hi ha **10 idiomes** (català, valencià, castellà, anglés, francés,
+  alemany, italià, portugués, búlgar i àrab del Marroc, este últim de dreta
+  a esquerra), amb un selector de botons CA VA ES EN i un desplegable amb la
+  resta. Vore «Idiomes i internacionalització» a `ARCHITECTURE.md`. Els sis
+  idiomes nous estan traduïts a la portada, l'alumnat i Solo; a les
+  pantalles del professorat (amfitrió, biblioteca, creador, multijugador i
+  partides) cauen en anglés mentre no es tradueixen (millora menor, sense
+  bloquejar la proposta).
 - **W4 — Paquet SCORM per al mode Solo, amb pas automàtic de la nota a
   Moodle/AULES.** El professorat puja un paquet SCORM al seu curs
   (sense dependre d'LTI, que AULES no té habilitat), i la nota final
