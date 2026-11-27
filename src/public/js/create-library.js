@@ -69,7 +69,7 @@ var QUIZ_DATE_MIN_MS = Date.UTC(2000, 0, 1);
 function formatQuizDate(value){
     var ms = Date.parse(value);
     if(!(ms > QUIZ_DATE_MIN_MS)) return '';
-    var locale = lang === 'en' ? 'en-GB' : (lang === 'ca' || lang === 'va' ? 'ca-ES' : 'es-ES');
+    var locale = lang === 'en' ? 'en-GB' : lang === 'fr' ? 'fr-FR' : (lang === 'ca' || lang === 'va' ? 'ca-ES' : 'es-ES');
     return new Date(ms).toLocaleString(locale, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
@@ -673,7 +673,7 @@ var libraryApp = {
             var visibilityLabel = quiz.visibility === 'private' ? t('visibilityPrivate') : (quiz.visibility === 'unlisted' ? t('visibilityUnlisted') : t('visibilityPublic'));
             var text = (quiz.ownerNickname ? quiz.ownerNickname : t('creatorUnknown')) + ' · ' + visibilityLabel;
             if(quiz.sourceQuizId){
-                var basedOnLabel = (lang === 'en' ? 'Based on ' : (lang === 'ca' || lang === 'va' ? 'Basat en ' : 'Basado en '));
+                var basedOnLabel = (lang === 'en' ? 'Based on ' : lang === 'fr' ? 'Basé sur ' : (lang === 'ca' || lang === 'va' ? 'Basat en ' : 'Basado en '));
                 var fromName = (quiz.sourceQuizName || '').trim();
                 var sourceText = fromName ? ('"' + fromName + '"') : ('ID ' + quiz.sourceQuizId);
                 if(fromName && quiz.sourceQuizId){

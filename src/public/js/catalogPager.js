@@ -6,7 +6,8 @@ var CATALOG_PAGER_I18N = {
     es: { prev: 'Anterior', next: 'Siguiente', info: 'Página {page} de {total}', size: 'Por página' },
     en: { prev: 'Previous', next: 'Next', info: 'Page {page} of {total}', size: 'Per page' },
     ca: { prev: 'Anterior', next: 'Següent', info: 'Pàgina {page} de {total}', size: 'Per pàgina' },
-    va: { prev: 'Anterior', next: 'Següent', info: 'Pàgina {page} de {total}', size: 'Per pàgina' }
+    va: { prev: 'Anterior', next: 'Següent', info: 'Pàgina {page} de {total}', size: 'Per pàgina' },
+    fr: { prev: 'Précédent', next: 'Suivant', info: 'Page {page} sur {total}', size: 'Par page' }
 };
 
 function catalogPagerT(key, vars){

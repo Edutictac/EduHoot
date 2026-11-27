@@ -6,7 +6,8 @@
         { code: 'ca', name: 'Català', short: 'CA' },
         { code: 'va', name: 'Valencià', short: 'VA' },
         { code: 'es', name: 'Español', short: 'ES' },
-        { code: 'en', name: 'English', short: 'EN' }
+        { code: 'en', name: 'English', short: 'EN' },
+        { code: 'fr', name: 'Français', short: 'FR' }
     ];
     var CODES = LANGUAGES.map(function(l){ return l.code; });
     // Totes les claus s'escriuen sempre juntes; l'ordre només decidix

@@ -68,6 +68,7 @@
         if(l.indexOf('ca') === 0 || l.indexOf('va') === 0) return 'ca-ES';
         if(l.indexOf('es') === 0) return 'es-ES';
         if(l.indexOf('en') === 0) return 'en-US';
+        if(l.indexOf('fr') === 0) return 'fr-FR';
         return 'es-ES';
     }
 

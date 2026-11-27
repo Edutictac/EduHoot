@@ -159,6 +159,16 @@ var hostLobbyMusicI18n = {
         bgMusicVolume: 'Volume',
         bgMusicNone: 'No music',
     },
+    fr: {
+        bgMusicTitle: 'Musique de fond',
+        bgMusicChoose: 'Choisir un morceau',
+        bgMusicPlay: 'Lire la musique',
+        bgMusicPause: 'Mettre la musique en pause',
+        bgMusicPrev: 'Préc.',
+        bgMusicNext: 'Suiv.',
+        bgMusicVolume: 'Volume',
+        bgMusicNone: 'Pas de musique'
+    },
     ca: {
         bgMusicTitle: 'Música de fons',
         bgMusicChoose: 'Tria un tema',

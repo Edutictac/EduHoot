@@ -9,7 +9,7 @@ test.beforeEach(async ({ page }) => {
     await page.route('**/api/**', route => route.fulfill({ json: { tags: [], quizzes: [], enabled: false } }));
 });
 
-for (const lang of ['ca', 'va', 'es', 'en']) {
+for (const lang of ['ca', 'va', 'es', 'en', 'fr']) {
     test(`${lang}: seleccio, recarrega i navegacio des de Commons`, async ({ page }) => {
         await page.goto('/?lang=va');
         await page.locator(`[data-lang="${lang}"]`).click();
@@ -18,8 +18,8 @@ for (const lang of ['ca', 'va', 'es', 'en']) {
         await expect(page.locator(`[data-lang="${lang}"]`)).toHaveClass(/active/);
         await page.goto('/create/quiz-creator/');
         await expect(page.locator('#lang-select')).toHaveValue(lang);
-        expect(await page.locator('#lang-select option').evaluateAll(options => options.map(option => option.value))).toEqual(['ca', 'va', 'es', 'en']);
-        const playLocal = { ca: 'Jugar sense desar', va: 'Jugar sense guardar', es: 'Jugar sin guardar', en: 'Play without saving' };
+        expect(await page.locator('#lang-select option').evaluateAll(options => options.map(option => option.value))).toEqual(['ca', 'va', 'es', 'en', 'fr']);
+        const playLocal = { ca: 'Jugar sense desar', va: 'Jugar sense guardar', es: 'Jugar sin guardar', en: 'Play without saving', fr: 'Jouer sans enregistrer' };
         await expect(page.locator('[data-i18n="btnPlayLocal"]')).toHaveText(playLocal[lang]);
     });
 
@@ -42,9 +42,9 @@ for (const lang of ['ca', 'va', 'es', 'en']) {
     });
 }
 
-const LANG_CODES = ['ca', 'va', 'es', 'en'];
-const LANG_NAMES = ['Català', 'Valencià', 'Español', 'English'];
-const LANG_SHORT = ['CA', 'VA', 'ES', 'EN'];
+const LANG_CODES = ['ca', 'va', 'es', 'en', 'fr'];
+const LANG_NAMES = ['Català', 'Valencià', 'Español', 'English', 'Français'];
+const LANG_SHORT = ['CA', 'VA', 'ES', 'EN', 'FR'];
 
 for (const [route, selector, labels] of [
     ['/create/', '#lang-select', LANG_NAMES],

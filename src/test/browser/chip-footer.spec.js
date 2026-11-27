@@ -60,7 +60,7 @@ test.describe('xip de compte', () => {
         await expect(page.locator('.top-actions .lang-switch')).toBeHidden();
         await expect(page.locator('#lang-select')).toHaveValue('es');
 
-        expect(await page.evaluate(() => window.edutictacLanguage.languages)).toEqual(['ca', 'va', 'es', 'en']);
+        expect(await page.evaluate(() => window.edutictacLanguage.languages)).toEqual(['ca', 'va', 'es', 'en', 'fr']);
         expect(await page.evaluate(() => window.edutictacLanguage.get())).toBe('es');
 
         await page.evaluate(() => window.edutictacLanguage.set('va'));

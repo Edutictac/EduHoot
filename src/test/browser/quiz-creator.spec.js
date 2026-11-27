@@ -378,10 +378,11 @@ const REALTIME_ERROR = {
     es: 'No se pudo conectar con el servidor en tiempo real. Recarga la página e inténtalo de nuevo.',
     en: 'Could not connect to the real-time server. Reload the page and try again.',
     ca: 'No s\'ha pogut connectar amb el servidor en temps real. Recarrega la pàgina i torna-ho a provar.',
-    va: 'No s\'ha pogut connectar amb el servidor en temps real. Recarrega la pàgina i torna-ho a intentar.'
+    va: 'No s\'ha pogut connectar amb el servidor en temps real. Recarrega la pàgina i torna-ho a intentar.',
+    fr: 'Impossible de se connecter au serveur en temps réel. Recharge la page et réessaie.'
 };
 
-for (const lang of ['es', 'en', 'ca', 'va']) {
+for (const lang of ['es', 'en', 'ca', 'va', 'fr']) {
     test(`sin conexión en tiempo real, el aviso de «Guardar» sale traducido (${lang})`, async ({ page }) => {
         await mockBackend(page, { user: { nickname: 'profe' } });
         // Sin socket.io no hay conexión en tiempo real.

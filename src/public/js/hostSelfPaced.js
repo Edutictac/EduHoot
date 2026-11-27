@@ -13,6 +13,22 @@ var i18n = {
     en: { endGame: 'End game', endConfirm: 'Confirm: end it', downloadReport: 'Download report (CSV)', downloadReportError: 'Could not download the session report.',
         backToLibrary: 'Library', noStudents: 'Waiting for students…', finished: 'Finished', handRaised: 'Hand raised', kickBtn: 'Kick', kickConfirm: 'Sure?',
         topPlayers: 'Top players', hostScores: 'Show scores and ranking on the host screen', summary: '{n} students · {f} finished', summaryEnded: 'Game over · {n} students' },
+    fr: {
+        endGame: 'Terminer la partie',
+        endConfirm: 'Confirmer : terminer',
+        downloadReport: 'Télécharger le rapport (CSV)',
+        downloadReportError: 'Impossible de télécharger le rapport de la session.',
+        backToLibrary: 'Bibliothèque',
+        noStudents: 'En attente des élèves…',
+        finished: 'Terminé',
+        handRaised: 'Main levée',
+        kickBtn: 'Exclure',
+        kickConfirm: 'Sûr ?',
+        topPlayers: 'Meilleurs joueurs',
+        hostScores: 'Afficher les scores et le classement sur l\'écran de l\'animateur',
+        summary: '{n} élèves · {f} ont terminé',
+        summaryEnded: 'Partie terminée · {n} élèves'
+    },
     ca: { endGame: 'Acabar partida', endConfirm: 'Confirma: acabar', downloadReport: 'Descarregar informe (CSV)', downloadReportError: 'No s\'ha pogut descarregar l\'informe de la sessió.',
         backToLibrary: 'Biblioteca', noStudents: 'Esperant alumnat…', finished: 'Acabat', handRaised: 'Mà alçada', kickBtn: 'Expulsar', kickConfirm: 'Segur?',
         topPlayers: 'Millors jugadors', hostScores: 'Mostra puntuacions i rànquing a l\'anfitrió', summary: '{n} alumnes · {f} han acabat', summaryEnded: 'Partida acabada · {n} alumnes' }
@@ -116,6 +132,7 @@ window.addEventListener('pagehide', stopSharedMusic);
 var musicI18n = {
     es: { title: 'Música de fondo', choose: 'Elige un tema', play: 'Reproducir música', pause: 'Pausar música', prev: 'Anterior', next: 'Siguiente', volume: 'Volumen', none: 'Sin música' },
     en: { title: 'Background music', choose: 'Choose a track', play: 'Play music', pause: 'Pause music', prev: 'Prev', next: 'Next', volume: 'Volume', none: 'No music' },
+    fr: { title: 'Musique de fond', choose: 'Choisir un morceau', play: 'Lire la musique', pause: 'Mettre la musique en pause', prev: 'Préc.', next: 'Suiv.', volume: 'Volume', none: 'Pas de musique' },
     ca: { title: 'Música de fons', choose: 'Tria un tema', play: 'Reprodueix música', pause: 'Atura la música', prev: 'Anterior', next: 'Següent', volume: 'Volum', none: 'Sense música' }
 };
 musicI18n.va = musicI18n.ca;

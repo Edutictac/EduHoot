@@ -19,6 +19,7 @@ fitxers corresponents, i els originals es van eliminar.
 ## [Sense publicar]
 
 ### Afegit
+- **Francés (`fr`) a tota la interfície**: alumnat, anfitrió, solo, multijugador, biblioteca, creador, deures, partides i promo; també la veu (`fr-FR`), les dates, el paginador, el xip i l'opció «Francés» del generador d'IA. Les traduccions estan sense revisar per una persona nativa.
 - **Vertader/Fals en l'idioma de qui juga**: les dues opcions es mostren en l'idioma de la interfície a l'alumnat, l'anfitrió, l'autoritme, solo i multijugador (`js/tfLabels.js`), encara que el quiz tinga «true/false» o el text buit. Un text propi (p. ex. «Cierto») es respecta.
 - **Pàgina de promoció `/promo/`**: portada de presentació amb el mateix aspecte que la portada i la biblioteca (fons blau, Raleway, targetes de vidre, botons grocs), targetes que reaccionen al ratolí i al clic, emoticones de la biblioteca, xip d'Authentik, peu comú d'EduTicTac amb la versió (i l'etiqueta a stage) i selector d'idioma (ca, va, es, en, fr). El testimoni és d'exemple i s'ha de substituir.
 - **Enllaç d'entrada a la sala de l'anfitrió**: sota el PIN i el QR, l'enllaç complet amb el PIN i un botó per copiar-lo (icona 🔗; durant 2 s canvia a ✅). El text es pot seleccionar per copiar-lo a mà.
