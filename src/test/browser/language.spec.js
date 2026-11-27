@@ -41,8 +41,7 @@ for (const lang of ALL) {
         await page.goto('/create/quiz-creator/');
         await expect(page.locator('#lang-select')).toHaveValue(lang);
         expect(await page.locator('#lang-select option').evaluateAll(options => options.map(option => option.value))).toEqual(ALL);
-        // Los idiomas sin diccionario propio en el creador caen en inglés.
-        const playLocal = { ca: 'Jugar sense desar', va: 'Jugar sense guardar', es: 'Jugar sin guardar', en: 'Play without saving', fr: 'Jouer sans enregistrer', de: 'Play without saving', it: 'Play without saving', pt: 'Play without saving', bg: 'Play without saving', ar: 'Play without saving' };
+        const playLocal = { ca: 'Jugar sense desar', va: 'Jugar sense guardar', es: 'Jugar sin guardar', en: 'Play without saving', fr: 'Jouer sans enregistrer', de: 'Ohne Speichern spielen', it: 'Gioca senza salvare', pt: 'Jogar sem guardar', bg: 'Играй без запазване', ar: 'العب دون حفظ' };
         await expect(page.locator('[data-i18n="btnPlayLocal"]')).toHaveText(playLocal[lang]);
     });
 

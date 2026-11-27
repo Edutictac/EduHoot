@@ -10,7 +10,7 @@ Imatge Docker i publicació en GitHub: [documentació](docs/DOCKER.md).
 **EduHoot** és una aplicació tipus Kahoot per a l’aula: pots crear, importar i llançar qüestionaris amb imatges, vídeos i temps configurables. Admet CSV (inclosos els generats per IA) i importació de Kahoot públic. Està inspirada i reutilitza idees de [llixhoot](https://github.com/llixhoot/llixhoot), [llixhoot en lliurex](https://github.com/lliurex/llixhoot) i [qplay](https://github.com/jjdeharo/qplay).
 
 - Visibilitat: **privat**, **per enllaç** o **públic**, amb control de permisos per a clonar.
-- Idiomes: valencià, català, castellà, anglés, francés, alemany, italià, portugués, búlgar i àrab del Marroc (de dreta a esquerra); autodetecta el navegador i es pot canviar. Els idiomes nous es tradueixen primer a la portada, l'alumnat i Solo; la resta de pantalles cauen en anglés.
+- Idiomes: valencià, català, castellà, anglés, francés, alemany, italià, portugués, búlgar i àrab del Marroc (de dreta a esquerra); autodetecta el navegador i es pot canviar.
 - Host: botó de “Saltar pregunta”, indicador de progrés i reentrada ràpida quan algun jugador perd la connexió.
 - Importació Kahoot: enganxa la URL pública i juga des d’EduHoot.
 
@@ -79,7 +79,7 @@ Per als canvis recents, consulta el [CHANGELOG](CHANGELOG.md).
 **EduHoot** es una aplicación tipo Kahoot para el aula: crea, importa y lanza quizzes con imágenes, vídeos y tiempos configurables. Admite CSV (también generados por IA) e importación de Kahoot público. Se inspira y reutiliza ideas de [llixhoot](https://github.com/llixhoot/llixhoot), [llixhoot en lliurex](https://github.com/lliurex/llixhoot) y [qplay](https://github.com/jjdeharo/qplay).
 
 - Visibilidad: **privado**, **por enlace** o **público**, con control de permisos para clonar.
-- Idiomas: valenciano, catalán, castellano, inglés, francés, alemán, italiano, portugués, búlgaro y árabe de Marruecos (de derecha a izquierda); autodetecta el navegador y se puede cambiar. Los idiomas nuevos se traducen primero en la portada, el alumnado y Solo; el resto de pantallas caen en inglés.
+- Idiomas: valenciano, catalán, castellano, inglés, francés, alemán, italiano, portugués, búlgaro y árabe de Marruecos (de derecha a izquierda); autodetecta el navegador y se puede cambiar.
 - Host: botón de “Saltar pregunta”, indicador de progreso y reincorporación rápida cuando los jugadores pierden la conexión.
 - Importación Kahoot: pega la URL pública y juega desde EduHoot.
 
@@ -172,7 +172,7 @@ Para los cambios recientes, consulta el [CHANGELOG](CHANGELOG.md).
 **EduHoot** is a Kahoot-like app for classrooms: create, import, and launch quizzes with images, videos, and configurable timers. Supports CSV (including AI-generated) and public Kahoot import. It’s inspired by and reuses ideas from [llixhoot](https://github.com/llixhoot/llixhoot), [llixhoot on lliurex](https://github.com/lliurex/llixhoot), and [qplay](https://github.com/jjdeharo/qplay).
 
 - Visibility: **private**, **by link**, or **public**, with clone-permission control.
-- Languages: Valencian, Catalan, Spanish, English, French, German, Italian, Portuguese, Bulgarian and Moroccan Arabic (right-to-left); auto-detects the browser and is switchable. The newer languages are translated first on the home page, the student screens and Solo; the other screens fall back to English.
+- Languages: Valencian, Catalan, Spanish, English, French, German, Italian, Portuguese, Bulgarian and Moroccan Arabic (right-to-left); auto-detects the browser and is switchable.
 - Host: “Skip question” button, progress counter, and quick player rejoin when connections drop.
 - Kahoot import: paste a public URL and play it from EduHoot.
 

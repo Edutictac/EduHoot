@@ -401,12 +401,13 @@ test('respuesta múltiple (acierto y parcial), verdadero/falso y pregunta con im
     await continueAfterRound(page);
 
     // Q2, verdadero/falso: solo 2 botones y sin "Enviar respuestas".
-    await expect(answerButtons(page, 0)).toHaveText(['Vertader', 'Fals']);
+    // El quiz guarda «Vertader/Fals», pero se muestra en el idioma de la interfaz (castellano).
+    await expect(answerButtons(page, 0)).toHaveText(['Verdadero', 'Falso']);
     await expect(submit0).toBeHidden();
     await answerButtons(page, 0).filter({ hasText: 'Vertader' }).click();
-    await answerButtons(page, 1).filter({ hasText: 'Fals' }).click();
+    await answerButtons(page, 1).filter({ hasText: 'Falso' }).click();
     await expect(panel(page, 1).locator('[data-feedback]')).toHaveText('Incorrecto');
-    await expect(answerButtons(page, 1).filter({ hasText: 'Fals' })).toHaveClass(/\bwrong\b/);
+    await expect(answerButtons(page, 1).filter({ hasText: 'Falso' })).toHaveClass(/\bwrong\b/);
     await continueAfterRound(page);
 
     // Q3, con imagen: se pinta en cada panel y en la tarjeta compartida.

@@ -982,10 +982,10 @@ estan en castellà).
   `i18n-solo.js`, `i18n-create.js` (biblioteca), `quizCreator.js`,
   `multiplayer.js`, `hostGame.js`, `hostSelfPaced.js`, `homeworkManage.js`,
   `partidasHistory.js`, `catalogPager.js` i `promo.js` (portada). `va` busca
-  primer `va`, després `ca`. Un idioma sense diccionari complet cau en
-  **anglés** (`[lang, 'en', 'es']`); l'alumnat, la promo i Solo estan
-  traduïts als 10 idiomes i la resta de pantalles, de moment, en `fr`, `ca`,
-  `va`, `es` i `en`.
+  primer `va`, després `ca`. Tots els diccionaris porten els 10 idiomes
+  (promo, alumnat, Solo, lobby i pantalla de l'amfitrió, multijugador,
+  biblioteca, editor, deures i Mis partidas). Un idioma o una clau que falte
+  cau en **anglés** (`[lang, 'en', 'es']`).
 - **Vertader/Fals** (`tfLabels.js`, `window.EduhootTf`): les dos opcions es
   mostren en l'idioma de qui juga (alumnat, anfitrió, autoritme, solo i
   multijugador) encara que el quiz tinga «true/false» o el text buit; un text

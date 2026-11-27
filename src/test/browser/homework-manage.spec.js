@@ -254,7 +254,7 @@ test('el logo de EduHoot va junto al título «Mis deberes»', async ({ page }) 
 });
 
 // Cabecera y ancho: el recuadro sigue la misma fórmula que Solo; «Biblioteca» y el título van al borde izquierdo
-// del recuadro; el chip de cuenta y «Mis deberes», al derecho.
+// del recuadro; el chip de cuenta y el selector de idioma, al derecho (con «Mis partidas» a su izquierda).
 for (const width of [360, 700, 1000, 1400, 1920]) {
     test(`cabecera alineada con el recuadro (${width} px)`, async ({ page }) => {
         await setup(page, {
@@ -270,7 +270,7 @@ for (const width of [360, 700, 1000, 1400, 1920]) {
         await page.goto('/create/homework/?quiz=7&lang=es');
         await expect(page.locator('#hwGamesLink')).toBeVisible();
         await expect(page.locator('edutictac-account nav')).toBeVisible();
-        // Con el chip de cuenta pintado, el selector de idioma propio se oculta (lo lleva el chip).
+        // Con el chip de cuenta pintado, el selector de idioma propio se mantiene (el chip no ofrece todos los idiomas).
         await page.evaluate(() => document.documentElement.classList.add('has-account-chip'));
         const box = async (sel) => page.locator(sel).first().boundingBox();
         const shell = await box('.hw-shell');
@@ -282,7 +282,9 @@ for (const width of [360, 700, 1000, 1400, 1920]) {
         const mine = await box('#hwGamesLink');
         const chip = await box('edutictac-account');
         expect(Math.abs(title.x - shell.x), 'título al borde izquierdo').toBeLessThanOrEqual(2);
-        expect(Math.abs(mine.x + mine.width - (shell.x + shell.width)), '«Mis partidas» al borde derecho').toBeLessThanOrEqual(2);
+        const lang = await box('.lang-switch');
+        expect(Math.abs(lang.x + lang.width - (shell.x + shell.width)), 'selector de idioma al borde derecho').toBeLessThanOrEqual(2);
+        expect(mine.x + mine.width, '«Mis partidas» a la izquierda del selector de idioma').toBeLessThanOrEqual(lang.x + 1);
         expect(Math.abs(chip.x + chip.width - (shell.x + shell.width)), 'chip al borde derecho').toBeLessThanOrEqual(2);
     });
 }
