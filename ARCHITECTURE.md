@@ -56,7 +56,7 @@ funcionament del projecte.
   `src/public/`, sense bundler (webpack/vite). Cada pantalla (`create`,
   `host`, `player`, `solo`, `multiplayer`) carrega els seus propis
   `<script>` solts. Totes les pantalles amb JS propi usen Vue 3, sense
-  build step; només la portada (`/`), que no en té, queda fora (vore
+  build step; només la portada (`/`, la promo) i l'inici ràpid (`/inicio/`), que no en tenen, queden fora (vore
   "Lobby de l'amfitrió amb Vue" i les seccions de Subfase B).
 - **Dependències de producció mínimes** (`src/package.json`): `express`,
   `socket.io`, `mongodb` (driver natiu, sense ORM/Mongoose), `helmet`
