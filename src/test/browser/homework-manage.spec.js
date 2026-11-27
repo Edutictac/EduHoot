@@ -284,7 +284,9 @@ for (const width of [360, 700, 1000, 1400, 1920]) {
         expect(Math.abs(title.x - shell.x), 'título al borde izquierdo').toBeLessThanOrEqual(2);
         const lang = await box('.lang-switch');
         expect(Math.abs(lang.x + lang.width - (shell.x + shell.width)), 'selector de idioma al borde derecho').toBeLessThanOrEqual(2);
-        expect(mine.x + mine.width, '«Mis partidas» a la izquierda del selector de idioma').toBeLessThanOrEqual(lang.x + 1);
+        // En pantallas estrechas el selector (con el desplegable de idiomas) baja a otra fila.
+        const sameRow = lang.y < mine.y + mine.height - 1;
+        if (sameRow) expect(mine.x + mine.width, '«Mis partidas» a la izquierda del selector de idioma').toBeLessThanOrEqual(lang.x + 1);
         expect(Math.abs(chip.x + chip.width - (shell.x + shell.width)), 'chip al borde derecho').toBeLessThanOrEqual(2);
     });
 }
