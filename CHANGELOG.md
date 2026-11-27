@@ -19,6 +19,8 @@ fitxers corresponents, i els originals es van eliminar.
 ## [Sense publicar]
 
 ### Afegit
+- **Pàgina inicial a triar**: la promo és la portada per defecte. Si en ella es tria «Inici ràpid», es guarda al navegador i `/` entra directament a `/inicio/` (conservant `?lang=`). El caixet d'EduHoot a l'inici ràpid fa el contrari i torna la promo com a pàgina inicial (`js/home-pref.js`, clau `eduhoot-home`).
+- **Inici ràpid**: el selector d'idioma va dins del requadre dels botons, a dalt a la dreta.
 - **Selector d'idioma propi sempre visible**: el xip de Commons només ofereix ca, va, es i en, així que ja no amaga el selector de cada pantalla (si és fix dalt a la dreta, baixa per sota del xip). A la promo, `#promo-lang`.
 - **La portada (`/`) és ara la promo**, amb els enllaços de l'antiga portada (jugar a l'aula, multijugador, jugar sol, accés professorat i instal·lar l'app), testimonis en carrusel (3, marcats com a exemple) i l'opció **Inici ràpid**. L'antiga portada viu a `/inicio/` amb l'aspecte de la promo (targeta de vidre, botons amb emoticones i els mateixos efectes). Tornar d'Authentik porta a la promo.
 - **Francés (`fr`) a tota la interfície**: alumnat, anfitrió, solo, multijugador, biblioteca, creador, deures, partides i promo; també la veu (`fr-FR`), les dates, el paginador, el xip i l'opció «Francés» del generador d'IA. Les traduccions estan sense revisar per una persona nativa.

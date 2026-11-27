@@ -87,3 +87,45 @@ test('los bloques de modos de juego llevan el emoticono grande y centrado; los c
     await expect(page.locator('.chips span', { hasText: 'Match' })).toBeVisible();
     await expect(page.locator('.chips span', { hasText: 'Order' })).toBeVisible();
 });
+
+test.describe('página inicial elegida (promo o inicio rápido)', () => {
+    test('por defecto, / es la promo', async ({ page }) => {
+        await page.goto('/?lang=es');
+        await expect(page).toHaveURL(/\/\?lang=es$/);
+        await expect(page.locator('h1')).toContainText('aula');
+    });
+
+    test('al elegir Inicio rápido, / entra directo a /inicio/ (y conserva el idioma)', async ({ page }) => {
+        await page.goto('/?lang=es');
+        await page.locator('.hero-actions a[href="/inicio/"]').click();
+        await expect(page).toHaveURL(/\/inicio\/$/);
+        expect(await page.evaluate(() => localStorage.getItem('eduhoot-home'))).toBe('quick');
+        await page.goto('/?lang=fr');
+        await expect(page).toHaveURL(/\/inicio\/\?lang=fr$/);
+        await expect(page.locator('.landing-shell')).toBeVisible();
+    });
+
+    test('el icono de EduHoot en /inicio/ devuelve la promo como página inicial', async ({ page }) => {
+        await page.addInitScript(() => { try { if (!localStorage.getItem('eduhoot-home')) localStorage.setItem('eduhoot-home', 'quick'); } catch (e) {} });
+        await page.goto('/?lang=es');
+        await expect(page).toHaveURL(/\/inicio\/\?lang=es$/);
+        await page.locator('.logo-link').click();
+        await expect(page).toHaveURL(/\/$/);
+        await expect(page.locator('h1')).toContainText('aula');
+        expect(await page.evaluate(() => localStorage.getItem('eduhoot-home'))).toBe('promo');
+        await page.goto('/');
+        await expect(page).toHaveURL(/\/$/);
+        await expect(page.locator('h1')).toContainText('aula');
+    });
+
+    test('en /inicio/ el selector de idioma va dentro del recuadro, arriba a la derecha', async ({ page }) => {
+        await page.goto('/inicio/?lang=es');
+        const shell = await page.locator('.landing-shell').boundingBox();
+        const sel = await page.locator('#lang-switcher').boundingBox();
+        expect(sel.x).toBeGreaterThanOrEqual(shell.x);
+        expect(sel.x + sel.width).toBeLessThanOrEqual(shell.x + shell.width);
+        expect(sel.y).toBeGreaterThanOrEqual(shell.y);
+        expect(sel.y + sel.height).toBeLessThan(shell.y + 80);
+        expect(shell.x + shell.width - (sel.x + sel.width)).toBeLessThan(30);
+    });
+});
