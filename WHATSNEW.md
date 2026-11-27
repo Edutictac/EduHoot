@@ -3,6 +3,10 @@
 
 ## Per al professorat
 
+- **Portada nova**: la portada és ara una pàgina de presentació amb una frase motivadora diferent en cada recàrrega, els tipus de pregunta, testimonis i totes les característiques. **«Inici ràpid»** duu a la portada de sempre i es recorda quina prefereixes com a pàgina inicial; el caixet d'EduHoot d'allí torna la presentació.
+- **Deu idiomes**: a més de valencià, català, castellà i anglés, ara també francés, alemany, italià, portugués, búlgar i àrab del Marroc (de dreta a esquerra). Es trien en un desplegable a la dreta de CA VA ES EN. La portada, l'alumnat i Solo estan complets; la resta de pantalles, de moment, en anglés.
+- **Vertader/Fals en l'idioma de qui juga**: les dos opcions es mostren sempre en l'idioma de l'alumne.
+
 - **Enllaç per entrar**: a la sala d'espera, sota el PIN, veus l'enllaç complet amb el PIN i el pots copiar amb un clic.
 - **Llista de jugadors a dalt**: a la sala d'espera, l'alumnat que es connecta apareix just sota el PIN, abans de les opcions.
 
@@ -204,6 +208,10 @@
 
 ## Para el profesorado
 
+- **Portada nueva**: la portada es ahora una página de presentación con una frase motivadora distinta en cada recarga, los tipos de pregunta, testimonios y todas las características. **«Inicio rápido»** lleva a la portada de siempre y se recuerda cuál prefieres como página inicial; el icono de EduHoot de allí devuelve la presentación.
+- **Diez idiomas**: además de valenciano, catalán, castellano e inglés, ahora también francés, alemán, italiano, portugués, búlgaro y árabe de Marruecos (de derecha a izquierda). Se eligen en un desplegable a la derecha de CA VA ES EN. La portada, el alumnado y Solo están completos; el resto de pantallas, por ahora, en inglés.
+- **Verdadero/Falso en el idioma de quien juega**: las dos opciones se muestran siempre en el idioma del alumno.
+
 - **Enlace para entrar**: en la sala de espera, bajo el PIN, ves el enlace completo con el PIN y lo puedes copiar con un clic.
 - **Lista de jugadores arriba**: en la sala de espera, el alumnado que se conecta aparece justo bajo el PIN, antes de las opciones.
 
@@ -368,6 +376,10 @@
 # What's new under development?
 
 ## For teachers
+
+- **New home page**: the home page is now a presentation page with a different motivational line on every reload, the question types, testimonials and all the features. **"Quick start"** takes you to the usual home page and remembers which one you prefer as your starting page; the EduHoot icon there brings the presentation back.
+- **Ten languages**: besides Valencian, Catalan, Spanish and English, now also French, German, Italian, Portuguese, Bulgarian and Moroccan Arabic (right-to-left). They are chosen in a drop-down to the right of CA VA ES EN. The home page, the student screens and Solo are complete; the other screens are in English for now.
+- **True/False in the player's language**: both options are always shown in the student's language.
 
 - **Join link**: in the waiting room, under the PIN, you see the full link with the PIN and can copy it with one click.
 - **Players list on top**: in the waiting room, students who connect appear just under the PIN, before the options.

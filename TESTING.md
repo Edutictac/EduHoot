@@ -214,10 +214,14 @@ regressions que cap test automàtic ni comprovació puntual cobrix:
    sentit; exportar el qüestionari a Moodle XML i comprovar que
    s'importa sense error en un Moodle/AULES de prova (si n'hi ha a
    l'abast).
-6. **Idiomes**: canviar entre els 4 idiomes disponibles (català,
-   valencià, castellà, anglés) amb el selector de la interfície, i
-   comprovar que el canvi persistix en recarregar i en navegar entre
-   `/create/`, `/host/`, `/join`, `/solo/` i `/multiplayer/`.
+6. **Idiomes**: canviar entre els 10 idiomes disponibles (català,
+   valencià, castellà i anglés als botons; francés, alemany, italià,
+   portugués, búlgar i àrab al desplegable de les dos inicials) amb el
+   selector de la interfície, comprovar que l'àrab es veu de dreta a
+   esquerra (`dir="rtl"`) i que el canvi persistix en recarregar i en navegar entre
+   `/create/`, `/host/`, `/join`, `/solo/` i `/multiplayer/`. A la portada
+   (`/`), triar «Inici ràpid» i comprovar que `/` ja entra a `/inicio/`, i
+   que el caixet d'EduHoot d'allí torna la promo com a pàgina inicial.
 7. **Sessió i accés**: tancar sessió i tornar a entrar; si hi ha Google
    o Authentik configurats en l'entorn de prova, provar també eixos
    fluxos d'inici de sessió.

@@ -75,8 +75,11 @@ Ja implementat, no cal tornar a proposar-ho:
 
 ## Buits detectats
 
-- **`lang` de pàgina**: només `index.html` el declara (`es`). Les
-  altres 10 pàgines no tenen `lang`, tot i que l'app és multiidioma.
+- **`lang` de pàgina**: només `/` i `/inicio/` el declaren al HTML (`es`);
+  la resta de pantalles el posen amb JS en carregar (`i18n-*.js`,
+  `hostGame.js`, `multiplayer.js`...). L'àrab del Marroc també posa
+  `dir="rtl"` a `<html>` (`languages.js`, `applyDir`). Convé que tots els
+  HTML el declaren de forma estàtica.
 - **Botons de resposta del jugador sense `aria-label`**: depenen només
   de color + forma visual; un lector de pantalla no té cap pista de
   quina resposta és quina. **Parcialment resolt**: quan l'amfitrió

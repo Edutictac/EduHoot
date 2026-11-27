@@ -30,6 +30,7 @@ funcionament del projecte.
 - [Exportació a Moodle XML](#exportació-a-moodle-xml)
 - [Panell d'administració (estadístiques)](#panell-dadministració-estadístiques)
 - [Logs del servidor (/admin/logs)](#logs-del-servidor-adminlogs)
+- [Idiomes i internacionalització](#idiomes-i-internacionalització)
 - [Lectura en veu alta (TTS)](#lectura-en-veu-alta-tts)
 - [Pantalla completa de la partida](#pantalla-completa-de-la-partida)
 - [Vídeos «aprén i després respon»](#vídeos-aprén-i-després-respon)
@@ -150,7 +151,8 @@ JS d'orquestració amb `<script>` clàssics (sense build step):
 
 | Pantalla | JS principal | Per a què servix |
 |---|---|---|
-| `/` (`index.html`) | *(sense JS propi; usa `i18n-player.js`, `pwa-install.js`)* | Portada: triar mode (aula / multijugador / solo), accés professorat, instal·lar com a PWA |
+| `/` (`index.html`) | `promo.js`, `home-pref.js` (+ `languages.js`, `pwa-install.js`, `app-version.js`) | Portada de presentació (promo): titular amb una frase motivadora diferent en cada recàrrega, botons (Inici ràpid, Jugar, Solo, Multijugador, Professorat), tipus de pregunta, testimonis en carrusel, característiques (9 a la vista i «Totes les característiques»), xip de compte, peu comú. Diccionari propi (10 idiomes). Si s'ha triat «Inici ràpid», redirigix a `/inicio/` |
+| `/inicio/` (`inicio/index.html`) | *(sense JS propi; usa `i18n-player.js`, `home-pref.js`, `pwa-install.js`)* | Inici ràpid: la portada de sempre (aula / multijugador / solo, accés professorat, instal·lar com a PWA) amb l'aspecte de la promo; el caixet d'EduHoot torna la promo com a pàgina inicial |
 | `/join.html` | `join.js` (ja amb Vue) | Alumnat: PIN + nom (o login EduTicTac) per a unir-se a una partida del mode "Jugar a l'aula" |
 | `/player/` | `lobby.js` (ja amb Vue) | Alumnat: sala d'espera des que s'uneix fins que el professorat inicia la partida |
 | `/player/game/` | `playerGame.js` (ja amb Vue) | Alumnat: pantalla de joc — pregunta, respostes, resultat, rànquing, reconnexió |
@@ -164,7 +166,8 @@ JS d'orquestració amb `<script>` clàssics (sense build step):
 | `/admin-logs.html` | `admin-logs.js` (ja amb Vue) | Logs del servidor: configuració, filtres, taula i detall |
 
 A banda, fitxers transversals que no pertanyen a una sola pantalla:
-`languages.js`, `i18n-host.js`/`i18n-player.js`/`i18n-solo.js`/
+`languages.js`, `tfLabels.js`, `home-pref.js`,
+`i18n-host.js`/`i18n-player.js`/`i18n-solo.js`/
 `i18n-create.js`, `env-badge.js`, `edutictac-chip.js`,
 `session-bridge.js` (pont de sessió amb el xip, per a `/create/` i els
 panells `/admin-*`),
@@ -958,6 +961,46 @@ poder importar un fitxer XML al banc de preguntes del seu propi curs.
   de reutilitzar una fila amb el mateix nom quan el token no resol —
   vore la issue de jugadors duplicats), i els errors no controlats de
   cada mòdul de sockets/rutes.
+
+## Idiomes i internacionalització
+
+La interfície està en 10 idiomes: `ca`, `va`, `es`, `en`, `fr`, `de`, `it`,
+`pt`, `bg` i `ar` (àrab del Marroc, de dreta a esquerra). L'idioma és del
+navegador: no hi ha traducció al servidor (els missatges d'error de l'API
+estan en castellà).
+
+- **`languages.js`** (`window.EduhootLang`) és el que tenen en comú totes les
+  pantalles: la llista `LANGUAGES` (amb `primary` i `rtl`), `init()` (ordre:
+  `?lang=` → `localStorage` → idioma del navegador), `persist()` (escriu totes
+  les claus d'idioma) i `applyDir()` (`dir="rtl"` per a l'àrab). Pinta els
+  desplegables `select[data-lang-options]` (els 10) i els selectors de botons
+  `[data-lang-buttons]`: **CA VA ES EN** com a botons i, a la dreta, un
+  desplegable amb les dos inicials (`FR DE IT PT BG AR`; `css/lang-more.css`).
+- **Diccionaris**: cada pantalla porta el seu, com a objecte
+  `{ es: {…}, en: {…}, ca: {…}, … }`, i la seua funció `t()`:
+  `i18n-player.js` (alumnat, `join.html`, `/inicio/`), `i18n-host.js` (lobby),
+  `i18n-solo.js`, `i18n-create.js` (biblioteca), `quizCreator.js`,
+  `multiplayer.js`, `hostGame.js`, `hostSelfPaced.js`, `homeworkManage.js`,
+  `partidasHistory.js`, `catalogPager.js` i `promo.js` (portada). `va` busca
+  primer `va`, després `ca`. Un idioma sense diccionari complet cau en
+  **anglés** (`[lang, 'en', 'es']`); l'alumnat, la promo i Solo estan
+  traduïts als 10 idiomes i la resta de pantalles, de moment, en `fr`, `ca`,
+  `va`, `es` i `en`.
+- **Vertader/Fals** (`tfLabels.js`, `window.EduhootTf`): les dos opcions es
+  mostren en l'idioma de qui juga (alumnat, anfitrió, autoritme, solo i
+  multijugador) encara que el quiz tinga «true/false» o el text buit; un text
+  propi («Cierto») es respecta.
+- **Dreta a esquerra (àrab)**: el navegador inverteix flex/grid i el text; el
+  que use `left/right` o `translateX` cal passar-lo a propietats lògiques o a
+  una regla `[dir="rtl"]` (vore el final de `css/promo.css`).
+- **Xip de Commons**: només ofereix `ca`, `va`, `es` i `en` (filtra la llista
+  amb la seua taula interna); per això el selector propi de cada pantalla ja
+  no s'amaga quan el xip es pinta (si és fix dalt a la dreta, baixa per sota).
+  A la promo, el selector és `#promo-lang`.
+- **Veu i dates**: `tts.js` (`bcp47`: `ar-MA`, `fr-FR`…) i `toLocaleString`
+  amb l'idioma actiu.
+- **Proves**: `test/browser/language.spec.js`, `chip-footer.spec.js`,
+  `quiz-creator.spec.js` i `promo.spec.js`.
 
 ## Lectura en veu alta (TTS)
 
