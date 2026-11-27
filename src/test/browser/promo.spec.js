@@ -8,7 +8,7 @@ test.beforeEach(async ({ page }) => {
 
 test('la portada (/) es la promo y reúne los enlaces de la antigua portada', async ({ page }) => {
     await page.goto('/?lang=es');
-    await expect(page.locator('h1')).toContainText('aula');
+    await expect(page.locator('h1#motto')).toHaveAttribute('data-i18n', /^motto_\d+$/);
     for (const href of ['/join.html', '/multiplayer/', '/solo/', '/create/', '/inicio/']) {
         await expect(page.locator(`a[href="${href}"]`).first()).toBeVisible();
     }
@@ -109,7 +109,7 @@ test.describe('página inicial elegida (promo o inicio rápido)', () => {
     test('por defecto, / es la promo', async ({ page }) => {
         await page.goto('/?lang=es');
         await expect(page).toHaveURL(/\/\?lang=es$/);
-        await expect(page.locator('h1')).toContainText('aula');
+        await expect(page.locator('h1#motto')).toHaveAttribute('data-i18n', /^motto_\d+$/);
     });
 
     test('al elegir Inicio rápido, / entra directo a /inicio/ (y conserva el idioma)', async ({ page }) => {
@@ -128,11 +128,11 @@ test.describe('página inicial elegida (promo o inicio rápido)', () => {
         await expect(page).toHaveURL(/\/inicio\/\?lang=es$/);
         await page.locator('.logo-link').click();
         await expect(page).toHaveURL(/\/$/);
-        await expect(page.locator('h1')).toContainText('aula');
+        await expect(page.locator('h1#motto')).toHaveAttribute('data-i18n', /^motto_\d+$/);
         expect(await page.evaluate(() => localStorage.getItem('eduhoot-home'))).toBe('promo');
         await page.goto('/');
         await expect(page).toHaveURL(/\/$/);
-        await expect(page.locator('h1')).toContainText('aula');
+        await expect(page.locator('h1#motto')).toHaveAttribute('data-i18n', /^motto_\d+$/);
     });
 
     test('en /inicio/ el selector de idioma va dentro del recuadro, arriba a la derecha', async ({ page }) => {
@@ -250,6 +250,18 @@ test.describe('frase motivadora', () => {
             // Longitud parecida: la más larga no pasa de 1,5 veces la más corta.
             expect(s.max / s.min, lang).toBeLessThanOrEqual(1.5);
         }
+    });
+
+    test('el titular grande es la frase y cambia en cada recarga (no hay otra frase bajo los botones)', async ({ page }) => {
+        await page.goto('/?lang=es');
+        await expect(page.locator('h1#motto')).toBeVisible();
+        expect(await page.locator('.hero p.motto').count()).toBe(0);
+        const size = await page.locator('h1#motto').evaluate(e => parseFloat(getComputedStyle(e).fontSize));
+        expect(size).toBeGreaterThanOrEqual(36);
+        // Va antes de la botonera, en el sitio del titular.
+        const y = async sel => (await page.locator(sel).first().boundingBox()).y;
+        expect(await y('h1#motto')).toBeLessThan(await y('.hero-actions'));
+        expect((await page.locator('h1#motto').textContent()).trim()).not.toMatch(/\.$/);
     });
 
     test('en cada recarga sale una frase distinta de la anterior', async ({ page }) => {

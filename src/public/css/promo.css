@@ -47,7 +47,7 @@ a:focus-visible,button:focus-visible,.card:focus-visible{outline:3px solid var(-
 .hero{text-align:center;padding:3.5rem 0 1.5rem}
 .hero-actions{display:flex;gap:.9rem;justify-content:center;flex-wrap:wrap}
 .eyebrow{font-weight:700;text-transform:uppercase;letter-spacing:.18em;color:var(--yellow);margin:0;font-size:.85rem}
-h1{font-size:clamp(2.6rem,8vw,5.2rem);line-height:1.04;margin:.6rem 0 1.75rem;font-weight:800;white-space:pre-line;text-wrap:balance}
+h1{font-size:clamp(2.3rem,6.2vw,4.6rem);line-height:1.08;margin:.6rem auto 1.75rem;max-width:16em;font-weight:800;text-wrap:balance}
 .cards{display:flex;justify-content:center;gap:1.25rem;margin-top:3.5rem;padding:1rem}
 
 /* Tarjetas del hero: cristal con borde blanco, como las de la biblioteca, con el color de cada tipo de respuesta */
@@ -210,5 +210,3 @@ p{margin-top:0}
 .extras #all-features-btn{ margin-top: 1.5rem; }
 .extras li{ text-align: center; }
 
-/* Frase motivadora bajo la botonera: una distinta en cada recarga. */
-.hero .motto{ margin: 1.75rem auto 0; max-width: 640px; min-height: 1.6em; font-size: 1.15rem; font-style: italic; color: var(--muted); }
