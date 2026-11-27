@@ -19,6 +19,7 @@ fitxers corresponents, i els originals es van eliminar.
 ## [Sense publicar]
 
 ### Afegit
+- **Alemany, italià, portugués, búlgar i àrab del Marroc**: la promo, l'alumnat (incloses les tasques i `/inicio/`) i Solo, traduïts; la resta cau en anglés. A més a més, un desplegable amb les inicials (FR DE IT PT BG AR) a la dreta dels botons CA VA ES EN. L'àrab escriu de dreta a esquerra: el document canvia de sentit (`dir="rtl"`).
 - **Pàgina inicial a triar**: la promo és la portada per defecte. Si en ella es tria «Inici ràpid», es guarda al navegador i `/` entra directament a `/inicio/` (conservant `?lang=`). El caixet d'EduHoot a l'inici ràpid fa el contrari i torna la promo com a pàgina inicial (`js/home-pref.js`, clau `eduhoot-home`).
 - **Inici ràpid**: el selector d'idioma va dins del requadre dels botons, a dalt a la dreta.
 - **Selector d'idioma propi sempre visible**: el xip de Commons només ofereix ca, va, es i en, així que ja no amaga el selector de cada pantalla (si és fix dalt a la dreta, baixa per sota del xip). A la promo, `#promo-lang`.
