@@ -706,8 +706,8 @@ la numeració 1-32 de dalt.
   desplegable amb la resta. Vore «Idiomes i internacionalització» a
   `ARCHITECTURE.md`. Estan traduïdes totes les pantalles (promo, alumnat,
   Solo, anfitrió, multijugador, biblioteca, editor, deures i Mis partidas).
-  Queda pendent que les revise gent nativa (les ha escrit Claude) i, si cal,
-  afegir-ne més (holandés i altres a decidir).
+  Queda pendent que les revise gent nativa i, si cal,
+  afegir-ne més.
 - **W4 — Paquet SCORM per al mode Solo, amb pas automàtic de la nota a
   Moodle/AULES.** El professorat puja un paquet SCORM al seu curs
   (sense dependre d'LTI, que AULES no té habilitat), i la nota final
