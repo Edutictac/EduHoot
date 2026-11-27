@@ -119,7 +119,8 @@
   "motto_7": "Enseñar con ilusión es encender mil curiosidades",
   "motto_8": "Pequeños retos cada día, grandes avances al final",
   "motto_9": "Aquí no se pierde: se aprende, se ríe y se sigue",
-  "motto_10": "Atrévete a probar: cada intento te acerca más"
+  "motto_10": "Atrévete a probar: cada intento te acerca más",
+  "motto_11": "Que el aula no se quede sin ganas"
  },
  "ca": {
   "nav_modes": "Modes de joc",
@@ -238,7 +239,8 @@
   "motto_7": "Ensenyar amb il·lusió és encendre mil curiositats",
   "motto_8": "Xicotets reptes cada dia, grans avanços al final",
   "motto_9": "Ací no es perd: s'aprén, es riu i es continua",
-  "motto_10": "Atrevix-te a provar: cada intent t'acosta més"
+  "motto_10": "Atrevix-te a provar: cada intent t'acosta més",
+  "motto_11": "Que l'aula no es quede sense ganes"
  },
  "va": {
   "nav_modes": "Modes de joc",
@@ -357,7 +359,8 @@
   "motto_7": "Ensenyar amb il·lusió és encendre mil curiositats",
   "motto_8": "Xicotets reptes cada dia, grans avanços al final",
   "motto_9": "Ací no es perd: s'aprén, es riu i es continua",
-  "motto_10": "Atrevix-te a provar: cada intent t'acosta més"
+  "motto_10": "Atrevix-te a provar: cada intent t'acosta més",
+  "motto_11": "Que l'aula no es quede sense ganes"
  },
  "en": {
   "nav_modes": "Game modes",
@@ -476,7 +479,8 @@
   "motto_7": "Teaching with passion lights a thousand curiosities",
   "motto_8": "Small challenges every day, big progress in the end",
   "motto_9": "Nobody loses here: you learn, laugh and keep going",
-  "motto_10": "Dare to try: every attempt brings you closer"
+  "motto_10": "Dare to try: every attempt brings you closer",
+  "motto_11": "Keep your classroom full of energy and ideas"
  },
  "fr": {
   "nav_modes": "Modes de jeu",
@@ -595,7 +599,8 @@
   "motto_7": "Enseigner avec passion éveille mille curiosités",
   "motto_8": "De petits défis chaque jour, de grands progrès au bout",
   "motto_9": "Ici, on ne perd pas : on apprend, on rit, on continue",
-  "motto_10": "Ose essayer : chaque tentative te rapproche"
+  "motto_10": "Ose essayer : chaque tentative te rapproche",
+  "motto_11": "Que la classe ne manque jamais d'énergie"
  },
  "de": {
   "nav_modes": "Spielmodi",
@@ -714,7 +719,8 @@
   "motto_7": "Mit Begeisterung unterrichten weckt Neugier",
   "motto_8": "Täglich kleine Ziele, am Ende große Fortschritte",
   "motto_9": "Hier verliert niemand: lernen, lachen, weitermachen",
-  "motto_10": "Trau dich: Jeder Versuch bringt dich weiter"
+  "motto_10": "Trau dich: Jeder Versuch bringt dich weiter",
+  "motto_11": "Dein Klassenzimmer soll voller Energie sein"
  },
  "it": {
   "nav_modes": "Modalità di gioco",
@@ -833,7 +839,8 @@
   "motto_7": "Insegnare con passione accende mille curiosità",
   "motto_8": "Piccole sfide ogni giorno, grandi progressi alla fine",
   "motto_9": "Qui non si perde: si impara, si ride e si va avanti",
-  "motto_10": "Osa provare: ogni tentativo ti avvicina di più"
+  "motto_10": "Osa provare: ogni tentativo ti avvicina di più",
+  "motto_11": "La tua classe sempre piena di energia"
  },
  "pt": {
   "nav_modes": "Modos de jogo",
@@ -952,7 +959,8 @@
   "motto_7": "Ensinar com paixão acende mil curiosidades",
   "motto_8": "Pequenos desafios diários, grandes avanços no fim",
   "motto_9": "Aqui ninguém perde: aprende-se, ri-se e continua-se",
-  "motto_10": "Atreva-se a tentar: cada tentativa aproxima-o mais"
+  "motto_10": "Atreva-se a tentar: cada tentativa aproxima-o mais",
+  "motto_11": "A sua sala de aula sempre cheia de energia"
  },
  "bg": {
   "nav_modes": "Режими на игра",
@@ -1071,7 +1079,8 @@
   "motto_7": "Преподаване с вдъхновение буди любопитство",
   "motto_8": "Малки предизвикателства всеки ден, голям напредък",
   "motto_9": "Тук никой не губи: учим, смеем се и продължаваме",
-  "motto_10": "Опитай смело: всеки опит те приближава"
+  "motto_10": "Опитай смело: всеки опит те приближава",
+  "motto_11": "Класната стая винаги пълна с енергия"
  },
  "ar": {
   "nav_modes": "أنماط اللعب",
@@ -1190,7 +1199,8 @@
   "motto_7": "التدريس بشغف يوقد في التلاميذ ألف فضول",
   "motto_8": "تحديات صغيرة كل يوم وتقدّم كبير في النهاية",
   "motto_9": "هنا لا أحد يخسر: نتعلم ونضحك ونواصل",
-  "motto_10": "اجرؤ على المحاولة: كل محاولة تقرّبك"
+  "motto_10": "اجرؤ على المحاولة: كل محاولة تقرّبك",
+  "motto_11": "خلّي قسمك ديما مليان حيوية ونشاط"
  }
 };
     window.EduhootPromoTexts = TEXTS;
@@ -1329,11 +1339,11 @@
     });
 })();
 
-// Titular: una frase motivadora distinta en cada recarga, de las 10 (nunca la misma que la vez anterior).
+// Titular: una frase motivadora distinta en cada recarga, de las 11 (nunca la misma que la vez anterior).
 (function(){
     var el = document.getElementById('motto');
     if(!el) return;
-    var TOTAL = 10, KEY = 'eduhoot-motto', last = -1, n;
+    var TOTAL = 11, KEY = 'eduhoot-motto', last = -1, n;
     try{ last = parseInt(window.localStorage.getItem(KEY), 10); }catch(e){}
     if(isNaN(last)) last = -1;
     do{ n = Math.floor(Math.random() * TOTAL); }while(n === last);

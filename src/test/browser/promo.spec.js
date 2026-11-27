@@ -233,20 +233,20 @@ test('en /inicio/ los botones (Instalar app y selector de idioma) también usan 
 });
 
 test.describe('frase motivadora', () => {
-    test('hay 10 frases por idioma, de longitud parecida', async ({ page }) => {
+    test('hay 11 frases por idioma, de longitud parecida', async ({ page }) => {
         await page.goto('/?lang=es');
         const stats = await page.evaluate(() => {
             const T = window.EduhootPromoTexts, out = {};
             for (const lang of Object.keys(T)) {
-                const phrases = Array.from({ length: 10 }, (_, i) => T[lang]['motto_' + (i + 1)]);
+                const phrases = Array.from({ length: 11 }, (_, i) => T[lang]['motto_' + (i + 1)]);
                 out[lang] = { count: phrases.filter(Boolean).length, distinct: new Set(phrases).size, min: Math.min(...phrases.map(p => p.length)), max: Math.max(...phrases.map(p => p.length)) };
             }
             return out;
         });
         expect(Object.keys(stats).sort()).toEqual(['ar', 'bg', 'ca', 'de', 'en', 'es', 'fr', 'it', 'pt', 'va']);
         for (const [lang, s] of Object.entries(stats)) {
-            expect(s.count, lang).toBe(10);
-            expect(s.distinct, lang).toBe(10);
+            expect(s.count, lang).toBe(11);
+            expect(s.distinct, lang).toBe(11);
             // Longitud parecida: la más larga no pasa de 1,5 veces la más corta.
             expect(s.max / s.min, lang).toBeLessThanOrEqual(1.5);
         }
