@@ -32,7 +32,7 @@ main,.top,.foot{max-width:1100px;margin-inline:auto}
 .lang button.active{background:var(--yellow);color:#1b1b1b}
 
 /* Botones: los de la portada (píldora, mayúsculas, amarillo con degradado) */
-.btn{display:inline-flex;justify-content:center;align-items:center;padding:12px 18px;line-height:1.25;border-radius:999px;border:1px solid transparent;
+.btn{font-family:inherit;display:inline-flex;justify-content:center;align-items:center;padding:12px 18px;line-height:1.25;border-radius:999px;border:1px solid transparent;
   text-decoration:none;font-weight:700;letter-spacing:.04em;text-transform:uppercase;font-size:.85rem;cursor:pointer;
   transition:transform .18s ease,box-shadow .18s ease,background .18s ease}
 .btn.primary{background:linear-gradient(135deg,var(--yellow-1),var(--yellow-2));color:#1b1b1b;box-shadow:0 12px 24px rgba(255,183,71,.4)}

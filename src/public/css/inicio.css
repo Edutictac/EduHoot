@@ -39,3 +39,7 @@ html.has-account-chip:not(.account-home-only) .landing-shell #lang-switcher{
     right: auto;
     inset-inline-end: 14px;
 }
+
+/* Los <button> no heredan la tipografía: «Instalar app» y el selector de idioma usan Raleway como el resto. */
+.landing-shell button,
+.install-button{ font-family: inherit; }

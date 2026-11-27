@@ -213,3 +213,21 @@ test('las características se traducen (también el botón) y el idioma se conse
         await expect(page.locator('.extras li[data-i18n="f_selfpaced"]')).not.toHaveText('Modo a su ritmo');
     }
 });
+
+test('todos los botones de la portada usan la tipografía de la página (Raleway), también los <button>', async ({ page }) => {
+    await page.goto('/?lang=es');
+    const fonts = await page.locator('.btn').evaluateAll(els => els.map(e => ({ tag: e.tagName, text: e.textContent.trim(), family: getComputedStyle(e).fontFamily })));
+    expect(fonts.length).toBeGreaterThan(5);
+    for (const f of fonts) expect(f.family, `${f.tag} «${f.text}»`).toContain('Raleway');
+    const btn = await page.locator('#all-features-btn').evaluate(e => getComputedStyle(e).fontSize);
+    const ref = await page.locator('.hero-actions a.btn.ghost').first().evaluate(e => getComputedStyle(e).fontSize);
+    expect(btn).toBe(ref);
+});
+
+test('en /inicio/ los botones (Instalar app y selector de idioma) también usan Raleway', async ({ page }) => {
+    await page.goto('/inicio/?lang=es');
+    await page.locator('#installApp').evaluate(el => { el.hidden = false; });
+    for (const sel of ['#installApp', '#lang-switcher button[data-lang="es"]', '.landing-actions .btn']) {
+        expect(await page.locator(sel).first().evaluate(e => getComputedStyle(e).fontFamily), sel).toContain('Raleway');
+    }
+});
