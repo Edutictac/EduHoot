@@ -75,7 +75,13 @@
   "q3_p": "«Me gusta jugar solo para practicar antes del examen. Sé qué preguntas fallo.»",
   "q3_w": "Alumna de 3.º de ESO",
   "carousel_prev": "Anterior",
-  "carousel_next": "Siguiente"
+  "carousel_next": "Siguiente",
+  "q4_p": "«Las tarjetas me dejan repasar justo lo que no sé. Con cinco minutos al día noto la diferencia.»",
+  "q4_w": "Alumno de 4.º de ESO",
+  "q5_p": "«Con las preguntas de ordenar, la línea del tiempo de Historia la ordena el alumnado, no yo.»",
+  "q5_w": "Docente de Ciencias Sociales",
+  "q6_p": "«Las preguntas de correspondencia me permiten unir conceptos y definiciones sin inventar trucos.»",
+  "q6_w": "Profesor de Lengua"
  },
  "ca": {
   "nav_modes": "Modes de joc",
@@ -150,7 +156,13 @@
   "q3_p": "«M'agrada jugar sol per a practicar abans de l'examen. Sé quines preguntes falle.»",
   "q3_w": "Alumna de 3r d'ESO",
   "carousel_prev": "Anterior",
-  "carousel_next": "Següent"
+  "carousel_next": "Següent",
+  "q4_p": "«Les targetes em deixen repassar just el que no sé. Amb cinc minuts al dia noto la diferència.»",
+  "q4_w": "Alumne de 4t d'ESO",
+  "q5_p": "«Amb les preguntes d'ordenar, la línia del temps d'Història l'ordena l'alumnat, no jo.»",
+  "q5_w": "Docent de Ciències Socials",
+  "q6_p": "«Les preguntes de correspondència em permeten unir conceptes i definicions sense inventar trucs.»",
+  "q6_w": "Professor de Llengua"
  },
  "va": {
   "nav_modes": "Modes de joc",
@@ -225,7 +237,13 @@
   "q3_p": "«M'agrada jugar sol per a practicar abans de l'examen. Sé quines preguntes falle.»",
   "q3_w": "Alumna de 3r d'ESO",
   "carousel_prev": "Anterior",
-  "carousel_next": "Següent"
+  "carousel_next": "Següent",
+  "q4_p": "«Les targetes em deixen repassar just el que no sé. Amb cinc minuts al dia noto la diferència.»",
+  "q4_w": "Alumne de 4t d'ESO",
+  "q5_p": "«Amb les preguntes d'ordenar, la línia del temps d'Història l'ordena l'alumnat, no jo.»",
+  "q5_w": "Docent de Ciències Socials",
+  "q6_p": "«Les preguntes de correspondència em permeten unir conceptes i definicions sense inventar trucs.»",
+  "q6_w": "Professor de Llengua"
  },
  "en": {
   "nav_modes": "Game modes",
@@ -300,7 +318,13 @@
   "q3_p": "\"I like playing solo to practise before the exam. I know which questions I get wrong.\"",
   "q3_w": "3rd-year secondary student",
   "carousel_prev": "Previous",
-  "carousel_next": "Next"
+  "carousel_next": "Next",
+  "q4_p": "\"Flashcards let me review exactly what I don't know. With five minutes a day I notice the difference.\"",
+  "q4_w": "4th-year secondary student",
+  "q5_p": "\"With ordering questions, the students put the History timeline in order, not me.\"",
+  "q5_w": "Social studies teacher",
+  "q6_p": "\"Matching questions let me pair concepts and definitions without inventing workarounds.\"",
+  "q6_w": "Language teacher"
  },
  "fr": {
   "nav_modes": "Modes de jeu",
@@ -375,7 +399,13 @@
   "q3_p": "« J'aime jouer seule pour m'entraîner avant l'examen. Je sais quelles questions je rate. »",
   "q3_w": "Élève de 4e",
   "carousel_prev": "Précédent",
-  "carousel_next": "Suivant"
+  "carousel_next": "Suivant",
+  "q4_p": "« Les cartes mémoire me font réviser exactement ce que je ne sais pas. Avec cinq minutes par jour, je vois la différence. »",
+  "q4_w": "Élève de 3e",
+  "q5_p": "« Avec les questions d'ordre, ce sont les élèves qui remettent la frise chronologique d'Histoire dans l'ordre, pas moi. »",
+  "q5_w": "Enseignant d'histoire-géographie",
+  "q6_p": "« Les questions d'association me permettent de relier notions et définitions sans bricoler. »",
+  "q6_w": "Professeur de lettres"
  }
 };
     var lang = 'es';

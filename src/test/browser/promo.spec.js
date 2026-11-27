@@ -31,15 +31,19 @@ test('muestra la versión en el pie y los enlaces comunes', async ({ page }) => 
 test('los testimonios van en carrusel y se avisa de que son de ejemplo', async ({ page }) => {
     await page.goto('/?lang=es');
     const slides = page.locator('.quote .slide');
-    await expect(slides).toHaveCount(3);
+    await expect(slides).toHaveCount(6);
     await expect(slides.nth(0)).toHaveClass(/is-active/);
     await page.locator('.q-next').click();
     await expect(slides.nth(1)).toHaveClass(/is-active/);
     await expect(slides.nth(0)).not.toHaveClass(/is-active/);
-    await page.locator('.q-dot').nth(2).click();
-    await expect(slides.nth(2)).toHaveClass(/is-active/);
+    await page.locator('.q-dot').nth(5).click();
+    await expect(slides.nth(5)).toHaveClass(/is-active/);
     await page.locator('.q-prev').click();
-    await expect(slides.nth(1)).toHaveClass(/is-active/);
+    await expect(slides.nth(4)).toHaveClass(/is-active/);
+    // Los tres últimos hablan de las tarjetas de repaso y de las preguntas de ordenar y de correspondencia.
+    await expect(slides.nth(3)).toContainText('tarjetas');
+    await expect(slides.nth(4)).toContainText('ordenar');
+    await expect(slides.nth(5)).toContainText('correspondencia');
     await expect(page.locator('.quote-note')).toContainText('ejemplo');
     const size = await page.locator('.quote-note').evaluate(el => parseFloat(getComputedStyle(el).fontSize));
     expect(size).toBeLessThan(14);
