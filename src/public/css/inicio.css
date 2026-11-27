@@ -1,6 +1,7 @@
 /* Inicio rápido (/inicio/): la portada de siempre con el aspecto de la promo (/):
    tarjeta de cristal con borde blanco, botones con los emoticonos de la app y los mismos efectos. */
 .landing-shell{
+    position: relative;
     border-radius: 14px;
     border: 1px solid #fff;
     background: rgba(255,255,255,.06);
@@ -28,4 +29,12 @@
 a:focus-visible, button:focus-visible{ outline: 3px solid #fdbc4b; outline-offset: 3px; }
 @media (prefers-reduced-motion: reduce){
     *, *::before, *::after{ animation: none !important; transition: none !important; }
+}
+
+/* El selector de idioma va dentro del recuadro de los botones, en la esquina superior derecha. */
+.landing-shell #lang-switcher,
+html.has-account-chip:not(.account-home-only) .landing-shell #lang-switcher{
+    position: absolute;
+    top: 14px;
+    right: 14px;
 }
