@@ -278,3 +278,11 @@ test.describe('frase motivadora', () => {
         await expect(page.locator('#motto')).not.toHaveText(es);
     });
 });
+
+test('los enlaces del pie van en el mismo orden que los botones bajo el titular', async ({ page }) => {
+    await page.goto('/?lang=es');
+    const hrefs = sel => page.locator(sel).evaluateAll(a => a.map(x => x.getAttribute('href')));
+    const hero = await hrefs('.hero-actions a');
+    expect(hero).toEqual(['/inicio/', '/join.html', '/solo/', '/multiplayer/', '/create/']);
+    expect(await hrefs('.foot-nav a')).toEqual(hero);
+});
