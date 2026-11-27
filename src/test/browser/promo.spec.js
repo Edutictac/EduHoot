@@ -63,8 +63,9 @@ test('los testimonios van en carrusel y se avisa de que son de ejemplo', async (
 
 test('el selector de idioma incluye el francés y traduce la promo', async ({ page }) => {
     await page.goto('/?lang=es');
-    expect(await page.locator('#promo-lang button').evaluateAll(b => b.map(x => x.dataset.lang))).toEqual(['ca', 'va', 'es', 'en', 'fr']);
-    await page.locator('#promo-lang [data-lang="fr"]').click();
+    expect(await page.locator('#promo-lang button').evaluateAll(b => b.map(x => x.dataset.lang))).toEqual(['ca', 'va', 'es', 'en']);
+    expect(await page.locator('#promo-lang select.lang-more option').evaluateAll(o => o.map(x => x.value))).toEqual(['', 'fr', 'de', 'it', 'pt', 'bg']);
+    await page.locator('#promo-lang select.lang-more').selectOption('fr');
     await expect(page.locator('html')).toHaveAttribute('lang', 'fr');
     await expect(page.locator('.hero-actions a.primary')).toContainText('Jouer maintenant');
     await expect(page.locator('.hero-actions a[href="/inicio/"]')).toContainText('Démarrage rapide');
@@ -76,7 +77,7 @@ test('el selector de idioma propio sigue visible aunque el chip de cuenta se pin
     // Lo que hace edutictac-chip.js cuando el chip de Commons está listo.
     await page.evaluate(() => document.documentElement.classList.add('has-account-chip'));
     await expect(page.locator('#promo-lang')).toBeVisible();
-    await expect(page.locator('#promo-lang [data-lang="fr"]')).toBeVisible();
+    await expect(page.locator('#promo-lang select.lang-more')).toBeVisible();
 });
 
 test('Inicio rápido lleva a la portada de siempre, con enlaces de vuelta a la promo', async ({ page }) => {
@@ -148,6 +149,25 @@ test.describe('página inicial elegida (promo o inicio rápido)', () => {
 
 test('botonera del titular en valenciano: Inici ràpid, Jugar ara, A soles, Multijugador, Professorat', async ({ page }) => {
     await page.goto('/?lang=va');
-    expect((await page.locator('.hero-actions a').allInnerTexts()).map(t => t.trim()))
+    expect((await page.locator('.hero-actions a').evaluateAll(a => a.map(x => x.textContent.trim()))))
         .toEqual(['Inici ràpid', 'Jugar ara', 'A soles', 'Multijugador', 'Professorat']);
+});
+
+test('los idiomas nuevos (alemán, italiano, portugués y búlgaro) traducen la promo desde el desplegable', async ({ page }) => {
+    await page.goto('/?lang=es');
+    const expected = { de: 'Jetzt spielen', it: 'Gioca ora', pt: 'Jogar agora', bg: 'Играй сега' };
+    for (const [lang, text] of Object.entries(expected)) {
+        await page.locator('#promo-lang select.lang-more').selectOption(lang);
+        await expect(page.locator('html')).toHaveAttribute('lang', lang);
+        await expect(page.locator('.hero-actions a.primary')).toContainText(text);
+        await expect(page.locator('#promo-lang select.lang-more')).toHaveValue(lang);
+        await expect(page.locator('#promo-lang select.lang-more')).toHaveClass(/active/);
+    }
+});
+
+test('el desplegable de más idiomas muestra las dos iniciales en mayúsculas, no el nombre', async ({ page }) => {
+    await page.goto('/?lang=es');
+    expect(await page.locator('#promo-lang select.lang-more option').evaluateAll(o => o.map(x => x.textContent.trim()))).toEqual(['🌐', 'FR', 'DE', 'IT', 'PT', 'BG']);
+    await page.locator('#promo-lang select.lang-more').selectOption('de');
+    await expect(page.locator('#promo-lang select.lang-more option:checked')).toHaveText('DE');
 });
