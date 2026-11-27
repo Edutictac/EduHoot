@@ -382,6 +382,7 @@ body.host-game-embedded > *:not(#host-game-frame){
 
 /* Lobby: «Cancelar partida» y «Iniciar partida» juntos, en la misma fila. Iniciar en verde. */
 .start-row{
+    margin-top: 8px; /* antes era un <br> de 19 px: con el enlace de entrada, «Iniciar» no cabía en 1280×800 */
     display: flex;
     gap: 12px;
     justify-content: center;

@@ -212,7 +212,6 @@
                     <small>{{ t('opt_t_help') }}</small>
                 </details>
             </div>
-            <br>
             <div class="start-row">
                 <button id="cancel" type="button" :class="{ 'is-confirming': cancelConfirming }" @click="askCancelLobby">{{ cancelConfirming ? t('cancel_confirm') : t('cancel_btn') }}</button>
                 <button id="start" @click="startGame" :disabled="starting">{{ starting ? t('starting') : t('start_btn') }}</button>
