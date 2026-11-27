@@ -181,10 +181,10 @@ test('en árabe la promo se muestra de derecha a izquierda y vuelve a izquierda 
     await expect(page.locator('html')).toHaveAttribute('dir', 'ltr');
 });
 
-test('«Y además…» muestra 14 características y «Todas las características» despliega las 33', async ({ page }) => {
+test('«Y además…» muestra 9 características y «Todas las características» despliega hasta 33', async ({ page }) => {
     await page.goto('/?lang=es');
     const visible = page.locator('.extras ul:not(.extras-more) li');
-    await expect(visible).toHaveCount(14);
+    await expect(visible).toHaveCount(9);
     const more = page.locator('#all-features');
     await expect(more).toBeHidden();
     const btn = page.locator('#all-features-btn');
@@ -192,7 +192,7 @@ test('«Y además…» muestra 14 características y «Todas las característica
     await expect(btn).toHaveAttribute('aria-expanded', 'false');
     await btn.click();
     await expect(more).toBeVisible();
-    await expect(more.locator('li')).toHaveCount(19);
+    await expect(more.locator('li')).toHaveCount(24);
     await expect(btn).toHaveAttribute('aria-expanded', 'true');
     await expect(btn).toHaveText('Menos características');
     await expect(page.locator('.extras li:visible')).toHaveCount(33);

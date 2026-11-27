@@ -19,7 +19,7 @@ fitxers corresponents, i els originals es van eliminar.
 ## [Sense publicar]
 
 ### Afegit
-- **Promo, «I a més…»**: 14 característiques a la quadrícula i el botó **«Totes les característiques»**, que desplega les altres fins a 33 (en els 10 idiomes).
+- **Promo, «I a més…»**: 9 característiques a la quadrícula i el botó **«Totes les característiques»**, que desplega les altres fins a 33 (en els 10 idiomes).
 - **Alemany, italià, portugués, búlgar i àrab del Marroc**: la promo, l'alumnat (incloses les tasques i `/inicio/`) i Solo, traduïts; la resta cau en anglés. A més a més, un desplegable amb les inicials (FR DE IT PT BG AR) a la dreta dels botons CA VA ES EN. L'àrab escriu de dreta a esquerra: el document canvia de sentit (`dir="rtl"`).
 - **Pàgina inicial a triar**: la promo és la portada per defecte. Si en ella es tria «Inici ràpid», es guarda al navegador i `/` entra directament a `/inicio/` (conservant `?lang=`). El caixet d'EduHoot a l'inici ràpid fa el contrari i torna la promo com a pàgina inicial (`js/home-pref.js`, clau `eduhoot-home`).
 - **Inici ràpid**: el selector d'idioma va dins del requadre dels botons, a dalt a la dreta.
