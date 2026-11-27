@@ -204,3 +204,8 @@ p{margin-top:0}
 [dir="rtl"] .slide{ transform: translateX(-24px); }
 [dir="rtl"] .slide.is-active{ transform: none; }
 [dir="rtl"] .foot a:hover{ padding-left: 0; padding-right: 6px; }
+
+/* «Todas las características»: la segunda lista tiene el mismo aspecto que la primera, con algo de aire entre ambas. */
+.extras .extras-more{ margin-top: 14px; }
+.extras #all-features-btn{ margin-top: 1.5rem; }
+.extras li{ text-align: center; }

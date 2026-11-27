@@ -180,3 +180,36 @@ test('en árabe la promo se muestra de derecha a izquierda y vuelve a izquierda 
     await page.locator('#promo-lang [data-lang="es"]').click();
     await expect(page.locator('html')).toHaveAttribute('dir', 'ltr');
 });
+
+test('«Y además…» muestra 14 características y «Todas las características» despliega las 33', async ({ page }) => {
+    await page.goto('/?lang=es');
+    const visible = page.locator('.extras ul:not(.extras-more) li');
+    await expect(visible).toHaveCount(14);
+    const more = page.locator('#all-features');
+    await expect(more).toBeHidden();
+    const btn = page.locator('#all-features-btn');
+    await expect(btn).toHaveText('Todas las características');
+    await expect(btn).toHaveAttribute('aria-expanded', 'false');
+    await btn.click();
+    await expect(more).toBeVisible();
+    await expect(more.locator('li')).toHaveCount(19);
+    await expect(btn).toHaveAttribute('aria-expanded', 'true');
+    await expect(btn).toHaveText('Menos características');
+    await expect(page.locator('.extras li:visible')).toHaveCount(33);
+    await btn.click();
+    await expect(more).toBeHidden();
+    await expect(btn).toHaveText('Todas las características');
+});
+
+test('las características se traducen (también el botón) y el idioma se conserva al desplegar', async ({ page }) => {
+    await page.goto('/?lang=fr');
+    await expect(page.locator('#all-features-btn')).toHaveText('Toutes les fonctionnalités');
+    await page.locator('#all-features-btn').click();
+    await expect(page.locator('#all-features-btn')).toHaveText('Moins de fonctionnalités');
+    await expect(page.locator('#all-features li[data-i18n="f_pause"]')).toHaveText('Pause et +15 secondes');
+    for (const lang of ['de', 'it', 'pt', 'bg', 'ar']) {
+        await page.locator('#promo-lang select.lang-more').selectOption(lang);
+        await expect(page.locator('#all-features-btn')).not.toHaveText(/Toutes|Moins/);
+        await expect(page.locator('.extras li[data-i18n="f_selfpaced"]')).not.toHaveText('Modo a su ritmo');
+    }
+});
