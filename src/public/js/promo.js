@@ -110,7 +110,17 @@
   "f_a11y": "Accesible: contraste alto y ✓/✕",
   "f_qr": "Entrada por QR",
   "x_all": "Todas las características",
-  "x_less": "Menos características"
+  "x_less": "Menos características",
+  "motto_1": "Cada pregunta es una puerta hacia algo nuevo.",
+  "motto_2": "Aprender juntos hace que todo cueste menos.",
+  "motto_3": "Un error de hoy es la respuesta de mañana.",
+  "motto_4": "Cuando se juega, el esfuerzo se disfruta más.",
+  "motto_5": "Las grandes ideas empiezan con una buena pregunta.",
+  "motto_6": "Tu clase puede ser el mejor equipo del mundo.",
+  "motto_7": "Enseñar con ilusión es encender mil curiosidades.",
+  "motto_8": "Pequeños retos cada día, grandes avances al final.",
+  "motto_9": "Aquí no se pierde: se aprende, se ríe y se sigue.",
+  "motto_10": "Atrévete a probar: cada intento te acerca más."
  },
  "ca": {
   "nav_modes": "Modes de joc",
@@ -220,7 +230,17 @@
   "f_a11y": "Accessible: contrast alt i ✓/✕",
   "f_qr": "Entrada per QR",
   "x_all": "Totes les característiques",
-  "x_less": "Menys característiques"
+  "x_less": "Menys característiques",
+  "motto_1": "Cada pregunta és una porta cap a alguna cosa nova.",
+  "motto_2": "Aprendre junts fa que tot coste menys.",
+  "motto_3": "Un error d'hui és la resposta de demà.",
+  "motto_4": "Quan es juga, l'esforç es gaudeix més.",
+  "motto_5": "Les grans idees comencen amb una bona pregunta.",
+  "motto_6": "La teua classe pot ser el millor equip del món.",
+  "motto_7": "Ensenyar amb il·lusió és encendre mil curiositats.",
+  "motto_8": "Xicotets reptes cada dia, grans avanços al final.",
+  "motto_9": "Ací no es perd: s'aprén, es riu i es continua.",
+  "motto_10": "Atrevix-te a provar: cada intent t'acosta més."
  },
  "va": {
   "nav_modes": "Modes de joc",
@@ -330,7 +350,17 @@
   "f_a11y": "Accessible: contrast alt i ✓/✕",
   "f_qr": "Entrada per QR",
   "x_all": "Totes les característiques",
-  "x_less": "Menys característiques"
+  "x_less": "Menys característiques",
+  "motto_1": "Cada pregunta és una porta cap a alguna cosa nova.",
+  "motto_2": "Aprendre junts fa que tot coste menys.",
+  "motto_3": "Un error d'hui és la resposta de demà.",
+  "motto_4": "Quan es juga, l'esforç es gaudix més.",
+  "motto_5": "Les grans idees comencen amb una bona pregunta.",
+  "motto_6": "La teua classe pot ser el millor equip del món.",
+  "motto_7": "Ensenyar amb il·lusió és encendre mil curiositats.",
+  "motto_8": "Xicotets reptes cada dia, grans avanços al final.",
+  "motto_9": "Ací no es perd: s'aprén, es riu i es continua.",
+  "motto_10": "Atrevix-te a provar: cada intent t'acosta més."
  },
  "en": {
   "nav_modes": "Game modes",
@@ -440,7 +470,17 @@
   "f_a11y": "Accessible: high contrast and ✓/✕",
   "f_qr": "Join by QR code",
   "x_all": "All features",
-  "x_less": "Fewer features"
+  "x_less": "Fewer features",
+  "motto_1": "Every question is a door to something new.",
+  "motto_2": "Learning together makes everything easier.",
+  "motto_3": "Today's mistake is tomorrow's answer.",
+  "motto_4": "When you play, effort is more enjoyable.",
+  "motto_5": "Great ideas start with a good question.",
+  "motto_6": "Your class can be the best team in the world.",
+  "motto_7": "Teaching with passion lights a thousand curiosities.",
+  "motto_8": "Small challenges every day, big progress in the end.",
+  "motto_9": "Nobody loses here: you learn, laugh and keep going.",
+  "motto_10": "Dare to try: every attempt brings you closer."
  },
  "fr": {
   "nav_modes": "Modes de jeu",
@@ -550,7 +590,17 @@
   "f_a11y": "Accessible : fort contraste et ✓/✕",
   "f_qr": "Entrée par code QR",
   "x_all": "Toutes les fonctionnalités",
-  "x_less": "Moins de fonctionnalités"
+  "x_less": "Moins de fonctionnalités",
+  "motto_1": "Chaque question est une porte vers du nouveau.",
+  "motto_2": "Apprendre ensemble rend tout plus facile.",
+  "motto_3": "L'erreur d'aujourd'hui est la réponse de demain.",
+  "motto_4": "En jouant, l'effort devient un plaisir.",
+  "motto_5": "Les grandes idées naissent d'une bonne question.",
+  "motto_6": "Ta classe peut être la meilleure équipe du monde.",
+  "motto_7": "Enseigner avec passion éveille mille curiosités.",
+  "motto_8": "De petits défis chaque jour, de grands progrès au bout.",
+  "motto_9": "Ici, on ne perd pas : on apprend, on rit, on continue.",
+  "motto_10": "Ose essayer : chaque tentative te rapproche."
  },
  "de": {
   "nav_modes": "Spielmodi",
@@ -660,7 +710,17 @@
   "f_a11y": "Barrierearm: hoher Kontrast und ✓/✕",
   "f_qr": "Beitritt per QR-Code",
   "x_all": "Alle Funktionen",
-  "x_less": "Weniger Funktionen"
+  "x_less": "Weniger Funktionen",
+  "motto_1": "Jede Frage ist eine Tür zu etwas Neuem.",
+  "motto_2": "Gemeinsam lernen macht alles leichter.",
+  "motto_3": "Der Fehler von heute ist die Antwort von morgen.",
+  "motto_4": "Beim Spielen macht Anstrengung mehr Freude.",
+  "motto_5": "Große Ideen beginnen mit einer guten Frage.",
+  "motto_6": "Deine Klasse kann das beste Team der Welt sein.",
+  "motto_7": "Mit Begeisterung unterrichten weckt tausend Neugierden.",
+  "motto_8": "Täglich kleine Ziele, am Ende große Fortschritte.",
+  "motto_9": "Hier verliert niemand: man lernt, lacht und macht weiter.",
+  "motto_10": "Trau dich: Jeder Versuch bringt dich weiter."
  },
  "it": {
   "nav_modes": "Modalità di gioco",
@@ -770,7 +830,17 @@
   "f_a11y": "Accessibile: alto contrasto e ✓/✕",
   "f_qr": "Accesso tramite QR",
   "x_all": "Tutte le funzionalità",
-  "x_less": "Meno funzionalità"
+  "x_less": "Meno funzionalità",
+  "motto_1": "Ogni domanda è una porta verso qualcosa di nuovo.",
+  "motto_2": "Imparare insieme rende tutto più facile.",
+  "motto_3": "L'errore di oggi è la risposta di domani.",
+  "motto_4": "Giocando, l'impegno diventa più piacevole.",
+  "motto_5": "Le grandi idee iniziano con una buona domanda.",
+  "motto_6": "La tua classe può essere la squadra migliore del mondo.",
+  "motto_7": "Insegnare con passione accende mille curiosità.",
+  "motto_8": "Piccole sfide ogni giorno, grandi progressi alla fine.",
+  "motto_9": "Qui non si perde: si impara, si ride e si va avanti.",
+  "motto_10": "Osa provare: ogni tentativo ti avvicina di più."
  },
  "pt": {
   "nav_modes": "Modos de jogo",
@@ -880,7 +950,17 @@
   "f_a11y": "Acessível: alto contraste e ✓/✕",
   "f_qr": "Entrada por QR",
   "x_all": "Todas as funcionalidades",
-  "x_less": "Menos funcionalidades"
+  "x_less": "Menos funcionalidades",
+  "motto_1": "Cada pergunta é uma porta para algo novo.",
+  "motto_2": "Aprender juntos torna tudo mais fácil.",
+  "motto_3": "O erro de hoje é a resposta de amanhã.",
+  "motto_4": "Quando se brinca, o esforço sabe melhor.",
+  "motto_5": "As grandes ideias começam com uma boa pergunta.",
+  "motto_6": "A sua turma pode ser a melhor equipa do mundo.",
+  "motto_7": "Ensinar com paixão acende mil curiosidades.",
+  "motto_8": "Pequenos desafios diários, grandes avanços no fim.",
+  "motto_9": "Aqui ninguém perde: aprende-se, ri-se e continua-se.",
+  "motto_10": "Atreva-se a tentar: cada tentativa aproxima-o mais."
  },
  "bg": {
   "nav_modes": "Режими на игра",
@@ -990,7 +1070,17 @@
   "f_a11y": "Достъпно: висок контраст и ✓/✕",
   "f_qr": "Влизане чрез QR код",
   "x_all": "Всички функции",
-  "x_less": "По-малко функции"
+  "x_less": "По-малко функции",
+  "motto_1": "Всеки въпрос е врата към нещо ново.",
+  "motto_2": "Когато учим заедно, всичко става по-лесно.",
+  "motto_3": "Грешката днес е отговорът на утрешния ден.",
+  "motto_4": "Като играем, усилието е по-приятно.",
+  "motto_5": "Великите идеи започват с добър въпрос.",
+  "motto_6": "Класът ти може да е най-добрият отбор на света.",
+  "motto_7": "Преподаването с въодушевление събужда хиляди любопитства.",
+  "motto_8": "Малки предизвикателства всеки ден, голям напредък накрая.",
+  "motto_9": "Тук никой не губи: учим, смеем се и продължаваме.",
+  "motto_10": "Опитай смело: всеки опит те приближава."
  },
  "ar": {
   "nav_modes": "أنماط اللعب",
@@ -1100,9 +1190,20 @@
   "f_a11y": "متاح للجميع: تباين عالٍ وعلامتا ✓/✕",
   "f_qr": "الدخول عبر رمز QR",
   "x_all": "كل الميزات",
-  "x_less": "ميزات أقل"
+  "x_less": "ميزات أقل",
+  "motto_1": "كل سؤال هو باب مفتوح نحو شيء جديد.",
+  "motto_2": "التعلّم معاً يجعل كل شيء أسهل وأجمل.",
+  "motto_3": "خطأ اليوم يصبح إجابة صحيحة في الغد.",
+  "motto_4": "حين نلعب نستمتع بالمجهود أكثر من أي وقت.",
+  "motto_5": "الأفكار الكبيرة تبدأ دائماً بسؤال جيد.",
+  "motto_6": "قسمك يمكن أن يكون أفضل فريق في العالم.",
+  "motto_7": "التدريس بشغف يوقد في التلاميذ ألف فضول.",
+  "motto_8": "تحديات صغيرة كل يوم وتقدّم كبير في النهاية.",
+  "motto_9": "هنا لا أحد يخسر: نتعلم ونضحك ونواصل.",
+  "motto_10": "اجرؤ على المحاولة: كل محاولة تقرّبك."
  }
 };
+    window.EduhootPromoTexts = TEXTS;
     var lang = 'es';
 
     function apply(){
@@ -1236,4 +1337,17 @@
         btn.setAttribute('data-i18n', open ? 'x_less' : 'x_all');
         if(window.promoApplyTexts) window.promoApplyTexts();
     });
+})();
+
+// Frase motivadora: en cada recarga sale una distinta de las 10 (nunca la misma que la vez anterior).
+(function(){
+    var el = document.getElementById('motto');
+    if(!el) return;
+    var TOTAL = 10, KEY = 'eduhoot-motto', last = -1, n;
+    try{ last = parseInt(window.localStorage.getItem(KEY), 10); }catch(e){}
+    if(isNaN(last)) last = -1;
+    do{ n = Math.floor(Math.random() * TOTAL); }while(n === last);
+    try{ window.localStorage.setItem(KEY, String(n)); }catch(e){}
+    el.setAttribute('data-i18n', 'motto_' + (n + 1));
+    if(window.promoApplyTexts) window.promoApplyTexts();
 })();

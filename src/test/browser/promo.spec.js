@@ -231,3 +231,50 @@ test('en /inicio/ los botones (Instalar app y selector de idioma) también usan 
         expect(await page.locator(sel).first().evaluate(e => getComputedStyle(e).fontFamily), sel).toContain('Raleway');
     }
 });
+
+test.describe('frase motivadora', () => {
+    test('hay 10 frases por idioma, de longitud parecida', async ({ page }) => {
+        await page.goto('/?lang=es');
+        const stats = await page.evaluate(() => {
+            const T = window.EduhootPromoTexts, out = {};
+            for (const lang of Object.keys(T)) {
+                const phrases = Array.from({ length: 10 }, (_, i) => T[lang]['motto_' + (i + 1)]);
+                out[lang] = { count: phrases.filter(Boolean).length, distinct: new Set(phrases).size, min: Math.min(...phrases.map(p => p.length)), max: Math.max(...phrases.map(p => p.length)) };
+            }
+            return out;
+        });
+        expect(Object.keys(stats).sort()).toEqual(['ar', 'bg', 'ca', 'de', 'en', 'es', 'fr', 'it', 'pt', 'va']);
+        for (const [lang, s] of Object.entries(stats)) {
+            expect(s.count, lang).toBe(10);
+            expect(s.distinct, lang).toBe(10);
+            // Longitud parecida: la más larga no pasa de 1,5 veces la más corta.
+            expect(s.max / s.min, lang).toBeLessThanOrEqual(1.5);
+        }
+    });
+
+    test('en cada recarga sale una frase distinta de la anterior', async ({ page }) => {
+        await page.goto('/?lang=es');
+        const read = () => page.locator('#motto').evaluate(el => ({ key: el.getAttribute('data-i18n'), text: el.textContent.trim() }));
+        let prev = await read();
+        expect(prev.text.length).toBeGreaterThan(20);
+        const seen = new Set([prev.key]);
+        for (let i = 0; i < 8; i++) {
+            await page.reload();
+            const cur = await read();
+            expect(cur.key).not.toBe(prev.key);
+            expect(cur.text.length).toBeGreaterThan(20);
+            seen.add(cur.key);
+            prev = cur;
+        }
+        expect(seen.size).toBeGreaterThan(3);
+    });
+
+    test('la frase se traduce al cambiar de idioma sin cambiar de frase', async ({ page }) => {
+        await page.goto('/?lang=es');
+        const key = await page.locator('#motto').getAttribute('data-i18n');
+        const es = (await page.locator('#motto').textContent()).trim();
+        await page.locator('#promo-lang select.lang-more').selectOption('fr');
+        await expect(page.locator('#motto')).toHaveAttribute('data-i18n', key);
+        await expect(page.locator('#motto')).not.toHaveText(es);
+    });
+});

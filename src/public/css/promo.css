@@ -209,3 +209,6 @@ p{margin-top:0}
 .extras .extras-more{ margin-top: 14px; }
 .extras #all-features-btn{ margin-top: 1.5rem; }
 .extras li{ text-align: center; }
+
+/* Frase motivadora bajo la botonera: una distinta en cada recarga. */
+.hero .motto{ margin: 1.75rem auto 0; max-width: 640px; min-height: 1.6em; font-size: 1.15rem; font-style: italic; color: var(--muted); }
