@@ -187,6 +187,8 @@ const EDUTICTAC_COMMONS_URL = (() => {
 const CHIP_PAGES = {
   '/': 'index.html',
   '/index.html': 'index.html',
+  '/inicio/': 'inicio/index.html',
+  '/inicio/index.html': 'inicio/index.html',
   '/join.html': 'join.html',
   '/solo/': 'solo/index.html',
   '/solo/index.html': 'solo/index.html',

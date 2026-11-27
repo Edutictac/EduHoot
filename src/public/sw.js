@@ -1,6 +1,6 @@
 // IMPORTANTE: cuando cambiemos JS/CSS y queramos evitar servir una versión antigua,
 // incrementa esta versión para invalidar el precache.
-const CACHE_NAME = 'eduh-pwa-v1.1.67';
+const CACHE_NAME = 'eduh-pwa-v1.1.68';
 
 // App shell: recursos críticos para que la app cargue incluso sin red.
 // El resto de recursos se cachean en runtime con stale-while-revalidate.
@@ -8,6 +8,8 @@ const CACHE_NAME = 'eduh-pwa-v1.1.67';
 const ASSETS = [
   '/',
   '/index.html',
+  '/inicio/',
+  '/inicio/index.html',
   '/join.html',
   '/multiplayer/',
   '/multiplayer/index.html',
@@ -84,6 +86,8 @@ const ASSETS = [
   '/js/listPageCommon.js',
   '/js/catalogPager.js',
   '/js/tfLabels.js',
+  '/js/promo.js',
+  '/css/promo.css',
   '/js/env-badge.js',
   '/js/solo-early.js',
   '/js/pwa-install.js',

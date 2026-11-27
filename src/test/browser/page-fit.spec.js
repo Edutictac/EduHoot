@@ -268,7 +268,7 @@ test('portada: el contenido ocupa el ancho disponible con el mismo margen', asyn
     await page.route('**/api/**', route => route.fulfill({ json: {} }));
     for (const [size, gutter] of [[{ width: 1280, height: 800 }, 128], [{ width: 390, height: 844 }, 12]]) {
         await page.setViewportSize(size);
-        await page.goto('/');
+        await page.goto('/inicio/');
         await page.waitForLoadState('load');
         const box = await page.locator('.landing-shell').boundingBox();
         expect(Math.abs(box.width - (size.width - 2 * gutter))).toBeLessThanOrEqual(2);
@@ -292,7 +292,7 @@ test('portada: el recuadro baja para no solaparse con el chip; botones y texto c
     await page.route(/^https:\/\//, route => route.abort());
     await page.route('**/api/**', route => route.fulfill({ json: {} }));
     await page.setViewportSize({ width: 1280, height: 800 });
-    await page.goto('/');
+    await page.goto('/inicio/');
     await page.waitForLoadState('load');
     const shell = await page.locator('.landing-shell').boundingBox();
     const actions = await page.locator('.landing-actions').boundingBox();
@@ -346,7 +346,7 @@ test('portada: en pantallas anchas los botones van en 2 columnas; en estrechas, 
     await page.route('**/api/**', route => route.fulfill({ json: {} }));
     const tops = async () => page.locator('.landing-actions .btn').evaluateAll(els => els.map(el => Math.round(el.getBoundingClientRect().top)));
     await page.setViewportSize({ width: 1280, height: 800 });
-    await page.goto('/?lang=es');
+    await page.goto('/inicio/?lang=es');
     await page.waitForLoadState('load');
     let t = await tops();
     expect(t[0]).toBe(t[1]);
@@ -362,7 +362,7 @@ test('portada en 2 columnas: «Instalar app» centrado, del ancho de una columna
     await page.route(/^https:\/\//, route => route.abort());
     await page.route('**/api/**', route => route.fulfill({ json: {} }));
     await page.setViewportSize({ width: 1280, height: 800 });
-    await page.goto('/?lang=es');
+    await page.goto('/inicio/?lang=es');
     await page.waitForLoadState('load');
     await page.locator('#installApp').evaluate(el => { el.hidden = false; });
     const btn = await page.locator('.landing-actions .btn').first().boundingBox();
@@ -378,7 +378,7 @@ test('portada en 2 columnas: «Instalar app» centrado, del ancho de una columna
 test('portada en 2 columnas: los botones crecen en alto como mucho hasta el doble de un botón normal', async ({ page }) => {
     await page.route(/^https:\/\//, route => route.abort());
     await page.route('**/api/**', route => route.fulfill({ json: {} }));
-    await page.goto('/?lang=es');
+    await page.goto('/inicio/?lang=es');
     await page.waitForLoadState('load');
     await page.locator('#installApp').evaluate(el => { el.hidden = false; });
     const heights = async () => {

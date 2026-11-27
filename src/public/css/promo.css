@@ -41,8 +41,10 @@ main,.top,.foot{max-width:1100px;margin-inline:auto}
 .btn:active{transform:translateY(1px) scale(.97)}
 a:focus-visible,button:focus-visible,.card:focus-visible{outline:3px solid var(--yellow);outline-offset:3px}
 
+[hidden]{display:none!important}
 /* Hero */
 .hero{text-align:center;padding:3.5rem 0 1.5rem}
+.hero-actions{display:flex;gap:.9rem;justify-content:center;flex-wrap:wrap}
 .eyebrow{font-weight:700;text-transform:uppercase;letter-spacing:.18em;color:var(--yellow);margin:0;font-size:.85rem}
 h1{font-size:clamp(2.6rem,8vw,5.2rem);line-height:1.04;margin:.6rem 0 1.75rem;font-weight:800;white-space:pre-line;text-wrap:balance}
 .cards{display:flex;justify-content:center;gap:1.25rem;margin-top:3.5rem;padding:1rem}
@@ -79,7 +81,7 @@ p{margin-top:0}
 .link:hover{transform:translateX(6px);text-decoration:underline}
 
 /* Modos de juego: tarjetas de cristal con un halo de color */
-.strip{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.strip{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
 .tile{position:relative;isolation:isolate;overflow:hidden;min-height:240px;border-radius:14px;padding:1.4rem;display:flex;flex-direction:column;justify-content:flex-end;
   text-decoration:none;border:1px solid #fff;background:var(--glass);box-shadow:0 14px 30px rgba(0,0,0,.22);transition:transform .2s,box-shadow .2s}
 .tile>*{position:relative}
@@ -90,7 +92,7 @@ p{margin-top:0}
 .tile:hover{transform:translateY(-4px);box-shadow:0 22px 40px rgba(0,0,0,.4)}
 .tile:hover::before{opacity:.8}.tile:hover::after{opacity:1;transform:none}.tile:hover small{transform:translateY(-4px)}
 .tile:active{transform:scale(.98)}
-.t1{--c:var(--blue)}.t2{--c:var(--green)}.t3{--c:var(--orange)}
+.t1{--c:var(--blue)}.t2{--c:var(--green)}.t3{--c:var(--orange)}.t4{--c:var(--purple)}
 
 /* Tipos de pregunta */
 .split,.duo{padding:4.5rem 0;display:grid;grid-template-columns:1fr 1fr;gap:2.5rem;align-items:center}
@@ -109,13 +111,21 @@ p{margin-top:0}
 .duo article{background:var(--glass);border:1px solid #fff;border-radius:14px;padding:1.5rem;box-shadow:0 14px 30px rgba(0,0,0,.22);transition:transform .3s,box-shadow .3s}
 .duo article:hover{transform:translateY(-6px);box-shadow:0 22px 40px rgba(0,0,0,.4)}
 
-/* Testimonio */
-.quote{margin:1rem 0;padding:3.5rem 1.5rem;text-align:center;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.05)}
-.quote blockquote{margin:0 auto;max-width:760px;transition:transform .4s}
-.quote:hover blockquote{transform:scale(1.02)}
+/* Testimonios en carrusel */
+.quote{margin:1rem 0;padding:3rem 1.5rem 1.25rem;text-align:center;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.05)}
+.slides{display:grid}
+.slide{grid-area:1/1;margin:0 auto;max-width:760px;opacity:0;visibility:hidden;transform:translateX(24px);transition:opacity .5s,transform .5s,visibility .5s}
+.slide.is-active{opacity:1;visibility:visible;transform:none}
 .quote p{font-size:clamp(1.4rem,3.2vw,2.1rem);font-weight:700;line-height:1.3;margin:0 0 1rem}
 .quote footer{color:var(--yellow);font-weight:700}
-.quote small{color:var(--muted);font-weight:400}
+.quote-nav{display:flex;align-items:center;justify-content:center;gap:1rem;margin-top:1.5rem}
+.quote-nav button{font:inherit;color:var(--text);cursor:pointer}
+.q-prev,.q-next{width:40px;height:40px;border-radius:999px;border:1px solid rgba(255,255,255,.35);background:var(--glass-2);font-size:1.4rem;line-height:1;transition:transform .2s,background .2s}
+.q-prev:hover,.q-next:hover{background:rgba(255,255,255,.2);transform:scale(1.1)}
+.q-dots{display:flex;gap:.5rem}
+.q-dot{width:12px;height:12px;padding:0;border-radius:999px;border:1px solid rgba(255,255,255,.6);background:transparent;transition:transform .2s,background .2s}
+.q-dot.active{background:var(--yellow);border-color:var(--yellow);transform:scale(1.25)}
+.quote .quote-note{margin:1rem 0 0;font-size:.72rem;color:var(--muted);font-weight:400;opacity:.8}
 .cta-actions{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap}
 
 /* Pie: enlaces de la app y el pie común de EduTicTac (el mismo de la portada) */
@@ -130,16 +140,20 @@ p{margin-top:0}
 @keyframes burst{to{transform:translate(var(--dx),var(--dy)) rotate(var(--r));opacity:0}}
 .brand img{transition:transform .5s}.brand:hover img{transform:rotate(360deg)}
 
+@media(max-width:1000px){.strip{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:1100px){.top nav{display:none}.top{flex-wrap:wrap}}
 @media(max-width:800px){
   .top{flex-wrap:wrap}.top nav{display:none}
   .top-actions{width:100%;justify-content:space-between;flex-wrap:wrap}
   .strip,.split,.duo{grid-template-columns:1fr}
+  .quote{padding-inline:1rem}
   .cards{gap:.6rem}.c3,.c4{display:none}.card{width:44vw}
 }
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
   html{scroll-behavior:auto}
   .card:hover,.tile:hover,.duo article:hover,.chips span:hover{transform:none}
+  .slide{transform:none}
 }
 
 /* Emoticonos: los mismos que la biblioteca, las partidas y los deberes. Van por CSS para no pisar las traducciones. */

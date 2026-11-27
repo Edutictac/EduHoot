@@ -4,7 +4,7 @@ if (process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH) {
     test.use({ launchOptions: { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } });
 }
 
-const PAGES = ['/', '/join.html', '/solo/', '/create/', '/multiplayer/', '/host/', '/player/'];
+const PAGES = ['/', '/inicio/', '/join.html', '/solo/', '/create/', '/multiplayer/', '/host/', '/player/'];
 
 const SOCKET_STUB = 'window.testSocketEvents = {}; window.io = function(){ return {on: function(name, fn){window.testSocketEvents[name] = fn;}, emit: function(){}, disconnect: function(){}, connect: function(){}}; };';
 
@@ -106,7 +106,7 @@ test.describe('xip de compte', () => {
 test('portada: la tarjeta deja un pequeño hueco sobre el pie común', async ({ page }) => {
     await page.route(/^https:\/\//, route => route.abort());
     await stubBase(page);
-    await page.goto('/?lang=es');
+    await page.goto('/inicio/?lang=es');
     const gap = await page.evaluate(() => document.querySelector('footer.ett-footer').getBoundingClientRect().top - document.querySelector('.landing-shell').getBoundingClientRect().bottom);
     expect(gap).toBeGreaterThanOrEqual(10);
     expect(gap).toBeLessThanOrEqual(24);

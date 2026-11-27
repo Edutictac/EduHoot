@@ -1,4 +1,4 @@
-// Traducciones y selector de idioma de la página de promoción (/promo/).
+// Traducciones y selector de idioma de la página de promoción (portada, /).
 // Usa EduhootLang (languages.js) para detectar, guardar y pintar los botones.
 (function(){
     var TEXTS = {
@@ -46,8 +46,7 @@
   "d2_p": "Envía un enlace como tarea asíncrona y consulta la clasificación y los aciertos por pregunta de cada partida.",
   "d2_link": "Ver deberes →",
   "quote_p": "«Mi clase pidió repetir la partida. Es la primera vez que me piden repasar.»",
-  "quote_who": "Docente de Secundaria",
-  "quote_note": "· testimonio de ejemplo, sustitúyelo por uno real",
+  "quote_note": "Testimonios de ejemplo: se sustituirán por reales.",
   "cta_h2": "Libre, gratuito y tuyo",
   "cta_p": "Código abierto bajo AGPL-3.0. Puedes instalarlo en tu centro o usarlo en la web, también como app instalable.",
   "see_code": "Ver el código",
@@ -64,7 +63,19 @@
   "x4": "Resultados por pregunta",
   "x5": "Enlace de entrada con el PIN",
   "x6": "Repaso con tarjetas",
-  "f_source": "Código fuente"
+  "f_source": "Código fuente",
+  "quick_start": "Inicio rápido",
+  "tile4": "Acceso profesorado",
+  "tile4s": "Crea y lanza tus cuestionarios",
+  "install_app": "Instalar app",
+  "q1_p": "«Mi clase pidió repetir la partida. Es la primera vez que me piden repasar.»",
+  "q1_w": "Docente de Secundaria",
+  "q2_p": "«Importé mis cuestionarios de Moodle en cinco minutos y esa misma tarde jugamos en clase.»",
+  "q2_w": "Profesora de Matemáticas",
+  "q3_p": "«Me gusta jugar solo para practicar antes del examen. Sé qué preguntas fallo.»",
+  "q3_w": "Alumna de 3.º de ESO",
+  "carousel_prev": "Anterior",
+  "carousel_next": "Siguiente"
  },
  "ca": {
   "nav_modes": "Modes de joc",
@@ -110,8 +121,7 @@
   "d2_p": "Envia un enllaç com a tasca asíncrona i consulta la classificació i els encerts per pregunta de cada partida.",
   "d2_link": "Veure deures →",
   "quote_p": "«La meua classe va demanar repetir la partida. És la primera vegada que em demanen repassar.»",
-  "quote_who": "Docent de Secundària",
-  "quote_note": "· testimoni d'exemple, substitueix-lo per un de real",
+  "quote_note": "Testimonis d'exemple: se substituiran per reals.",
   "cta_h2": "Lliure, gratuït i teu",
   "cta_p": "Codi obert sota AGPL-3.0. Pots instal·lar-lo al teu centre o usar-lo al web, també com a app instal·lable.",
   "see_code": "Veure el codi",
@@ -128,7 +138,19 @@
   "x4": "Resultats per pregunta",
   "x5": "Enllaç d'entrada amb el PIN",
   "x6": "Repàs amb targetes",
-  "f_source": "Codi font"
+  "f_source": "Codi font",
+  "quick_start": "Inici ràpid",
+  "tile4": "Accés professorat",
+  "tile4s": "Crea i llança els teus qüestionaris",
+  "install_app": "Instal·lar app",
+  "q1_p": "«La meua classe va demanar repetir la partida. És la primera vegada que em demanen repassar.»",
+  "q1_w": "Docent de Secundària",
+  "q2_p": "«Vaig importar els meus qüestionaris de Moodle en cinc minuts i eixa mateixa vesprada vam jugar a classe.»",
+  "q2_w": "Professora de Matemàtiques",
+  "q3_p": "«M'agrada jugar sol per a practicar abans de l'examen. Sé quines preguntes falle.»",
+  "q3_w": "Alumna de 3r d'ESO",
+  "carousel_prev": "Anterior",
+  "carousel_next": "Següent"
  },
  "va": {
   "nav_modes": "Modes de joc",
@@ -174,8 +196,7 @@
   "d2_p": "Envia un enllaç com a tasca asíncrona i consulta la classificació i els encerts per pregunta de cada partida.",
   "d2_link": "Veure deures →",
   "quote_p": "«La meua classe va demanar repetir la partida. És la primera vegada que em demanen repassar.»",
-  "quote_who": "Docent de Secundària",
-  "quote_note": "· testimoni d'exemple, substituïx-lo per un de real",
+  "quote_note": "Testimonis d'exemple: se substituiran per reals.",
   "cta_h2": "Lliure, gratuït i teu",
   "cta_p": "Codi obert sota AGPL-3.0. Pots instal·lar-lo al teu centre o usar-lo al web, també com a app instal·lable.",
   "see_code": "Veure el codi",
@@ -192,7 +213,19 @@
   "x4": "Resultats per pregunta",
   "x5": "Enllaç d'entrada amb el PIN",
   "x6": "Repàs amb targetes",
-  "f_source": "Codi font"
+  "f_source": "Codi font",
+  "quick_start": "Inici ràpid",
+  "tile4": "Accés professorat",
+  "tile4s": "Crea i llança els teus qüestionaris",
+  "install_app": "Instal·lar app",
+  "q1_p": "«La meua classe va demanar repetir la partida. És la primera vegada que em demanen repassar.»",
+  "q1_w": "Docent de Secundària",
+  "q2_p": "«Vaig importar els meus qüestionaris de Moodle en cinc minuts i eixa mateixa vesprada vam jugar a classe.»",
+  "q2_w": "Professora de Matemàtiques",
+  "q3_p": "«M'agrada jugar sol per a practicar abans de l'examen. Sé quines preguntes falle.»",
+  "q3_w": "Alumna de 3r d'ESO",
+  "carousel_prev": "Anterior",
+  "carousel_next": "Següent"
  },
  "en": {
   "nav_modes": "Game modes",
@@ -238,8 +271,7 @@
   "d2_p": "Send a link as an asynchronous task and check the ranking and correct answers per question for each game.",
   "d2_link": "See homework →",
   "quote_p": "\"My class asked to play again. It's the first time they've asked to review.\"",
-  "quote_who": "Secondary school teacher",
-  "quote_note": "· sample testimonial, replace it with a real one",
+  "quote_note": "Sample testimonials: they will be replaced with real ones.",
   "cta_h2": "Free, open and yours",
   "cta_p": "Open source under AGPL-3.0. Install it at your school or use it on the web, also as an installable app.",
   "see_code": "View the code",
@@ -256,7 +288,19 @@
   "x4": "Results per question",
   "x5": "Join link with the PIN",
   "x6": "Flashcard review",
-  "f_source": "Source code"
+  "f_source": "Source code",
+  "quick_start": "Quick start",
+  "tile4": "Teacher access",
+  "tile4s": "Create and launch your quizzes",
+  "install_app": "Install app",
+  "q1_p": "\"My class asked to play again. It's the first time they've asked to review.\"",
+  "q1_w": "Secondary school teacher",
+  "q2_p": "\"I imported my Moodle quizzes in five minutes and we played in class that same afternoon.\"",
+  "q2_w": "Maths teacher",
+  "q3_p": "\"I like playing solo to practise before the exam. I know which questions I get wrong.\"",
+  "q3_w": "3rd-year secondary student",
+  "carousel_prev": "Previous",
+  "carousel_next": "Next"
  },
  "fr": {
   "nav_modes": "Modes de jeu",
@@ -302,8 +346,7 @@
   "d2_p": "Envoie un lien comme tâche asynchrone et consulte le classement et les bonnes réponses par question pour chaque partie.",
   "d2_link": "Voir les devoirs →",
   "quote_p": "« Ma classe a demandé à rejouer la partie. C'est la première fois qu'ils demandent à réviser. »",
-  "quote_who": "Enseignant de collège",
-  "quote_note": "· témoignage d'exemple, remplace-le par un vrai",
+  "quote_note": "Témoignages d'exemple : ils seront remplacés par de vrais.",
   "cta_h2": "Libre, gratuit et à toi",
   "cta_p": "Code ouvert sous AGPL-3.0. Installe-le dans ton établissement ou utilise-le sur le web, aussi comme application installable.",
   "see_code": "Voir le code",
@@ -320,7 +363,19 @@
   "x3": "Lecture à voix haute",
   "x4": "Résultats par question",
   "x5": "Lien d'entrée avec le PIN",
-  "x6": "Révision avec des cartes mémoire"
+  "x6": "Révision avec des cartes mémoire",
+  "quick_start": "Démarrage rapide",
+  "tile4": "Accès enseignants",
+  "tile4s": "Crée et lance tes quiz",
+  "install_app": "Installer l'application",
+  "q1_p": "« Ma classe a demandé à rejouer la partie. C'est la première fois qu'ils demandent à réviser. »",
+  "q1_w": "Enseignant de collège",
+  "q2_p": "« J'ai importé mes quiz Moodle en cinq minutes et nous avons joué en classe le jour même. »",
+  "q2_w": "Professeure de mathématiques",
+  "q3_p": "« J'aime jouer seule pour m'entraîner avant l'examen. Je sais quelles questions je rate. »",
+  "q3_w": "Élève de 4e",
+  "carousel_prev": "Précédent",
+  "carousel_next": "Suivant"
  }
 };
     var lang = 'es';
@@ -331,6 +386,10 @@
         document.querySelectorAll('[data-i18n]').forEach(function(el){
             var v = dict[el.getAttribute('data-i18n')];
             if(v !== undefined) el.textContent = v;
+        });
+        document.querySelectorAll('[data-i18n-aria]').forEach(function(el){
+            var v = dict[el.getAttribute('data-i18n-aria')];
+            if(v !== undefined) el.setAttribute('aria-label', v);
         });
         document.querySelectorAll('#lang-switcher button[data-lang]').forEach(function(b){
             var on = b.getAttribute('data-lang') === lang;
@@ -388,4 +447,50 @@
     // Las tarjetas decorativas ahora responden al clic: se exponen como botones.
     document.querySelectorAll('.card').forEach(function(c){ c.removeAttribute('aria-hidden'); c.setAttribute('role', 'button'); c.tabIndex = 0;
         c.addEventListener('keydown', function(e){ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); c.click(); } }); });
+})();
+
+// Carrusel de testimonios: automático (se pausa con el ratón o el foco y no se mueve si el sistema reduce el movimiento), con puntos y flechas.
+(function(){
+    var root = document.querySelector('.quote');
+    if(!root) return;
+    var slides = Array.prototype.slice.call(root.querySelectorAll('.slide'));
+    var dotsBox = document.getElementById('quote-dots');
+    if(slides.length < 2 || !dotsBox) return;
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var current = 0, timer = null, paused = false;
+
+    var dots = slides.map(function(_, i){
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'q-dot';
+        b.setAttribute('aria-label', (i + 1) + ' / ' + slides.length);
+        b.addEventListener('click', function(){ show(i); restart(); });
+        dotsBox.appendChild(b);
+        return b;
+    });
+
+    function show(n){
+        current = (n + slides.length) % slides.length;
+        slides.forEach(function(s, i){
+            var on = i === current;
+            s.classList.toggle('is-active', on);
+            s.setAttribute('aria-hidden', on ? 'false' : 'true');
+        });
+        dots.forEach(function(d, i){
+            d.classList.toggle('active', i === current);
+            if(i === current) d.setAttribute('aria-current', 'true'); else d.removeAttribute('aria-current');
+        });
+    }
+    function restart(){
+        if(timer) clearInterval(timer);
+        timer = null;
+        if(reduce || paused) return;
+        timer = setInterval(function(){ show(current + 1); }, 7000);
+    }
+    root.querySelector('.q-prev').addEventListener('click', function(){ show(current - 1); restart(); });
+    root.querySelector('.q-next').addEventListener('click', function(){ show(current + 1); restart(); });
+    ['mouseenter', 'focusin'].forEach(function(ev){ root.addEventListener(ev, function(){ paused = true; restart(); }); });
+    ['mouseleave', 'focusout'].forEach(function(ev){ root.addEventListener(ev, function(){ paused = false; restart(); }); });
+    show(0);
+    restart();
 })();

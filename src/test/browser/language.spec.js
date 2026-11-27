@@ -11,7 +11,7 @@ test.beforeEach(async ({ page }) => {
 
 for (const lang of ['ca', 'va', 'es', 'en', 'fr']) {
     test(`${lang}: seleccio, recarrega i navegacio des de Commons`, async ({ page }) => {
-        await page.goto('/?lang=va');
+        await page.goto('/inicio/?lang=va');
         await page.locator(`[data-lang="${lang}"]`).click();
         await expect(page.locator(`[data-lang="${lang}"]`)).toHaveClass(/active/);
         await page.reload();
