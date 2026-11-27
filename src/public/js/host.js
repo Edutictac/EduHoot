@@ -159,6 +159,56 @@ var hostLobbyMusicI18n = {
         bgMusicVolume: 'Volume',
         bgMusicNone: 'No music',
     },
+    de: {
+        bgMusicTitle: 'Hintergrundmusik',
+        bgMusicChoose: 'Titel wählen',
+        bgMusicPlay: 'Musik abspielen',
+        bgMusicPause: 'Musik pausieren',
+        bgMusicPrev: 'Zurück',
+        bgMusicNext: 'Weiter',
+        bgMusicVolume: 'Lautstärke',
+        bgMusicNone: 'Keine Musik'
+    },
+    it: {
+        bgMusicTitle: 'Musica di sottofondo',
+        bgMusicChoose: 'Scegli un brano',
+        bgMusicPlay: 'Riproduci musica',
+        bgMusicPause: 'Metti in pausa la musica',
+        bgMusicPrev: 'Prec.',
+        bgMusicNext: 'Succ.',
+        bgMusicVolume: 'Volume',
+        bgMusicNone: 'Nessuna musica'
+    },
+    pt: {
+        bgMusicTitle: 'Música de fundo',
+        bgMusicChoose: 'Escolher uma faixa',
+        bgMusicPlay: 'Reproduzir música',
+        bgMusicPause: 'Pausar música',
+        bgMusicPrev: 'Ant.',
+        bgMusicNext: 'Seg.',
+        bgMusicVolume: 'Volume',
+        bgMusicNone: 'Sem música'
+    },
+    bg: {
+        bgMusicTitle: 'Фонова музика',
+        bgMusicChoose: 'Избери парче',
+        bgMusicPlay: 'Пусни музика',
+        bgMusicPause: 'Пауза на музиката',
+        bgMusicPrev: 'Назад',
+        bgMusicNext: 'Напред',
+        bgMusicVolume: 'Сила на звука',
+        bgMusicNone: 'Без музика'
+    },
+    ar: {
+        bgMusicTitle: 'موسيقى الخلفية',
+        bgMusicChoose: 'اختر مقطعاً',
+        bgMusicPlay: 'شغّل الموسيقى',
+        bgMusicPause: 'أوقف الموسيقى مؤقتاً',
+        bgMusicPrev: 'السابق',
+        bgMusicNext: 'التالي',
+        bgMusicVolume: 'مستوى الصوت',
+        bgMusicNone: 'بدون موسيقى'
+    },
     fr: {
         bgMusicTitle: 'Musique de fond',
         bgMusicChoose: 'Choisir un morceau',
