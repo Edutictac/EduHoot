@@ -88,6 +88,7 @@ const ASSETS = [
   '/js/tfLabels.js',
   '/js/promo.js',
   '/css/promo.css',
+  '/css/inicio.css',
   '/js/env-badge.js',
   '/js/solo-early.js',
   '/js/pwa-install.js',

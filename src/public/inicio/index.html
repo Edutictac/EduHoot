@@ -2,12 +2,13 @@
 <html lang="es">
     <head>
         <meta charset="utf-8">
-        <title>EduHoot</title>
+        <title>EduHoot · Inicio rápido</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#6c2bd9">
         <link rel="manifest" href="/manifest.webmanifest">
         <link rel="icon" href="/icons/logo.svg" type="image/svg+xml">
         <link rel="stylesheet" href="/css/landing.css">
+        <link rel="stylesheet" href="/css/inicio.css">
         <link rel="stylesheet" href="/css/edutictac-footer.css">
         <link rel="stylesheet" href="/css/edutictac-shared.css">
         <script src="/js/edutictac-chip.js"></script>
@@ -20,14 +21,14 @@
             <span data-i18n="landing_langLabel">Idioma</span>
         </div>
         <main class="landing-shell">
-            <img class="logo" src="/icons/logo.svg" alt="EduHoot logo">
+            <a class="logo-link" href="/" title="EduHoot"><img class="logo" src="/icons/logo.svg" alt="EduHoot"></a>
             <h1 data-i18n="landing_title">EduHoot</h1>
             <p class="tagline" data-i18n="landing_tagline">Juega desde cualquier aula o en solitario.</p>
             <div class="landing-actions">
-                <a class="btn primary" href="/join.html" data-i18n="landing_play_multi">Jugar en el aula</a>
-                <a class="btn secondary" href="/multiplayer/" data-i18n="landing_play_local_multi">Multijugador</a>
-                <a class="btn secondary" href="/solo/" data-i18n="landing_play_solo">Jugar solo</a>
-                <a class="btn teacher" href="/create/" data-i18n="landing_prof_access">Acceso profesorado</a>
+                <a class="btn primary" href="/join.html" data-i18n="landing_play_multi" data-ic="🎮">Jugar en el aula</a>
+                <a class="btn secondary" href="/multiplayer/" data-i18n="landing_play_local_multi" data-ic="👥">Multijugador</a>
+                <a class="btn secondary" href="/solo/" data-i18n="landing_play_solo" data-ic="👤">Jugar solo</a>
+                <a class="btn teacher" href="/create/" data-i18n="landing_prof_access" data-ic="📚">Acceso profesorado</a>
             </div>
             <button id="installApp" class="install-button" type="button" data-i18n="landing_install_app" hidden>Instalar app</button>
         </main>
