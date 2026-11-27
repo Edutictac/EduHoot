@@ -391,7 +391,7 @@
             var v = dict[el.getAttribute('data-i18n-aria')];
             if(v !== undefined) el.setAttribute('aria-label', v);
         });
-        document.querySelectorAll('#lang-switcher button[data-lang]').forEach(function(b){
+        document.querySelectorAll('#promo-lang button[data-lang]').forEach(function(b){
             var on = b.getAttribute('data-lang') === lang;
             b.classList.toggle('active', on);
             b.setAttribute('aria-pressed', on ? 'true' : 'false');
@@ -407,7 +407,7 @@
     if(window.EduhootLang) lang = window.EduhootLang.init({ fallback: 'es' });
     if(!TEXTS[lang]) lang = 'es';
     document.addEventListener('click', function(e){
-        var b = e.target.closest && e.target.closest('#lang-switcher button[data-lang]');
+        var b = e.target.closest && e.target.closest('#promo-lang button[data-lang]');
         if(b) set(b.getAttribute('data-lang'));
     });
     apply();

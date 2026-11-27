@@ -42,12 +42,20 @@ test('los testimonios van en carrusel y se avisa de que son de ejemplo', async (
 
 test('el selector de idioma incluye el francés y traduce la promo', async ({ page }) => {
     await page.goto('/?lang=es');
-    expect(await page.locator('#lang-switcher button').evaluateAll(b => b.map(x => x.dataset.lang))).toEqual(['ca', 'va', 'es', 'en', 'fr']);
-    await page.locator('#lang-switcher [data-lang="fr"]').click();
+    expect(await page.locator('#promo-lang button').evaluateAll(b => b.map(x => x.dataset.lang))).toEqual(['ca', 'va', 'es', 'en', 'fr']);
+    await page.locator('#promo-lang [data-lang="fr"]').click();
     await expect(page.locator('html')).toHaveAttribute('lang', 'fr');
     await expect(page.locator('.top-actions a.primary')).toContainText('Jouer maintenant');
     await expect(page.locator('.hero-actions a[href="/inicio/"]')).toContainText('Démarrage rapide');
     await expect(page.locator('.quote-note')).toContainText('exemple');
+});
+
+test('el selector de idioma propio sigue visible aunque el chip de cuenta se pinte', async ({ page }) => {
+    await page.goto('/?lang=es');
+    // Lo que hace edutictac-chip.js cuando el chip de Commons está listo.
+    await page.evaluate(() => document.documentElement.classList.add('has-account-chip'));
+    await expect(page.locator('#promo-lang')).toBeVisible();
+    await expect(page.locator('#promo-lang [data-lang="fr"]')).toBeVisible();
 });
 
 test('Inicio rápido lleva a la portada de siempre, con enlaces de vuelta a la promo', async ({ page }) => {
