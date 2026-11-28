@@ -46,6 +46,7 @@ test('/dev/login llista els usuaris del seed i permet entrar amb la seua contras
   assert.equal(page.status, 200);
   const html = await page.text();
   assert.ok(html.includes(`data-email="${SEED_USER.email}"`), 'botó de l’usuari de prova');
+  assert.ok(html.includes('<a href="/">← Inici</a>') && html.includes('<a href="/create/">Biblioteca</a>'), 'enllaços a Inici i Biblioteca');
 
   const login = await fetch(`${baseUrl}/api/auth/login`, {
     method: 'POST',

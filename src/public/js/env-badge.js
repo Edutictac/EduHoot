@@ -163,15 +163,95 @@
             try{ return window.localStorage.getItem(STORE) === '1'; }catch(e){ return false; }
         };
         applyHidden(isHidden());
+        var toggleHidden = function(){
+            var hidden = !isHidden();
+            try{ window.localStorage.setItem(STORE, hidden ? '1' : '0'); }catch(e){}
+            applyHidden(hidden);
+            return hidden;
+        };
         window.addEventListener('keydown', function(ev){
             var isF9 = ev.key === 'F9' && !ev.ctrlKey && !ev.altKey && !ev.metaKey && !ev.shiftKey;
             var isAltB = ev.code === 'KeyB' && ev.altKey && !ev.ctrlKey && !ev.metaKey && !ev.shiftKey;
             if(!isF9 && !isAltB) return;
             ev.preventDefault();
-            var hidden = !isHidden();
-            try{ window.localStorage.setItem(STORE, hidden ? '1' : '0'); }catch(e){}
-            applyHidden(hidden);
+            toggleHidden();
         });
+        // Portada: en dev y stage, el logo de EduHoot (#brand) muestra u oculta el distintivo al hacer clic.
+        // En producción este código no llega a ejecutarse y el logo solo conserva su animación.
+        var brand = document.getElementById('brand');
+        if(brand){
+            brand.classList.add('is-clickable');
+            brand.setAttribute('role', 'button');
+            brand.setAttribute('tabindex', '0');
+            brand.setAttribute('title', cfg.label);
+            var syncBrand = function(){ brand.setAttribute('aria-pressed', isHidden() ? 'false' : 'true'); };
+            syncBrand();
+            brand.addEventListener('click', function(){ toggleHidden(); syncBrand(); });
+            brand.addEventListener('keydown', function(ev){
+                if(ev.key !== 'Enter' && ev.key !== ' ') return;
+                ev.preventDefault();
+                toggleHidden();
+                syncBrand();
+            });
+        }
+    }
+
+    // Textos del botó (només l'admin el veu): tooltip i etiqueta accessible.
+    var STAGE_TOGGLE_TEXT = {
+        ca: "Mostra o amaga l'avís de Stage (admin, per a tots)", va: "Mostra o amaga l'avís de Stage (admin, per a tots)",
+        es: 'Mostrar u ocultar el aviso de Stage (admin, para todos)', en: 'Show or hide the Stage notice (admin, for everyone)',
+        fr: "Afficher ou masquer l'avis Stage (admin, pour tous)", de: 'Stage-Hinweis ein- oder ausblenden (Admin, für alle)',
+        it: "Mostra o nascondi l'avviso Stage (admin, per tutti)", pt: 'Mostrar ou ocultar o aviso do Stage (admin, para todos)',
+        bg: 'Показване или скриване на известието за Stage (админ, за всички)', ar: 'إظهار أو إخفاء إشعار Stage (للمشرف، للجميع)'
+    };
+
+    // Tooltip del botó ⚙️ (només l'admin el veu): porta al panell d'administració.
+    var ADMIN_LINK_TEXT = {
+        ca: "Panell d'administració", va: "Panell d'administració", es: 'Panel de administración', en: 'Administration panel',
+        fr: "Panneau d'administration", de: 'Verwaltungsbereich', it: 'Pannello di amministrazione', pt: 'Painel de administração',
+        bg: 'Административен панел', ar: 'لوحة الإدارة'
+    };
+
+    // Només l'admin pot mostrar o amagar l'avís (per a tots els usuaris): té un botó 🧪 al costat de l'avís.
+    function setupStageNoticeAdmin(notice){
+        var toggle = document.getElementById('stage-notice-toggle');
+        if(!toggle) return;
+        // El usuario lo publica create-auth.js (sin pedir /api/auth/me otra vez).
+        var start = function(user){
+            if(!user || user.role !== 'admin') return;
+            var visible = function(){ return !notice.classList.contains('hidden'); };
+            var code = String(document.documentElement.lang || 'es').toLowerCase();
+            code = code.indexOf('valencia') !== -1 ? 'va' : code.split('-')[0];
+            var label = STAGE_TOGGLE_TEXT[code] || STAGE_TOGGLE_TEXT.es;
+            toggle.setAttribute('title', label);
+            toggle.setAttribute('aria-label', label);
+            var refresh = function(){
+                toggle.setAttribute('aria-pressed', visible() ? 'true' : 'false');
+                toggle.classList.toggle('is-off', !visible());
+            };
+            toggle.classList.remove('hidden');
+            var adminLink = document.getElementById('admin-link');
+            if(adminLink){
+                var adminLabel = ADMIN_LINK_TEXT[code] || ADMIN_LINK_TEXT.es;
+                adminLink.setAttribute('title', adminLabel);
+                adminLink.setAttribute('aria-label', adminLabel);
+                adminLink.classList.remove('hidden');
+            }
+            refresh();
+            toggle.addEventListener('click', function(){
+                var next = !visible();
+                fetch('/api/admin/settings/stage-notice', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ visible: next })
+                }).then(function(res){
+                    if(res.ok){ notice.classList.toggle('hidden', !next); refresh(); }
+                }).catch(function(){});
+            });
+        };
+        if(window.eduhootCurrentUser !== undefined) start(window.eduhootCurrentUser);
+        else window.addEventListener('eduhoot:user', function(ev){ start(ev.detail); }, { once: true });
     }
 
     function init(){
@@ -185,11 +265,13 @@
             // ja), però el de "novetats" seguix visible.
             var stageNotice = document.getElementById('stage-notice');
             if(stageNotice && data){
-                stageNotice.classList.remove('hidden');
+                // stageNoticeVisible (servidor): true o sense definir, es veu; false, amagat per a tots.
+                if(data.stageNoticeVisible !== false) stageNotice.classList.remove('hidden');
                 var tryStageBtn = document.getElementById('stage-notice-try-stage');
                 if(tryStageBtn && data.env === 'staging'){
                     tryStageBtn.classList.add('hidden');
                 }
+                setupStageNoticeAdmin(stageNotice);
             }
             var cfg = data && ENVS[data.env];
             if(!cfg) return;

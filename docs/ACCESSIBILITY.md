@@ -49,7 +49,8 @@ Ja implementat, no cal tornar a proposar-ho:
 - El viewport no bloqueja el zoom (no hi ha `user-scalable=no`).
 - **Contrast del text dels botons de resposta** de com a mínim 4,5:1
   (WCAG 1.4.3) a l'alumnat, l'amfitrió, Solo i les barres de resultats;
-  `test/unit/a11yContrast.test.js` ho comprova als CSS.
+  `test/unit/a11yContrast.test.js` ho comprova als CSS. El roig dels botons de
+  sortir i cancel·lar la partida és `#cc3f4f` (4,78:1 amb text blanc).
 - **L'encert i la errada no depenen només del color** (WCAG 1.4.1): a Solo,
   la resposta correcta i la fallada porten «✓» i «✕» al botó, i la finestra
   de resultat mostra una icona («✓», «◐», «✕») amb el text; a l'alumnat i a

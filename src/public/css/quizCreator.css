@@ -41,7 +41,8 @@ body.modal-open{
     color: #fff;
 }
 
-#back{
+#back + #backHome{ margin-left: 8px; }
+#back, #backHome{
     display: inline-block;
     margin: 16px 0 0 16px;
     color: white;
@@ -52,7 +53,7 @@ body.modal-open{
     border-radius: 999px;
     transition: transform 0.2s ease, background 0.2s ease;
 }
-#back:hover{
+#back:hover, #backHome:hover{
     background: rgba(255,255,255,0.18);
     transform: translateY(-1px);
 }
@@ -407,7 +408,7 @@ label{
 
 @media (max-width: 600px){
     .page-shell{ margin: 16px auto 46px auto; padding: 0 14px 26px; }
-    #back{ margin: 12px 0 0 12px; }
+    #back, #backHome{ margin: 12px 0 0 12px; }
     .top-row{ flex-direction: column; align-items: stretch; }
     #title{ font-size: 32px; line-height: 1.1; }
     #subtitle{ margin-bottom: 18px; }

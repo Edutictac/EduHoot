@@ -152,3 +152,34 @@ test('en la pantalla del anfitrión el distintivo no recibe clics', async ({ pag
     await expect(badge(page)).toBeVisible();
     await expect(badge(page)).toHaveCSS('pointer-events', 'none');
 });
+
+// Portada (/): en dev y stage, un clic en el logo de EduHoot oculta y muestra el distintivo; en producción no hace nada.
+for (const [env, label] of [['development', 'desarrollo'], ['staging', 'stage']]) {
+    test(`${label}: en la portada, el clic en el logo oculta y muestra el distintivo`, async ({ page }) => {
+        await openWithEnv(page, '/?lang=es', env);
+        const brand = page.locator('#brand');
+        await expect(badge(page)).toBeVisible();
+        await expect(brand).toHaveAttribute('role', 'button');
+        await brand.click();
+        await expect(badge(page)).toBeHidden();
+        await expect(brand).toHaveAttribute('aria-pressed', 'false');
+        await brand.click();
+        await expect(badge(page)).toBeVisible();
+        // También con el teclado (Intro).
+        await brand.focus();
+        await page.keyboard.press('Enter');
+        await expect(badge(page)).toBeHidden();
+    });
+}
+
+test('producción: en la portada el logo no es un botón ni cambia nada al hacer clic', async ({ page }) => {
+    await openWithEnv(page, '/?lang=es', 'production');
+    const brand = page.locator('#brand');
+    await expect(brand).toBeVisible();
+    await expect(brand).not.toHaveAttribute('role', 'button');
+    await expect(brand).not.toHaveClass(/is-clickable/);
+    const url = page.url();
+    await brand.click();
+    await page.waitForTimeout(300);
+    expect(page.url()).toBe(url);
+});

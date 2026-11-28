@@ -1,7 +1,7 @@
 // Deures asíncrons: pantalla del alumnat. Se carga en /player/self-paced/ y solo actúa con ?hw=CÓDIGO.
 // Hace dos cosas: (1) la entrada (nombre, o nombre + código de recuperación) y (2) un «socket» falso
 // que habla con la API HTTP (/api/homework/:code/act) y entrega los mismos eventos que el servidor
-// en directo, de modo que playerSelfPaced.js sirve tal cual. Vore HOMEWORK_PLAN.md.
+// en directo, de modo que playerSelfPaced.js sirve tal cual. Vore HOMEWORK_HOWTO.md.
 (function(){
     'use strict';
     var code = String(new URLSearchParams(window.location.search).get('hw') || '').toUpperCase().replace(/[^A-Z0-9]/g, '');

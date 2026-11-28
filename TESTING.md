@@ -93,6 +93,7 @@ problemes d'estil, variables sense usar, etc.
   fora d'ell), `devPages.test.js` / `devPagesOff.test.js` (el mateix per a
   tot `/dev/`), i `devOidc.test.js` (flux d'Authentik complet contra l'OIDC
   simulat de dev: rol del seed, rebuig sense rol docent i PKCE), i
+  `stageNotice.test.js` (l'avís de Stage: visible per defecte i només l'admin el canvia, per a tots) i
   `adminLogs.test.js` (visor de logs, «Cargar más» amb `before`/`beforeId`,
   configuració de nivell/mida de la col·lecció capped i nom del quiz als
   logs, tot protegit per rol admin), `selfPacedSockets.test.js` (autoritme amb sockets reals de xarxa
@@ -146,7 +147,11 @@ problemes d'estil, variables sense usar, etc.
   `long-text.spec.js` (el text llarg sense espais no se n'ix del requadre),
   `music-blocks.spec.js` (la música de fons de solo, l'anfitrió i multijugador:
   reproduir, parar i canviar de pista amb botons i selector) i
-  `library-view.spec.js` (la biblioteca en targetes o en detall).
+  `library-view.spec.js` (la biblioteca en targetes o en detall),
+  `library-create.spec.js` (el botó «Crear» de la biblioteca), `library-subtitle-gap.spec.js`
+  (separació del subtítol), `nav-links.spec.js` («Inici» i «Biblioteca» a les pantalles
+  docents), `pager-hidden.spec.js` (el paginador s'amaga amb un quiz triat) i
+  `stage-notice.spec.js` (el botó 🧪 i el ⚙️ només per a l'administració).
 
 ### Scripts puntuals que NO són part del flux de test estàndard
 

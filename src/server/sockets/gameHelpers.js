@@ -15,7 +15,7 @@ const { buildAnswerStatus, leftListOf } = require('./answerStatus');
 const { getTimings } = require('../services/gameTimings');
 const { ghostStartInfo } = require('../services/ghostMark');
 const { normalizeAutoAdvance, AutoAdvanceTimer } = require('../services/autoAdvance');
-const { studentMetaOf, showCorrectAnswersOf } = require('../services/showAnswers');
+const { studentMetaOf, studentPlayersOf, showCorrectAnswersOf } = require('../services/showAnswers');
 const QUESTION_COUNTDOWN_SECONDS = 3;
 
 const answerRate = new Map(); // clave: hostId:ip -> { count, windowStart }
@@ -581,7 +581,7 @@ module.exports = function createGameHelpers({ io, games, players, cleanImportedT
     meta.showCorrectAnswers = showCorrectAnswersOf(game);
     // El anfitrión recibe el resultado completo; el alumnado, sin la respuesta correcta si está desactivado.
     io.to(game.hostId).emit('questionOver', playerData, meta);
-    io.to(game.pin).except(game.hostId).emit('questionOver', playerData, studentMetaOf(game, meta));
+    io.to(game.pin).except(game.hostId).emit('questionOver', studentPlayersOf(game, playerData), studentMetaOf(game, meta));
     armAutoAdvance(game);
   }
 

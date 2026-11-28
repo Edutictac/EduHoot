@@ -25,11 +25,12 @@
             <div class="top-row">
                 <h1 id="hwPageTitle" class="lp-title"><img class="title-logo" src="/icons/logo.svg" alt="" width="56" height="56"><span>{{ t('title') }}</span></h1>
                 <div class="top-actions">
+                    <a id="hwHomeLink" :title="t('backHome')" class="btn btn-ghost btn-small" href="/">{{ t('backHome') }}</a>
                     <a id="hwBackLink" :title="t('back')" class="btn btn-ghost btn-small" href="/create/">{{ t('back') }}</a>
                     <a id="hwGamesLink" :title="t('myGames')" class="btn btn-ghost btn-small" href="/create/partidas/">{{ t('myGames') }}</a>
                     <label class="lang-switch">
                         <span>{{ t('langLabel') }}</span>
-                        <select id="lang-select" data-lang-options="name"></select>
+                        <select id="lang-select" data-lang-options="short"></select>
                     </label>
                 </div>
             </div>

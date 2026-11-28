@@ -484,7 +484,7 @@ h3[id^="answer"]::before{
 }
 #showRanking{ display: inline-block; }
 #downloadReportBtn{ background: rgba(16,185,129,0.22); }
-/* Cancelar partida y volver: se ve siempre; en la confirmación usa el rojo del logo de EduHoot (#da4453). */
+/* Cancelar partida y volver: se ve siempre; en la confirmación usa el rojo del logo de EduHoot oscurecido (#cc3f4f). */
 #cancelGameBtn{ display: inline-block; background: rgba(218,68,83,0.22); }
 /* Fila superior: siguiente pregunta (verde, como el informe) y ver ranking (amarillo). */
 .top-row{ display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 8px 0; }
@@ -495,7 +495,7 @@ h3[id^="answer"]::before{
 #showRanking{ background: #fdbc4b; color: #4d4d4d; }
 #nextQButton:hover{ filter: brightness(1.08); }
 #showRanking:hover{ filter: brightness(1.05); }
-#cancelGameBtn.is-confirming{ background: #da4453; border-color: #da4453; color: #fff; }
+#cancelGameBtn.is-confirming{ background: #cc3f4f; border-color: #cc3f4f; color: #fff; }
 #nextQButton:hover, #showRanking:hover, #skipQButton:hover, #downloadReportBtn:hover, #cancelGameBtn:hover{ transform: translateY(-2px); filter: brightness(1.05); }
 
 #winnerTitle, #winner1, #winner2, #winner3, #winner4, #winner5{

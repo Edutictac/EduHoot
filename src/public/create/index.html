@@ -21,16 +21,21 @@
             <div class="top-row">
                 <h1 id = "title"><img class="title-logo" src="/icons/logo.svg" alt="" width="56" height="56"><span data-i18n="title">Crea y lanza tu EduHoot</span></h1>
                 <div class="top-actions">
-                    <a id="my-games" :title="t('myGames')" class="btn btn-ghost btn-small hidden" href="partidas/" data-i18n="myGames">Mis partidas</a>
-                    <a id="my-homework" :title="t('myHomework')" class="btn btn-ghost btn-small" href="homework/" data-i18n="myHomework">Mis deberes</a>
+                    <a id="my-games" :title="t('myGames')" class="btn btn-ghost btn-small hidden" href="partidas/" data-i18n="myGames">Partidas</a>
+                    <a id="my-homework" :title="t('myHomework')" class="btn btn-ghost btn-small" href="homework/" data-i18n="myHomework">Deberes</a>
+                    <button id="open-account" type="button" class="btn btn-ghost btn-small hidden" data-i18n="btnAccount">Preferencias</button>
                     <label class="lang-switch">
                         <span data-i18n="langLabel">Idioma</span>
-                        <select id="lang-select" data-lang-options="name"></select>
+                        <select id="lang-select" data-lang-options="short"></select>
                     </label>
-                    <button id="open-account" type="button" class="btn btn-ghost btn-small hidden" data-i18n="btnAccount">Preferencias</button>
                 </div>
             </div>
             <h4 id = "subtitle" data-i18n="subtitle">Genera con IA, importa (archivo o Kahoot) o <a id = "link" href = "quiz-creator/">crea un cuestionario desde cero</a>.</h4>
+
+            <div class="admin-tools">
+                <button id="stage-notice-toggle" type="button" class="stage-notice-toggle hidden" aria-pressed="true">🧪</button>
+                <a id="admin-link" class="stage-notice-toggle hidden" href="/admin">⚙️</a>
+            </div>
 
             <aside id="stage-notice" class="stage-notice hidden" aria-labelledby="stage-notice-title">
                 <h2 id="stage-notice-title" data-i18n="stageNoticeTitle">Prova les novetats d'EduHoot</h2>
@@ -295,7 +300,10 @@
                         <h3>{{ t('libraryTitle') }}</h3>
                         <p class="subtext">{{ t('libraryDesc') }}</p>
                     </div>
-                    <div id="game-count" class="pill pill-muted">{{ countText }}</div>
+                    <div class="library-head-actions">
+                        <div id="game-count" class="pill pill-muted">{{ countText }}</div>
+                        <a id="library-create" class="btn btn-primary" href="quiz-creator/"><span aria-hidden="true">＋</span> {{ t('libCreate') }}</a>
+                    </div>
                 </div>
                 <div class="filter-bar extra-gap">
                     <input id="library-search" type="search" :placeholder="t('searchPlaceholder')" v-model="filters.search" @input="onSearch">
@@ -348,7 +356,7 @@
                             </label>
                         </div>
                         <div id="game-list" class="game-grid" v-if="listView === 'cards'">
-                            <div v-if="!sortedQuizzes.length" class="empty-state"><p>{{ t('noGames') }}</p><p>{{ t('noGamesHint') }}</p></div>
+                            <div v-if="!sortedQuizzes.length" class="empty-state"><p>{{ t('noGames') }}</p><p>{{ t('noGamesHint') }}</p><div class="empty-state__action"><a class="btn btn-primary library-create-empty" href="quiz-creator/"><span aria-hidden="true">＋</span> {{ t('libCreate') }}</a></div></div>
                             <div v-for="quiz in pageQuizzes" :key="quiz.id" class="game-card">
                                 <img v-if="lib.coverLevel > 0" class="game-card__cover" :style="{ '--cover-opacity': lib.coverLevel / 100 }" :src="coverSrc(quiz)" alt="" aria-hidden="true" loading="lazy" decoding="async" @error="onCoverError($event)">
                                 <div class="game-card-head">
@@ -413,7 +421,7 @@
                             </div>
                         </div>
                         <div v-else id="library-detail" class="hw-card lib-detail-card">
-                            <div v-if="!sortedQuizzes.length" class="empty-state"><p>{{ t('noGames') }}</p><p>{{ t('noGamesHint') }}</p></div>
+                            <div v-if="!sortedQuizzes.length" class="empty-state"><p>{{ t('noGames') }}</p><p>{{ t('noGamesHint') }}</p><div class="empty-state__action"><a class="btn btn-primary library-create-empty" href="quiz-creator/"><span aria-hidden="true">＋</span> {{ t('libCreate') }}</a></div></div>
                             <div v-else class="hw-table-wrap">
                                 <table class="hw-table lib-detail" id="libDetail">
                                     <thead><tr>

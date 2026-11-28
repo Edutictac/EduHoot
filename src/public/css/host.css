@@ -407,8 +407,8 @@ body.host-game-embedded > *:not(#host-game-frame){
     color: var(--text-main);
 }
 #cancel.is-confirming{
-    background: #da4453;
-    border-color: #da4453;
+    background: #cc3f4f;
+    border-color: #cc3f4f;
     color: #fff;
 }
 
@@ -480,7 +480,7 @@ body{ font-family: 'Raleway', sans-serif; }
     border: 1px solid rgba(255,80,80,0.35);
     color: #ffdede;
 }
-#cancel.is-confirming{ background: #da4453; border-color: #da4453; color: #fff; }
+#cancel.is-confirming{ background: #cc3f4f; border-color: #cc3f4f; color: #fff; }
 
 /* Botó «Copiar enlace» del lobby: primari de la biblioteca (com el de deures), només emoticona.
    Durant els 2 s de confirmació gira i fa un petit salt; si falla, es mou de costat. */

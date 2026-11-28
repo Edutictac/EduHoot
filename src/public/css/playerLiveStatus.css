@@ -52,7 +52,7 @@
 .auto-advance-notice{ font-size: 1.1em; font-weight: 700; margin: 4px 0; }
 
 
-/* Salir de la partida: flotante abajo a la izquierda, rojo del logo (#da4453); pide confirmación. */
+/* Salir de la partida: flotante abajo a la izquierda, rojo del logo oscurecido (#cc3f4f, contraste 4,78:1 con texto blanco); pide confirmación. */
 .leave-game-btn{
     position: fixed;
     left: 12px;
@@ -63,7 +63,7 @@
     padding: 8px 16px;
     border: 0;
     border-radius: 12px;
-    background: #da4453;
+    background: #cc3f4f;
     color: #fff;
     font: 700 16px/1 'Inter', 'Poppins', sans-serif;
     cursor: pointer;

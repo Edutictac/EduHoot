@@ -1,7 +1,7 @@
 // Pregunta d'ordenar (feature 7, part «ordenar»): model i puntuació, sense E/S.
 // Els elements es guarden en l'ordre correcte: items[i] és el que ha d'anar a la posició i.
 // Una resposta és una permutació: answer[k] = índex (de items) col·locat en la posició k.
-// Les regles de puntuació segueixen els modes de qtype_ordering de Moodle (vore ORDER_PLAN.md, decisió 5b).
+// Les regles de puntuació segueixen els modes de qtype_ordering de Moodle (vore ORDER_HOWTO.md, decisió 5b).
 
 const MIN_ITEMS = 2;
 const MAX_ITEMS = 8;

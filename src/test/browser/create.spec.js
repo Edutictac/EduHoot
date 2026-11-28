@@ -217,7 +217,7 @@ test('con sesión: marca «Sólo mis cuestionarios», pide mine=1 y reclama el q
 test('sin cuestionarios: estado vacío y sin paginación', async ({ page }) => {
     await mockBackend(page, { quizzes: [] });
     await page.goto('/create/?lang=es');
-    await expect(page.locator('#game-list .empty-state p')).toHaveText(['No hay cuestionarios importados aún.', 'Sube un archivo o crea uno nuevo para verlo aquí.']);
+    await expect(page.locator('#game-list .empty-state p')).toHaveText(['No hay cuestionarios aún.', 'Sube un archivo o crea uno nuevo para verlo aquí.']);
     await expect(page.locator('#game-count')).toHaveText('0 cuestionarios');
     await expect(page.locator('#library-pagination')).toBeHidden();
 });
@@ -470,7 +470,7 @@ test('rechazar el borrado no borra', async ({ page }) => {
 test('botones de jugar y editar llevan a su pantalla', async ({ page }) => {
     await mockBackend(page, { user: TEACHER });
     await openCreate(page);
-    for (const [label, re] of [['▶️', /\/host\/\?id=q1$/], ['👥', /\/multiplayer\/\?id=q1$/], ['👤', /\/solo\/\?id=q1&from=library$/], ['🔁', /\/solo\/\?id=q1&mode=cards&from=library$/], ['✏️', /\/create\/quiz-creator\/\?id=q1$/]]) {
+    for (const [label, re] of [['▶️', /\/host\/\?id=q1$/], ['👥', /\/multiplayer\/\?id=q1&from=library$/], ['👤', /\/solo\/\?id=q1&from=library$/], ['🔁', /\/solo\/\?id=q1&mode=cards&from=library$/], ['✏️', /\/create\/quiz-creator\/\?id=q1$/]]) {
         await card(page, 'Geografia').locator('.game-actions > button', { hasText: label }).click();
         await expect(page).toHaveURL(re);
         await openCreate(page);

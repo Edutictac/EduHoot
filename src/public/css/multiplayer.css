@@ -1043,6 +1043,7 @@ body{
     padding-top: max(14px, var(--env-badge-space, 0px));
   }
 }
+.back-links{ display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
 .grid{ max-width: none; }
 .back-link{
   border-radius: 999px;

@@ -127,6 +127,8 @@ body {
     margin-top: 0;
     margin-bottom: 30px;
 }
+/* Cuando los botones pasan debajo del título (ventana estrecha), el subtítulo queda a la misma distancia de ellos que del título. */
+.top-row:has(+ #subtitle) .top-actions{ margin-bottom: 6px; }
 #link{
     color: #fff;
     font-weight: 600;
@@ -151,6 +153,9 @@ body {
     text-shadow: 0 1px 1px rgba(0,0,0,0.35);
 }
 
+.library-head-actions{ display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+.library-head-actions .btn{ text-decoration: none; font-family: inherit; font-weight: 700; }
+.library-create-empty{ text-decoration: none; }
 .panel-header{
     display: flex;
     align-items: flex-start;
@@ -256,6 +261,23 @@ body {
     opacity: 1;
 }
 
+/* Herramientas solo para administradores (🧪 aviso de Stage, ⚙️ panel de administración). */
+.admin-tools{ display: flex; justify-content: flex-end; gap: 8px; margin: 10px 0 0; }
+.stage-notice-toggle{
+    display: block;
+    margin: 0;
+    padding: 4px 10px;
+    text-decoration: none;
+    border: 2px solid #fbbf24;
+    border-radius: 999px;
+    background: #49330d;
+    font-size: 1.1rem;
+    line-height: 1.2;
+    cursor: pointer;
+}
+.stage-notice-toggle.is-off{ background: transparent; opacity: 0.7; }
+.stage-notice-toggle:hover, .stage-notice-toggle:focus-visible{ opacity: 1; }
+.stage-notice-toggle.hidden{ display: none; }
 .stage-notice{
     margin: 24px 0;
     padding: 20px;

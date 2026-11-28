@@ -23,7 +23,7 @@
     background: #0f172a; color: #e9eefb; font-weight: 700; cursor: pointer;
     box-shadow: 0 18px 55px rgba(0,0,0,0.25); transition: transform 0.18s ease, filter 0.18s ease; }
 .sp-btn--end{ background: rgba(218,68,83,0.22); border-color: rgba(218,68,83,0.55); }
-.sp-btn--end.is-confirming{ background: #da4453; border-color: #da4453; color: #fff; }
+.sp-btn--end.is-confirming{ background: #cc3f4f; border-color: #cc3f4f; color: #fff; }
 .sp-btn--report{ background: #15803d; border-color: #15803d; color: #fff; }
 .sp-btn:hover{ transform: translateY(-2px); filter: brightness(1.05); }
 .sp-btn--report:hover{ filter: brightness(1.08); }

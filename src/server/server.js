@@ -209,8 +209,19 @@ app.use(helmet({
 }));
 app.use(express.json({ limit: BODY_LIMIT }));
 app.use(express.urlencoded({ extended: true, limit: BODY_LIMIT }));
-app.get('/api/env', (req, res) => {
-  res.json({ env: process.env.NODE_ENV || '' });
+// stageNoticeVisible: «Prova les novetats d'EduHoot» a la biblioteca. Per defecte es veu (true);
+// l'admin ho canvia amb POST /api/admin/settings/stage-notice i val per a tots els usuaris.
+app.get('/api/env', async (req, res) => {
+  let stageNoticeVisible = true;
+  try {
+    const settings = await require('./data/repositories').getSettingsCollection();
+    const doc = await settings.findOne({ _id: 'ui' });
+    if (doc && doc.stageNoticeVisible === false) stageNoticeVisible = false;
+  } catch (err) {
+    // Sense base de dades, l'avís es veu: mai bloquejar la pàgina.
+  }
+  res.set('Cache-Control', 'no-cache');
+  res.json({ env: process.env.NODE_ENV || '', stageNoticeVisible });
 });
 // Versió de la imatge desplegada (package.json) i, si en té, la tag amb
 // la qual es va publicar (p. ex. stage-2026.11.04-1), per al peu de pàgina.

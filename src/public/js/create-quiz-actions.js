@@ -12,7 +12,7 @@ function startSoloCards(data){
 }
 
 function startMultiplayer(data){
-    window.location.href = "/multiplayer/" + "?id=" + encodeURIComponent(data);
+    window.location.href = "/multiplayer/" + "?id=" + encodeURIComponent(data) + "&from=library";
 }
 
 async function renameQuiz(id, name){

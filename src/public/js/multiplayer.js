@@ -114,7 +114,7 @@
 
   var i18n = {
     es: {
-      back: 'Inicio',
+      back: 'Inicio', backLibrary: 'Biblioteca',
       footerPrivacy: 'Privacidad',
       footerCookies: 'Cookies',
       footerSource: 'Código fuente',
@@ -196,7 +196,7 @@
       iconLabel: 'Icono'
     },
     en: {
-      back: 'Home',
+      back: 'Home', backLibrary: 'Library',
       footerPrivacy: 'Privacy',
       footerCookies: 'Cookies',
       footerSource: 'Source code',
@@ -278,7 +278,7 @@
       iconLabel: 'Icon'
     },
     de: {
-        back: 'Startseite',
+        back: 'Startseite', backLibrary: 'Bibliothek',
         footerPrivacy: 'Datenschutz',
         footerCookies: 'Cookies',
         footerSource: 'Quellcode',
@@ -360,7 +360,7 @@
         iconLabel: 'Symbol'
     },
     it: {
-        back: 'Home',
+        back: 'Home', backLibrary: 'Libreria',
         footerPrivacy: 'Privacy',
         footerCookies: 'Cookie',
         footerSource: 'Codice sorgente',
@@ -442,7 +442,7 @@
         iconLabel: 'Icona'
     },
     pt: {
-        back: 'Início',
+        back: 'Início', backLibrary: 'Biblioteca',
         footerPrivacy: 'Privacidade',
         footerCookies: 'Cookies',
         footerSource: 'Código-fonte',
@@ -524,7 +524,7 @@
         iconLabel: 'Ícone'
     },
     bg: {
-        back: 'Начало',
+        back: 'Начало', backLibrary: 'Библиотека',
         footerPrivacy: 'Поверителност',
         footerCookies: 'Бисквитки',
         footerSource: 'Изходен код',
@@ -606,7 +606,7 @@
         iconLabel: 'Икона'
     },
     ar: {
-        back: 'الرئيسية',
+        back: 'الرئيسية', backLibrary: 'المكتبة',
         footerPrivacy: 'الخصوصية',
         footerCookies: 'ملفات تعريف الارتباط',
         footerSource: 'الكود المصدري',
@@ -688,7 +688,7 @@
         iconLabel: 'أيقونة'
     },
     fr: {
-        back: 'Accueil',
+        back: 'Accueil', backLibrary: 'Bibliothèque',
         footerPrivacy: 'Confidentialité',
         footerCookies: 'Cookies',
         footerSource: 'Code source',
@@ -770,7 +770,7 @@
         iconLabel: 'Icône'
     },
     ca: {
-      back: "Inici",
+      back: "Inici", backLibrary: 'Biblioteca',
       footerPrivacy: 'Privacitat',
       footerCookies: 'Galetes',
       footerSource: 'Codi font',
@@ -2317,6 +2317,11 @@
     try{
       var params = new URLSearchParams(window.location.search || '');
       id = params.get('id');
+      // Se llegó desde la biblioteca (?from=library): se ofrece también volver a ella.
+      if(params.get('from') === 'library'){
+        var libraryLink = document.getElementById('back-library');
+        if(libraryLink) libraryLink.classList.remove('hidden');
+      }
     }catch(e){}
     if(id){
       selectQuiz(id);

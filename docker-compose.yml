@@ -27,6 +27,8 @@ services:
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
       - PUBLIC_BASE_URL=${PUBLIC_BASE_URL:-}
+      # Política de seguridad en modo informe (no bloquea): CSP_REPORT_ONLY=true en .env.
+      - CSP_REPORT_ONLY=${CSP_REPORT_ONLY:-}
       # Authentik simulado por el servicio `oidc` (ver abajo). El navegador va a
       # localhost:${OIDC_PORT}; el contenedor pide token/userinfo por la red
       # interna (oidc:8080). Para desactivarlo: AUTHENTIK_CLIENT_ID= vacío en .env.

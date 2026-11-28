@@ -1,7 +1,7 @@
 // Deures asíncrons (feature 1): un quiz amb data límit que l'alumnat fa al seu ritme, sense
 // professorat present. Reutilitza el motor d'autoritme (services/selfPaced.js): el «game» i el
 // «player» es construïxen des de MongoDB en cada petició i es guarden en acabar l'acció.
-// El servidor mana: temps, puntuació i resposta correcta. Vore HOMEWORK_PLAN.md.
+// El servidor mana: temps, puntuació i resposta correcta. Vore HOMEWORK_HOWTO.md.
 const crypto = require('crypto');
 const sp = require('./selfPaced');
 const payloads = require('./selfPacedPayloads');

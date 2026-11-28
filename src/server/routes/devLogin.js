@@ -55,9 +55,13 @@ function renderPage(seedUsers, oidcEnabled, nonce) {
   .warning { background: #fff7ed; border: 1px solid #fdba74; padding: 0.75rem 1rem; border-radius: 8px; }
   #status { min-height: 1.5rem; font-weight: 600; }
   #session { display: none; }
+  .dev-nav { display: flex; gap: 8px; flex-wrap: wrap; }
+  .dev-nav a { padding: 0.35rem 0.9rem; border: 1px solid #d1d5db; border-radius: 999px; color: inherit; text-decoration: none; font-weight: 600; }
+  .dev-nav a:hover { background: #f3f4f6; }
 </style>
 </head>
 <body>
+  <nav class="dev-nav"><a href="/">← Inici</a><a href="/create/">Biblioteca</a></nav>
   <h1>🛠️ Accés de desenvolupament</h1>
   <p class="warning">Esta pàgina només existix quan <code>NODE_ENV=development</code>. En stage i producció l'únic accés docent és el xip d'EduTicTac.</p>
   <p id="status" role="status"></p>

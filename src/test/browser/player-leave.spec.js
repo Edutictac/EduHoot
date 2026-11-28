@@ -75,7 +75,7 @@ test('alumnado (partida): el botón de salir va flotante abajo a la izquierda, f
     await page.evaluate(() => window.__serverEmit('connect'));
     await page.evaluate(() => window.__serverEmit('playerQuestion', [{ question: 'Capital de Francia?', answers: ['Paris', 'Roma', 'Londres', 'Berlín'], type: 'quiz', time: 15 }]));
     await expect(page.locator('#leaveGameBtn')).toHaveCSS('position', 'fixed');
-    await expect(page.locator('#leaveGameBtn')).toHaveCSS('background-color', 'rgb(218, 68, 83)');
+    await expect(page.locator('#leaveGameBtn')).toHaveCSS('background-color', 'rgb(204, 63, 79)');
     const inStats = await page.evaluate(() => !!document.querySelector('#stats #leaveGameBtn'));
     expect(inStats).toBe(false);
     const box = await page.locator('#leaveGameBtn').boundingBox();
