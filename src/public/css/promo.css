@@ -139,6 +139,7 @@ p{margin-top:0}
 /* Confeti del clic */
 .burst{position:fixed;width:10px;height:10px;border-radius:2px;pointer-events:none;z-index:50;animation:burst .8s ease-out forwards}
 @keyframes burst{to{transform:translate(var(--dx),var(--dy)) rotate(var(--r));opacity:0}}
+.brand.is-clickable{cursor:pointer}
 .brand img{transition:transform .5s}.brand:hover img{transform:rotate(360deg)}
 
 @media(max-width:1000px){.strip{grid-template-columns:repeat(2,1fr)}}

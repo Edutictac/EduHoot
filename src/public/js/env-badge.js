@@ -163,15 +163,37 @@
             try{ return window.localStorage.getItem(STORE) === '1'; }catch(e){ return false; }
         };
         applyHidden(isHidden());
+        var toggleHidden = function(){
+            var hidden = !isHidden();
+            try{ window.localStorage.setItem(STORE, hidden ? '1' : '0'); }catch(e){}
+            applyHidden(hidden);
+            return hidden;
+        };
         window.addEventListener('keydown', function(ev){
             var isF9 = ev.key === 'F9' && !ev.ctrlKey && !ev.altKey && !ev.metaKey && !ev.shiftKey;
             var isAltB = ev.code === 'KeyB' && ev.altKey && !ev.ctrlKey && !ev.metaKey && !ev.shiftKey;
             if(!isF9 && !isAltB) return;
             ev.preventDefault();
-            var hidden = !isHidden();
-            try{ window.localStorage.setItem(STORE, hidden ? '1' : '0'); }catch(e){}
-            applyHidden(hidden);
+            toggleHidden();
         });
+        // Portada: en dev y stage, el logo de EduHoot (#brand) muestra u oculta el distintivo al hacer clic.
+        // En producción este código no llega a ejecutarse y el logo solo conserva su animación.
+        var brand = document.getElementById('brand');
+        if(brand){
+            brand.classList.add('is-clickable');
+            brand.setAttribute('role', 'button');
+            brand.setAttribute('tabindex', '0');
+            brand.setAttribute('title', cfg.label);
+            var syncBrand = function(){ brand.setAttribute('aria-pressed', isHidden() ? 'false' : 'true'); };
+            syncBrand();
+            brand.addEventListener('click', function(){ toggleHidden(); syncBrand(); });
+            brand.addEventListener('keydown', function(ev){
+                if(ev.key !== 'Enter' && ev.key !== ' ') return;
+                ev.preventDefault();
+                toggleHidden();
+                syncBrand();
+            });
+        }
     }
 
     // Textos del botó (només l'admin el veu): tooltip i etiqueta accessible.
