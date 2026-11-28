@@ -579,6 +579,23 @@ module.exports = function createAdminRouter({
     }
   });
 
+  // «Prova les novetats d'EduHoot» (biblioteca): visible per a tots (true) o amagat (false). Només l'admin ho canvia.
+  router.post('/api/admin/settings/stage-notice', requireRole('admin'), async (req, res) => {
+    try {
+      const { visible } = req.body || {};
+      if (typeof visible !== 'boolean') {
+        return res.status(400).json({ error: 'Cal indicar visible: true o false.' });
+      }
+      const settings = await getSettingsCollection();
+      await settings.updateOne({ _id: 'ui' }, { $set: { stageNoticeVisible: visible } }, { upsert: true });
+      logger.info('Avís de Stage actualitzat', { tag: 'admin-settings', stageNoticeVisible: visible });
+      return res.json({ ok: true, stageNoticeVisible: visible });
+    } catch (err) {
+      console.error('admin-settings-stage-notice POST error', err);
+      return res.status(500).json({ error: 'No s\'ha pogut actualitzar l\'avís.' });
+    }
+  });
+
   router.get('/admin/logs', (req, res) => {
     res.sendFile(path.join(publicPath, 'admin-logs.html'));
   });

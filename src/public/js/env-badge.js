@@ -174,6 +174,49 @@
         });
     }
 
+    // Textos del botó (només l'admin el veu): tooltip i etiqueta accessible.
+    var STAGE_TOGGLE_TEXT = {
+        ca: "Mostra o amaga l'avís de Stage (admin, per a tots)", va: "Mostra o amaga l'avís de Stage (admin, per a tots)",
+        es: 'Mostrar u ocultar el aviso de Stage (admin, para todos)', en: 'Show or hide the Stage notice (admin, for everyone)',
+        fr: "Afficher ou masquer l'avis Stage (admin, pour tous)", de: 'Stage-Hinweis ein- oder ausblenden (Admin, für alle)',
+        it: "Mostra o nascondi l'avviso Stage (admin, per tutti)", pt: 'Mostrar ou ocultar o aviso do Stage (admin, para todos)',
+        bg: 'Показване или скриване на известието за Stage (админ, за всички)', ar: 'إظهار أو إخفاء إشعار Stage (للمشرف، للجميع)'
+    };
+
+    // Només l'admin pot mostrar o amagar l'avís (per a tots els usuaris): té un botó 🧪 al costat de l'avís.
+    function setupStageNoticeAdmin(notice){
+        var toggle = document.getElementById('stage-notice-toggle');
+        if(!toggle) return;
+        fetch('/api/auth/me', { credentials: 'include' }).then(function(res){
+            return res.ok ? res.json() : null;
+        }).then(function(user){
+            if(!user || user.role !== 'admin') return;
+            var visible = function(){ return !notice.classList.contains('hidden'); };
+            var code = String(document.documentElement.lang || 'es').toLowerCase();
+            code = code.indexOf('valencia') !== -1 ? 'va' : code.split('-')[0];
+            var label = STAGE_TOGGLE_TEXT[code] || STAGE_TOGGLE_TEXT.es;
+            toggle.setAttribute('title', label);
+            toggle.setAttribute('aria-label', label);
+            var refresh = function(){
+                toggle.setAttribute('aria-pressed', visible() ? 'true' : 'false');
+                toggle.classList.toggle('is-off', !visible());
+            };
+            toggle.classList.remove('hidden');
+            refresh();
+            toggle.addEventListener('click', function(){
+                var next = !visible();
+                fetch('/api/admin/settings/stage-notice', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ visible: next })
+                }).then(function(res){
+                    if(res.ok){ notice.classList.toggle('hidden', !next); refresh(); }
+                }).catch(function(){});
+            });
+        }).catch(function(){});
+    }
+
     function init(){
         fetch('/api/env').then(function(res){
             return res.ok ? res.json() : null;
@@ -185,11 +228,13 @@
             // ja), però el de "novetats" seguix visible.
             var stageNotice = document.getElementById('stage-notice');
             if(stageNotice && data){
-                stageNotice.classList.remove('hidden');
+                // stageNoticeVisible (servidor): true o sense definir, es veu; false, amagat per a tots.
+                if(data.stageNoticeVisible !== false) stageNotice.classList.remove('hidden');
                 var tryStageBtn = document.getElementById('stage-notice-try-stage');
                 if(tryStageBtn && data.env === 'staging'){
                     tryStageBtn.classList.add('hidden');
                 }
+                setupStageNoticeAdmin(stageNotice);
             }
             var cfg = data && ENVS[data.env];
             if(!cfg) return;

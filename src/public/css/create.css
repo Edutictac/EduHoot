@@ -256,6 +256,21 @@ body {
     opacity: 1;
 }
 
+.stage-notice-toggle{
+    display: block;
+    margin: 10px 0 0;
+    margin-inline-start: auto;
+    padding: 4px 10px;
+    border: 2px solid #fbbf24;
+    border-radius: 999px;
+    background: #49330d;
+    font-size: 1.1rem;
+    line-height: 1.2;
+    cursor: pointer;
+}
+.stage-notice-toggle.is-off{ background: transparent; opacity: 0.7; }
+.stage-notice-toggle:hover, .stage-notice-toggle:focus-visible{ opacity: 1; }
+.stage-notice-toggle.hidden{ display: none; }
 .stage-notice{
     margin: 24px 0;
     padding: 20px;

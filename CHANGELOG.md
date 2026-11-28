@@ -47,6 +47,7 @@ fitxers corresponents, i els originals es van eliminar.
 - **Biblioteca: valoració amb estrelles i paginació per compte**: es poden valorar els quizzes públics; la mida de pàgina es guarda al compte; barra de paginació flotant i desplegable de pàgina. L'API de la llista de quizzes torna les valoracions i les preferències de paginació.
 - **Flashcards**: opcions amb la forma i el color de les respostes del joc, casella per mostrar-les, imatge damunt, disposició (2×2, una columna si no caben, vertader/fals), targeta que creix sense scroll i vídeo 16:9 dins de la finestra; resum final en una fila pròpia.
 - **Música de fons a l'autoritme** (pantalla de l'anfitrió), títol de la pàgina i cursor al títol de l'editor.
+- **Avís «Prova les novetats d'EduHoot»** (biblioteca): l'administració el mostra o l'amaga per a tots els usuaris amb el botó 🧪 que només ella veu, al costat de l'avís. Es guarda al servidor (`appSettings`, `stageNoticeVisible`, per defecte `true`); `/api/env` el torna i `POST /api/admin/settings/stage-notice` (rol admin) el canvia.
 
 ### Canviat
 - **Tipografia i botons comuns**: totes les pantalles (excepte la portada `/`) usen Raleway, i els botons amb classe `btn` tenen els mateixos radis (10 px). Fitxer `css/brand-unify.css`.
