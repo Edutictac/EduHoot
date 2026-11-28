@@ -300,7 +300,10 @@
                         <h3>{{ t('libraryTitle') }}</h3>
                         <p class="subtext">{{ t('libraryDesc') }}</p>
                     </div>
-                    <div id="game-count" class="pill pill-muted">{{ countText }}</div>
+                    <div class="library-head-actions">
+                        <div id="game-count" class="pill pill-muted">{{ countText }}</div>
+                        <a id="library-create" class="btn btn-primary" href="quiz-creator/"><span aria-hidden="true">＋</span> {{ t('libCreate') }}</a>
+                    </div>
                 </div>
                 <div class="filter-bar extra-gap">
                     <input id="library-search" type="search" :placeholder="t('searchPlaceholder')" v-model="filters.search" @input="onSearch">
@@ -353,7 +356,7 @@
                             </label>
                         </div>
                         <div id="game-list" class="game-grid" v-if="listView === 'cards'">
-                            <div v-if="!sortedQuizzes.length" class="empty-state"><p>{{ t('noGames') }}</p><p>{{ t('noGamesHint') }}</p></div>
+                            <div v-if="!sortedQuizzes.length" class="empty-state"><p>{{ t('noGames') }}</p><p>{{ t('noGamesHint') }}</p><div class="empty-state__action"><a class="btn btn-primary library-create-empty" href="quiz-creator/"><span aria-hidden="true">＋</span> {{ t('libCreate') }}</a></div></div>
                             <div v-for="quiz in pageQuizzes" :key="quiz.id" class="game-card">
                                 <img v-if="lib.coverLevel > 0" class="game-card__cover" :style="{ '--cover-opacity': lib.coverLevel / 100 }" :src="coverSrc(quiz)" alt="" aria-hidden="true" loading="lazy" decoding="async" @error="onCoverError($event)">
                                 <div class="game-card-head">
@@ -418,7 +421,7 @@
                             </div>
                         </div>
                         <div v-else id="library-detail" class="hw-card lib-detail-card">
-                            <div v-if="!sortedQuizzes.length" class="empty-state"><p>{{ t('noGames') }}</p><p>{{ t('noGamesHint') }}</p></div>
+                            <div v-if="!sortedQuizzes.length" class="empty-state"><p>{{ t('noGames') }}</p><p>{{ t('noGamesHint') }}</p><div class="empty-state__action"><a class="btn btn-primary library-create-empty" href="quiz-creator/"><span aria-hidden="true">＋</span> {{ t('libCreate') }}</a></div></div>
                             <div v-else class="hw-table-wrap">
                                 <table class="hw-table lib-detail" id="libDetail">
                                     <thead><tr>

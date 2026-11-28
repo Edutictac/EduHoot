@@ -118,6 +118,9 @@ function fetchMe(){
         .then(function(user){
             authState.user = user;
             authState.checked = true;
+            // Lo usan otras piezas de la pantalla (env-badge.js) sin pedir /api/auth/me otra vez.
+            window.eduhootCurrentUser = user;
+            window.dispatchEvent(new CustomEvent('eduhoot:user', { detail: user }));
             sessionBridge.clearAttempt();
             updateAuthUI();
             // Al entrar se marca «Sólo mis cuestionarios», salvo que la persona ya lo haya cambiado en esta sesión.
@@ -130,6 +133,7 @@ function fetchMe(){
         .catch(function(){
             authState.user = null;
             authState.checked = true;
+            window.eduhootCurrentUser = null;
             updateAuthUI();
             fetchWithFilters();
         });

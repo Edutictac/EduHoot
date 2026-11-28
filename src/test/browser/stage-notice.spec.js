@@ -8,6 +8,7 @@ if (process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH) {
 async function setup(page, { role, visible = true }) {
     const state = { visible, posts: [] };
     await page.route(/^https:\/\//, route => route.abort());
+    await page.route('**/socket.io/socket.io.js', route => route.fulfill({ contentType: 'application/javascript', body: 'window.io = function(){ return { on: function(){}, emit: function(){}, disconnect: function(){}, connect: function(){} }; };' }));
     await page.route('**/api/**', async route => {
         const url = new URL(route.request().url());
         if (url.pathname === '/api/env') return route.fulfill({ json: { env: 'production', stageNoticeVisible: state.visible } });
@@ -18,6 +19,7 @@ async function setup(page, { role, visible = true }) {
             state.visible = body.visible;
             return route.fulfill({ json: { ok: true, stageNoticeVisible: body.visible } });
         }
+        if (url.pathname === '/api/quizzes') return route.fulfill({ json: [] });
         return route.fulfill({ json: { tags: [], quizzes: [], enabled: false, top: [] } });
     });
     return state;

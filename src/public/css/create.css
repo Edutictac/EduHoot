@@ -153,6 +153,9 @@ body {
     text-shadow: 0 1px 1px rgba(0,0,0,0.35);
 }
 
+.library-head-actions{ display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+.library-head-actions .btn{ text-decoration: none; font-family: inherit; font-weight: 700; }
+.library-create-empty{ text-decoration: none; }
 .panel-header{
     display: flex;
     align-items: flex-start;

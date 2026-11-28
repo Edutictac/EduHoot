@@ -216,9 +216,8 @@
     function setupStageNoticeAdmin(notice){
         var toggle = document.getElementById('stage-notice-toggle');
         if(!toggle) return;
-        fetch('/api/auth/me', { credentials: 'include' }).then(function(res){
-            return res.ok ? res.json() : null;
-        }).then(function(user){
+        // El usuario lo publica create-auth.js (sin pedir /api/auth/me otra vez).
+        var start = function(user){
             if(!user || user.role !== 'admin') return;
             var visible = function(){ return !notice.classList.contains('hidden'); };
             var code = String(document.documentElement.lang || 'es').toLowerCase();
@@ -250,7 +249,9 @@
                     if(res.ok){ notice.classList.toggle('hidden', !next); refresh(); }
                 }).catch(function(){});
             });
-        }).catch(function(){});
+        };
+        if(window.eduhootCurrentUser !== undefined) start(window.eduhootCurrentUser);
+        else window.addEventListener('eduhoot:user', function(ev){ start(ev.detail); }, { once: true });
     }
 
     function init(){
