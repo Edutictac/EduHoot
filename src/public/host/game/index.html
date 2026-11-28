@@ -54,13 +54,13 @@
             </label>
         </div>
         <div class="top-row">
-            <button @click="skipQuestion" id="skipQButton" :style="{ display: skipVisible ? 'inline-block' : 'none' }" :disabled="skipDisabled">{{ t('skip') }}</button>
-            <button type="button" id="cancelGameBtn" :class="{ 'is-confirming': cancelGameConfirming }" @click="gameOverMode ? goBackToLibrary() : askCancelGame()">{{ gameOverMode ? t('backToLibrary') : (cancelGameConfirming ? t('cancelConfirm') : t('cancelGame')) }}</button>
-            <button type="button" @click="goNextQuestion" id="nextQButton">Next Question</button>
-            <button v-if="videoLearning" type="button" @click="toggleVideoPlay" id="pauseVideoBtn" :class="videoPlaying ? 'is-playing' : 'is-stopped'">{{ videoPlaying ? t('pauseVideo') : t('playVideo') }}</button>
-            <button v-if="videoLearning" type="button" @click="finishVideo" id="finishVideoBtn">{{ t('finishVideo') }}</button>
-            <button type="button" @click="showRankingToggle" id="showRanking" v-show="showRankingButton">{{ t('showRanking') }}</button>
-            <button type="button" id="downloadReportBtn" @click="downloadReport" :style="{ display: downloadReportVisible ? 'inline-block' : 'none' }">{{ t('downloadReport') }}</button>
+            <button @click="skipQuestion" id="skipQButton" :style="{ display: skipVisible ? 'inline-block' : 'none' }" :title="t('skip')" :disabled="skipDisabled" class="mi-btn" data-ico="⏭️"><span class="mi-txt">{{ t('skip') }}</span></button>
+            <button type="button" id="cancelGameBtn" class="mi-btn" :class="{ 'is-confirming': cancelGameConfirming }" :title="gameOverMode ? t('backToLibrary') : (cancelGameConfirming ? t('cancelConfirm') : t('cancelGame'))" @click="gameOverMode ? goBackToLibrary() : askCancelGame()" :data-ico="gameOverMode ? '📚' : '✕'"><span class="mi-txt">{{ gameOverMode ? t('backToLibrary') : (cancelGameConfirming ? t('cancelConfirm') : t('cancelGame')) }}</span></button>
+            <button type="button" @click="goNextQuestion" id="nextQButton" class="mi-btn" data-ico="➡️"><span class="mi-txt">Next Question</span></button>
+            <button v-if="videoLearning" type="button" @click="toggleVideoPlay" id="pauseVideoBtn" :class="['mi-btn', videoPlaying ? 'is-playing' : 'is-stopped']" :title="videoPlaying ? t('pauseVideo') : t('playVideo')" :data-ico="videoPlaying ? '⏸️' : '▶️'"><span class="mi-txt">{{ videoPlaying ? t('pauseVideo') : t('playVideo') }}</span></button>
+            <button v-if="videoLearning" type="button" @click="finishVideo" id="finishVideoBtn" class="mi-btn" :title="t('finishVideo')" data-ico="⏹️"><span class="mi-txt">{{ t('finishVideo') }}</span></button>
+            <button type="button" @click="showRankingToggle" id="showRanking" class="mi-btn" :title="t('showRanking')" v-show="showRankingButton" data-ico="🏆"><span class="mi-txt">{{ t('showRanking') }}</span></button>
+            <button type="button" id="downloadReportBtn" @click="downloadReport" class="mi-btn" :title="t('downloadReport')" :style="{ display: downloadReportVisible ? 'inline-block' : 'none' }" data-ico="⬇️"><span class="mi-txt">{{ t('downloadReport') }}</span></button>
         </div>
         <div id="questionPointsBadge" class="question-points-badge points-badge-pop" :key="'badge-' + badgeKey" :style="{ display: badgeVisible ? 'inline-flex' : 'none' }">{{ pointsBadgeText }}</div>
         <h4 id = "playersAnswered" v-show="playersAnsweredVisible">{{ playersAnsweredText }}</h4>
@@ -70,7 +70,7 @@
                 <svg v-else viewBox="0 0 24 24" width="1em" height="1em" aria-hidden="true"><path d="M7 4.5v15a1 1 0 0 0 1.5.86l12-7.5a1 1 0 0 0 0-1.72l-12-7.5A1 1 0 0 0 7 4.5z"/></svg>
             </span></h3>
         <div id="timerControls" class="timer-controls" v-show="timerVisible">
-            <button type="button" id="timerPauseBtn" @click="toggleTimerPause">{{ timerPaused ? t('timerResume') : t('timerPause') }}</button>
+            <button type="button" id="timerPauseBtn" class="mi-btn" :title="timerPaused ? t('timerResume') : t('timerPause')" @click="toggleTimerPause" :data-ico="timerPaused ? '▶️' : '⏸️'"><span class="mi-txt">{{ timerPaused ? t('timerResume') : t('timerPause') }}</span></button>
             <button type="button" id="timerAddBtn" @click="addTimerSeconds(15)">{{ t('timerAdd15') }}</button>
         </div>
         <div id="questionCountdown" class="question-countdown" :class="{ 'is-visible': countdownVisible, 'is-ticking': countdownVisible, 'has-preview': countdownVisible && !!countdownPreview }" aria-live="polite" :aria-hidden="!countdownVisible">
@@ -145,7 +145,7 @@
                 <button id="rankingNextBtn" class="ranking-next" @click="rankingNext" :disabled="autoPaused">{{ rankingNextLabel }}</button>
                 <div v-if="autoActive" id="autoAdvanceBar" class="auto-advance-bar">
                     <span id="autoAdvanceText">{{ autoAdvanceText }}</span>
-                    <button type="button" id="autoPauseBtn" @click="toggleAutoPause">{{ autoPaused ? t('autoResume') : t('autoPause') }}</button>
+                    <button type="button" id="autoPauseBtn" class="mi-btn" :title="autoPaused ? t('autoResume') : t('autoPause')" @click="toggleAutoPause" :data-ico="autoPaused ? '▶️' : '⏸️'"><span class="mi-txt">{{ autoPaused ? t('autoResume') : t('autoPause') }}</span></button>
                 </div>
                 <span id="closeRanking" class="close" @click="closeRanking" :style="{ display: closeVisible ? 'block' : 'none' }">&times;</span>
                 <div id="resultsStepChart" class="results-step" v-show="modalStep === 'chart'">

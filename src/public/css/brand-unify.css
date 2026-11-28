@@ -13,3 +13,19 @@ button.btn, a.btn, button[class*="btn-"], a[class*="btn-"]{ border-radius: 10px;
 #cancelGameBtn, #showRanking, #raiseHandBtn, .fullscreen-toggle{ font-family: 'Raleway', sans-serif !important; }
 .pin-modal button.pin-modal__submit, button.selected, #logs-export-csv, #logs-export-ndjson{ border-radius: 10px; }
 #timerPauseBtn, #timerAddBtn{ font-family: 'Raleway', sans-serif !important; }
+
+/* Finestres xicotetes (mòbil, tauleta o PC amb la finestra reduïda, també apaïsades): botons de text amb icona (data-ico) i el text (.mi-txt) només per a lectors
+   de pantalla. El text es llig sempre en les confirmacions (.is-confirming). */
+.mi-btn::before{ content: attr(data-ico); display: none; }
+@media (max-width: 760px), (max-height: 520px){
+    .mi-btn::before{ display: inline; }
+    .mi-btn.is-confirming::before{ display: none; }
+    .mi-btn:not(.is-confirming) .mi-txt{
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+    }
+}

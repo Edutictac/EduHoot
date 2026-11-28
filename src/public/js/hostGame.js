@@ -1063,7 +1063,11 @@ function applyStaticText(){
         langSelect.value = lang;
     }
     var nextBtn = document.getElementById('nextQButton');
-    if(nextBtn) nextBtn.textContent = t('next');
+    if(nextBtn){
+        var nextText = nextBtn.querySelector('.mi-txt');
+        if(nextText) nextText.textContent = t('next'); else nextBtn.textContent = t('next');
+        nextBtn.setAttribute('title', t('next'));
+    }
 
     updateFullscreenToggleUI();
 }

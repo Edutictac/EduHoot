@@ -289,8 +289,8 @@
                         <ol id="ranking-list"><li v-for="(item, i) in s.rankingBox.items" :key="i">{{ itemText(item) }}</li></ol>
                     </div>
                     <div class="result-actions">
-                        <button id="play-again" class="btn btn-primary" @click="playAgain">{{ t('playAgain') }}</button>
-                        <button id="pick-another" class="btn btn-ghost" @click="pickAnother">{{ t('pickAnother') }}</button>
+                        <button id="play-again" class="btn btn-primary mi-btn" :title="t('playAgain')" @click="playAgain" data-ico="🔁"><span class="mi-txt">{{ t('playAgain') }}</span></button>
+                        <button id="pick-another" class="btn btn-ghost mi-btn" :title="t('pickAnother')" @click="pickAnother" data-ico="📚"><span class="mi-txt">{{ t('pickAnother') }}</span></button>
                     </div>
                 </div>
 
@@ -407,16 +407,16 @@
                             </div>
                         </div>
                         <div class="cards-actions">
-                            <button id="cards-prev" class="btn btn-cards-nav" :disabled="s.cards.pos === 0" @click="cardsPrev">{{ t('flashcardsPrev') }}</button>
-                            <button v-if="cardsAutoCheck && !cardsOrderBoard && !s.cards.flipped && !cardsResult" id="cards-check" class="btn btn-primary" @click="cardsCheck">{{ t('flashcardsCheck') }}</button>
-                            <button id="cards-flip" class="btn" :class="s.cards.flipped ? 'btn-cards-hide' : 'btn-cards-show'" @click="cardsFlip">{{ s.cards.flipped ? t('flashcardsHideAnswer') : t('flashcardsShowAnswer') }}</button>
-                            <button id="cards-next" class="btn btn-cards-nav" @click="cardsNext">{{ t('flashcardsNext') }}</button>
+                            <button id="cards-prev" class="btn btn-cards-nav mi-btn" :title="t('flashcardsPrev')" :disabled="s.cards.pos === 0" @click="cardsPrev" data-ico="⬅️"><span class="mi-txt">{{ t('flashcardsPrev') }}</span></button>
+                            <button v-if="cardsAutoCheck && !cardsOrderBoard && !s.cards.flipped && !cardsResult" id="cards-check" class="btn btn-primary mi-btn" :title="t('flashcardsCheck')" @click="cardsCheck" data-ico="✔️"><span class="mi-txt">{{ t('flashcardsCheck') }}</span></button>
+                            <button id="cards-flip" class="btn mi-btn" :class="s.cards.flipped ? 'btn-cards-hide' : 'btn-cards-show'" :title="s.cards.flipped ? t('flashcardsHideAnswer') : t('flashcardsShowAnswer')" @click="cardsFlip" :data-ico="s.cards.flipped ? '🙈' : '👁️'"><span class="mi-txt">{{ s.cards.flipped ? t('flashcardsHideAnswer') : t('flashcardsShowAnswer') }}</span></button>
+                            <button id="cards-next" class="btn btn-cards-nav mi-btn" :title="t('flashcardsNext')" @click="cardsNext" data-ico="➡️"><span class="mi-txt">{{ t('flashcardsNext') }}</span></button>
                         </div>
                         <!-- Región en viu: existe sempre i només canvia el text, perquè el lector de pantalla anuncie el resultat. -->
                         <p id="cards-result" class="cards-result" role="status" :class="'cards-result--' + cardsResult">{{ s.cards.flipped ? cardsResultText : '' }}</p>
                         <div v-if="s.cards.flipped && !cardsAutoCheck" class="cards-mark">
-                            <button id="cards-dont-know" class="btn btn-cards-unknown" @click="cardsMarkUnknown">{{ t('flashcardsDontKnow') }}</button>
-                            <button id="cards-know" class="btn btn-primary" @click="cardsMarkKnown">{{ t('flashcardsKnow') }}</button>
+                            <button id="cards-dont-know" class="btn btn-cards-unknown mi-btn" :title="t('flashcardsDontKnow')" @click="cardsMarkUnknown" data-ico="❌"><span class="mi-txt">{{ t('flashcardsDontKnow') }}</span></button>
+                            <button id="cards-know" class="btn btn-primary mi-btn" :title="t('flashcardsKnow')" @click="cardsMarkKnown" data-ico="✅"><span class="mi-txt">{{ t('flashcardsKnow') }}</span></button>
                         </div>
                         <div class="cards-tools">
                             <button v-if="cardsTtsAvailable" id="cards-tts" type="button" class="tts-btn" :aria-pressed="s.ttsSpeaking ? 'true' : 'false'" :aria-label="s.ttsSpeaking ? t('ttsStop') : t('ttsListen')" :title="s.ttsSpeaking ? t('ttsStop') : t('ttsListen')" @click="cardsSpeak"><span aria-hidden="true">{{ s.ttsSpeaking ? '⏹' : '🔊' }}</span></button>

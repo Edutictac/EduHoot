@@ -1366,7 +1366,7 @@ body.playing #answers > .free-answer-row{ grid-column: 1 / -1; }
 }
 /* Pantallas estrechas: solo el icono (con nombre accesible); la confirmación de
    «Cancelar partida» se lee siempre. */
-@media (max-width: 600px){
+@media (max-width: 760px), (max-height: 520px){
     .solo-control:not(.is-confirming) .solo-control__text{
         position: absolute;
         width: 1px;

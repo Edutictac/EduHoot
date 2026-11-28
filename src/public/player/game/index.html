@@ -67,7 +67,7 @@
             <p id="ghostLine" class="result-sub ghost-line" v-if="ghostLine">{{ ghostLine }}</p>
             <div id="freeSubmitRow" :style="{ display: freeRowVisible ? 'flex' : 'none' }">
                 <input id="freeAnswerInput" ref="freeAnswerInput" type="text" autocomplete="off" :inputmode="questionType === 'numeric' ? 'decimal' : 'text'" :placeholder="freePlaceholder" v-model="freeAnswerValue" @keydown.enter.prevent="submitFree" />
-                <button type="button" id="freeSubmitBtn" class="button free-submit" @click="submitFree">{{ t('submit_free', 'Enviar') }}</button>
+                <button type="button" id="freeSubmitBtn" class="button free-submit mi-btn" :title="t('submit_free', 'Enviar')" @click="submitFree" data-ico="✔️"><span class="mi-txt">{{ t('submit_free', 'Enviar') }}</span></button>
             </div>
             <order-board v-if="orderVisible" :key="'order-' + orderKey" :items="orderItems" :count="orderCount" :layout="orderLayout" :t="t" @submit="submitOrder"></order-board>
             <matching-board v-if="matchingVisible" :key="'match-' + matchKey" :left="matchLeft" :right="matchRight" :left-count="matchLeftCount" :right-count="matchRightCount" :blind-style="matchBlindStyle" :t="t" @submit="submitMatching"></matching-board>
@@ -78,11 +78,11 @@
                 <button id = "answer4" class = "button answer-shape answer-shape--4" :class="{ 'multi-selected': isMultiSelected(4) }" v-show="buttonVisible(3)" :aria-label="buttonAriaLabel(3)" v-html="buttonHtml(3)" @click="onAnswerClick(4)"></button>
             </div>
             <div id="multiSubmitRow" :style="{ display: multiRowVisible ? 'flex' : 'none' }">
-                <button type="button" id="multiSubmitBtn" class="button multi-submit" @click="submitMultiAnswers">{{ t('submit_multiple', 'Submit answers') }}</button>
+                <button type="button" id="multiSubmitBtn" class="button multi-submit mi-btn" :title="t('submit_multiple', 'Submit answers')" @click="submitMultiAnswers" data-ico="✔️"><span class="mi-txt">{{ t('submit_multiple', 'Submit answers') }}</span></button>
             </div>
-            <button type="button" id="leaveGameBtn" class="leave-game-btn" :class="{ 'is-confirming': leaveConfirming }" @click="askLeave">{{ leaveConfirming ? t('lobby_leave_confirm', 'Confirmar salida') : t('lobby_leave', 'Salir') }}</button>
+            <button type="button" id="leaveGameBtn" class="leave-game-btn mi-btn" :class="{ 'is-confirming': leaveConfirming }" :title="leaveConfirming ? t('lobby_leave_confirm', 'Confirmar salida') : t('lobby_leave', 'Salir')" @click="askLeave" data-ico="🚪"><span class="mi-txt">{{ leaveConfirming ? t('lobby_leave_confirm', 'Confirmar salida') : t('lobby_leave', 'Salir') }}</span></button>
             <div id="raiseHandRow" v-show="answersVisible">
-                <button type="button" id="raiseHandBtn" class="raise-hand-btn" :aria-pressed="handRaised ? 'true' : 'false'" @click="toggleHand">✋ {{ handRaised ? t('handLower', 'Bajar la mano') : t('handRaise', 'Levantar la mano') }}</button>
+                <button type="button" id="raiseHandBtn" class="raise-hand-btn mi-btn" :aria-pressed="handRaised ? 'true' : 'false'" :title="handRaised ? t('handLower', 'Bajar la mano') : t('handRaise', 'Levantar la mano')" @click="toggleHand"><span aria-hidden="true">✋</span> <span class="mi-txt">{{ handRaised ? t('handLower', 'Bajar la mano') : t('handRaise', 'Levantar la mano') }}</span></button>
             </div>
             <div id="playerRankingModal" class="player-modal" :class="{ show: rankingVisible }">
                 <div class="player-modal__content">

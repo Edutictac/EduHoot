@@ -20,6 +20,7 @@ fitxers corresponents, i els originals es van eliminar.
 
 ### Afegit
 - **Stage redirigix a producció** (`src/server/stageGate.js`): qui entra a stage va a producció (302), tret de qui entra una vegada amb `/?dev=<clau>` (cookie de 90 dies) o envia `X-Stage-Dev-Key`. Interruptor 🔓/🔒 a la biblioteca, al costat del ⚙️ (només admin i només en stage): genera i guarda la clau, sense tocar el VPS; també `GET`/`POST /api/admin/settings/stage-redirect`. `STAGE_DEV_KEY` fixa la clau i `STAGE_REDIRECT=off` l'apaga. Stage no s'indexa (`X-Robots-Tag` i `robots.txt`). La comprovació de salut de Docker usa ara `/api/version`.
+- **Finestres xicotetes (mòbil, tauleta o PC; fins a 760 px d'ample o 520 px d'alt)**: els botons de text passen a emoticones per a guanyar espai, amb el text només per a lectors de pantalla i com a títol: flashcards (⬅️ ✔️ 👁️ ➡️ ✅ ❌), resultats de Solo, jugador (✔️ enviar, 🚪 eixir, ✋) i amfitrió (⏭️ ✕ ➡️ ⏸️ ⏹️ 🏆 ⬇️). Les confirmacions mantenen el text. Estil comú en `brand-unify.css` (`.mi-btn`, `data-ico`).
 
 ### Corregit
 - **Etiqueta al peu de pàgina en producció**: `/api/version` la torna també quan el desplegament deixa `APP_TAG` buida; el `Dockerfile` la guarda en `/app/.app-tag` en construir la imatge i el servidor la llig d'ahí (`src/server/appTag.js`). En dev, el peu mostra el commit curt de Git (`docker-compose.yml` munta `.git` en només lectura).
