@@ -17,6 +17,8 @@ COPY src/package.json src/package-lock.json ./
 RUN npm ci --omit=dev
 
 COPY src/ ./
+# La mateixa etiqueta en un fitxer: si el desplegament buida APP_TAG, el servidor la llig d'ací.
+RUN printf '%s' "$APP_TAG" > /app/.app-tag
 COPY entrypoint.sh /entrypoint.sh
 
 RUN addgroup -S app && adduser -S app -G app \

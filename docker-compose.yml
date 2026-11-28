@@ -43,6 +43,8 @@ services:
       - "127.0.0.1:${APP_PORT:-3000}:3000"
     volumes:
       - ./src:/app
+      # Només lectura: perquè el peu de pàgina mostre el commit curt en dev.
+      - ./.git:/repo-git:ro
       - eduhoot_node_modules:/app/node_modules
       - eduhoot_quiz_images:/var/lib/eduhoot/quiz-images
     command: sh -c "npm install; npm run seed:dev; npm run dev"

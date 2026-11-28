@@ -171,6 +171,8 @@ io.engine.on('connection_error', (err) => {
 });
 const PUBLIC_IMPORT_SOURCE_URL = (process.env.PUBLIC_IMPORT_SOURCE_URL || '').trim().replace(/\/+$/, '');
 const APP_VERSION = require('../package.json').version;
+const { readAppTag } = require('./appTag');
+const APP_TAG = readAppTag();
 // Commons al qual apunta el xip de compte. Per defecte el d'EduTicTac; un Commons
 // local (LliureX) passa la seua adreça pública, p. ex. http://edutictac.local:8082.
 const DEFAULT_COMMONS_URL = 'https://commons.edutictac.es';
@@ -235,7 +237,8 @@ app.get('/api/env', async (req, res) => {
 // la qual es va publicar (p. ex. stage-2026.11.04-1), per al peu de pàgina.
 app.get('/api/version', (req, res) => {
   res.set('Cache-Control', 'no-cache');
-  res.json({ version: APP_VERSION, tag: process.env.APP_TAG || '' });
+  // En dev el commit canvia sense reiniciar el servidor: es torna a llegir a cada petició.
+  res.json({ version: APP_VERSION, tag: process.env.NODE_ENV === 'development' ? readAppTag() : APP_TAG });
 });
 app.get('/manifest.webmanifest', (req, res) => {
   res.type('application/manifest+json');
