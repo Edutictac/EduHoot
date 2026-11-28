@@ -78,8 +78,8 @@ test('anfitrión: cancelar partida pide confirmación antes de cerrar', async ({
     await openGame(page);
     await page.locator('#cancelGameBtn').click();
     await expect(page.locator('#cancelGameBtn')).toHaveText('Confirmar cancelación');
-    // Al confirmar, el botón usa el rojo del logo de EduHoot (#da4453).
-    await expect(page.locator('#cancelGameBtn')).toHaveCSS('background-color', 'rgb(218, 68, 83)');
+    // Al confirmar, el botón usa el rojo del logo de EduHoot oscurecido (#cc3f4f, contraste AA).
+    await expect(page.locator('#cancelGameBtn')).toHaveCSS('background-color', 'rgb(204, 63, 79)');
     expect(await emitsNamed(page, 'cancelGame')).toEqual([]);
 
     await page.locator('#cancelGameBtn').click();

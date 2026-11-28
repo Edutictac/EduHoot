@@ -147,8 +147,10 @@ test('otro error al cargar los logs da el mensaje genérico', async ({ page }) =
 test('enlaza con el panel de estadísticas y alinea la configuración', async ({ page }) => {
     await openLogs(page);
     await expect(page.locator('.admin-header p')).toHaveText('Eventos de partidas, jugadores, importaciones y errores del servidor.');
-    await expect(page.locator('.admin-nav a')).toHaveText('← Panel de estadísticas');
-    await expect(page.locator('.admin-nav a')).toHaveAttribute('href', '/admin/stats');
+    await expect(page.locator('.admin-nav a')).toHaveText(['← Inicio', 'Biblioteca', '← Panel de estadísticas']);
+    await expect(page.locator('.admin-nav a[href="/admin/stats"]')).toHaveText('← Panel de estadísticas');
+    await expect(page.locator('.admin-nav a[href="/"]')).toBeVisible();
+    await expect(page.locator('.admin-nav a[href="/create/"]')).toBeVisible();
     const boxes = [];
     for (const id of ['#logs-level-select', '#logs-capped-mb', '#logs-settings-save']) boxes.push(await page.locator(id).boundingBox());
     if (boxes[2].y > boxes[0].y + 20) return; // pantalla estrecha: el botón baja de línea

@@ -86,6 +86,8 @@ test('al volver de Authentik con error lo dice y limpia la URL', async ({ page }
 
 test('enlaza con el panel de logs', async ({ page }) => {
     await openStats(page, { user: { id: 'a', role: 'admin' } });
-    await expect(page.locator('.admin-nav a')).toHaveText('Logs del servidor →');
-    await expect(page.locator('.admin-nav a')).toHaveAttribute('href', '/admin/logs');
+    await expect(page.locator('.admin-nav a')).toHaveText(['← Inicio', 'Biblioteca', 'Logs del servidor →']);
+    await expect(page.locator('.admin-nav a[href="/admin/logs"]')).toHaveText('Logs del servidor →');
+    await expect(page.locator('.admin-nav a[href="/"]')).toBeVisible();
+    await expect(page.locator('.admin-nav a[href="/create/"]')).toBeVisible();
 });

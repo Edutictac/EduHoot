@@ -18,6 +18,24 @@ fitxers corresponents, i els originals es van eliminar.
 
 ## [Sense publicar]
 
+## [2.0.1] - 2026-11-28
+
+### Afegit
+- **Avís «Prova les novetats d'EduHoot»** (biblioteca): l'administració el mostra o l'amaga per a tots els usuaris amb el botó 🧪 que només ella veu, al costat de l'avís. Es guarda al servidor (`appSettings`, `stageNoticeVisible`, per defecte `true`); `/api/env` el torna i `POST /api/admin/settings/stage-notice` (rol admin) el canvia.
+
+### Canviat
+- **Navegació**: l'editor de qüestionaris, Mis partidas i Mis deberes tenen també «Inici»; multijugador té «Biblioteca» (només si s'hi arriba des de la biblioteca, com solo); el panell d'estadístiques i els logs tenen «Inici» i «Biblioteca». L'amfitrió i l'alumnat en partida queden com estaven.
+- **Biblioteca**: la capçalera és Partides, Deures, Preferències i, a la dreta, el selector d'idioma amb dues lletres (també a Partides, Deures i l'editor); les etiquetes «Mis partidas» i «Mis deberes» passen a «Partidas» i «Deberes» (els títols de les pantalles no canvien); el títol del llistat és «Catàleg de qüestionaris» i el missatge de llista buida ja no diu «importats». El botó ⚙️ (només admin, al costat del 🧪) du al panell d'administració. El botó «Crear» (cap al creador, sempre visible) és a la capçalera del catàleg i a l'estat buit.
+- **Portada**: en dev i stage, un clic al logo d'EduHoot mostra o amaga el distintiu d'entorn; en producció el logo ja no és un enllaç i només conserva l'animació.
+- **`/dev/login`**: enllaços a «Inici» i «Biblioteca».
+
+### Corregit
+- **Seguretat: «Mostrar respostes» desactivat**: el servidor enviava a l'alumnat la llista de jugadors amb l'historial de respostes (què van enviar i si van encertar), amb la qual es podia deduir la solució. Ara s'hi treu l'historial (`studentPlayersOf`) a `questionOver` i en reconnectar. L'amfitrió continua rebent-ho tot.
+- **Accessibilitat**: el roig dels botons de sortir i de cancel·lar la partida passa de `#da4453` (4,26:1) a `#cc3f4f` (4,78:1 amb text blanc, WCAG AA).
+- **Docker Compose**: `CSP_REPORT_ONLY` arriba al contenidor (abans definir-la a `.env` no tenia efecte).
+- **Paginador del catàleg**: en solo, flashcards i multijugador s'amaga quan ja hi ha un quiz triat (abans quedava visible, sobretot la barra flotant).
+- **Proves**: la suite de Playwright (1376 proves) passava del límit de 15 min del workflow; ara 45 min i 4 workers.
+
 ## [2.0.0] - 2026-11-27
 
 ### Afegit
@@ -47,7 +65,6 @@ fitxers corresponents, i els originals es van eliminar.
 - **Biblioteca: valoració amb estrelles i paginació per compte**: es poden valorar els quizzes públics; la mida de pàgina es guarda al compte; barra de paginació flotant i desplegable de pàgina. L'API de la llista de quizzes torna les valoracions i les preferències de paginació.
 - **Flashcards**: opcions amb la forma i el color de les respostes del joc, casella per mostrar-les, imatge damunt, disposició (2×2, una columna si no caben, vertader/fals), targeta que creix sense scroll i vídeo 16:9 dins de la finestra; resum final en una fila pròpia.
 - **Música de fons a l'autoritme** (pantalla de l'anfitrió), títol de la pàgina i cursor al títol de l'editor.
-- **Avís «Prova les novetats d'EduHoot»** (biblioteca): l'administració el mostra o l'amaga per a tots els usuaris amb el botó 🧪 que només ella veu, al costat de l'avís. Es guarda al servidor (`appSettings`, `stageNoticeVisible`, per defecte `true`); `/api/env` el torna i `POST /api/admin/settings/stage-notice` (rol admin) el canvia.
 
 ### Canviat
 - **Tipografia i botons comuns**: totes les pantalles (excepte la portada `/`) usen Raleway, i els botons amb classe `btn` tenen els mateixos radis (10 px). Fitxer `css/brand-unify.css`.
@@ -65,18 +82,10 @@ fitxers corresponents, i els originals es van eliminar.
 - **Autoritme**: els botons tenen els colors, l'ombra i l'efecte en passar el ratolí dels del lobby.
 - **Solo**: la pantalla inicial reparteix els controls verticalment, com les flashcards, i les etiquetes són «Ver pregunta en cuenta atrás», «Segundos para ver el resultado» i «Segundos por cada pregunta».
 - **Icona**: el logo d'EduHoot és el favicon de totes les pàgines.
-- **Navegació**: l'editor de qüestionaris, Mis partidas i Mis deberes tenen també «Inici»; multijugador té «Biblioteca» (només si s'hi arriba des de la biblioteca, com solo); el panell d'estadístiques i els logs tenen «Inici» i «Biblioteca». L'amfitrió i l'alumnat en partida queden com estaven.
-- **Biblioteca**: la capçalera és Partides, Deures, Preferències i, a la dreta, el selector d'idioma amb dues lletres (també a Partides, Deures i l'editor); les etiquetes «Mis partidas» i «Mis deberes» passen a «Partidas» i «Deberes» (els títols de les pantalles no canvien); el títol del llistat és «Catàleg de qüestionaris» i el missatge de llista buida ja no diu «importats». El botó ⚙️ (només admin, al costat del 🧪) du al panell d'administració. El botó «Crear» (cap al creador, sempre visible) és a la capçalera del catàleg i a l'estat buit.
-- **Portada**: en dev i stage, un clic al logo d'EduHoot mostra o amaga el distintiu d'entorn; en producció el logo ja no és un enllaç i només conserva l'animació.
-- **`/dev/login`**: enllaços a «Inici» i «Biblioteca».
 
 ### Corregit
-- **Seguretat: «Mostrar respostes» desactivat**: el servidor enviava a l'alumnat la llista de jugadors amb l'historial de respostes (què van enviar i si van encertar), amb la qual es podia deduir la solució. Ara s'hi treu l'historial (`studentPlayersOf`) a `questionOver` i en reconnectar. L'amfitrió continua rebent-ho tot.
 - **Privacitat dels quizzes**: els privats només els llegeixen el propietari, l'administració o el seu dispositiu; un autoritme acabat no es reobre.
-- **Accessibilitat**: el roig dels botons de sortir i de cancel·lar la partida passa de `#da4453` (4,26:1) a `#cc3f4f` (4,78:1 amb text blanc, WCAG AA).
-- **Docker Compose**: `CSP_REPORT_ONLY` arriba al contenidor (abans definir-la a `.env` no tenia efecte).
 - **Sala de l'anfitrió a 1280×800**: «Iniciar» torna a cabre (un `<br>` de 19 px passa a un marge de 8 px).
-- **Proves**: la suite de Playwright (1376 proves) passava del límit de 15 min del workflow; ara 45 min i 4 workers.
 
 ## [1.2.0] - 2026-11-23
 
@@ -797,6 +806,7 @@ migrar la base `kahootDB`.
   d'imatge/vídeo en preguntes.
 - Estadístiques bàsiques de partides i modes de joc preferits.
 
+[2.0.1]: https://github.com/Edutictac/EduHoot/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/Edutictac/EduHoot/compare/v1.2.0...v2.0.0
 [1.2.0]: https://github.com/Edutictac/EduHoot/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/Edutictac/EduHoot/compare/v1.0.13...v1.1.0
