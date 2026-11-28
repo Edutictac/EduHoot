@@ -5,16 +5,17 @@ umask 077
 
 COMPOSE_DIR=/opt/eduhoot/docker
 COMPOSE_FILE=$COMPOSE_DIR/compose.yml
-HEADER_FILE=$COMPOSE_DIR/deploy-readiness.header
 MAINTENANCE_FLAG=/var/www/eduhoot-maintenance/ON
 STATE_DIR=/opt/eduhoot/production-update-state
 STATUS_FILE=/var/www/eduhoot-deployment/current.json
 REMOTE_IMAGE=ghcr.io/edutictac/eduhoot:prod-latest
 SERVICE=eduhoot
 STAGE_CONTAINER=eduhoot-stage
-READY_URL=http://127.0.0.1:3000/api/internal/deploy-readiness
-DRAIN_URL=http://127.0.0.1:3000/api/internal/deploy-drain
-LEGACY_IMAGE_ID=sha256:98b6956d4b56ed99a3f21873829f85a3258ec1b7a445d09c9711a121484497c6
+APP_PORT=3000
+# Fitxer opcional (mode 600) amb TELEGRAM_TOKEN i TELEGRAM_CHAT_ID per als avisos.
+NOTIFY_ENV=${EDUHOOT_NOTIFY_ENV:-/opt/eduhoot-stage/notify.env}
+# Si una candidata espera més d'este temps per partides en curs, s'avisa una vegada.
+WAIT_ALERT_SECONDS=${EDUHOOT_WAIT_ALERT_SECONDS:-10800}
 CHECK_ONLY=false
 [[ ${1:-} == --check ]] && CHECK_ONLY=true
 [[ $# -le 1 && ( $# -eq 0 || $CHECK_ONLY == true ) ]] || { echo 'Ús: eduhoot-update.sh [--check]' >&2; exit 2; }
@@ -24,35 +25,54 @@ flock -n 9 || exit 0
 
 log() { printf '%s\n' "$*" >&2; }
 healthy() { [[ $(docker inspect "$SERVICE" --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' 2>/dev/null) == healthy ]]; }
-ready() {
-  curl --silent --fail --max-time 5 -H "@$HEADER_FILE" "$READY_URL" |
-    python3 -c 'import json,sys
-try:
-    state=json.load(sys.stdin)
-except (ValueError, UnicodeError):
-    raise SystemExit(1)
-raise SystemExit(0 if isinstance(state, dict) and state.get("ready") is True and state.get("activeGames") == 0 else 1)'
+notify() {
+  # Envia un avís per Telegram. El token no apareix en la línia d'ordres.
+  [[ -r $NOTIFY_ENV ]] || { log "Avís no enviat (falta $NOTIFY_ENV): $1"; return 0; }
+  (
+    # shellcheck disable=SC1090
+    . "$NOTIFY_ENV"
+    printf 'url = "https://api.telegram.org/bot%s/sendMessage"\n' "$TELEGRAM_TOKEN" |
+      curl --silent --max-time 20 -K - --data-urlencode "chat_id=$TELEGRAM_CHAT_ID" \
+        --data-urlencode "text=$1" >/dev/null
+  ) || log 'No s’ha pogut enviar l’avís per Telegram.'
 }
-drain() {
-  local enabled=$1
-  curl --silent --show-error --fail --max-time 5 -H "@$HEADER_FILE" \
-    -H 'Content-Type: application/json' --data "{\"enabled\":$enabled}" "$DRAIN_URL" >/dev/null
+alert_once() {
+  # Evita repetir el mateix avís cada dos minuts mentre el problema continua.
+  local key=$1 message=$2
+  [[ -f $STATE_DIR/alerted && $(<"$STATE_DIR/alerted") == "$key" ]] && return 0
+  notify "$message"
+  printf '%s\n' "$key" > "$STATE_DIR/alerted"
 }
-legacy_idle() {
-  # Excepció limitada a la imatge antiga: no té l'API de drenatge.
-  # Sense connexions al port 3000 no pot haver-hi una partida en curs.
-  python3 - <<'PY'
-import subprocess
-import sys
-logs = subprocess.run(['docker', 'logs', 'eduhoot'], capture_output=True, text=True, check=True)
-snapshots = [line for line in (logs.stdout + '\n' + logs.stderr).splitlines() if 'Active games:' in line]
-connections = subprocess.run(['ss', '-H', '-tn', 'state', 'established', '(', 'sport', '=', ':3000', ')'], capture_output=True, text=True, check=True)
-idle = not connections.stdout.strip() and (not snapshots or snapshots[-1].strip().endswith('Active games: none'))
-sys.exit(0 if idle else 1)
-PY
+idle() {
+  # Amb network_mode: host, tota connexió a l'app (nginx, Socket.IO) es veu ací.
+  # Una partida en directe manté sempre connexions obertes; sense cap, no n'hi ha.
+  [[ -z $(ss -H -tn state established "( sport = :$APP_PORT )") ]]
 }
-safe_to_switch() {
-  if [[ $current_id == "$LEGACY_IMAGE_ID" ]]; then legacy_idle; else ready; fi
+wait_for_games() {
+  # Esperar partides no és un error: es torna a provar en el cicle següent.
+  local since now
+  now=$(date +%s)
+  if [[ -f $STATE_DIR/waiting-since && $(cut -d' ' -f1 "$STATE_DIR/waiting-since") == "$candidate_id" ]]; then
+    since=$(cut -d' ' -f2 "$STATE_DIR/waiting-since")
+  else
+    since=$now
+    printf '%s %s\n' "$candidate_id" "$since" > "$STATE_DIR/waiting-since"
+  fi
+  log "$1 Es torna a provar en el cicle següent."
+  if (( now - since >= WAIT_ALERT_SECONDS )); then
+    alert_once "waiting $candidate_id" "EduHoot producció: $stage_tag espera des de fa $(( (now - since) / 3600 )) h perquè sempre hi ha connexions obertes. Revisa-ho si cal desplegar-la."
+  fi
+  exit 0
+}
+report_failure() {
+  local status=$1
+  (( status == 0 )) && return 0
+  alert_once "failed $status ${last_error:-}" "EduHoot producció: l’actualitzador ha fallat (codi $status). ${last_error:-Revisa journalctl -u eduhoot-production-update.service.}"
+}
+fail() {
+  last_error=$1
+  log "$1"
+  exit 1
 }
 wait_healthy() {
   local attempt
@@ -85,13 +105,20 @@ temporary.replace(path)
 PY
 }
 
-[[ -f $HEADER_FILE && $(stat -c %a "$HEADER_FILE") == 600 ]] || { log 'Falta la capçalera privada de desplegament (mode 600).'; exit 1; }
-healthy || { log 'Producció no està sana; no es desplega.'; exit 1; }
-docker pull "$REMOTE_IMAGE" >/dev/null
+last_error=
+stage_tag=
+candidate_id=
+trap 'report_failure $?' EXIT
+healthy || fail 'Producció no està sana; no es desplega.'
+docker pull "$REMOTE_IMAGE" >/dev/null || fail 'No s’ha pogut descarregar la imatge candidata de GHCR.'
 candidate_id=$(docker image inspect "$REMOTE_IMAGE" --format '{{.Id}}')
 current_id=$(docker inspect "$SERVICE" --format '{{.Image}}')
-[[ $candidate_id != "$current_id" ]] || exit 0
 mkdir -p "$STATE_DIR"
+if [[ $candidate_id == "$current_id" ]]; then
+  # Res a fer: es netegen els avisos d'un problema que ja no existix.
+  rm -f "$STATE_DIR/alerted" "$STATE_DIR/waiting-since"
+  exit 0
+fi
 if [[ -f $STATE_DIR/failed && $(<"$STATE_DIR/failed") == "$candidate_id" ]]; then
   log 'La imatge candidata ja va fallar; espera una nova publicació.'
   exit 0
@@ -102,17 +129,16 @@ if [[ -f $STATE_DIR/ignored && $(<"$STATE_DIR/ignored") == "$candidate_id" ]]; t
 fi
 stage_id=$(docker inspect "$STAGE_CONTAINER" --format '{{.Image}}')
 stage_health=$(docker inspect "$STAGE_CONTAINER" --format '{{.State.Health.Status}}')
-[[ $stage_health == healthy && $stage_id == "$candidate_id" ]] || { log 'La candidata no és la imatge activa i sana de stage.'; exit 1; }
+[[ $stage_health == healthy && $stage_id == "$candidate_id" ]] || fail 'La candidata de prod-latest no és la imatge activa i sana de stage.'
 stage_tag=$(docker image inspect "$REMOTE_IMAGE" --format '{{index .Config.Labels "org.opencontainers.image.version"}}')
-[[ $stage_tag =~ ^stage-[0-9]{4}\.[0-9]{2}\.[0-9]{2}-[0-9]+$ ]] || { log 'La candidata no porta una etiqueta stage vàlida.'; exit 1; }
-safe_to_switch || { log 'La comprovació de partides no està disponible o hi ha una partida activa.'; exit 1; }
+[[ $stage_tag =~ ^stage-[0-9]{4}\.[0-9]{2}\.[0-9]{2}-[0-9]+$ ]] || fail 'La candidata no porta una etiqueta stage vàlida.'
+idle || wait_for_games "Hi ha connexions obertes a l'app (possible partida en curs)."
 if $CHECK_ONLY; then
   log "Preparada per a promoure $stage_tag ($candidate_id)."
   exit 0
 fi
 
 backup_dir=
-drained=false
 maintenance=false
 deployment_started=false
 completed=false
@@ -125,40 +151,39 @@ cleanup() {
       cp "$backup_dir/compose.yml" "$COMPOSE_FILE"
       docker compose -f "$COMPOSE_FILE" up -d --no-deps --force-recreate "$SERVICE" || true
       if ! wait_healthy; then
-        log 'La restauració no està sana: es manté el mode manteniment.'
+        last_error="$stage_tag no arranca i la restauració tampoc està sana: es manté el mode manteniment. Cal revisar-ho ja."
+        log "$last_error"
+        report_failure 1
         exit 1
       fi
       printf '%s\n' "$candidate_id" > "$STATE_DIR/failed"
+      last_error="$stage_tag no ha passat la comprovació; s'ha restaurat la imatge anterior (còpia en $backup_dir). ${last_error:-}"
     fi
-    if $drained; then drain false || true; fi
     if $maintenance; then sudo -n rm -f "$MAINTENANCE_FLAG"; fi
   fi
+  report_failure "$status"
   exit "$status"
 }
 trap cleanup EXIT
 
-if [[ $current_id != "$LEGACY_IMAGE_ID" ]]; then
-  drain true
-  drained=true
-fi
 sudo -n touch "$MAINTENANCE_FLAG"
 maintenance=true
-safe_to_switch || { log 'Hi ha partides actives després de bloquejar-ne de noves.'; exit 75; }
+idle || wait_for_games 'Hi ha connexions obertes després d’activar el manteniment.'
 
 backup_dir=/home/samgua/backups/eduhoot-production-$(date -u +%Y%m%dT%H%M%SZ)-$$
 mkdir -m 700 "$backup_dir"
 cp "$COMPOSE_FILE" "$backup_dir/compose.yml"
 cp "$COMPOSE_DIR/eduhoot.env" "$backup_dir/eduhoot.env"
-mongodump --db kahootDB --gzip --archive="$backup_dir/mongo.archive.gz" >/dev/null
-tar -C /opt/eduhoot/src/public -czf "$backup_dir/uploads.tgz" uploads
-safe_to_switch || { log 'Ha començat una partida abans del reinici.'; exit 75; }
+mongodump --db kahootDB --gzip --archive="$backup_dir/mongo.archive.gz" >/dev/null || fail 'Ha fallat la còpia de MongoDB; no es desplega.'
+tar -C /opt/eduhoot/src/public -czf "$backup_dir/uploads.tgz" uploads || fail 'Ha fallat la còpia d’uploads; no es desplega.'
+idle || wait_for_games 'Ha començat una connexió abans del reinici.'
 
 docker tag "$REMOTE_IMAGE" "eduhoot-prod:$stage_tag"
 set_compose_image "eduhoot-prod:$stage_tag"
 deployment_started=true
 docker compose -f "$COMPOSE_FILE" up -d --no-deps --force-recreate "$SERVICE"
-wait_healthy || { log 'La nova imatge no ha passat la comprovació de salut.'; exit 1; }
-[[ $(docker inspect "$SERVICE" --format '{{.Image}}') == "$candidate_id" ]] || { log 'La imatge en execució no coincidix.'; exit 1; }
+wait_healthy || fail 'La nova imatge no ha passat la comprovació de salut.'
+[[ $(docker inspect "$SERVICE" --format '{{.Image}}') == "$candidate_id" ]] || fail 'La imatge en execució no coincidix.'
 printf '%s %s\n' "$stage_tag" "$candidate_id" > "$STATE_DIR/deployed"
 printf '{"tag":"%s","imageId":"%s","updatedAt":"%s"}\n' \
   "$stage_tag" "$candidate_id" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" |
@@ -166,4 +191,6 @@ printf '{"tag":"%s","imageId":"%s","updatedAt":"%s"}\n' \
 sudo -n rm -f "$MAINTENANCE_FLAG"
 maintenance=false
 completed=true
+rm -f "$STATE_DIR/alerted" "$STATE_DIR/waiting-since"
 log "Desplegat $stage_tag; còpia en $backup_dir."
+notify "EduHoot producció: desplegada $stage_tag. Còpia prèvia en $backup_dir."

@@ -12,16 +12,35 @@ El workflow també comprova que el commit etiquetat en stage ja està en
 `main`. El VPS consulta eixa etiqueta cada dos minuts. Només accepta la imatge si el
 contenidor `eduhoot-stage` està sa **i executa exactament la mateixa imatge**.
 Per tant, si stage canvia entre la petició i la comprovació del VPS, no es
-desplega la candidata. L'actualitzador també exigeix la comprovació de
-partides documentada en [PRODUCTION-DEPLOY-READINESS.md](PRODUCTION-DEPLOY-READINESS.md).
+desplega la candidata.
 
-Quan la candidata supera estes comprovacions, el VPS deté la creació de
-partides noves, activa el manteniment, comprova que no queda cap partida,
-guarda MongoDB, imatges pujades i configuració, i reinicia **només EduHoot**.
-Si la nova imatge no es posa sana, torna a la imatge anterior. Una imatge que
-ha fallat no es torna a provar automàticament. Els logs del servei systemd
-registren el resultat. Cap etiqueta de GitHub desplega per si sola sense
-passar per estes comprovacions.
+Abans del canvi, l'actualitzador comprova que **no hi ha cap connexió oberta**
+al port 3000 de l'app (el contenidor usa `network_mode: host`, de manera que
+el VPS veu totes les connexions de nginx i de Socket.IO). Una partida en
+directe manté sempre connexions obertes, així que, mentre n'hi haja, el canvi
+s'ajorna al cicle següent sense comptar com a error. No cal cap ruta interna a
+l'aplicació.
+
+Quan no hi ha connexions, el VPS activa el manteniment, torna a comprovar-ho,
+guarda MongoDB, imatges pujades i configuració, ho comprova una última vegada i
+reinicia **només EduHoot**. Si la nova imatge no es posa sana, torna a la
+imatge anterior. Una imatge que ha fallat no es torna a provar
+automàticament. Cap etiqueta de GitHub desplega per si sola sense passar per
+estes comprovacions.
+
+## Avisos
+
+L'actualitzador envia un avís per Telegram (credencials en
+`/opt/eduhoot-stage/notify.env`, mode 600, les mateixes que stage) quan:
+
+- desplega una versió nova;
+- falla qualsevol pas (producció no sana, GHCR, còpia, salut de la nova
+  imatge, restauració);
+- una candidata porta més de 3 hores esperant perquè sempre hi ha connexions.
+
+Cada problema s'avisa una sola vegada (estat en
+`/opt/eduhoot/production-update-state/alerted`) i l'avís s'esborra quan
+producció torna a estar al dia.
 
 La restauració automàtica canvia la imatge del contenidor. La còpia de MongoDB
 queda disponible per a una restauració manual si una versió ha modificat les
@@ -29,11 +48,8 @@ dades de manera incompatible.
 
 ## Estat de la instal·lació (6-11-2026)
 
-El timer `eduhoot-production-update.timer` està actiu al VPS. La clau privada
-del drenatge està en `/opt/eduhoot/docker/eduhoot.env` i en
-`deploy-readiness.header` (mode 600); GitHub no la té. nginx retorna 404 a
-Internet per a les dos rutes internes. El VPS les consulta directament en
-`127.0.0.1:3000`.
+El timer `eduhoot-production-update.timer` està actiu al VPS. GitHub no té
+cap credencial del VPS.
 
 La primera versió `stage-2026.11.06-1` es va desplegar manualment amb còpia
 prèvia en `/home/samgua/backups/eduhoot-bootstrap-20261106T171614Z-425312`.
@@ -44,17 +60,14 @@ restauració: `/home/samgua/backups/eduhoot-before-restore-20261106T172628Z-4433
 La candidata `stage-2026.11.06-1` queda ignorada per l'actualitzador; no es
 reinstal·larà sola.
 
-La imatge antiga no té l'API de drenatge. Només per al primer desplegament
-futur des d'eixa imatge, l'actualitzador exigeix que l'última instantània de
-partides estiga buida (o que no n'hi haja des de l'arrancada) **i** que no hi
-haja connexions TCP al port 3000. Activa manteniment i repetix la comprovació
-abans del reinici. Després, la nova imatge ja disposarà de l'API de drenatge.
+### Canvi del 28-11-2026
 
-`main` encara no inclou tot el treball de la branca d'Eduardo. El primer pas
-és integrar en la seua branca `feat/delegated-deploy-readiness`, obrir un PR a
-`main` i fusionar-lo després que passe el job `tests`. Eduardo pot fusionar
-els seus propis PR; el push directe a `main` continua bloquejat. Després
-d'això, les noves etiquetes de stage han d'eixir de `main`.
+Fins a esta data, l'actualitzador consultava les rutes internes
+`/api/internal/deploy-readiness` i `/api/internal/deploy-drain`. Eixes rutes
+mai van arribar a `main`, i per això, després de desplegar `stage-2026.11.27-4`,
+el timer bloquejava tota candidata nova. Ara només comprova les connexions
+obertes i ja no necessita `deploy-readiness.header` ni
+`EDUHOOT_DEPLOY_READINESS_TOKEN`.
 
 ## Publicar després de la instal·lació
 
