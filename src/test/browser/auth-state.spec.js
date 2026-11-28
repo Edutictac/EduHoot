@@ -86,6 +86,9 @@ test('amb sessió de professorat al xip, EduHoot entra per SSO una sola vegada',
     await page.goto(SITE + '/create/?lang=va');
     await expect.poll(() => state.starts.length).toBe(1);
     expect(state.starts[0]).toBe('/create/?lang=va');
+    // Esperem que la navegació cap a Authentik acabe; si no, el goto següent
+    // la pot interrompre (prova inestable a CI).
+    await page.waitForURL('**/api/auth/authentik/start**');
     // Si Authentik torna amb error, no es reintenta en bucle.
     await page.goto(SITE + '/create/?lang=va&authentik=error');
     await expect(page.locator('#auth-message')).not.toBeEmpty();
