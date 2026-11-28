@@ -4,23 +4,28 @@
     <meta charset="utf-8">
     <title>Multiplayer | EduHoot</title>
     <link rel="stylesheet" href="../css/multiplayer.css">
+    <link rel="stylesheet" href="/css/matching.css">
+    <link rel="stylesheet" href="/css/order.css">
+    <link rel="stylesheet" href="/css/dropdowns.css">
     <link rel="stylesheet" href="../css/music-player.css">
     <link href="/css/fonts.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/edutictac-footer.css">
     <link rel="stylesheet" href="/css/edutictac-shared.css">
     <script src="/js/edutictac-chip.js"></script>
-    <script src="https://commons.edutictac.es/assets/account-widget.js" defer onerror="document.documentElement.classList.add('account-fallback')"></script>
+    <script src="https://commons.edutictac.es/assets/account-widget.js" defer></script>
     <link rel="icon" href="/icons/logo.svg" type="image/svg+xml">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  </head>
+      <link href="/css/brand-unify.css" rel="stylesheet">
+        <link href="/css/pager.css" rel="stylesheet">
+</head>
   <body>
-    <a class="back-link" href="/" data-i18n="back">← Volver</a>
+    <a class="back-link" href="/" data-i18n="back">← Inicio</a>
     <edutictac-account class="site-account site-account--top" data-home-only data-base="https://commons.edutictac.es"></edutictac-account>
 
     <header class="hero">
       <img class="hero__logo" src="/icons/logo.svg" alt="EduHoot logo">
       <div class="hero__text">
-        <p class="eyebrow" data-i18n="eyebrow">Multiplayer</p>
+        <p class="eyebrow"><span class="mode-icon" aria-hidden="true">👥</span><span data-i18n="eyebrow">Multijugador local</span></p>
         <h1 data-i18n="title">Juega en la misma pantalla</h1>
         <p class="subtext" data-i18n="subtitle">Elige un quiz público, selecciona 2–4 jugadores y responde en pantalla dividida.</p>
       </div>
@@ -32,66 +37,117 @@
       </div>
     </header>
 
+    <div id="multiplayer-app"></div>
+    <template id="multiplayer-tpl">
     <main class="grid">
       <section id="catalog-panel" class="panel">
         <div class="panel__header">
           <div>
-            <p class="eyebrow" data-i18n="publicListEyebrow">Catálogo público</p>
-            <h2 data-i18n="publicListTitle">Quizzes públicos</h2>
-            <p class="subtext" data-i18n="publicListDesc">Elige un quiz para configurar la partida local.</p>
+            <p class="eyebrow">{{ t('publicListEyebrow') }}</p>
+            <h2>{{ t('publicListTitle') }}</h2>
+            <p class="subtext">{{ t('publicListDesc') }}</p>
           </div>
           <div class="panel__actions">
-            <input id="search" type="search" placeholder="Buscar por nombre o etiqueta" data-i18n-placeholder="searchPlaceholder">
-            <label for="sort" class="muted" data-i18n="sortLabel">Ordenar por</label>
-            <select id="sort">
-              <option value="plays" data-i18n="sortPlays">Más jugados</option>
-              <option value="recent" data-i18n="sortNewest">Más recientes</option>
-              <option value="rating" data-i18n="sortRating">Mejor valorados</option>
-              <option value="alpha" data-i18n="sortAlphaAsc">A-Z</option>
-              <option value="alpha-desc" data-i18n="sortAlphaDesc">Z-A</option>
+            <input id="search" type="search" v-model="search" @input="page = 0" :placeholder="t('searchPlaceholder')">
+            <label for="sort" class="muted">{{ t('sortLabel') }}</label>
+            <select id="sort" v-model="sortOrder" @change="page = 0">
+              <option value="plays">{{ t('sortPlays') }}</option>
+              <option value="recent">{{ t('sortNewest') }}</option>
+              <option value="rating">{{ t('sortRating') }}</option>
+              <option value="alpha">{{ t('sortAlphaAsc') }}</option>
+              <option value="alpha-desc">{{ t('sortAlphaDesc') }}</option>
             </select>
           </div>
         </div>
         <div class="panel__filters">
-          <label for="tag-filter" class="muted" data-i18n="filterTagLabel">Etiqueta</label>
-          <div id="tag-filter" class="tag-filter" role="group" aria-label="Etiquetas"></div>
+          <label for="tag-filter" class="muted">{{ t('filterTagLabel') }}</label>
+          <div id="tag-filter" class="tag-filter" role="group" aria-label="Etiquetas">
+            <template v-if="tagFilterExpanded">
+              <label v-for="item in allTags" :key="item.tag" class="tag-filter__item">
+                <input type="checkbox" :value="item.tag" v-model="filters.tags" @change="page = 0">
+                <span>{{ item.tag }}</span>
+              </label>
+            </template>
+          </div>
           <div class="tag-filter__actions">
-            <button id="tags-select-all" class="tag-filter__btn is-icon" type="button" data-i18n="filterTagSelectAll" aria-label="Seleccionar todas">
+            <button id="tags-select-all" class="tag-filter__btn is-icon" type="button" :aria-label="t('filterTagSelectAll')" @click="selectAllTags">
               <span class="tag-filter__icon" aria-hidden="true">✓</span>
-              <span class="sr-only">Seleccionar todas</span>
+              <span class="sr-only">{{ t('filterTagSelectAll') }}</span>
             </button>
-            <button id="tags-clear" class="tag-filter__btn is-icon" type="button" data-i18n="filterTagClear" aria-label="Limpiar">
+            <button id="tags-toggle" v-show="allTags.length > 0" class="tag-filter__btn is-icon" type="button" :aria-label="tagToggleLabel" @click="tagFilterExpanded = !tagFilterExpanded">
+              <span class="tag-filter__icon" aria-hidden="true">{{ tagFilterExpanded ? '▴' : '▾' }}</span>
+              <span class="sr-only">{{ tagToggleLabel }}</span>
+            </button>
+            <button id="tags-clear" class="tag-filter__btn is-icon" type="button" :aria-label="t('filterTagClear')" @click="clearTags">
               <span class="tag-filter__icon" aria-hidden="true">×</span>
-              <span class="sr-only">Limpiar</span>
+              <span class="sr-only">{{ t('filterTagClear') }}</span>
             </button>
           </div>
-          <label for="min-questions" class="muted" data-i18n="filterQuestionsLabel">Preguntas</label>
-          <input id="min-questions" type="number" min="1" inputmode="numeric" data-i18n-placeholder="filterMinPlaceholder" placeholder="mín">
+          <label for="min-questions" class="muted">{{ t('filterQuestionsLabel') }}</label>
+          <input id="min-questions" type="number" min="1" inputmode="numeric" v-model="filters.minQuestions" @input="page = 0" :placeholder="t('filterMinPlaceholder')">
           <span class="muted">-</span>
-          <input id="max-questions" type="number" min="1" inputmode="numeric" data-i18n-placeholder="filterMaxPlaceholder" placeholder="máx">
+          <input id="max-questions" type="number" min="1" inputmode="numeric" v-model="filters.maxQuestions" @input="page = 0" :placeholder="t('filterMaxPlaceholder')">
           <label class="checkbox-inline">
-            <input id="only-image" type="checkbox">
-            <span data-i18n="filterOnlyImage">Solo con imagen</span>
+            <input id="only-image" type="checkbox" v-model="filters.onlyImage" @change="page = 0">
+            <span>{{ t('filterOnlyImage') }}</span>
           </label>
         </div>
-        <div id="public-list" class="cards"></div>
-        <p id="public-empty" class="muted"></p>
-        <div id="public-pagination" class="pagination hidden"></div>
+        <div id="public-list" class="cards">
+          <div v-for="q in pageItems" :key="q.id" class="card">
+            <div class="card-thumb" :class="thumbLoaded[q.id] ? 'has-media' : 'placeholder'">
+              <img alt="" :src="thumbFailed[q.id] ? null : thumbUrl(q)" @load="thumbLoaded[q.id] = true" @error="thumbFailed[q.id] = true">
+            </div>
+            <div class="card-header">
+              <h3>{{ q.name || 'Quiz' }}</h3>
+              <button type="button" class="favorite-btn" :class="{ 'is-active': isFavorite(q.id) }" :aria-pressed="isFavorite(q.id) ? 'true' : 'false'" :aria-label="favoriteLabel(q.id)" :title="favoriteLabel(q.id)" @click.stop="toggleFavorite(q.id)">{{ isFavorite(q.id) ? '❤' : '♡' }}</button>
+            </div>
+            <p class="muted">{{ format(t('questionsLabel'), { count: q.questionsCount || 0 }) }}</p>
+            <div>
+              <template v-for="tag in cleanTags(q)" :key="tag"><span class="tag">{{ tag }}</span></template>
+            </div>
+            <div class="card-rating">
+              <div class="rating-stars">
+                <button v-for="stars in 5" :key="stars" type="button" class="rating-star" :class="{ 'is-filled': stars <= displayRating(q) }" :data-value="stars" :aria-label="format(t('ratingStarLabel'), { stars: stars })" :title="format(t('ratingStarLabel'), { stars: stars })" @click.stop="rate(q, stars)">★</button>
+              </div>
+              <span class="rating-summary muted">{{ ratingSummary(q) }}</span>
+            </div>
+            <p class="muted">{{ (q.playsCount || 0) + ' ' + t('playsShort') + ' · ' + (q.playersCount || 0) + ' ' + t('playersShort') }}</p>
+            <button class="btn btn-primary" type="button" @click="selectQuiz(q.id)">{{ t('selectQuiz') }}</button>
+          </div>
+        </div>
+        <p id="public-empty" class="muted">{{ loading ? '…' : '' }}</p>
+        
       </section>
+      <div id="public-pagination" ref="pagerBottom" class="pagination" :class="{ hidden: totalPages <= 1 }">
+        <template v-if="totalPages > 1">
+            <button class="btn btn-ghost" :title="pagerT('prev')" :disabled="currentPage <= 0" @click="setPage(currentPage - 1)">{{ pagerT('prev') }}</button>
+            <select class="page-select" :value="currentPage" :aria-label="pagerT('info', { page: currentPage + 1, total: totalPages })" @change="setPage(Number($event.target.value))"><option v-for="p in totalPages" :key="p" :value="p - 1">{{ pagerT('info', { page: p, total: totalPages }) }}</option></select>
+            <button class="btn btn-ghost" :title="pagerT('next')" :disabled="currentPage >= totalPages - 1" @click="setPage(currentPage + 1)">{{ pagerT('next') }}</button>
+        </template>
+        <label class="page-size"><span>{{ pagerT('size') }}</span><select :value="pageSize" @change="setPageSize"><option v-for="n in [6, 12, 24, 48]" :key="n" :value="n">{{ n }}</option></select></label>
+        </div>
+        <div id="public-pagination-fixed" class="pagination-fixed" :class="{ 'is-visible': showFixedPager }" :inert="!showFixedPager || null">
+        <template v-if="totalPages > 1">
+            <button class="btn btn-ghost" :title="pagerT('prev')" :disabled="currentPage <= 0" @click="setPage(currentPage - 1)">{{ pagerT('prev') }}</button>
+            <select class="page-select" :value="currentPage" :aria-label="pagerT('info', { page: currentPage + 1, total: totalPages })" @change="setPage(Number($event.target.value))"><option v-for="p in totalPages" :key="p" :value="p - 1">{{ pagerT('info', { page: p, total: totalPages }) }}</option></select>
+            <button class="btn btn-ghost" :title="pagerT('next')" :disabled="currentPage >= totalPages - 1" @click="setPage(currentPage + 1)">{{ pagerT('next') }}</button>
+        </template>
+        <label class="page-size"><span>{{ pagerT('size') }}</span><select :value="pageSize" @change="setPageSize"><option v-for="n in [6, 12, 24, 48]" :key="n" :value="n">{{ n }}</option></select></label>
+        </div>
 
-      <section id="game-panel" class="panel play-panel hidden">
+      <section id="game-panel" class="panel play-panel" :class="{ hidden: !s.quizData }">
         <div class="panel__header">
           <div>
-            <p class="eyebrow" data-i18n="gameEyebrow">Partida local</p>
-            <h2 id="selected-title" data-i18n="gameTitle">Elige un quiz para empezar</h2>
-            <p id="selected-meta" class="muted" data-i18n="startSelect">Selecciona un quiz público.</p>
+            <p class="eyebrow">{{ t('gameEyebrow') }}</p>
+            <h2 id="selected-title">{{ s.quizData ? (s.quizData.name || t('gameTitle')) : t('gameTitle') }}</h2>
+            <p id="selected-meta" class="muted">{{ s.quizData ? format(t('questionsLabel'), { count: quizQuestionTotal }) : t('startSelect') }}</p>
           </div>
         </div>
 
-        <div id="setup" class="setup hidden">
+        <div id="setup" class="setup" :class="{ hidden: !(s.quizData && s.view === 'setup') }">
           <div class="setup-row">
-            <label for="player-count" class="muted" data-i18n="playerCountLabel">Jugadores</label>
-            <select id="player-count">
+            <label for="player-count" class="muted">{{ t('playerCountLabel') }}</label>
+            <select id="player-count" :value="String(s.playerCount)" @change="setPlayerCount($event.target.value)">
               <option value="2">2</option>
               <option value="3">3</option>
               <option value="4">4</option>
@@ -99,75 +155,115 @@
           </div>
 
           <div class="setup-row">
-            <label for="question-mode" class="muted" data-i18n="questionModeLabel">Preguntas</label>
-            <select id="question-mode">
-              <option value="shared" data-i18n="questionModeShared">La misma para todos</option>
-              <option value="per-player" data-i18n="questionModePerPlayer">Una diferente por jugador</option>
+            <label for="question-mode" class="muted">{{ t('questionModeLabel') }}</label>
+            <select id="question-mode" v-model="s.questionMode">
+              <option value="shared">{{ t('questionModeShared') }}</option>
+              <option value="per-player">{{ t('questionModePerPlayer') }}</option>
             </select>
           </div>
 
           <div class="setup-row setup-row--question-count">
-            <label for="question-count" class="muted" data-i18n="questionCountLabel">Preguntas a jugar</label>
+            <label for="question-count" class="muted">{{ t('questionCountLabel') }}</label>
             <div class="question-count-controls">
-              <input id="question-count" type="number" min="1" step="1" inputmode="numeric" autocomplete="off">
-              <span id="question-count-total" class="muted"></span>
+              <input id="question-count" type="number" min="1" :max="quizQuestionTotal > 0 ? quizQuestionTotal : null" step="1" inputmode="numeric" autocomplete="off" :value="s.questionCountInput" @input="s.questionCountInput = $event.target.value" @change="onQuestionCountChange($event)">
+              <span id="question-count-total" class="muted">{{ quizQuestionTotal ? format(t('questionCountTotal'), { total: quizQuestionTotal }) : '' }}</span>
             </div>
           </div>
           <div class="setup-row setup-row--question-count">
-            <label for="question-time" class="muted" data-i18n="questionTimeLabel">Tiempo por pregunta (segundos)</label>
+            <label for="question-time" class="muted">{{ t('questionTimeLabel') }}</label>
             <div class="question-count-controls">
-              <input id="question-time" type="number" min="5" max="120" step="1" inputmode="numeric" autocomplete="off" data-i18n-placeholder="questionTimePlaceholder" placeholder="Auto">
+              <input id="question-time" type="number" min="5" max="120" step="1" inputmode="numeric" autocomplete="off" :placeholder="t('questionTimePlaceholder')" :value="s.questionTimeInput" @input="onQuestionTimeInput($event)">
             </div>
           </div>
 
-          <p class="muted" data-i18n="playerNamesLabel">Nombres de jugadores</p>
-          <div id="player-names" class="player-names"></div>
+          <p class="muted">{{ t('playerNamesLabel') }}</p>
+          <div id="player-names" class="player-names">
+            <div v-for="i in s.playerCount" :key="i" class="player-name-field">
+              <label :for="'player-name-' + (i - 1)">{{ format(t('player'), { n: i }) }}</label>
+              <input :id="'player-name-' + (i - 1)" type="text" autocomplete="off" maxlength="3" pattern="[A-Za-z0-9]{1,3}" placeholder="AAA" :value="normalizePlayerTag(s.playerNames[i - 1])" @input="onNameInput(i - 1, $event)">
+              <div class="player-icon-label">{{ t('iconLabel') }}</div>
+              <div class="mp-icon-picker" role="group" :aria-label="t('iconLabel')">
+                <button v-for="icon in icons" :key="icon" type="button" class="mp-icon-btn" :class="{ selected: s.playerIcons[i - 1] === icon }" :data-icon="icon" :aria-pressed="s.playerIcons[i - 1] === icon ? 'true' : 'false'" @click="pickIcon(i - 1, icon)">{{ icon }}</button>
+              </div>
+            </div>
+          </div>
 
           <div class="setup-actions">
-            <button id="start-btn" class="btn btn-primary" data-i18n="startButton">Empezar</button>
+            <button id="start-btn" class="btn btn-primary" @click="start">{{ t('startButton') }}</button>
           </div>
         </div>
 
-        <div id="game" class="game hidden">
+        <div id="game" class="game" :class="{ hidden: s.view !== 'game' }">
           <div class="game-header">
-            <span id="question-progress" class="pill"></span>
-            <span id="timer-pill" class="pill pill-timer"></span>
+            <span id="question-progress" class="pill">{{ format(t('questionOf'), { current: s.idx + 1, total: roundCount }) }}</span>
+            <span id="timer-pill" class="pill pill-timer">{{ t('timer') + ': ' + Math.ceil(s.timerLeft) + 's' }}</span>
           </div>
 
           <div class="question-card">
-            <p id="question-text" class="question-text"></p>
-            <div id="question-media" class="question-media hidden">
-              <img id="question-image" alt="">
-              <video id="question-video" controls playsinline></video>
-              <iframe id="question-iframe" title="video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            <p id="question-text" class="question-text">{{ s.sharedQuestionText }}</p>
+            <div id="question-media" class="question-media" :class="{ hidden: !s.sharedMedia.has }">
+              <img id="question-image" alt="" :src="s.sharedMedia.image || null" :style="{ display: s.sharedMedia.image ? 'block' : 'none' }">
+              <video id="question-video" controls playsinline :src="s.sharedMedia.video || null" :style="{ display: s.sharedMedia.video ? 'block' : 'none' }"></video>
+              <iframe referrerpolicy="strict-origin-when-cross-origin" id="question-iframe" title="video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen :src="s.sharedMedia.iframe || null" :style="{ display: s.sharedMedia.iframe ? 'block' : 'none' }"></iframe>
             </div>
           </div>
 
-          <div id="players" class="players"></div>
+          <div id="players" :class="'players players-' + s.playerCount">
+            <section v-for="p in s.players" :key="p.id" class="player-panel" :data-player="p.id">
+              <div class="player-question-card">
+                <p class="question-text" data-player-question="1">{{ questionTextFor(p) }}</p>
+                <div class="question-media" :class="{ hidden: !mediaFor(p).has }" data-player-media="1">
+                  <img alt="" data-player-image="1" :src="mediaFor(p).image || null" :style="{ display: mediaFor(p).image ? 'block' : 'none' }">
+                  <video controls playsinline data-player-video="1" :src="mediaFor(p).video || null" :style="{ display: mediaFor(p).video ? 'block' : 'none' }"></video>
+                  <iframe referrerpolicy="strict-origin-when-cross-origin" title="video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen data-player-iframe="1" :src="mediaFor(p).iframe || null" :style="{ display: mediaFor(p).iframe ? 'block' : 'none' }"></iframe>
+                </div>
+              </div>
+              <div class="player-header">
+                <div class="player-name">
+                  <span class="player-icon">{{ p.icon || '' }}</span>
+                  <span class="player-name-text">{{ p.name }}</span>
+                </div>
+                <div class="player-score" data-score="1">{{ t('score') + ': ' + p.shownScore }}</div>
+              </div>
+              <div class="player-feedback" :class="feedbackFor(p).cls" data-feedback="1">{{ feedbackFor(p).text }}</div>
+              <matching-board v-if="matchingFor(p)" :key="'match-' + s.idx + '-' + p.id" :left="matchingFor(p).matchLeft" :right="matchingFor(p).matchRight" :t="boardT" @submit="submitMatching(p.id, $event)"></matching-board>
+              <order-board v-if="orderFor(p)" :key="'order-' + s.idx + '-' + p.id" :items="orderFor(p).orderItems" :t="boardT" @submit="submitOrder(p.id, $event)"></order-board>
+              <div class="answers" data-answers="1">
+                <button v-for="(ans, idx) in answersFor(p)" :key="idx" type="button" class="answer" :class="answerClass(p, idx + 1)" :data-answer="idx + 1" :disabled="p.answered || s.revealed" @click="answerClick(p.id, idx + 1)">{{ ans || ('A' + (idx + 1)) }}</button>
+              </div>
+              <button type="button" class="btn multi-submit" :class="{ hidden: !showMultiSubmit(p), 'has-selection': p.multiSelections.length > 0 }" data-multi-submit="1" :disabled="!p.multiSelections.length || s.phaseLocked" @click="submitMulti(p.id)">{{ t('submitAnswers') }}</button>
+            </section>
+          </div>
         </div>
 
-        <div id="results" class="results hidden">
-          <h3 data-i18n="finishTitle">Partida terminada</h3>
-          <ol id="ranking-list" class="ranking-list"></ol>
+        <div id="results" class="results" :class="{ hidden: s.view !== 'results' }">
+          <h3>{{ t('finishTitle') }}</h3>
+          <ol id="ranking-list" class="ranking-list">
+            <li v-for="p in sortedPlayers" :key="p.id">{{ rankingLine(p) }}</li>
+          </ol>
           <div class="result-actions">
-            <button id="play-again" class="btn btn-primary" data-i18n="playAgain">Repetir</button>
-            <button id="play-same" class="btn btn-ghost" data-i18n="playSame">Repetir mismas preguntas</button>
-            <button id="pick-another" class="btn btn-ghost" data-i18n="pickAnother">Elegir otro quiz</button>
+            <button id="play-again" class="btn btn-primary" @click="start">{{ t('playAgain') }}</button>
+            <button id="play-same" class="btn btn-ghost" @click="playSame">{{ t('playSame') }}</button>
+            <button id="pick-another" class="btn btn-ghost" @click="pickAnother">{{ t('pickAnother') }}</button>
           </div>
         </div>
       </section>
     </main>
 
+    <div id="round-ranking-modal" class="mp-modal" :class="{ show: s.roundRankingOpen }" :aria-hidden="s.roundRankingOpen ? 'false' : 'true'">
+      <div class="mp-modal__content" role="dialog" aria-modal="true">
+        <h3 class="mp-modal__title">{{ t('roundRankingTitle') }}</h3>
+        <ol id="round-ranking-list" class="ranking-list">
+          <li v-for="p in sortedPlayers" :key="p.id">{{ rankingLine(p) }}</li>
+        </ol>
+        <button id="round-ranking-continue" class="btn btn-primary" @click="continueRound">{{ t('roundContinue') }}</button>
+      </div>
+    </div>
+    </template>
+
+
     <div class="music-section bottom-music">
       <div id="multiplayer-music-player" class="music-player-shell"></div>
-    </div>
-
-    <div id="round-ranking-modal" class="mp-modal" aria-hidden="true">
-      <div class="mp-modal__content" role="dialog" aria-modal="true">
-        <h3 class="mp-modal__title" data-i18n="roundRankingTitle">Ranking</h3>
-        <ol id="round-ranking-list" class="ranking-list"></ol>
-        <button id="round-ranking-continue" class="btn btn-primary" data-i18n="roundContinue">Continuar</button>
-      </div>
     </div>
 
     <footer class="ett-footer">
@@ -178,7 +274,6 @@
         <span class="ett-footer__version" id="app-version" aria-live="polite"></span>
       </p>
       <div class="ett-footer__links">
-        <a href="https://edutictac.es/" target="_blank" rel="noopener">edutictac.es</a>
         <a href="https://edutictac.es/privacitat.html" target="_blank" rel="noopener" data-i18n="footerPrivacy">Privacidad</a>
         <a href="https://edutictac.es/galetes.html" target="_blank" rel="noopener" data-i18n="footerCookies">Galetes</a>
         <a href="https://git.edutictac.es/Edutictac/eduhoot" target="_blank" rel="noopener" data-i18n="footerSource">Código fuente</a>
@@ -189,7 +284,12 @@
     <script src="../js/music-player.js"></script>
     <script src="/js/languages.js"></script>
     <script src="/js/env-badge.js"></script>
-    <script src="../js/multiplayer.js"></script>
+    <script src="../js/libs/vue.global.prod.js"></script>
+    <script src="../js/matchingBoard.js"></script>
+    <script src="../js/orderBoard.js"></script>
+    <script src="../js/catalogPager.js"></script>
+    <script src="/js/tfLabels.js"></script>
+        <script src="../js/multiplayer.js"></script>
       <script src="/js/app-version.js"></script>
     </body>
 </html>

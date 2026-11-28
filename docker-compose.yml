@@ -22,6 +22,8 @@ services:
       - HOST=0.0.0.0
       - PORT=3000
       - NODE_ENV=development
+      # Imatges dels quizzes: volum de Docker, fora de la carpeta del projecte.
+      - QUIZ_IMAGES_DIR=/var/lib/eduhoot/quiz-images
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
       - PUBLIC_BASE_URL=${PUBLIC_BASE_URL:-}
@@ -40,6 +42,7 @@ services:
     volumes:
       - ./src:/app
       - eduhoot_node_modules:/app/node_modules
+      - eduhoot_quiz_images:/var/lib/eduhoot/quiz-images
     command: sh -c "npm install; npm run seed:dev; npm run dev"
     develop:
       watch:
@@ -71,3 +74,4 @@ services:
 volumes:
   eduhoot_mongo_data:
   eduhoot_node_modules:
+  eduhoot_quiz_images:

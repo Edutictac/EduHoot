@@ -35,6 +35,16 @@ de treball esperat per a proposar un canvi.
 - Si el canvi toca el comportament d'una funcionalitat, actualitza
   [`ARCHITECTURE.md`](ARCHITECTURE.md) i, si aplica, el `README.md` — mantenint
   sincronitzats els tres idiomes.
+- Si afigs o canvies un text de la interfície, afig la clau a tots els idiomes
+  del diccionari de la pantalla (`es`, `en`, `ca` i `fr`; `va` només si difereix
+  de `ca`): vore «Idiomes i internacionalització» a [`ARCHITECTURE.md`](ARCHITECTURE.md).
+  Els idiomes sense diccionari complet cauen en anglés.
+- En el HTML, no uses scripts en línia ni atributs com `onclick="…"`: la
+  CSP (`src/server/csp.js`) els bloqueja. Posa el codi en un fitxer `.js`
+  (amb `addEventListener` o `@click` de Vue).
+- Si afiges un fitxer JS o CSS del frontend, afig-lo també a la llista
+  `ASSETS` de `src/public/sw.js` i puja `CACHE_NAME`; si no, la pàgina
+  falla sense connexió.
 
 ### Obrir el Pull Request
 
@@ -51,7 +61,7 @@ abans de fusionar-lo.
 ### Després de fusionar-se
 
 El canvi es valida en l'entorn de preproducció descrit en
-[`docs/STAGE_SETUP.md`](docs/STAGE_SETUP.md) abans de promocionar-se a producció.
+[[`docs/STAGE-AUTOMATIC.md`](docs/STAGE-AUTOMATIC.md)](docs/STAGE_SETUP.md) abans de promocionar-se a producció.
 
 ### Llicència
 
@@ -93,6 +103,16 @@ flujo de trabajo esperado para proponer un cambio.
 - Si el cambio toca el comportamiento de una funcionalidad, actualiza
   [`ARCHITECTURE.md`](ARCHITECTURE.md) y, si aplica, el `README.md` — manteniendo
   sincronizados los tres idiomas.
+- Si añades o cambias un texto de la interfaz, añade la clave a todos los idiomas
+  del diccionario de la pantalla (`es`, `en`, `ca` y `fr`; `va` solo si difiere
+  de `ca`): ver «Idiomes i internacionalització» en [`ARCHITECTURE.md`](ARCHITECTURE.md).
+  Los idiomas sin diccionario completo caen en inglés.
+- En el HTML, no uses scripts en línea ni atributos como `onclick="…"`:
+  la CSP (`src/server/csp.js`) los bloquea. Pon el código en un fichero
+  `.js` (con `addEventListener` o `@click` de Vue).
+- Si añades un fichero JS o CSS del frontend, añádelo también a la lista
+  `ASSETS` de `src/public/sw.js` y sube `CACHE_NAME`; si no, la página
+  falla sin conexión.
 
 ### Abrir el Pull Request
 
@@ -109,7 +129,7 @@ antes de fusionarlo.
 ### Después de fusionarse
 
 El cambio se valida en el entorno de preproducción descrito en
-[`docs/STAGE_SETUP.md`](docs/STAGE_SETUP.md) antes de promocionarse a producción.
+[[`docs/STAGE-AUTOMATIC.md`](docs/STAGE-AUTOMATIC.md)](docs/STAGE_SETUP.md) antes de promocionarse a producción.
 
 ### Licencia
 
@@ -151,8 +171,16 @@ summarizes the expected workflow for proposing a change.
 - If the change affects how a feature behaves, update
   [`ARCHITECTURE.md`](ARCHITECTURE.md) and, if relevant, `README.md` — keeping
   all three languages in sync.
-
-### Opening the Pull Request
+- If you add or change an interface text, add the key to every language of that
+  screen's dictionary (`es`, `en`, `ca` and `fr`; `va` only if it differs from
+  `ca`): see "Idiomes i internacionalització" in [`ARCHITECTURE.md`](ARCHITECTURE.md).
+  Languages without a complete dictionary fall back to English.
+- In HTML, don't use inline scripts or attributes like `onclick="…"`: the
+  CSP (`src/server/csp.js`) blocks them. Put the code in a `.js` file
+  (with `addEventListener` or Vue's `@click`).
+- If you add a frontend JS or CSS file, also add it to the `ASSETS` list
+  in `src/public/sw.js` and bump `CACHE_NAME`; otherwise the page breaks
+  offline.
 
 ```bash
 git push <your-remote> <your-branch>
@@ -167,7 +195,7 @@ before merging it.
 ### After merging
 
 The change is validated in the pre-production environment described in
-[`docs/STAGE_SETUP.md`](docs/STAGE_SETUP.md) before being promoted to production.
+[[`docs/STAGE-AUTOMATIC.md`](docs/STAGE-AUTOMATIC.md)](docs/STAGE_SETUP.md) before being promoted to production.
 
 ### License
 

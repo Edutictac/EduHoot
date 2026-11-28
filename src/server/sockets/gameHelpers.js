@@ -3,13 +3,19 @@ const {
   isFreeAnswerType,
   normalizeCorrectAnswers,
   getQuestionMeta,
-  isSubmissionCorrect
+  orderDisplayOf,
+  isSubmissionCorrect,
+  buildMatchingLayout,
+  normalizeMatchingBlindStyle
 } = require('../questionUtils');
+const { logger } = require('../logger');
+const { isStreakEnabled, questionTimeOf } = require('../services/scoring');
+const { buildAnswerStatus, leftListOf } = require('./answerStatus');
 
-const GAME_CLEANUP_DELAY = 100 * 1000; // 90 segundos tras GameOver
-const GAME_INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutos de inactividad
-const HOST_RECONNECT_GRACE_MS = 30 * 1000; // 30 segundos para reanudar partida en aula
-const PLAYER_RECONNECT_GRACE_MS = 40 * 1000; // 40 segundos para reconexion de alumno
+const { getTimings } = require('../services/gameTimings');
+const { ghostStartInfo } = require('../services/ghostMark');
+const { normalizeAutoAdvance, AutoAdvanceTimer } = require('../services/autoAdvance');
+const { studentMetaOf, showCorrectAnswersOf } = require('../services/showAnswers');
 const QUESTION_COUNTDOWN_SECONDS = 3;
 
 const answerRate = new Map(); // clave: hostId:ip -> { count, windowStart }
@@ -92,19 +98,26 @@ function recordPlayerAnswerHistory(player, game, questionNumber, submission, isC
 
 function logGames(games, tag) {
   const pins = games.games.map((g) => `${g.pin}(host:${g.hostId})`);
-  console.log(`[${tag}] Active games:`, pins.length ? pins.join(', ') : 'none');
+  logger.debug(`Active games: ${pins.length ? pins.join(', ') : 'none'}`, { tag });
 }
 
 // Factoria: la majoria d'estos helpers necessiten io/games/players, compartits
 // amb la resta de server.js i amb les rutes ja mogudes en el Pas 4 — s'injecten
 // en compte de moure's, igual que 'players' en services/sessionReport.js.
-module.exports = function createGameHelpers({ io, games, players, cleanImportedText, isMultiplayerFreeTypeQuestion }) {
-  function scheduleGameCleanup(hostId, delayMs = GAME_CLEANUP_DELAY) {
+module.exports = function createGameHelpers({ io, games, players, cleanImportedText }) {
+  // Tiempos vigentes de la partida de este anfitrión (se leen al usarlos, no al cargar).
+  function timingsFor(hostId) {
+    return getTimings(games.getGame(hostId));
+  }
+
+  function scheduleGameCleanup(hostId, delayMs) {
     const game = games.getGame(hostId);
     if (!game) return;
+    const timings = getTimings(game);
+    if (delayMs === undefined || delayMs === null) delayMs = timings.cleanupMs;
     if (game.cleanupTimer) clearTimeout(game.cleanupTimer);
-    if (game.gameOver && delayMs > GAME_CLEANUP_DELAY) {
-      delayMs = GAME_CLEANUP_DELAY;
+    if (game.gameOver && delayMs > timings.cleanupMs) {
+      delayMs = timings.cleanupMs;
     }
     game.cleanupTimer = setTimeout(() => {
       const current = games.getGame(hostId);
@@ -135,7 +148,8 @@ module.exports = function createGameHelpers({ io, games, players, cleanImportedT
     if (!game) return;
     clearHostDisconnectTimer(game);
     game.hostDisconnectedAt = Date.now();
-    game.hostReconnectDeadline = game.hostDisconnectedAt + HOST_RECONNECT_GRACE_MS;
+    const graceMs = getTimings(game).hostReconnectMs;
+    game.hostReconnectDeadline = game.hostDisconnectedAt + graceMs;
     game.hostDisconnectTimer = setTimeout(() => {
       const current = games.getGameByPin(game.pin);
       if (!current) return;
@@ -147,18 +161,25 @@ module.exports = function createGameHelpers({ io, games, players, cleanImportedT
         players.removePlayer(playersToRemove[i].playerId);
       }
       io.to(current.pin).emit('hostDisconnect');
-    }, HOST_RECONNECT_GRACE_MS);
+    }, graceMs);
   }
 
   function buildQuestions(questions = [], opts = {}) {
-    const randomQ = opts.randomQuestions === true;
+    const safeQuestions = Array.isArray(questions) ? questions : [];
+    // originalIndex: la posició de la pregunta al quiz, perquè el mode fantasma la compare encara que el barajat la mogui.
+    const indexed = safeQuestions.map((q, i) => ({ q, i }));
+    const ordered = opts.randomQuestions === true ? shuffleQuestions(indexed) : indexed;
+    return buildQuestionList(ordered.map((x) => x.q), opts)
+      .map((b, k) => ({ ...b, originalIndex: ordered[k].i }));
+  }
+
+  function buildQuestionList(questions = [], opts = {}) {
     const randomA = opts.randomAnswers !== false;
     const overrideTime = parseInt(opts.timePerQuestion, 10);
     const useOverrideTime = !Number.isNaN(overrideTime) && overrideTime > 0;
 
-    const filtered = Array.isArray(questions) ? questions.filter((q) => !isMultiplayerFreeTypeQuestion(q)) : [];
-
-    const base = randomQ ? shuffleQuestions(filtered) : [...filtered];
+    const safeQuestions = Array.isArray(questions) ? questions : [];
+    const base = [...safeQuestions];
 
     return base.map((q) => {
       const meta = normalizeQuestionMeta(q);
@@ -179,6 +200,55 @@ module.exports = function createGameHelpers({ io, games, players, cleanImportedT
           acceptedAnswers: Array.isArray(meta.acceptedAnswers) ? meta.acceptedAnswers.map(cleanImportedText) : [],
           numericAnswer: typeof meta.numericAnswer === 'number' ? meta.numericAnswer : null,
           tolerance: typeof meta.tolerance === 'number' ? meta.tolerance : 0
+        };
+      }
+
+      // Ordenar: els elements es guarden en ordre correcte; l'alumnat veu una llista barrejada (orderShown).
+      if (type === 'order') {
+        const items = Array.isArray(meta.items) ? meta.items : [];
+        const domain = items.map((_, idx) => idx);
+        let shown = shuffleArray(domain);
+        if (domain.length > 1 && shown.every((v, i) => v === i)) shown = [...domain.slice(1), domain[0]];
+        return {
+          question: cleanImportedText(q.question),
+          answers: [],
+          correct: 1,
+          correctAnswers: [1],
+          type,
+          time: useOverrideTime ? overrideTime : (q.time || 0),
+          pointsMultiplier: Number(q.pointsMultiplier) > 1 ? 2 : 1,
+          image: q.image || '',
+          video: q.video || '',
+          items: items.map(cleanImportedText),
+          orderShown: shown,
+          orderGrading: meta.orderGrading,
+          layout: meta.layout
+        };
+      }
+
+      // Correspondencia: la izquierda en orden fijo y la derecha barajada siempre
+      // (sin barajar, la solución sería el mismo orden). Se evita que salga igual.
+      if (type === 'matching') {
+        const pairs = Array.isArray(meta.pairs) ? meta.pairs : [];
+        const domain = pairs.map((_, idx) => idx);
+        let order = shuffleArray(domain);
+        if (domain.length > 1 && order.every((v, i) => v === i)) {
+          order = [...domain.slice(1), domain[0]];
+        }
+        const layout = buildMatchingLayout(pairs, order);
+        return {
+          question: cleanImportedText(q.question),
+          answers: [],
+          correct: 1,
+          correctAnswers: [1],
+          type,
+          time: useOverrideTime ? overrideTime : (q.time || 0),
+          pointsMultiplier: Number(q.pointsMultiplier) > 1 ? 2 : 1,
+          image: q.image || '',
+          video: q.video || '',
+          matchLeft: layout.matchLeft.map(cleanImportedText),
+          matchRight: layout.matchRight.map(cleanImportedText),
+          matchSolution: layout.matchSolution
         };
       }
 
@@ -234,13 +304,22 @@ module.exports = function createGameHelpers({ io, games, players, cleanImportedT
     const current = questions[questionNum];
     if (!current) return null;
     const meta = getQuestionMeta(current);
-    const answer1 = current.answers[0];
-    const answer2 = current.answers[1];
-    const answer3 = current.answers[2];
-    const answer4 = current.answers[3];
+    const answerList = Array.isArray(current.answers) ? current.answers : [];
+    const answer1 = answerList[0];
+    const answer2 = answerList[1];
+    const answer3 = answerList[2];
+    const answer4 = answerList[3];
+    // Correspondencia: el anfitrión recibe también la solución; el alumnado, solo las columnas.
+    const matching = meta.type === 'matching'
+      ? { matchLeft: meta.matchLeft, matchRight: meta.matchRight }
+      : null;
+    // Ordenar: el proyector rep la solució; l'alumnat només la llista barrejada.
+    const ordering = meta.type === 'order'
+      ? { orderItems: orderDisplayOf(meta), layout: meta.layout }
+      : null;
     const image = current.image || '';
     const video = current.video || '';
-    const time = (game.gameData.options && game.gameData.options.timePerQuestion) || current.time || 20;
+    const time = questionTimeOf(game.gameData, current);
     const pointsMultiplier = Number(current.pointsMultiplier) > 1 ? 2 : 1;
     return {
       current,
@@ -264,16 +343,23 @@ module.exports = function createGameHelpers({ io, games, players, cleanImportedT
         showScores: game.gameData.options ? game.gameData.options.showScoresBetween !== false : true,
         questionNumber: game.gameData.question,
         totalQuestions: game.gameData.totalQuestions || questions.length,
-        time
+        time,
+        ...(matching ? { ...matching, matchSolution: meta.matchSolution } : {}),
+        ...(ordering ? { ...ordering, orderSolution: meta.items } : {})
       },
       playerPayload: {
         question: current.question,
         answers: [answer1, answer2, answer3, answer4],
         type: meta.type,
         image,
-        video,
+        // En directo l'alumnat no veu el vídeo (només el projector); a ritme propi i deures és un altre flux.
+        video: '',
         pointsMultiplier,
-        time
+        time,
+        originalIndex: current.originalIndex,
+        ...ghostStartInfo(game),
+        ...(matching || {}),
+        ...(ordering || {})
       }
     };
   }
@@ -286,13 +372,56 @@ module.exports = function createGameHelpers({ io, games, players, cleanImportedT
     if (sendFull) return playerPayload;
     const answerCount = (playerPayload.answers || [])
       .filter((a) => a && String(a).trim()).length;
+    // Correspondencia a ciegas: solo el número de elementos de cada columna; el móvil
+    // muestra números (izquierda) y letras (derecha), y el texto está en el proyector.
+    const matchingCounts = playerPayload.type === 'matching'
+      ? {
+        leftCount: (playerPayload.matchLeft || []).length,
+        rightCount: (playerPayload.matchRight || []).length,
+        blindStyle: normalizeMatchingBlindStyle(options.matchingBlindStyle)
+      }
+      : {};
     return {
       blind: true,
       answerCount,
+      ...matchingCounts,
+      // Ordenar a ciegas: només el nombre d'elements (la llista no surt del servidor fins que la pantalla la mostra).
+      ...(playerPayload.type === 'order' ? { orderCount: (playerPayload.orderItems || []).length, layout: playerPayload.layout } : {}),
       type: playerPayload.type,
       pointsMultiplier: playerPayload.pointsMultiplier,
-      time: playerPayload.time
+      time: playerPayload.time,
+      originalIndex: playerPayload.originalIndex,
+      ghostMode: playerPayload.ghostMode,
+      ghostFingerprint: playerPayload.ghostFingerprint
     };
+  }
+
+  // Fase «aprén i després respon» (feature 24): una pregunta amb vídeo primer es mira a la pantalla de
+  // l'anfitrió (projector); l'alumnat espera i no rep la pregunta fins que acaba el vídeo.
+  function beginVideoLearning(game, payload) {
+    game.gameData.questionPending = false;
+    game.gameData.questionLive = false;
+    game.gameData.questionLearning = true;
+    const options = game.gameData.options || {};
+    io.to(game.hostId).emit('videoLearn', {
+      questionNumber: game.gameData.question,
+      video: payload.video,
+      image: payload.image,
+      startAt: Number(options.videoStartSec) || 0
+    });
+    io.to(game.pin).except(game.hostId).emit('videoLearnWait', {
+      questionNumber: game.gameData.question,
+      totalQuestions: game.gameData.totalQuestions || 0
+    });
+  }
+
+  // Acaba la fase del vídeo (el profesorat ho tanca, o el vídeo acaba): comencen les respostes i el temps.
+  function finishVideoLearning(game) {
+    if (!game || !game.gameData || !game.gameData.questionLearning) return false;
+    game.gameData.videoLearnedFor = game.gameData.question;
+    game.gameData.questionLearning = false;
+    startCurrentQuestion(game);
+    return true;
   }
 
   function startCurrentQuestion(game) {
@@ -300,12 +429,29 @@ module.exports = function createGameHelpers({ io, games, players, cleanImportedT
     clearQuestionStartTimer(game);
     const payload = getCurrentQuestionPayload(game);
     if (!payload) return;
+    const learnFirst = !!payload.video && game.gameData.videoLearnedFor !== game.gameData.question;
+    if (learnFirst) {
+      beginVideoLearning(game, payload);
+      return;
+    }
     game.gameData.questionPending = false;
     game.gameData.questionLive = true;
     game.gameData.questionStartedAt = Date.now();
     io.to(game.hostId).emit('gameQuestions', payload.hostPayload);
-    io.to(game.pin).emit('questionMedia', { image: payload.image, video: payload.video });
+    emitAutoAdvanceState(game);
+    // El vídeo ja l'ha vist l'anfitrió: l'alumnat i la pantalla no el tornen a rebre.
+    io.to(game.pin).emit('questionMedia', { image: payload.image, video: '' });
     io.to(game.pin).emit('playerQuestion', buildStudentPlayerPayload(payload.playerPayload, game.gameData.options));
+  }
+
+  // Opció «Mostrar pregunta durante la cuenta atrás»: el text de la pregunta que ve, o null si l'opció és inactiva.
+  function countdownPreviewOf(game) {
+    const options = game && game.gameData && game.gameData.options;
+    if (!options || options.showQuestionDuringCountdown !== true) return null;
+    const questions = (game.gameData && game.gameData.questions) || [];
+    const q = questions[(Number(game.gameData.question) || 1) - 1];
+    if (!q) return null;
+    return { question: String(q.question || '') };
   }
 
   function scheduleQuestionCountdown(game, delaySeconds = QUESTION_COUNTDOWN_SECONDS) {
@@ -314,11 +460,13 @@ module.exports = function createGameHelpers({ io, games, players, cleanImportedT
     const seconds = Math.max(0, Math.round(Number(delaySeconds) || 0));
     game.gameData.questionLive = false;
     game.gameData.questionPending = true;
+    game.gameData.questionLearning = false;
     game.gameData.questionCountdownEndsAt = Date.now() + (seconds * 1000);
     io.to(game.pin).emit('questionCountdown', {
       seconds,
       questionNumber: game.gameData.question,
-      totalQuestions: game.gameData.totalQuestions || (game.gameData.questions || []).length
+      totalQuestions: game.gameData.totalQuestions || (game.gameData.questions || []).length,
+      preview: countdownPreviewOf(game)
     });
     game.gameData.questionStartTimer = setTimeout(() => {
       startCurrentQuestion(game);
@@ -342,14 +490,99 @@ module.exports = function createGameHelpers({ io, games, players, cleanImportedT
     return null;
   }
 
+  // Avance automático: tras los resultados, el servidor pide al anfitrión que avance
+  // (clasificación o siguiente pregunta). El anfitrión responde con el paso que ha dado.
+  function autoAdvanceSecondsOf(game) {
+    return normalizeAutoAdvance(game && game.gameData && game.gameData.options && game.gameData.options.autoAdvanceSec);
+  }
+
+  function emitAutoAdvanceState(game, extra) {
+    if (!game || !game.gameData) return;
+    const t = game.gameData.autoAdvance;
+    const state = {
+      seconds: autoAdvanceSecondsOf(game),
+      active: !!(t && !t.cancelled),
+      paused: !!(t && t.paused),
+      remainingMs: t && !t.cancelled ? t.snapshot().remainingMs : 0,
+      ...(extra || {})
+    };
+    io.to(game.pin).emit('autoAdvanceState', state);
+  }
+
+  function stopAutoAdvance(game) {
+    if (!game || !game.gameData || !game.gameData.autoAdvance) return;
+    game.gameData.autoAdvance.cancel();
+    game.gameData.autoAdvance = null;
+    emitAutoAdvanceState(game);
+  }
+
+  function armAutoAdvance(game) {
+    const seconds = autoAdvanceSecondsOf(game);
+    if (!seconds || !game.gameData) return;
+    const question = game.gameData.question;
+    const current = game.gameData.autoAdvance;
+    // Idempotente: una misma pregunta no vuelve a armarse si ya está en marcha.
+    if (current && current.question === question && !current.cancelled) return;
+    if (current) current.cancel();
+    const timer = new AutoAdvanceTimer(seconds * 1000, () => {
+      io.to(game.hostId).emit('autoAdvanceStep');
+    });
+    timer.question = question;
+    game.gameData.autoAdvance = timer;
+    timer.start();
+    emitAutoAdvanceState(game);
+  }
+
+  // El anfitrión avanzó un paso de resultados: si sigue en resultados (clasificación), rearma.
+  function onAutoAdvanceStepDone(game, stage) {
+    const t = game && game.gameData && game.gameData.autoAdvance;
+    if (!t || t.cancelled) return;
+    if (stage === 'ranking') {
+      t.rearm();
+      emitAutoAdvanceState(game);
+    } else if (stage !== 'next') {
+      stopAutoAdvance(game);
+    }
+  }
+
+  function setAutoAdvancePaused(game, paused) {
+    if (!game || !game.gameData) return;
+    game.paused = !!paused;
+    const t = game.gameData.autoAdvance;
+    if (t && !t.cancelled) {
+      if (paused) t.pause(); else t.resume();
+    }
+    emitAutoAdvanceState(game);
+  }
+
   function emitQuestionOverPayload(game) {
     if (!game) return;
     const playerData = players.getPlayers(game.hostId);
+    // Racha de aciertos (feature 11): quien no ha respondido esta pregunta la reinicia.
+    // Es idempotente: al reiniciarse no vuelve a cambiar en un segundo aviso.
+    if (isStreakEnabled(game)) {
+      let changed = false;
+      playerData.forEach((p) => {
+        if (p.gameData && p.gameData.answeredQuestion !== game.gameData.question && (Number(p.gameData.streak) || 0) !== 0) {
+          p.gameData.streak = 0;
+          changed = true;
+        }
+      });
+      if (changed) {
+        io.to(game.hostId).emit('answerStatus', buildAnswerStatus(playerData, game.gameData.question, leftListOf(game, playerData)));
+      }
+    }
     const questions = game.gameData.questions || [];
     const current = questions[game.gameData.question - 1];
     const meta = getQuestionMeta(current);
     meta.groupResult = getGroupAnswerResult(playerData, meta);
-    io.to(game.pin).emit('questionOver', playerData, meta);
+    meta.showScores = game.gameData.options ? game.gameData.options.showScoresBetween !== false : true;
+    // «Mostrar respuestas»: en una correspondencia, el proyector solo enseña la solución si está activado.
+    meta.showCorrectAnswers = showCorrectAnswersOf(game);
+    // El anfitrión recibe el resultado completo; el alumnado, sin la respuesta correcta si está desactivado.
+    io.to(game.hostId).emit('questionOver', playerData, meta);
+    io.to(game.pin).except(game.hostId).emit('questionOver', playerData, studentMetaOf(game, meta));
+    armAutoAdvance(game);
   }
 
   function emitQuestionOverPayloadDeferred(game, delayMs = 250) {
@@ -364,9 +597,14 @@ module.exports = function createGameHelpers({ io, games, players, cleanImportedT
   }
 
   return {
-    GAME_INACTIVITY_TIMEOUT,
-    HOST_RECONNECT_GRACE_MS,
-    PLAYER_RECONNECT_GRACE_MS,
+    countdownPreviewOf,
+    finishVideoLearning,
+    timingsFor,
+    stopAutoAdvance,
+    emitAutoAdvanceState,
+    onAutoAdvanceStepDone,
+    setAutoAdvancePaused,
+    autoAdvanceSecondsOf,
     scheduleGameCleanup,
     markHostConnected,
     scheduleHostReconnectCleanup,

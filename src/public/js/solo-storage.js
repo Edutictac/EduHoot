@@ -37,17 +37,6 @@ function toggleFavorite(id){
     saveFavorites();
 }
 
-function updateFavoriteButton(btn, id){
-    if(!btn) return;
-    var active = isFavorite(id);
-    btn.classList.toggle('is-active', active);
-    btn.setAttribute('aria-pressed', active ? 'true' : 'false');
-    var label = active ? t('favoriteRemove') : t('favoriteAdd');
-    btn.setAttribute('aria-label', label);
-    btn.title = label;
-    btn.textContent = active ? '❤' : '♡';
-}
-
 function getDeviceId(){
     try{
         var existing = localStorage.getItem(DEVICE_ID_STORAGE_KEY);
@@ -101,16 +90,7 @@ function formatRatingSummary(avg, count){
     return format(t('ratingSummary'), { avg: avg.toFixed(1), count: count });
 }
 
-function updateRatingStars(starsWrap, displayRating){
-    if(!starsWrap) return;
-    var buttons = starsWrap.querySelectorAll('button[data-value]');
-    Array.prototype.forEach.call(buttons, function(btn){
-        var value = parseInt(btn.getAttribute('data-value'), 10);
-        btn.classList.toggle('is-filled', value <= displayRating);
-    });
-}
-
-function submitRating(quizId, rating, summaryEl, starsWrap, quizRef){
+function submitRating(quizId, rating, quizRef){
     if(!deviceId) deviceId = getDeviceId();
     fetch('/api/quizzes/' + encodeURIComponent(quizId) + '/rating', {
         method: 'POST',
@@ -130,8 +110,6 @@ function submitRating(quizId, rating, summaryEl, starsWrap, quizRef){
                 quizRef.ratingCount = count;
             }
             setUserRating(quizId, rating);
-            if(summaryEl) summaryEl.textContent = formatRatingSummary(avg, count);
-            updateRatingStars(starsWrap, rating);
         })
         .catch(function(){});
 }

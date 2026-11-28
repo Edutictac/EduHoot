@@ -540,7 +540,7 @@ input[type="search"]::placeholder{ color: #9fb1d9; }
 }
 
 .btn-primary{
-  background: linear-gradient(135deg, #22c55e, #16a34a);
+  background: linear-gradient(135deg, #15803d, #166534);
   color: #fff;
   box-shadow: var(--shadow);
 }
@@ -562,7 +562,7 @@ input[type="search"]::placeholder{ color: #9fb1d9; }
 }
 
 .btn.multi-submit.has-selection{
-  background: linear-gradient(135deg, #22c55e, #16a34a);
+  background: linear-gradient(135deg, #15803d, #166534);
 }
 
 .btn.multi-submit:disabled{
@@ -572,25 +572,6 @@ input[type="search"]::placeholder{ color: #9fb1d9; }
 
 .btn:hover{ transform: translateY(-1px); }
 
-.pagination{
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  margin-top: 12px;
-}
-
-.pagination button{
-  border: none;
-  background: rgba(255,255,255,0.12);
-  color: #fff;
-  padding: 8px 12px;
-  border-radius: 10px;
-  cursor: pointer;
-  box-shadow: var(--shadow);
-}
-
-.pagination button:disabled{ opacity: 0.4; cursor: not-allowed; box-shadow: none; }
 
 .hidden{ display: none !important; }
 
@@ -906,6 +887,7 @@ body.mode-per-player .question-card{
 
 .player-feedback.ok{ color: #bbf7d0; }
 .player-feedback.bad{ color: #fecaca; }
+.player-feedback.partial{ color: #fde68a; }
 .player-feedback.muted{ color: rgba(255,255,255,0.7); }
 
 .answers{
@@ -929,10 +911,10 @@ body.mode-per-player .question-card{
   user-select: none;
 }
 
-.answer:nth-child(1){ background: linear-gradient(135deg, #22c55e, #16a34a); }
-.answer:nth-child(2){ background: linear-gradient(135deg, #f97316, #ea580c); }
-.answer:nth-child(3){ background: linear-gradient(135deg, #3b82f6, #2563eb); }
-.answer:nth-child(4){ background: linear-gradient(135deg, #f43f5e, #e11d48); }
+.answer:nth-child(1){ background: linear-gradient(135deg, #15803d, #166534); }
+.answer:nth-child(2){ background: linear-gradient(135deg, #c2410c, #9a3412); }
+.answer:nth-child(3){ background: linear-gradient(135deg, #2563eb, #1d4ed8); }
+.answer:nth-child(4){ background: linear-gradient(135deg, #e11d48, #be123c); }
 
 .answer:active{ transform: translateY(0); filter: brightness(0.95); }
 
@@ -1003,4 +985,81 @@ body.mode-per-player .question-card{
   .players-2{ grid-template-columns: 1fr; }
   .players-4{ grid-template-columns: 1fr; }
   .player-panel{ min-height: 280px; }
+}
+
+#multiplayer-app{ display: contents; }
+
+/* Correspondencia (feature 7): el tablero cabe en el panel de cada jugador; si no
+   cabe entero (paneles bajos, móvil), el panel se desplaza en lugar de solaparse. */
+.player-panel:has(.matching-board){
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.player-panel .matching-board{ margin: 0; gap: 8px; }
+.player-panel .matching-hint{ font-size: 12px; }
+.player-panel .matching-cols{ gap: 6px; }
+.player-panel .matching-col{ gap: 6px; }
+.player-panel .matching-item{ min-height: 40px; padding: 6px 8px; font-size: 14px; }
+.player-panel .matching-code{ width: 22px; height: 22px; font-size: 12px; }
+.player-panel .matching-send{ min-height: 44px; min-width: 0; padding: 8px 14px; }
+
+/* El texto largo (respuestas, nombres) no se sale de las ventanas ni de los avisos. */
+.mp-modal__content{
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  overflow-wrap: anywhere;
+  box-sizing: border-box;
+}
+.player-feedback{ overflow-wrap: anywhere; }
+/* Enunciados y respuestas: el texto sin espacios que no cabe se parte. */
+.question-text,
+.answer{
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+/* Paginador del catàleg: blau clar, el mateix al paginador de la pàgina i a la barra flotant. */
+/* Paginador de la pàgina: fons transparent (es veu el de la pàgina), com abans. */
+#public-pagination{ background: transparent; box-shadow: none; padding: 0; }
+/* Barra flotant: blau clar, amb text fosc. */
+#public-pagination-fixed{ background: #8cc4ea; color: #0f2a44; border-top: 1px solid rgba(15,42,68,0.25); box-shadow: 0 -8px 24px rgba(0,0,0,0.3); }
+#public-pagination-fixed span{ color: #0f2a44; }
+#public-pagination-fixed select{ color: #0f2a44; background: rgba(255,255,255,0.55); border-color: rgba(15,42,68,0.25); }
+#public-pagination-fixed button{ color: #0f2a44; background: rgba(255,255,255,0.55); border: 1px solid rgba(15,42,68,0.25); }
+
+/* Cabecera i disposició com al catàleg de solo: mateix ample (fins a la vora del recuadre), enllaç «Inicio» en píldora,
+   text de la capçalera centrat i la icona de mode. Només canvien els colors propis de multijugador. */
+:root{
+  --page-gutter: clamp(5vw, calc(5vw + (100vw - 600px) * 0.175), 15vw);
+  --chip-right: var(--page-gutter);
+}
+body{
+  padding: 18px var(--page-gutter);
+  padding-top: max(18px, var(--env-badge-space, 0px));
+}
+@media (max-width: 960px){
+  body{
+    padding: 14px var(--page-gutter);
+    padding-top: max(14px, var(--env-badge-space, 0px));
+  }
+}
+.grid{ max-width: none; }
+.back-link{
+  border-radius: 999px;
+  padding: 6px 14px;
+  margin-bottom: 18px;
+}
+.hero__text{ text-align: center; }
+.hero__text .subtext{ margin-left: auto; margin-right: auto; }
+.mode-icon{ font-size: 30px; line-height: 1; margin-right: 10px; vertical-align: middle; display: inline-block; }
+
+/* Catàleg de multijugador: fons de l'apartat i de les targetes en tons blaus (per diferenciar-lo del de solo). */
+#catalog-panel{ background: rgba(14, 78, 150, 0.62); border-color: rgba(120, 180, 255, 0.28); }
+#catalog-panel .card{ background: rgba(40, 120, 220, 0.18); border-color: rgba(140, 196, 234, 0.30); }
+
+/* Catàleg: el mateix degradat animat lent, però en tons blaus (les pantalles de partida conserven el seu). */
+body:not(.preparing):not(.playing){
+  background: linear-gradient(120deg, #1e3a8a, #1d4ed8, #0369a1, #0ea5e9);
+  background-size: 400% 400%;
+  animation: gradientMove 16s ease infinite;
 }

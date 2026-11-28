@@ -2,12 +2,16 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const { parseCsv, toQuestion } = require('../importCsv');
+const { parseMoodleXml } = require('../services/moodleXmlImport');
+const { parseGift } = require('../services/giftImport');
+const { detectImportFormat } = require('../services/importFormat');
 const {
   getGamesCollection,
   getUsersCollection,
   getRatingsCollection,
   getRatingVotesCollection
 } = require('../data/repositories');
+const { logger } = require('../logger');
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 2 * 1024 * 1024 } });
 const uploadRate = new Map(); // clave: ip -> { count, windowStart }
@@ -40,7 +44,7 @@ function uploadRateLimiter(req, res, next) {
 }
 
 function logEvent(tag, payload) {
-  console.log(`[${tag}]`, payload);
+  logger.info(tag, Object.assign({ tag }, payload));
 }
 
 module.exports = function createQuizzesRouter({
@@ -81,11 +85,19 @@ module.exports = function createQuizzesRouter({
   quizToCsv,
   quizToMoodleXml,
   slugifyForFilename,
+  buildQuizCsvFileName,
   GLOBAL_OWNER_ID,
   GLOBAL_OWNER_EMAIL,
   PUBLIC_IMPORT_SOURCE_URL
 }) {
   const router = express.Router();
+  // Qui consulta el quiz: l'usuari (si n'hi ha) i el token del dispositiu que va crear un quiz local.
+  const viewerOf = (req) => ({ ...(req.user || {}), ownerToken: ownerTokenFromReq(req) });
+  // Cookie del token del dispositiu (24 h, igual que els quizzes locals): la envia el navegador sola.
+  function setOwnerCookie(req, res, token) {
+    const secure = !!req.secure || req.headers['x-forwarded-proto'] === 'https';
+    res.cookie('eduh_owner', token, { httpOnly: true, sameSite: 'lax', path: '/', maxAge: 24 * 60 * 60 * 1000, secure });
+  }
   let catalogueImportRunning = false;
 
   router.get('/api/quizzes/:id', async (req, res) => {
@@ -95,7 +107,7 @@ module.exports = function createQuizzesRouter({
       if (!quiz) {
         return res.status(404).json({ error: 'Quiz no encontrado.' });
       }
-      if (!canUseQuiz(quiz, req.user)) {
+      if (!canUseQuiz(quiz, viewerOf(req))) {
         return res.status(403).json({ error: 'No autorizado para ver este quiz.' });
       }
 
@@ -130,6 +142,39 @@ module.exports = function createQuizzesRouter({
   });
 
   // Download quiz as CSV
+  // Portada del quiz (la primera pregunta amb imatge): la carrega la biblioteca amb <img>, només per a les tarjetes visibles.
+  router.get('/api/quizzes/:id/cover', async (req, res) => {
+    try {
+      const quiz = await findGameById(req.params.id);
+      if (!quiz) return res.status(404).end();
+      if (!canUseQuiz(quiz, viewerOf(req))) return res.status(403).end();
+      const questions = Array.isArray(quiz.questions) ? quiz.questions : [];
+      const first = questions.find((q) => q && ((typeof q.image === 'string' && q.image) || (typeof q.video === 'string' && q.video)));
+      const image = first && typeof first.image === 'string' ? first.image : '';
+      if (!image) return res.status(404).end();
+      if (/^https?:\/\//i.test(image)) return res.redirect(302, image);
+      // data:<tipus>[;paràmetres][;base64],<dades>: el tipus ha de ser d'imatge.
+      const m = /^data:([^;,]+)([^,]*),([\s\S]*)$/i.exec(image);
+      if (!m || !/^image\/(png|jpeg|gif|webp|svg\+xml)$/i.test(m[1])) return res.status(404).end();
+      const base64 = /;base64$/i.test(m[2]);
+      let body;
+      if (base64) body = Buffer.from(m[3], 'base64');
+      else {
+        try { body = Buffer.from(decodeURIComponent(m[3]), 'utf8'); } catch (e) { body = Buffer.from(m[3], 'utf8'); }
+      }
+      res.set({
+        'Content-Type': m[1],
+        'Cache-Control': 'private, max-age=3600',
+        'X-Content-Type-Options': 'nosniff',
+        // Si s'obri directament, un SVG no pot executar scripts.
+        'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; sandbox"
+      });
+      return res.send(body);
+    } catch (err) {
+      return res.status(500).end();
+    }
+  });
+
   router.get('/api/quizzes/:id/csv', async (req, res) => {
     const quizIdParam = req.params.id;
     try {
@@ -137,11 +182,11 @@ module.exports = function createQuizzesRouter({
       if (!quiz) {
         return res.status(404).json({ error: 'Quiz no encontrado.' });
       }
-      if (!canUseQuiz(quiz, req.user)) {
+      if (!canUseQuiz(quiz, viewerOf(req))) {
         return res.status(403).json({ error: 'No autorizado para descargar este quiz.' });
       }
       const csv = quizToCsv(quiz);
-      const fileName = `${slugifyForFilename(quiz.name) || 'quiz'}.csv`;
+      const fileName = buildQuizCsvFileName(quiz.name);
       res.setHeader('Content-Type', 'text/csv; charset=utf-8');
       res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
       return res.send(csv);
@@ -158,7 +203,7 @@ module.exports = function createQuizzesRouter({
       if (!quiz) {
         return res.status(404).json({ error: 'Quiz no encontrado.' });
       }
-      if (!canUseQuiz(quiz, req.user)) {
+      if (!canUseQuiz(quiz, viewerOf(req))) {
         return res.status(403).json({ error: 'No autorizado para descargar este quiz.' });
       }
       const xml = quizToMoodleXml(quiz);
@@ -183,7 +228,28 @@ module.exports = function createQuizzesRouter({
       const tagMode = req.query.tagMode === 'any' ? 'any' : 'all';
       const matchesTagFilter = (quiz) => matchesTags(quiz, normalized, tagMode);
       const collection = await getGamesCollection();
-      let quizzesRaw = await collection.find({}).project({ questions: 0 }).toArray();
+      // El nombre de preguntas es compta a la base de dades: no s'envien les preguntes a la biblioteca.
+      let quizzesRaw = await collection.aggregate([
+        { $addFields: {
+          questionCount: { $size: { $cond: [{ $isArray: '$questions' }, '$questions', []] } },
+          // Primera pregunta amb imatge o vídeo: només es calcula si té imatge i l'URL del vídeo (sense dades d'imatge).
+          coverMedia: { $let: {
+            vars: { m: { $arrayElemAt: [{ $filter: {
+              input: { $cond: [{ $isArray: '$questions' }, '$questions', []] }, as: 'q',
+              cond: { $or: [
+                { $and: [{ $eq: [{ $type: '$$q.image' }, 'string'] }, { $ne: ['$$q.image', ''] }] },
+                { $and: [{ $eq: [{ $type: '$$q.video' }, 'string'] }, { $ne: ['$$q.video', ''] }] }
+              ] }
+            } }, 0] } },
+            in: {
+              image: { $and: [{ $eq: [{ $type: '$$m.image' }, 'string'] }, { $ne: ['$$m.image', ''] }] },
+              video: { $cond: [{ $eq: [{ $type: '$$m.video' }, 'string'] },
+                { $cond: [{ $lt: [{ $strLenCP: '$$m.video' }, 500] }, '$$m.video', ''] }, ''] }
+            }
+          } }
+        } },
+        { $project: { questions: 0 } }
+      ]).toArray();
       if (normalized.length) {
         quizzesRaw = quizzesRaw.filter(matchesTagFilter);
       }
@@ -204,6 +270,9 @@ module.exports = function createQuizzesRouter({
         tags: quiz.tags || [],
         playsCount: quiz.playsCount || 0,
         playersCount: quiz.playersCount || 0,
+        questionCount: Number(quiz.questionCount) || 0,
+        coverImage: quiz.coverMedia && quiz.coverMedia.image ? `/api/quizzes/${encodeURIComponent(String(quiz.id))}/cover` : '',
+        coverVideo: (quiz.coverMedia && quiz.coverMedia.video) || '',
         visibility: currentVisibility(quiz),
         allowClone: normalizeAllowClone(quiz.allowClone),
         ownerId: quiz.ownerId,
@@ -212,8 +281,27 @@ module.exports = function createQuizzesRouter({
         sourceQuizName: quiz.sourceQuizName || '',
         sourceOwnerNickname: quiz.sourceOwnerNickname || '',
         sourceQuizId: quiz.sourceQuizId,
-        createdAt: quiz.createdAt || quiz.updatedAt || new Date(0)
+        createdAt: quiz.createdAt || quiz.updatedAt || new Date(0),
+        updatedAt: quiz.updatedAt || quiz.createdAt || null
       }));
+      // Valoració (mitjana i vots) de cada quiz, com a /api/public-quizzes. Els quizzes locals no tenen valoració.
+      const listRatingsCol = await getRatingsCollection();
+      const listRatingKeys = new Set();
+      quizzes.forEach((q) => {
+        if (q.id !== undefined && q.id !== null) {
+          listRatingKeys.add(String(q.id));
+          if (typeof q.id === 'number') listRatingKeys.add(q.id);
+        }
+      });
+      const listRatings = listRatingKeys.size
+        ? await listRatingsCol.find({ quizId: { $in: Array.from(listRatingKeys) } }).project({ quizId: 1, avg: 1, count: 1 }).toArray()
+        : [];
+      const listRatingById = new Map(listRatings.map((r) => [String(r.quizId), r]));
+      quizzes.forEach((q) => {
+        const r = listRatingById.get(String(q.id));
+        q.ratingAvg = r ? r.avg : 0;
+        q.ratingCount = r ? r.count : 0;
+      });
       // Añadir quizzes efímeros solicitados
       const localIdsParam = req.query.localIds;
       const localIds = Array.isArray(localIdsParam)
@@ -412,7 +500,7 @@ module.exports = function createQuizzesRouter({
 
   router.post('/api/upload-csv', uploadRateLimiter, upload.single('file'), async (req, res) => {
     if (!req.file) {
-      return res.status(400).json({ error: 'Selecciona un archivo CSV para importar.' });
+      return res.status(400).json({ error: 'Selecciona un archivo para importar.' });
     }
 
     const quizName =
@@ -427,13 +515,37 @@ module.exports = function createQuizzesRouter({
       });
 
       const content = req.file.buffer.toString('utf8');
-      const rows = parseCsv(content);
-      if (rows.length === 0) {
-        logEvent('upload-csv:empty', { filename: req.file.originalname });
-        return res.status(400).json({ error: 'No se encontraron preguntas en el CSV.' });
+      // El mismo endpoint acepta CSV de EduHoot y XML de Moodle (feature 15).
+      const format = detectImportFormat(req.file.originalname, content);
+      const isMoodleXml = format === 'xml';
+      let questions;
+      // Preguntas omitidas al importar (solo XML de Moodle), con el motivo, para mostrárselas al docente.
+      let skipped = [];
+      const isGift = format === 'gift';
+      if (isGift) {
+        const parsed = parseGift(content);
+        questions = parsed.questions;
+        skipped = parsed.skipped.map(({ name, reason }) => ({ name, reason }));
+      } else if (isMoodleXml) {
+        let parsed;
+        try {
+          parsed = parseMoodleXml(content);
+        } catch (err) {
+          logEvent('upload-xml:invalid', { filename: req.file.originalname });
+          return res.status(400).json({ error: 'El archivo no es un cuestionario XML de Moodle.' });
+        }
+        questions = parsed.questions;
+        skipped = parsed.skipped.map(({ name, reason }) => ({ name, reason }));
+        if (parsed.skipped.length) {
+          logEvent('upload-xml:skipped', { filename: req.file.originalname, skipped: parsed.skipped.length, reasons: parsed.skipped.map((s) => s.reason) });
+        }
+      } else {
+        questions = parseCsv(content).map(toQuestion).filter(Boolean);
       }
-
-      const questions = rows.map(toQuestion);
+      if (questions.length === 0) {
+        logEvent('upload-csv:empty', { filename: req.file.originalname });
+        return res.status(400).json({ error: 'No se encontraron preguntas en el archivo.' });
+      }
       const tags = normalizeTags(req.body.tags ? [].concat(req.body.tags) : []);
       const ownerToken = (req.body.ownerToken || req.headers['x-owner-token'] || '').toString().trim();
       const language = cleanMetaText(req.body.language, 40);
@@ -466,12 +578,12 @@ module.exports = function createQuizzesRouter({
             updatedAt: new Date()
           };
           await collection.insertOne(quiz);
-          logEvent('upload-csv:public-anon', { filename: req.file.originalname, newId, count: questions.length });
-          return res.json({ id: newId, name: quizName, count: questions.length, local: false });
+          logEvent('upload-csv:public-anon', { filename: req.file.originalname, newId, count: questions.length, quizId: newId, quizName });
+          return res.json({ id: newId, name: quizName, count: questions.length, local: false, skipped });
         } else {
           const saved = await saveEphemeralQuiz({ name: quizName, tags, questions, visibility: 'private', allowClone, ownerToken });
-          logEvent('upload-csv:local', { filename: req.file.originalname, id: saved.id, count: questions.length });
-          return res.json({ id: saved.id, name: quizName, count: questions.length, local: true });
+          logEvent('upload-csv:local', { filename: req.file.originalname, id: saved.id, count: questions.length, quizId: saved.id, quizName });
+          return res.json({ id: saved.id, name: quizName, count: questions.length, local: true, skipped });
         }
       }
 
@@ -497,11 +609,11 @@ module.exports = function createQuizzesRouter({
       };
 
       await collection.insertOne(quiz);
-      logEvent('upload-csv:success', { filename: req.file.originalname, newId, count: questions.length });
-      return res.json({ id: newId, name: quizName, count: questions.length, local: false });
+      logEvent('upload-csv:success', { filename: req.file.originalname, newId, count: questions.length, quizId: newId, quizName });
+      return res.json({ id: newId, name: quizName, count: questions.length, local: false, skipped });
     } catch (err) {
       console.error('upload-csv error', err);
-      return res.status(500).json({ error: 'No se pudo importar el CSV.' });
+      return res.status(500).json({ error: 'No se pudo importar el archivo.' });
     }
   });
 
@@ -1052,6 +1164,7 @@ module.exports = function createQuizzesRouter({
       }
       if (visibility === 'private') {
         const saved = await saveEphemeralQuiz({ name, questions, tags, visibility, allowClone, ownerToken, language, license, description });
+        if (ownerToken) setOwnerCookie(req, res, ownerToken);
         return res.json({ ok: true, id: saved.id, count: questions.length });
       }
       const collection = await getGamesCollection();

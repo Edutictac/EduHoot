@@ -1,20 +1,15 @@
 var socket = io({
     reconnection: true,
-    reconnectionAttempts: 15,
+    reconnectionAttempts: 200,
     reconnectionDelay: 500,
-    reconnectionDelayMax: 2000
+    reconnectionDelayMax: 3000
 });
 
 var params = jQuery.deparam(window.location.search); //Gets the id from url
 var lastHostKey = 'lastHostId';
 var lastPinKey = 'lastGamePin';
-var pinBadge = document.getElementById('pin-badge');
-var rankingNextBtn = document.getElementById('rankingNextBtn');
-var resultsChartEl = document.getElementById('resultsChart');
-var resultsStepChartEl = document.getElementById('resultsStepChart');
-var resultsStepRankingEl = document.getElementById('resultsStepRanking');
-var downloadReportBtn = null;
-
+// Aquests elements viuen dins del <template> de Vue: no existixen al DOM
+// real fins que l'app es munta (vore més avall, després de crear `app`).
 // Fallback: si faltan id o pin en la URL, usa localStorage
 try{
     if(!params.id){
@@ -58,8 +53,6 @@ var hostSharedAudio = (function(){
     return null;
 })();
 var GONG_VOLUME_BOOST = 1.25;
-var hostModalStep = 'chart';
-var hostResultsHasRanking = true;
 var currentPointsMultiplier = 1;
 // playerId -> posición (0 = 1º) del último ranking mostrado, para pintar flechas
 // de avance/retroceso al estilo Kahoot. Se resetea al empezar cada partida.
@@ -71,11 +64,15 @@ var i18n = {
         timeLeft: 'Tiempo restante:',
         skip: 'Saltar pregunta',
         next: 'Siguiente pregunta',
-        showRanking: 'Mostrar Top 10',
+        showRanking: 'Top 10',
         rankingTitle: 'Top 10',
         topPlayers: 'Top 5 jugadores',
         gameOver: 'FIN DE LA PARTIDA',
         bgMusicTitle: 'Música de fondo',
+        pauseVideo: 'Pausar',
+        playVideo: 'Reproducir',
+        finishVideo: 'Parar',
+        bgMusicNone: 'Sin música',
         bgMusicChoose: 'Elige un tema',
         bgMusicPlay: 'Reproducir música',
         bgMusicPause: 'Pausar música',
@@ -88,14 +85,51 @@ var i18n = {
         resultsTitle: 'Resultados',
         resultsNextToRanking: 'Ver clasificación',
         resultsNextQuestion: 'Siguiente pregunta (Enter)',
+        leftTag: 'Abandono',
+        leftBtn: 'Abandonó',
+        autoLabel: 'Avance automático',
+        statePaused: 'Partida en pausa',
+        statePlaying: 'Partida en marcha',
+        matchingExtraLabel: 'Tiempo extra en preguntas compuestas',
+        autoTip: 'Pasa solo a la siguiente pregunta tras los resultados, esperando los segundos indicados. «Manual» = lo decides tú con el botón. Se aplica desde la siguiente pregunta.',
+        scoresTip: 'Muestra u oculta la puntuación y el ranking entre preguntas y el podio final.',
+        matchingExtraTip: 'Tiempo extra (en %) para las preguntas de correspondencia y de ordenar. Se aplica desde la siguiente pregunta.',
+        autoManual: 'Manual',
+        autoIn: 'Siguiente en {s} s',
+        autoPaused: 'Avance pausado',
+        autoPause: 'Pausar avance',
+        autoResume: 'Reanudar avance',
+        scoresToggle: 'Puntuaciones y ranking',
+        timerPause: 'Pausar partida',
+        timerResume: 'Reanudar partida',
+        cancelGame: 'Cancelar partida',
+        cancelConfirm: 'Confirmar cancelación',
+        timerAdd15: '+15 s',
+        answerSent: 'Enviado',
+        answerTrying: 'Intentando',
+        answerStatusCount: '{sent} de {total} han enviado',
+        handRaised: 'Mano levantada',
+        awayFromTab: 'Fuera de la pestaña',
+        awayCount: '{n} fuera de la pestaña',
+        streakInRow: 'seguidos',
+        kickedTitle: 'Expulsados',
+        unkickBtn: 'Permitir entrar',
+        kickBtn: 'Expulsar',
+        kickConfirm: 'Confirmar',
         freeAnswersReceived: function(ans, total){ return 'Respuestas recibidas ' + ans + ' / ' + total; },
         correctAnswerLabel: 'Respuesta correcta:',
+        matchingResultsHint: 'Porcentaje de alumnos que aciertan cada pareja',
+        matchingSummary: 'Todo bien: {f} · parcial: {p} · ninguna: {n} (de {t})',
+        matchingNoPair: 'sin pareja',
+        matchingImpostors: 'Elementos sin pareja:',
+        orderSolutionLabel: 'Orden correcto:',
         correctOptionBadge: 'Correcta',
         pointsDouble: 'Puntos dobles',
         questionCountdown: 'Prepara la siguiente pregunta...',
         questionCountdownHint: 'La siguiente empieza en',
         downloadReport: 'Descargar informe (CSV)',
         downloadReportError: 'No se pudo descargar el informe de la sesión.',
+        backToLibrary: 'Biblioteca',
         fullscreenEnter: 'Pantalla completa',
         fullscreenExit: 'Salir de pantalla completa',
         groupAllCorrect: '¡Pleno de aciertos!',
@@ -107,11 +141,15 @@ var i18n = {
         timeLeft: 'Time Left:',
         skip: 'Skip question',
         next: 'Next question',
-        showRanking: 'Show Top 10',
+        showRanking: 'Top 10',
         rankingTitle: 'Top 10',
         topPlayers: 'Top 5 Players',
         gameOver: 'GAME OVER',
         bgMusicTitle: 'Background music',
+        pauseVideo: 'Pause',
+        playVideo: 'Play',
+        finishVideo: 'Stop',
+        bgMusicNone: 'No music',
         bgMusicChoose: 'Choose a track',
         bgMusicPlay: 'Play music',
         bgMusicPause: 'Pause music',
@@ -122,20 +160,519 @@ var i18n = {
         musicActivationBody: '',
         musicActivationEnable: "Let's go!",
         resultsTitle: 'Results',
-        resultsNextToRanking: 'Show leaderboard',
+        resultsNextToRanking: 'View ranking',
         resultsNextQuestion: 'Next question (Enter)',
+        leftTag: 'Left',
+        leftBtn: 'Left',
+        autoLabel: 'Automatic advance',
+        statePaused: 'Game paused',
+        statePlaying: 'Game running',
+        matchingExtraLabel: 'Extra time on composite questions',
+        autoTip: 'Moves on to the next question by itself after the results, waiting the seconds shown. "Manual" = you decide with the button. Applies from the next question.',
+        scoresTip: 'Shows or hides scores and ranking between questions and the final podium.',
+        matchingExtraTip: 'Extra time (in %) for matching and ordering questions. Applies from the next question.',
+        scoresToggle: 'Scores and ranking',
+        autoManual: 'Manual',
+        autoIn: 'Next in {s} s',
+        autoPaused: 'Advance paused',
+        autoPause: 'Pause advance',
+        autoResume: 'Resume advance',
+        timerPause: 'Pause game',
+        timerResume: 'Resume game',
+        cancelGame: 'Cancel game',
+        cancelConfirm: 'Confirm cancellation',
+        timerAdd15: '+15 s',
+        answerSent: 'Sent',
+        answerTrying: 'Trying',
+        answerStatusCount: '{sent} of {total} sent',
+        handRaised: 'Hand raised',
+        awayFromTab: 'Away from tab',
+        awayCount: '{n} away from tab',
+        streakInRow: 'in a row',
+        kickedTitle: 'Removed',
+        unkickBtn: 'Allow back',
+        kickBtn: 'Remove',
+        kickConfirm: 'Confirm',
         freeAnswersReceived: function(ans, total){ return 'Answers received ' + ans + ' / ' + total; },
         correctAnswerLabel: 'Correct answer:',
+        matchingResultsHint: 'Share of students who got each pair right',
+        matchingSummary: 'All right: {f} · partly: {p} · none: {n} (of {t})',
+        matchingNoPair: 'no pair',
+        matchingImpostors: 'Items with no pair:',
+        orderSolutionLabel: 'Correct order:',
         correctOptionBadge: 'Correct',
         pointsDouble: 'Double points',
         questionCountdown: 'Get ready for the next question...',
         questionCountdownHint: 'Next question starts in',
         downloadReport: 'Download report (CSV)',
         downloadReportError: 'Could not download the session report.',
+        backToLibrary: 'Library',
         fullscreenEnter: 'Fullscreen',
         fullscreenExit: 'Exit fullscreen',
         groupAllCorrect: 'Everyone got it right!',
         groupAllWrong: 'Nobody got it this time'
+    },
+    de: {
+        questionXofY: function(n, t){ return 'Frage ' + n + ' / ' + t; },
+        playersAnswered: function(ans, total){ return 'Geantwortet haben ' + ans + ' / ' + total; },
+        timeLeft: 'Verbleibende Zeit:',
+        skip: 'Frage überspringen',
+        next: 'Nächste Frage',
+        showRanking: 'Top 10',
+        rankingTitle: 'Top 10',
+        topPlayers: 'Top 5 Spieler',
+        gameOver: 'SPIEL VORBEI',
+        bgMusicTitle: 'Hintergrundmusik',
+        pauseVideo: 'Pause',
+        playVideo: 'Abspielen',
+        finishVideo: 'Stopp',
+        bgMusicNone: 'Keine Musik',
+        bgMusicChoose: 'Titel wählen',
+        bgMusicPlay: 'Musik abspielen',
+        bgMusicPause: 'Musik pausieren',
+        bgMusicPrev: 'Zurück',
+        bgMusicNext: 'Weiter',
+        bgMusicVolume: 'Lautstärke',
+        musicActivationTitle: 'Ton aktivieren',
+        musicActivationBody: '',
+        musicActivationEnable: 'Los geht\'s!',
+        resultsTitle: 'Ergebnisse',
+        resultsNextToRanking: 'Rangliste ansehen',
+        resultsNextQuestion: 'Nächste Frage (Enter)',
+        leftTag: 'Weg',
+        leftBtn: 'Weg',
+        autoLabel: 'Automatisches Weiterschalten',
+        statePaused: 'Spiel pausiert',
+        statePlaying: 'Spiel läuft',
+        matchingExtraLabel: 'Zusatzzeit bei zusammengesetzten Fragen',
+        autoTip: 'Springt nach den Ergebnissen von selbst zur nächsten Frage und wartet die angezeigten Sekunden. „Manuell“ = du entscheidest per Knopf. Gilt ab der nächsten Frage.',
+        scoresTip: 'Zeigt oder verbirgt Punkte und Rangliste zwischen den Fragen und das Abschlusspodium.',
+        matchingExtraTip: 'Zusatzzeit (in %) für Zuordnungs- und Reihenfolgefragen. Gilt ab der nächsten Frage.',
+        scoresToggle: 'Punkte und Rangliste',
+        autoManual: 'Manuell',
+        autoIn: 'Nächste in {s} s',
+        autoPaused: 'Weiterschalten pausiert',
+        autoPause: 'Weiterschalten pausieren',
+        autoResume: 'Weiterschalten fortsetzen',
+        timerPause: 'Spiel pausieren',
+        timerResume: 'Spiel fortsetzen',
+        cancelGame: 'Spiel abbrechen',
+        cancelConfirm: 'Abbruch bestätigen',
+        timerAdd15: '+15 s',
+        answerSent: 'Gesendet',
+        answerTrying: 'Denkt nach',
+        answerStatusCount: '{sent} von {total} gesendet',
+        handRaised: 'Hand gehoben',
+        awayFromTab: 'Nicht im Tab',
+        awayCount: '{n} nicht im Tab',
+        streakInRow: 'in Folge',
+        kickedTitle: 'Entfernt',
+        unkickBtn: 'Wieder zulassen',
+        kickBtn: 'Entfernen',
+        kickConfirm: 'Bestätigen',
+        freeAnswersReceived: function(ans, total){ return 'Antworten erhalten ' + ans + ' / ' + total; },
+        correctAnswerLabel: 'Richtige Antwort:',
+        matchingResultsHint: 'Anteil der Schüler, die jedes Paar richtig hatten',
+        matchingSummary: 'Alles richtig: {f} · teilweise: {p} · keine: {n} (von {t})',
+        matchingNoPair: 'ohne Paar',
+        matchingImpostors: 'Elemente ohne Paar:',
+        orderSolutionLabel: 'Richtige Reihenfolge:',
+        correctOptionBadge: 'Richtig',
+        pointsDouble: 'Doppelte Punkte',
+        questionCountdown: 'Mach dich bereit für die nächste Frage...',
+        questionCountdownHint: 'Die nächste Frage beginnt in',
+        downloadReport: 'Bericht herunterladen (CSV)',
+        downloadReportError: 'Der Sitzungsbericht konnte nicht heruntergeladen werden.',
+        backToLibrary: 'Bibliothek',
+        fullscreenEnter: 'Vollbild',
+        fullscreenExit: 'Vollbild beenden',
+        groupAllCorrect: 'Alle haben es richtig!',
+        groupAllWrong: 'Diesmal hat es niemand geschafft'
+    },
+    it: {
+        questionXofY: function(n, t){ return 'Domanda ' + n + ' / ' + t; },
+        playersAnswered: function(ans, total){ return 'Hanno risposto ' + ans + ' / ' + total; },
+        timeLeft: 'Tempo rimasto:',
+        skip: 'Salta la domanda',
+        next: 'Prossima domanda',
+        showRanking: 'Top 10',
+        rankingTitle: 'Top 10',
+        topPlayers: 'Top 5 giocatori',
+        gameOver: 'PARTITA FINITA',
+        bgMusicTitle: 'Musica di sottofondo',
+        pauseVideo: 'Pausa',
+        playVideo: 'Riproduci',
+        finishVideo: 'Stop',
+        bgMusicNone: 'Nessuna musica',
+        bgMusicChoose: 'Scegli un brano',
+        bgMusicPlay: 'Riproduci musica',
+        bgMusicPause: 'Metti in pausa la musica',
+        bgMusicPrev: 'Prec.',
+        bgMusicNext: 'Succ.',
+        bgMusicVolume: 'Volume',
+        musicActivationTitle: 'Attiva l\'audio',
+        musicActivationBody: '',
+        musicActivationEnable: 'Si parte!',
+        resultsTitle: 'Risultati',
+        resultsNextToRanking: 'Vedi la classifica',
+        resultsNextQuestion: 'Prossima domanda (Invio)',
+        leftTag: 'Uscito',
+        leftBtn: 'Uscito',
+        autoLabel: 'Avanzamento automatico',
+        statePaused: 'Partita in pausa',
+        statePlaying: 'Partita in corso',
+        matchingExtraLabel: 'Tempo extra nelle domande composte',
+        autoTip: 'Passa da solo alla domanda successiva dopo i risultati, attendendo i secondi indicati. «Manuale» = decidi tu con il pulsante. Vale dalla prossima domanda.',
+        scoresTip: 'Mostra o nasconde punteggi e classifica tra le domande e il podio finale.',
+        matchingExtraTip: 'Tempo extra (in %) per le domande di abbinamento e ordine. Vale dalla prossima domanda.',
+        scoresToggle: 'Punteggi e classifica',
+        autoManual: 'Manuale',
+        autoIn: 'Prossima tra {s} s',
+        autoPaused: 'Avanzamento in pausa',
+        autoPause: 'Metti in pausa l\'avanzamento',
+        autoResume: 'Riprendi l\'avanzamento',
+        timerPause: 'Metti in pausa la partita',
+        timerResume: 'Riprendi la partita',
+        cancelGame: 'Annulla la partita',
+        cancelConfirm: 'Conferma annullamento',
+        timerAdd15: '+15 s',
+        answerSent: 'Inviata',
+        answerTrying: 'Sta pensando',
+        answerStatusCount: '{sent} su {total} inviate',
+        handRaised: 'Mano alzata',
+        awayFromTab: 'Fuori dalla scheda',
+        awayCount: '{n} fuori dalla scheda',
+        streakInRow: 'di fila',
+        kickedTitle: 'Rimosso',
+        unkickBtn: 'Riammetti',
+        kickBtn: 'Rimuovi',
+        kickConfirm: 'Conferma',
+        freeAnswersReceived: function(ans, total){ return 'Risposte ricevute ' + ans + ' / ' + total; },
+        correctAnswerLabel: 'Risposta corretta:',
+        matchingResultsHint: 'Quota di studenti che hanno abbinato correttamente ogni coppia',
+        matchingSummary: 'Tutto giusto: {f} · in parte: {p} · nessuno: {n} (su {t})',
+        matchingNoPair: 'senza coppia',
+        matchingImpostors: 'Elementi senza coppia:',
+        orderSolutionLabel: 'Ordine corretto:',
+        correctOptionBadge: 'Corretta',
+        pointsDouble: 'Punti doppi',
+        questionCountdown: 'Preparatevi per la prossima domanda...',
+        questionCountdownHint: 'La prossima domanda inizia tra',
+        downloadReport: 'Scarica il report (CSV)',
+        downloadReportError: 'Impossibile scaricare il report della sessione.',
+        backToLibrary: 'Libreria',
+        fullscreenEnter: 'Schermo intero',
+        fullscreenExit: 'Esci dallo schermo intero',
+        groupAllCorrect: 'Tutti hanno risposto bene!',
+        groupAllWrong: 'Stavolta nessuno ci è riuscito'
+    },
+    pt: {
+        questionXofY: function(n, t){ return 'Pergunta ' + n + ' / ' + t; },
+        playersAnswered: function(ans, total){ return 'Responderam ' + ans + ' / ' + total; },
+        timeLeft: 'Tempo restante:',
+        skip: 'Saltar pergunta',
+        next: 'Próxima pergunta',
+        showRanking: 'Top 10',
+        rankingTitle: 'Top 10',
+        topPlayers: 'Top 5 jogadores',
+        gameOver: 'FIM DO JOGO',
+        bgMusicTitle: 'Música de fundo',
+        pauseVideo: 'Pausa',
+        playVideo: 'Reproduzir',
+        finishVideo: 'Parar',
+        bgMusicNone: 'Sem música',
+        bgMusicChoose: 'Escolher uma faixa',
+        bgMusicPlay: 'Reproduzir música',
+        bgMusicPause: 'Pausar música',
+        bgMusicPrev: 'Ant.',
+        bgMusicNext: 'Seg.',
+        bgMusicVolume: 'Volume',
+        musicActivationTitle: 'Ativar o áudio',
+        musicActivationBody: '',
+        musicActivationEnable: 'Vamos lá!',
+        resultsTitle: 'Resultados',
+        resultsNextToRanking: 'Ver classificação',
+        resultsNextQuestion: 'Próxima pergunta (Enter)',
+        leftTag: 'Saiu',
+        leftBtn: 'Saiu',
+        autoLabel: 'Avanço automático',
+        statePaused: 'Jogo em pausa',
+        statePlaying: 'Jogo em curso',
+        matchingExtraLabel: 'Tempo extra nas perguntas compostas',
+        autoTip: 'Passa sozinho à pergunta seguinte depois dos resultados, esperando os segundos indicados. «Manual» = decide você com o botão. Aplica-se a partir da próxima pergunta.',
+        scoresTip: 'Mostra ou oculta pontuações e classificação entre as perguntas e o pódio final.',
+        matchingExtraTip: 'Tempo extra (em %) para perguntas de associação e ordenação. Aplica-se a partir da próxima pergunta.',
+        scoresToggle: 'Pontuações e classificação',
+        autoManual: 'Manual',
+        autoIn: 'Seguinte em {s} s',
+        autoPaused: 'Avanço em pausa',
+        autoPause: 'Pausar o avanço',
+        autoResume: 'Retomar o avanço',
+        timerPause: 'Pausar o jogo',
+        timerResume: 'Retomar o jogo',
+        cancelGame: 'Cancelar o jogo',
+        cancelConfirm: 'Confirmar cancelamento',
+        timerAdd15: '+15 s',
+        answerSent: 'Enviada',
+        answerTrying: 'A pensar',
+        answerStatusCount: '{sent} de {total} enviadas',
+        handRaised: 'Mão levantada',
+        awayFromTab: 'Fora do separador',
+        awayCount: '{n} fora do separador',
+        streakInRow: 'seguidas',
+        kickedTitle: 'Removido',
+        unkickBtn: 'Permitir regresso',
+        kickBtn: 'Remover',
+        kickConfirm: 'Confirmar',
+        freeAnswersReceived: function(ans, total){ return 'Respostas recebidas ' + ans + ' / ' + total; },
+        correctAnswerLabel: 'Resposta correta:',
+        matchingResultsHint: 'Percentagem de alunos que acertaram cada par',
+        matchingSummary: 'Tudo certo: {f} · em parte: {p} · nenhum: {n} (de {t})',
+        matchingNoPair: 'sem par',
+        matchingImpostors: 'Itens sem par:',
+        orderSolutionLabel: 'Ordem correta:',
+        correctOptionBadge: 'Correta',
+        pointsDouble: 'Pontos a dobrar',
+        questionCountdown: 'Preparem-se para a próxima pergunta...',
+        questionCountdownHint: 'A próxima pergunta começa em',
+        downloadReport: 'Descarregar relatório (CSV)',
+        downloadReportError: 'Não foi possível descarregar o relatório da sessão.',
+        backToLibrary: 'Biblioteca',
+        fullscreenEnter: 'Ecrã inteiro',
+        fullscreenExit: 'Sair do ecrã inteiro',
+        groupAllCorrect: 'Todos acertaram!',
+        groupAllWrong: 'Desta vez ninguém acertou'
+    },
+    bg: {
+        questionXofY: function(n, t){ return 'Въпрос ' + n + ' / ' + t; },
+        playersAnswered: function(ans, total){ return 'Отговориха ' + ans + ' / ' + total; },
+        timeLeft: 'Оставащо време:',
+        skip: 'Пропусни въпроса',
+        next: 'Следващ въпрос',
+        showRanking: 'Топ 10',
+        rankingTitle: 'Топ 10',
+        topPlayers: 'Топ 5 играчи',
+        gameOver: 'КРАЙ НА ИГРАТА',
+        bgMusicTitle: 'Фонова музика',
+        pauseVideo: 'Пауза',
+        playVideo: 'Пусни',
+        finishVideo: 'Стоп',
+        bgMusicNone: 'Без музика',
+        bgMusicChoose: 'Избери парче',
+        bgMusicPlay: 'Пусни музика',
+        bgMusicPause: 'Пауза на музиката',
+        bgMusicPrev: 'Назад',
+        bgMusicNext: 'Напред',
+        bgMusicVolume: 'Сила на звука',
+        musicActivationTitle: 'Включи звука',
+        musicActivationBody: '',
+        musicActivationEnable: 'Хайде!',
+        resultsTitle: 'Резултати',
+        resultsNextToRanking: 'Виж класирането',
+        resultsNextQuestion: 'Следващ въпрос (Enter)',
+        leftTag: 'Излязъл',
+        leftBtn: 'Излязъл',
+        autoLabel: 'Автоматично преминаване',
+        statePaused: 'Играта е на пауза',
+        statePlaying: 'Играта тече',
+        matchingExtraLabel: 'Допълнително време при съставни въпроси',
+        autoTip: 'Преминава сам към следващия въпрос след резултатите, като изчаква показаните секунди. „Ръчно“ = ти решаваш с бутона. Важи от следващия въпрос.',
+        scoresTip: 'Показва или скрива точките и класирането между въпросите и крайния подиум.',
+        matchingExtraTip: 'Допълнително време (в %) за въпроси за съответствие и подредба. Важи от следващия въпрос.',
+        scoresToggle: 'Точки и класиране',
+        autoManual: 'Ръчно',
+        autoIn: 'Следващ след {s} с',
+        autoPaused: 'Преминаването е на пауза',
+        autoPause: 'Паузирай преминаването',
+        autoResume: 'Продължи преминаването',
+        timerPause: 'Паузирай играта',
+        timerResume: 'Продължи играта',
+        cancelGame: 'Откажи играта',
+        cancelConfirm: 'Потвърди отказа',
+        timerAdd15: '+15 с',
+        answerSent: 'Изпратен',
+        answerTrying: 'Мисли',
+        answerStatusCount: '{sent} от {total} изпратени',
+        handRaised: 'Вдигната ръка',
+        awayFromTab: 'Извън раздела',
+        awayCount: '{n} извън раздела',
+        streakInRow: 'поред',
+        kickedTitle: 'Премахнат',
+        unkickBtn: 'Разреши връщане',
+        kickBtn: 'Премахни',
+        kickConfirm: 'Потвърди',
+        freeAnswersReceived: function(ans, total){ return 'Получени отговори ' + ans + ' / ' + total; },
+        correctAnswerLabel: 'Верен отговор:',
+        matchingResultsHint: 'Дял на учениците, които са познали всяка двойка',
+        matchingSummary: 'Всичко вярно: {f} · частично: {p} · никой: {n} (от {t})',
+        matchingNoPair: 'без двойка',
+        matchingImpostors: 'Елементи без двойка:',
+        orderSolutionLabel: 'Верен ред:',
+        correctOptionBadge: 'Вярно',
+        pointsDouble: 'Двойни точки',
+        questionCountdown: 'Пригответе се за следващия въпрос...',
+        questionCountdownHint: 'Следващият въпрос започва след',
+        downloadReport: 'Изтегли отчета (CSV)',
+        downloadReportError: 'Отчетът за сесията не можа да се изтегли.',
+        backToLibrary: 'Библиотека',
+        fullscreenEnter: 'Цял екран',
+        fullscreenExit: 'Изход от цял екран',
+        groupAllCorrect: 'Всички отговориха вярно!',
+        groupAllWrong: 'Този път никой не успя'
+    },
+    ar: {
+        questionXofY: function(n, t){ return 'السؤال ' + n + ' / ' + t; },
+        playersAnswered: function(ans, total){ return 'أجاب ' + ans + ' / ' + total; },
+        timeLeft: 'الوقت المتبقي:',
+        skip: 'تخطّي السؤال',
+        next: 'السؤال التالي',
+        showRanking: 'أفضل 10',
+        rankingTitle: 'أفضل 10',
+        topPlayers: 'أفضل 5 لاعبين',
+        gameOver: 'انتهت اللعبة',
+        bgMusicTitle: 'موسيقى الخلفية',
+        pauseVideo: 'إيقاف مؤقت',
+        playVideo: 'تشغيل',
+        finishVideo: 'إيقاف',
+        bgMusicNone: 'بدون موسيقى',
+        bgMusicChoose: 'اختر مقطعاً',
+        bgMusicPlay: 'شغّل الموسيقى',
+        bgMusicPause: 'أوقف الموسيقى مؤقتاً',
+        bgMusicPrev: 'السابق',
+        bgMusicNext: 'التالي',
+        bgMusicVolume: 'مستوى الصوت',
+        musicActivationTitle: 'تفعيل الصوت',
+        musicActivationBody: '',
+        musicActivationEnable: 'هيا بنا!',
+        resultsTitle: 'النتائج',
+        resultsNextToRanking: 'شاهد الترتيب',
+        resultsNextQuestion: 'السؤال التالي (Enter)',
+        leftTag: 'غادر',
+        leftBtn: 'غادر',
+        autoLabel: 'التقدّم التلقائي',
+        statePaused: 'اللعبة متوقفة مؤقتاً',
+        statePlaying: 'اللعبة جارية',
+        matchingExtraLabel: 'وقت إضافي للأسئلة المركّبة',
+        autoTip: 'ينتقل وحده إلى السؤال التالي بعد النتائج منتظراً الثواني المعروضة. «يدوي» = تقرر أنت بالزر. يسري ابتداءً من السؤال التالي.',
+        scoresTip: 'يُظهر أو يُخفي النقاط والترتيب بين الأسئلة والمنصة الأخيرة.',
+        matchingExtraTip: 'وقت إضافي (بالنسبة المئوية) لأسئلة المطابقة والترتيب. يسري ابتداءً من السؤال التالي.',
+        scoresToggle: 'النقاط والترتيب',
+        autoManual: 'يدوي',
+        autoIn: 'التالي بعد {s} ث',
+        autoPaused: 'التقدّم متوقف مؤقتاً',
+        autoPause: 'إيقاف التقدّم مؤقتاً',
+        autoResume: 'استئناف التقدّم',
+        timerPause: 'إيقاف اللعبة مؤقتاً',
+        timerResume: 'استئناف اللعبة',
+        cancelGame: 'إلغاء اللعبة',
+        cancelConfirm: 'تأكيد الإلغاء',
+        timerAdd15: '+15 ث',
+        answerSent: 'أُرسلت',
+        answerTrying: 'يفكّر',
+        answerStatusCount: '{sent} من {total} أُرسلت',
+        handRaised: 'يد مرفوعة',
+        awayFromTab: 'خارج التبويب',
+        awayCount: '{n} خارج التبويب',
+        streakInRow: 'متتالية',
+        kickedTitle: 'تمت إزالته',
+        unkickBtn: 'السماح بالعودة',
+        kickBtn: 'إزالة',
+        kickConfirm: 'تأكيد',
+        freeAnswersReceived: function(ans, total){ return 'الإجابات المستلمة ' + ans + ' / ' + total; },
+        correctAnswerLabel: 'الإجابة الصحيحة:',
+        matchingResultsHint: 'نسبة التلاميذ الذين أصابوا في كل زوج',
+        matchingSummary: 'الكل صحيح: {f} · جزئياً: {p} · لا شيء: {n} (من {t})',
+        matchingNoPair: 'بدون زوج',
+        matchingImpostors: 'عناصر بلا زوج:',
+        orderSolutionLabel: 'الترتيب الصحيح:',
+        correctOptionBadge: 'صحيح',
+        pointsDouble: 'نقاط مضاعفة',
+        questionCountdown: 'استعدوا للسؤال التالي...',
+        questionCountdownHint: 'يبدأ السؤال التالي بعد',
+        downloadReport: 'تنزيل التقرير (CSV)',
+        downloadReportError: 'تعذّر تنزيل تقرير الجلسة.',
+        backToLibrary: 'المكتبة',
+        fullscreenEnter: 'ملء الشاشة',
+        fullscreenExit: 'الخروج من ملء الشاشة',
+        groupAllCorrect: 'أصاب الجميع!',
+        groupAllWrong: 'لم ينجح أحد هذه المرة'
+    },
+    fr: {
+        questionXofY: function(n, t){ return 'Question ' + n + ' / ' + t; },
+        playersAnswered: function(ans, total){ return 'Ont répondu ' + ans + ' / ' + total; },
+        timeLeft: 'Temps restant :',
+        skip: 'Passer la question',
+        next: 'Question suivante',
+        showRanking: 'Top 10',
+        rankingTitle: 'Top 10',
+        topPlayers: 'Top 5 des joueurs',
+        gameOver: 'FIN DE PARTIE',
+        bgMusicTitle: 'Musique de fond',
+        pauseVideo: 'Pause',
+        playVideo: 'Lecture',
+        finishVideo: 'Arrêter',
+        bgMusicNone: 'Pas de musique',
+        bgMusicChoose: 'Choisir un morceau',
+        bgMusicPlay: 'Lire la musique',
+        bgMusicPause: 'Mettre la musique en pause',
+        bgMusicPrev: 'Préc.',
+        bgMusicNext: 'Suiv.',
+        bgMusicVolume: 'Volume',
+        musicActivationTitle: 'Activer le son',
+        musicActivationBody: '',
+        musicActivationEnable: 'C\'est parti !',
+        resultsTitle: 'Résultats',
+        resultsNextToRanking: 'Voir le classement',
+        resultsNextQuestion: 'Question suivante (Entrée)',
+        leftTag: 'Parti',
+        leftBtn: 'Parti',
+        autoLabel: 'Avance automatique',
+        statePaused: 'Partie en pause',
+        statePlaying: 'Partie en cours',
+        matchingExtraLabel: 'Temps supplémentaire pour les questions composées',
+        autoTip: 'Passe tout seul à la question suivante après les résultats, en attendant les secondes indiquées. « Manuel » = tu décides avec le bouton. S\'applique à partir de la prochaine question.',
+        scoresTip: 'Affiche ou masque les scores et le classement entre les questions et sur le podium final.',
+        matchingExtraTip: 'Temps supplémentaire (en %) pour les questions d\'association et d\'ordre. S\'applique à partir de la prochaine question.',
+        scoresToggle: 'Scores et classement',
+        autoManual: 'Manuel',
+        autoIn: 'Suivante dans {s} s',
+        autoPaused: 'Avance en pause',
+        autoPause: 'Mettre l\'avance en pause',
+        autoResume: 'Reprendre l\'avance',
+        timerPause: 'Mettre la partie en pause',
+        timerResume: 'Reprendre la partie',
+        cancelGame: 'Annuler la partie',
+        cancelConfirm: 'Confirmer l\'annulation',
+        timerAdd15: '+15 s',
+        answerSent: 'Envoyée',
+        answerTrying: 'Réfléchit',
+        answerStatusCount: '{sent} sur {total} envoyées',
+        handRaised: 'Main levée',
+        awayFromTab: 'Hors de l\'onglet',
+        awayCount: '{n} hors de l\'onglet',
+        streakInRow: 'd\'affilée',
+        kickedTitle: 'Exclu',
+        unkickBtn: 'Autoriser le retour',
+        kickBtn: 'Exclure',
+        kickConfirm: 'Confirmer',
+        freeAnswersReceived: function(ans, total){ return 'Réponses reçues ' + ans + ' / ' + total; },
+        correctAnswerLabel: 'Bonne réponse :',
+        matchingResultsHint: 'Part des élèves qui ont bien associé chaque paire',
+        matchingSummary: 'Tout juste : {f} · en partie : {p} · aucun : {n} (sur {t})',
+        matchingNoPair: 'sans paire',
+        matchingImpostors: 'Éléments sans paire :',
+        orderSolutionLabel: 'Bon ordre :',
+        correctOptionBadge: 'Correcte',
+        pointsDouble: 'Points doubles',
+        questionCountdown: 'Prépare-toi pour la prochaine question...',
+        questionCountdownHint: 'La prochaine question commence dans',
+        downloadReport: 'Télécharger le rapport (CSV)',
+        downloadReportError: 'Impossible de télécharger le rapport de la session.',
+        backToLibrary: 'Bibliothèque',
+        fullscreenEnter: 'Plein écran',
+        fullscreenExit: 'Quitter le plein écran',
+        groupAllCorrect: 'Tout le monde a bon !',
+        groupAllWrong: 'Personne n\'a trouvé cette fois'
     },
     ca: {
         questionXofY: function(n, t){ return 'Pregunta ' + n + ' / ' + t; },
@@ -143,11 +680,15 @@ var i18n = {
         timeLeft: 'Temps restant:',
         skip: 'Saltar pregunta',
         next: 'Següent pregunta',
-        showRanking: 'Mostrar Top 10',
+        showRanking: 'Top 10',
         rankingTitle: 'Top 10',
         topPlayers: 'Top 5 jugadors',
         gameOver: 'FI DE LA PARTIDA',
         bgMusicTitle: 'Música de fons',
+        pauseVideo: 'Pausar',
+        playVideo: 'Reproduir',
+        finishVideo: 'Aturar',
+        bgMusicNone: 'Sense música',
         bgMusicChoose: 'Tria un tema',
         bgMusicPlay: 'Reprodueix música',
         bgMusicPause: 'Atura la música',
@@ -160,14 +701,51 @@ var i18n = {
         resultsTitle: 'Resultats',
         resultsNextToRanking: 'Veure classificació',
         resultsNextQuestion: 'Següent pregunta (Enter)',
+        leftTag: 'Abandonament',
+        leftBtn: 'Va abandonar',
+        autoLabel: 'Avanç automàtic',
+        statePaused: 'Partida en pausa',
+        statePlaying: 'Partida en marxa',
+        matchingExtraLabel: 'Temps extra en preguntes compostes',
+        autoTip: 'Passa sol a la pregunta següent després dels resultats, esperant els segons indicats. «Manual» = ho decidixes tu amb el botó. S\'aplica des de la pregunta següent.',
+        scoresTip: 'Mostra o amaga la puntuació i el rànquing entre preguntes i el podi final.',
+        matchingExtraTip: 'Temps extra (en %) per a les preguntes de correspondència i d\'ordenar. S\'aplica des de la pregunta següent.',
+        scoresToggle: 'Puntuacions i rànquing',
+        autoManual: 'Manual',
+        autoIn: 'Següent en {s} s',
+        autoPaused: 'Avanç pausat',
+        autoPause: 'Pausar avanç',
+        autoResume: 'Reprendre avanç',
+        timerPause: 'Pausar partida',
+        timerResume: 'Reprendre partida',
+        cancelGame: 'Cancel·lar partida',
+        cancelConfirm: 'Confirmar cancel·lació',
+        timerAdd15: '+15 s',
+        answerSent: 'Enviat',
+        answerTrying: 'Intentant',
+        answerStatusCount: '{sent} de {total} han enviat',
+        handRaised: 'Mà alçada',
+        awayFromTab: 'Fora de la pestanya',
+        awayCount: '{n} fora de la pestanya',
+        streakInRow: 'seguits',
+        kickedTitle: 'Expulsats',
+        unkickBtn: 'Permetre entrar',
+        kickBtn: 'Expulsar',
+        kickConfirm: 'Confirmar',
         freeAnswersReceived: function(ans, total){ return 'Respostes rebudes ' + ans + ' / ' + total; },
         correctAnswerLabel: 'Resposta correcta:',
+        matchingResultsHint: "Percentatge d'alumnes que encerten cada parella",
+        matchingSummary: 'Tot bé: {f} · parcial: {p} · cap: {n} (de {t})',
+        matchingNoPair: 'sense parella',
+        matchingImpostors: 'Elements sense parella:',
+        orderSolutionLabel: 'Ordre correcte:',
         correctOptionBadge: 'Correcta',
         pointsDouble: 'Punts dobles',
         questionCountdown: 'Prepara la pregunta següent...',
         questionCountdownHint: 'La següent comença en',
         downloadReport: 'Descarregar informe (CSV)',
         downloadReportError: 'No s\'ha pogut descarregar l\'informe de la sessió.',
+        backToLibrary: "Biblioteca",
         fullscreenEnter: 'Pantalla completa',
         fullscreenExit: 'Eixir de pantalla completa',
         groupAllCorrect: 'Ple d\'encerts!',
@@ -178,13 +756,263 @@ var i18n = {
     }
 };
 
-function t(key){
-    var chain = lang === 'va' ? ['va', 'ca', 'es'] : [lang, 'es'];
+function t(key, langOverride){
+    var l = langOverride || lang;
+    var chain = l === 'va' ? ['va', 'ca', 'es'] : [l, 'en', 'es'];
     for(var i = 0; i < chain.length; i++){
         var dict = i18n[chain[i]];
         if(dict && dict[key]) return dict[key];
     }
     return key;
+}
+
+// Pregunta/respostes, insígnia de punts, comptador de jugadors, temporitzador
+// i compte arrere (Subfase B, Vue, bloc 1): com en playerGame.js, Vue mai
+// reescriu un node sense directives, així que la resta de la pantalla
+// (modal de resultats, rànquing, celebració de grup, GameOver) es queda
+// estàtica dins de la mateixa arrel fins al bloc 2 (vore ARCHITECTURE.md).
+// Cancela la confirmación de expulsión si no se confirma a tiempo.
+var kickGameResetTimer = null;
+var cancelGameResetTimer = null;
+
+var app = Vue.createApp({
+    template: '#host-game-tpl',
+    data: function(){
+        return {
+            lang: lang,
+            pin: '',
+            questionNumText: '',
+            pointsMultiplier: 1,
+            pointsBadgeText: '',
+            badgeKey: 0,
+            playersAnsweredVisible: true,
+            playersAnsweredText: '',
+            timerVisible: true,
+            timerText: ' ' + time,
+            countdownVisible: false,
+            countdownSeconds: 0,
+            countdownPreview: '',
+            questionText: '',
+            answers: ['', '', '', ''],
+            questionType: 'quiz',
+            answerHighlight: [null, null, null, null],
+            skipVisible: false,
+            skipDisabled: false,
+            rankingVisible: false,
+            closeVisible: true,
+            modalStep: 'chart',
+            resultsHasRanking: true,
+            resultsMode: 'bars',
+            resultsBars: [],
+            resultsFreeLines: [],
+            // Correspondencia: columnas en pantalla y resultados por pareja.
+            matchLeft: [],
+            videoLearning: false,
+            videoPlaying: false,
+            videoIsYoutube: false,
+            matchRight: [],
+            // Ordenar: la llista barrejada (durant la pregunta) i la solució (en mostrar el resultat).
+            orderItems: [],
+            orderSolution: [],
+            resultsMatching: { rows: [], impostors: [], summary: '' },
+            rankingRows: [],
+            groupCelebrationVisible: false,
+            groupCelebrationGood: true,
+            groupCelebrationEmoji: '🎉',
+            groupCelebrationText: '',
+            winnersVisible: false,
+            showRankingButton: true,
+            answerStatus: [],
+            pendingKickId: '',
+            cancelGameConfirming: false,
+            // Avance automático entre preguntas (servidor): 0 = manual.
+            autoAdvanceSec: 0,
+            // Título del quiz y margen de las correspondencias (si el quiz tiene alguna).
+            quizName: '',
+            hasMatching: false,
+            hasComposite: false,
+            matchingExtraTime: 50,
+            matchingExtraChoices: [25, 50, 75, 100],
+            // Puntuaciones y ranking: se puede cambiar en cualquier momento de la partida.
+            showScoresToggle: true,
+            autoActive: false,
+            autoPaused: false,
+            autoLeft: 0,
+            autoEndAt: 0,
+            kickedList: [],
+            timerPaused: false,
+            winners: ['', '', '', '', ''],
+            downloadReportVisible: false,
+            // Partida terminada: «Cancelar partida» pasa a «Volver» (vuelve a la biblioteca).
+            gameOverMode: false
+        };
+    },
+    computed: {
+        autoAdvanceChoices: function(){
+            var list = [];
+            for(var n = 3; n <= 20; n++) list.push(n);
+            return list;
+        },
+        autoAdvanceText: function(){
+            if(this.autoPaused) return this.t('autoPaused');
+            return this.t('autoIn').replace('{s}', this.autoLeft);
+        },
+        pinText: function(){
+            return this.pin ? ('PIN ' + this.pin) : '';
+        },
+        badgeVisible: function(){
+            var m = Number(this.pointsMultiplier);
+            return Number.isFinite(m) && m > 1;
+        },
+        questionHtml: function(){
+            return formatRichText(this.questionText);
+        },
+        answerStatusSummary: function(){
+            // Quien ha abandonado no cuenta: ya no responde.
+            var active = this.answerStatus.filter(function(p){ return !p.left; });
+            var sent = active.filter(function(p){ return p.answered; }).length;
+            return this.t('answerStatusCount').replace('{sent}', String(sent)).replace('{total}', String(active.length));
+        },
+        awayCount: function(){
+            return this.answerStatus.filter(function(p){ return p.away; }).length;
+        },
+        awayText: function(){
+            return this.t('awayCount').replace('{n}', String(this.awayCount));
+        },
+        rankingNextLabel: function(){
+            if(this.modalStep === 'chart'){
+                return this.resultsHasRanking ? this.t('resultsNextToRanking') : this.t('resultsNextQuestion');
+            }
+            return this.t('resultsNextQuestion');
+        }
+    },
+    methods: {
+        t: function(key){
+            return t(key, this.lang);
+        },
+        // Antes eran onclick="…" en el HTML; con @click no hacen falta
+        // atributos on… y la CSP puede prohibir los scripts en línea.
+        toggleFullscreen: function(){ toggleHostFullscreen(); },
+        goNextQuestion: function(){ nextQuestion(); },
+        finishVideo: function(){ socket.emit('finishVideoLearning'); },
+        // Reprodueix o pausa el vídeo de la fase (arxiu: element <video>; YouTube: ordres a l'iframe).
+        toggleVideoPlay: function(){
+            if(this.videoIsYoutube){
+                youtubePost({ event: 'command', func: this.videoPlaying ? 'pauseVideo' : 'playVideo', args: '' });
+                this.videoPlaying = !this.videoPlaying;
+                return;
+            }
+            var v = document.getElementById('questionVideo');
+            if(!v) return;
+            if(v.paused) v.play().catch(function(){}); else v.pause();
+        },
+        showRankingToggle: function(){ toggleRanking(); },
+        // Expulsión en dos pasos desde la lista de respuestas (issue #29).
+        askKick: function(player){
+            this.pendingKickId = player.playerId;
+            clearTimeout(kickGameResetTimer);
+            kickGameResetTimer = setTimeout(function(){
+                app.pendingKickId = '';
+            }, 4000);
+        },
+        confirmKick: function(player){
+            clearTimeout(kickGameResetTimer);
+            this.pendingKickId = '';
+            socket.emit('kick-player', { playerId: player.playerId });
+        },
+        toggleTimerPause: function(){ hostToggleTimerPause(); },
+        // Readmitir a un alumno expulsado de esta partida.
+        unkickGame: function(entry){
+            socket.emit('unkick-player', { id: entry.id });
+        },
+        // Cancelar y volver a crear: dos pasos (primero se pide confirmación).
+        goBackToLibrary: function(){
+            (window.top || window).location.href = '/create/';
+        },
+        askCancelGame: function(){
+            if(!this.cancelGameConfirming){
+                this.cancelGameConfirming = true;
+                clearTimeout(cancelGameResetTimer);
+                cancelGameResetTimer = setTimeout(function(){ app.cancelGameConfirming = false; }, 4000);
+                return;
+            }
+            clearTimeout(cancelGameResetTimer);
+            this.cancelGameConfirming = false;
+            stopHostMusicOnCancel();
+            socket.emit('cancelGame');
+        },
+        addTimerSeconds: function(seconds){ hostAddTimerSeconds(seconds); },
+        matchLetter: function(i){
+            return 'ABCDEFGH'.charAt(i) || String(i + 1);
+        },
+        answerHasContent: function(i){
+            if(this.questionType === 'short-answer' || this.questionType === 'numeric' || this.questionType === 'matching') return false;
+            if(this.questionType === 'true-false' && i >= 2) return false;
+            var text = this.answers[i];
+            return !!(text && String(text).trim());
+        },
+        answerVisible: function(i){
+            return this.answerHasContent(i);
+        },
+        answerHtml: function(i){
+            var prefix = this.answerHighlight[i] === 'correct' ? '✓ ' : '';
+            return prefix + formatRichText(this.answers[i] || '');
+        },
+        answerFilter: function(i){
+            if(!this.answerVisible(i)) return '';
+            return this.answerHighlight[i] === 'wrong' ? 'grayscale(50%)' : '';
+        },
+        skipQuestion: function(){
+            skipQuestion();
+        },
+        closeRanking: function(){
+            closeRankingModal();
+        },
+        emitAutoAdvanceSec: function(){
+            socket.emit('setAutoAdvance', { seconds: this.autoAdvanceSec });
+        },
+        emitMatchingExtraTime: function(){
+            socket.emit('setMatchingExtraTime', { percent: this.matchingExtraTime });
+        },
+        emitShowScores: function(){
+            socket.emit('setShowScores', { enabled: !!this.showScoresToggle });
+            window.hostShowScores = !!this.showScoresToggle;
+            this.showRankingButton = !!this.showScoresToggle;
+        },
+        toggleAutoPause: function(){
+            socket.emit('autoAdvancePause', { paused: !this.autoPaused });
+        },
+        rankingNext: function(){
+            if(this.modalStep === 'chart'){
+                if(this.resultsHasRanking){
+                    this.modalStep = 'ranking';
+                    return;
+                }
+                if(hostQuestionEnded){
+                    nextQuestion();
+                }
+                this.rankingVisible = false;
+                return;
+            }
+            // Paso ranking
+            if(hostQuestionEnded){
+                nextQuestion();
+            }
+            this.rankingVisible = false;
+        },
+        downloadReport: function(){
+            downloadSessionReportCsv();
+        }
+    }
+}).mount('#host-game');
+
+// Ara que Vue ha muntat la plantilla, #lang-select ja existix de veres al
+// DOM: cal omplir les seues opcions ara (languages.js ja ha fet la seua
+// crida inicial a render(), abans de muntar, quan encara no hi havia cap
+// <select> real dins de l'arrel de Vue). Si no, applyStaticText() fixaria
+// lang-select.value sobre un <select> encara buit, i es perdria.
+if(window.EduhootLang && typeof window.EduhootLang.render === 'function'){
+    window.EduhootLang.render();
 }
 
 function decodeBasicEntities(value){
@@ -224,7 +1052,8 @@ function updateHostMusicLabels(){
         pause: t('bgMusicPause'),
         prev: t('bgMusicPrev'),
         next: t('bgMusicNext'),
-        volume: t('bgMusicVolume')
+        volume: t('bgMusicVolume'),
+        none: t('bgMusicNone')
     });
 }
 
@@ -233,30 +1062,9 @@ function applyStaticText(){
     if(langSelect){
         langSelect.value = lang;
     }
-    var timeLabel = document.querySelector('#timerText span[data-i18n="timeLeft"]');
-    if(timeLabel){
-        timeLabel.textContent = t('timeLeft') + ' ';
-    }
-    var skipBtn = document.getElementById('skipQButton');
-    if(skipBtn) skipBtn.textContent = t('skip');
     var nextBtn = document.getElementById('nextQButton');
     if(nextBtn) nextBtn.textContent = t('next');
-    var showRanking = document.getElementById('showRanking');
-    if(showRanking) showRanking.textContent = t('showRanking');
-    var rankingTitle = document.getElementById('rankingTitle');
-    if(rankingTitle) rankingTitle.textContent = t('rankingTitle');
-    var resultsTitle = document.getElementById('resultsTitle');
-    if(resultsTitle) resultsTitle.textContent = t('resultsTitle');
-    var countdownLabel = document.getElementById('questionCountdownLabel');
-    if(countdownLabel) countdownLabel.textContent = t('questionCountdown');
-    var countdownHint = document.getElementById('questionCountdownHint');
-    if(countdownHint) countdownHint.textContent = t('questionCountdownHint');
-    var winnerTitle = document.getElementById('winnerTitle');
-    if(winnerTitle) winnerTitle.textContent = t('topPlayers');
-    var reportBtn = ensureDownloadReportButton();
-    if(reportBtn) reportBtn.textContent = t('downloadReport');
 
-    updateModalNextButtonLabel();
     updateFullscreenToggleUI();
 }
 
@@ -292,59 +1100,29 @@ document.addEventListener('webkitfullscreenchange', updateFullscreenToggleUI);
 // pregunta. No toca puntuación ni ranking: solo se muestra sobre la pantalla y desaparece sola.
 var groupCelebrationHideTimer = null;
 function showGroupCelebration(kind){
-    var el = document.getElementById('groupCelebration');
-    if(!el) return;
     var isGood = kind === 'allCorrect';
-    el.className = 'group-celebration ' + (isGood ? 'group-celebration--good' : 'group-celebration--bad');
-    document.getElementById('groupCelebrationEmoji').textContent = isGood ? '🎉' : '💀';
-    document.getElementById('groupCelebrationText').textContent = t(isGood ? 'groupAllCorrect' : 'groupAllWrong');
-    el.hidden = false;
+    app.groupCelebrationGood = isGood;
+    app.groupCelebrationEmoji = isGood ? '🎉' : '💀';
+    app.groupCelebrationText = t(isGood ? 'groupAllCorrect' : 'groupAllWrong');
+    app.groupCelebrationVisible = true;
     if(groupCelebrationHideTimer) clearTimeout(groupCelebrationHideTimer);
     groupCelebrationHideTimer = setTimeout(function(){
-        el.hidden = true;
+        app.groupCelebrationVisible = false;
     }, 2600);
 }
 
-function updateModalNextButtonLabel(){
-    if(!rankingNextBtn) return;
-    if(hostModalStep === 'chart'){
-        rankingNextBtn.textContent = hostResultsHasRanking ? t('resultsNextToRanking') : t('resultsNextQuestion');
-        return;
-    }
-    rankingNextBtn.textContent = t('resultsNextQuestion');
-}
-
 function updateQuestionPointsBadge(multiplier){
-    var badge = document.getElementById('questionPointsBadge');
-    if(!badge) return;
     var m = Number(multiplier);
     if(!Number.isFinite(m) || m <= 1){
-        badge.style.display = 'none';
-        badge.textContent = '';
-        badge.classList.remove('points-badge-pop');
+        app.pointsMultiplier = 1;
+        app.pointsBadgeText = '';
         return;
     }
-    badge.textContent = 'x' + m + ' · ' + t('pointsDouble');
-    badge.style.display = 'inline-flex';
-    badge.classList.remove('points-badge-pop');
-    void badge.offsetWidth; // reinicia la animación aunque el badge ya estuviera visible
-    badge.classList.add('points-badge-pop');
+    app.pointsMultiplier = m;
+    app.pointsBadgeText = 'x' + m + ' · ' + t('pointsDouble');
+    app.badgeKey += 1;
 }
 
-function ensureDownloadReportButton(){
-    if(downloadReportBtn) return downloadReportBtn;
-    var row = document.querySelector('.control-row');
-    if(!row) return null;
-    var btn = document.createElement('button');
-    btn.id = 'downloadReportBtn';
-    btn.style.display = 'none';
-    btn.addEventListener('click', function(){
-        downloadSessionReportCsv();
-    });
-    row.appendChild(btn);
-    downloadReportBtn = btn;
-    return downloadReportBtn;
-}
 
 async function downloadSessionReportCsv(){
     if(!params.pin || !params.id){
@@ -380,21 +1158,16 @@ async function downloadSessionReportCsv(){
 }
 
 function setHostModalStep(step){
-    hostModalStep = step === 'ranking' ? 'ranking' : 'chart';
-    if(resultsStepChartEl) resultsStepChartEl.style.display = hostModalStep === 'chart' ? 'block' : 'none';
-    if(resultsStepRankingEl) resultsStepRankingEl.style.display = hostModalStep === 'ranking' ? 'block' : 'none';
-    updateModalNextButtonLabel();
+    app.modalStep = step === 'ranking' ? 'ranking' : 'chart';
 }
 
 function renderResultsChart(answerCounts, totalPlayers, correctAnswers){
-    if(!resultsChartEl) return;
-    resultsChartEl.innerHTML = '';
-
     var total = (typeof totalPlayers === 'number' && totalPlayers > 0) ? totalPlayers : 0;
     var denom = total > 0 ? total : 1;
     var visible = getVisibleAnswerFlags();
     var letters = ['A', 'B', 'C', 'D'];
     var correctSet = new Set((Array.isArray(correctAnswers) ? correctAnswers : []).map(Number));
+    var bars = [];
 
     for(var i = 0; i < 4; i++){
         if(!visible[i]) continue;
@@ -404,60 +1177,71 @@ function renderResultsChart(answerCounts, totalPlayers, correctAnswers){
         if(pct < 0) pct = 0;
         if(pct > 100) pct = 100;
 
-        var bar = document.createElement('div');
-        bar.className = 'results-bar results-bar--' + (i + 1);
-
-        var track = document.createElement('div');
-        track.className = 'results-bar-track';
-        var fill = document.createElement('div');
-        fill.className = 'results-bar-fill';
-        fill.style.height = pct + '%';
-        track.appendChild(fill);
-
-        var meta = document.createElement('div');
-        meta.className = 'results-bar-meta';
-
-        var key = document.createElement('div');
-        key.className = 'results-bar-key';
-        key.textContent = letters[i];
-
-        var isCorrect = correctSet.has(i + 1);
-        if(isCorrect){
-            bar.classList.add('results-bar--correct');
-        }
-
-        var correctBadge = null;
-        if(isCorrect){
-            correctBadge = document.createElement('div');
-            correctBadge.className = 'results-bar-correct-badge';
-            correctBadge.textContent = '✓ ' + t('correctOptionBadge');
-        }
-
-        var stats = document.createElement('div');
-        stats.className = 'results-bar-stats';
-        stats.textContent = pct + '% (' + count + ')';
-
-        var text = document.createElement('div');
-        text.className = 'results-bar-text';
-        text.innerHTML = formatRichText((currentAnswerTexts[i] || '').trim());
-
-        meta.appendChild(key);
-        if(correctBadge){
-            meta.appendChild(correctBadge);
-        }
-        meta.appendChild(stats);
-        if(text.textContent){
-            meta.appendChild(text);
-        }
-
-        bar.appendChild(track);
-        bar.appendChild(meta);
-        resultsChartEl.appendChild(bar);
+        bars.push({
+            index: i + 1,
+            letter: letters[i],
+            pct: pct,
+            count: count,
+            correct: correctSet.has(i + 1),
+            html: formatRichText((currentAnswerTexts[i] || '').trim())
+        });
     }
+    app.resultsMode = 'bars';
+    app.resultsBars = bars;
+}
+
+// Correspondencia: para cada pareja, el porcentaje del alumnado que la ha acertado,
+// y cuántos lo han hecho todo bien, en parte o nada. Quien no ha respondido cuenta como «ninguna».
+var currentMatchSolution = [];
+function buildMatchingResults(playerData, payload){
+    var left = (payload && payload.matchLeft) || app.matchLeft || [];
+    var right = (payload && payload.matchRight) || app.matchRight || [];
+    var solution = (payload && Array.isArray(payload.matchSolution)) ? payload.matchSolution : currentMatchSolution;
+    var list = Array.isArray(playerData) ? playerData : [];
+    var total = list.length;
+    var hits = left.map(function(){ return 0; });
+    var full = 0, partial = 0, none = 0;
+    list.forEach(function(player){
+        var answer = player && player.gameData ? player.gameData.answer : null;
+        var own = 0;
+        if(Array.isArray(answer)){
+            solution.forEach(function(r, i){
+                if(answer[i] !== null && answer[i] !== undefined && Number(answer[i]) === r){
+                    hits[i] += 1;
+                    own += 1;
+                }
+            });
+        }
+        if(solution.length && own === solution.length) full += 1;
+        else if(own > 0) partial += 1;
+        else none += 1;
+    });
+    var letter = function(i){ return 'ABCDEFGH'.charAt(i) || String(i + 1); };
+    // Con «Mostrar respuestas» desactivado, la clase ve los porcentajes pero no la solución.
+    var showSolution = !(payload && payload.showCorrectAnswers === false);
+    var rows = left.map(function(text, i){
+        var r = solution[i];
+        return {
+            code: String(i + 1),
+            left: text,
+            right: (!showSolution || r === undefined || r === null) ? '' : letter(r) + ' ' + (right[r] || ''),
+            pct: total ? Math.round(hits[i] / total * 100) : 0
+        };
+    });
+    var impostors = [];
+    right.forEach(function(text, j){
+        if(showSolution && solution.indexOf(j) === -1) impostors.push(letter(j) + ' ' + text);
+    });
+    return {
+        rows: rows,
+        impostors: impostors,
+        summary: t('matchingSummary').replace('{f}', full).replace('{p}', partial).replace('{n}', none).replace('{t}', total)
+    };
 }
 
 function setLang(newLang){
     lang = newLang;
+    app.lang = newLang;
     EduhootLang.persist(lang);
     applyStaticText();
     updateHostMusicLabels();
@@ -469,7 +1253,8 @@ function initHostMusicPlayer(){
         sharedAudio: hostSharedAudio && hostSharedAudio.music,
         storageKey: 'eduhoot-host-music',
         randomStart: true,
-        volume: 0.7
+        volume: 0.7,
+        noneOption: true
     });
     updateHostMusicLabels();
 }
@@ -479,20 +1264,7 @@ function setCurrentAnswerTexts(answers){
     for(var i = 0; i < 4; i++){
         currentAnswerTexts[i] = answers[i] || '';
     }
-    for(var j = 1; j <= 4; j++){
-        var el = document.getElementById('answer' + j);
-        if(!el) continue;
-        var text = currentAnswerTexts[j - 1];
-        setRichText(el, text);
-        if(currentQuestionType === 'short-answer' || currentQuestionType === 'numeric'){
-            el.style.display = 'none';
-        }else if(currentQuestionType === 'true-false' && j > 2){
-            el.style.display = 'none';
-        }else{
-            el.style.display = text && text.trim().length ? 'block' : 'none';
-        }
-        el.style.filter = '';
-    }
+    app.answers = currentAnswerTexts.slice();
 }
 
 function getVisibleAnswerFlags(){
@@ -523,26 +1295,20 @@ function hideAnswerSquares(){
 
 function highlightCorrectAnswers(correctAnswers){
     if(currentQuestionType === 'short-answer' || currentQuestionType === 'numeric'){
+        app.answerHighlight = [null, null, null, null];
         return;
     }
     var valid = Array.isArray(correctAnswers) ? correctAnswers : [];
     var correctSet = new Set(valid.map(Number));
     var visibleFlags = getVisibleAnswerFlags();
+    var highlight = [null, null, null, null];
     for(var idx = 1; idx <= 4; idx++){
-        var el = document.getElementById('answer' + idx);
-        if(!el) continue;
-        var visible = visibleFlags[idx - 1];
-        if(!visible){
-            el.style.filter = '';
+        if(!visibleFlags[idx - 1]){
             continue;
         }
-        if(correctSet.has(idx)){
-            el.innerHTML = '✓ ' + formatRichText(currentAnswerTexts[idx - 1] || '');
-            el.style.filter = '';
-        }else{
-            el.style.filter = "grayscale(50%)";
-        }
+        highlight[idx - 1] = correctSet.has(idx) ? 'correct' : 'wrong';
     }
+    app.answerHighlight = highlight;
 }
 
 function updateSquareHeights(counts, total){
@@ -755,16 +1521,11 @@ function pauseHostMusicForRanking(){
 }
 
 function openRankingModal(playGongOnce){
-    var modal = document.getElementById('rankingModal');
-    if(!modal) return;
-    modal.style.display = 'block';
+    app.rankingVisible = true;
 
     // En fin de pregunta, forzamos el flujo Resultados -> Ranking -> Siguiente.
     // Si el host abre manualmente el modal en mitad de la pregunta, permitimos cerrar.
-    var closeBtn = document.getElementById('closeRanking');
-    if(closeBtn){
-        closeBtn.style.display = hostQuestionEnded ? 'none' : 'block';
-    }
+    app.closeVisible = !hostQuestionEnded;
 
     // Solo actuamos (parar música + gong) cuando es fin de pregunta.
     if(!hostQuestionEnded) return;
@@ -776,8 +1537,7 @@ function openRankingModal(playGongOnce){
 }
 
 function closeRankingModal(){
-    var modal = document.getElementById('rankingModal');
-    if(modal) modal.style.display = 'none';
+    app.rankingVisible = false;
 }
 
 function maybeAutoplayHostMusicFromLobby(){
@@ -807,7 +1567,7 @@ socket.on('connect', function() {
     if(params.pin){
         try{ localStorage.setItem(lastPinKey, params.pin); }catch(e){}
     }
-    setPinBadge(params.pin || '');
+    app.pin = params.pin || '';
 });
 
 socket.on('noGameFound', function(){
@@ -818,7 +1578,7 @@ socket.on('noGameFound', function(){
 });
 
 socket.on('disconnect', function(){
-    document.getElementById('playersAnswered').textContent = 'Reconectando con la partida...';
+    app.playersAnsweredText = 'Reconectando con la partida...';
 });
 
 function clearQuestionCountdown(){
@@ -826,57 +1586,41 @@ function clearQuestionCountdown(){
         clearInterval(questionCountdownTimer);
         questionCountdownTimer = null;
     }
-    var countdownEl = document.getElementById('questionCountdown');
-    if(countdownEl){
-        countdownEl.classList.remove('is-visible', 'is-ticking');
-        countdownEl.setAttribute('aria-hidden', 'true');
-    }
+    app.countdownVisible = false;
     document.body.classList.remove('is-question-countdown');
-}
-
-function renderQuestionCountdown(seconds){
-    var countdownEl = document.getElementById('questionCountdown');
-    var numberEl = document.getElementById('questionCountdownNumber');
-    var labelEl = document.getElementById('questionCountdownLabel');
-    var hintEl = document.getElementById('questionCountdownHint');
-    if(labelEl) labelEl.textContent = t('questionCountdown');
-    if(hintEl) hintEl.textContent = t('questionCountdownHint');
-    if(numberEl) numberEl.textContent = seconds > 0 ? String(seconds) : '';
-    if(countdownEl){
-        countdownEl.classList.remove('is-ticking');
-        void countdownEl.offsetWidth;
-        countdownEl.classList.add('is-visible', 'is-ticking');
-        countdownEl.setAttribute('aria-hidden', seconds > 0 ? 'false' : 'true');
-    }
 }
 
 function showQuestionCountdown(data){
     clearQuestionCountdown();
+    // Opció «Mostrar pregunta durante la cuenta atrás»: el text de la pregunta a la pantalla.
+    app.countdownPreview = (data && data.preview && data.preview.question) || '';
     clearInterval(timer);
     closeRankingModal();
     hideAnswerSquares();
     setMedia(null, null);
     currentQuestionType = 'quiz';
+    app.questionType = 'quiz';
     currentPointsMultiplier = 1;
-    updateQuestionPointsBadge(1);
+    app.pointsMultiplier = 1;
+    app.pointsBadgeText = '';
     currentAnswerTexts = ['', '', '', ''];
+    app.answers = ['', '', '', ''];
     var seconds = Math.max(0, Math.ceil(Number(data && data.seconds) || 0));
-    var questionEl = document.getElementById('question');
-    var playersEl = document.getElementById('playersAnswered');
-    var timerEl = document.getElementById('timerText');
     document.body.classList.add('is-question-countdown');
-    if(questionEl) questionEl.textContent = '';
-    if(playersEl) playersEl.textContent = t('questionCountdown');
-    if(timerEl) timerEl.style.display = 'none';
+    app.questionText = '';
+    app.playersAnsweredText = t('questionCountdown');
+    app.playersAnsweredVisible = true;
+    app.timerVisible = false;
     if(data && data.questionNumber && data.totalQuestions){
-        document.getElementById('questionNum').textContent = t('questionXofY')(data.questionNumber, data.totalQuestions);
+        app.questionNumText = t('questionXofY')(data.questionNumber, data.totalQuestions);
     }
     function render(){
         if(seconds <= 0){
             clearQuestionCountdown();
             return;
         }
-        renderQuestionCountdown(seconds);
+        app.countdownVisible = true;
+        app.countdownSeconds = seconds;
         seconds -= 1;
     }
     render();
@@ -885,7 +1629,71 @@ function showQuestionCountdown(data){
 
 socket.on('questionCountdown', showQuestionCountdown);
 
+// Fase «aprén i després respon» (feature 24): el vídeo a la pantalla abans de les respostes.
+// YouTube: l'iframe s'activa amb enablejsapi=1 i es controla per missatges (postMessage), sense carregar
+// l'API de YouTube (la CSP no ho permet). Només s'accepta l'origen de l'embed.
+var YT_ORIGIN = 'https://www.youtube-nocookie.com';
+function youtubePost(payload){
+    var iframe = document.getElementById('questionIframe');
+    if(iframe && iframe.contentWindow) iframe.contentWindow.postMessage(JSON.stringify(payload), YT_ORIGIN);
+}
+var videoLearnEventsBound = false;
+function bindVideoLearnEvents(){
+    if(videoLearnEventsBound) return;
+    videoLearnEventsBound = true;
+    window.addEventListener('message', function(e){
+        if(e.origin !== YT_ORIGIN) return;
+        var d;
+        try{ d = typeof e.data === 'string' ? JSON.parse(e.data) : e.data; }catch(err){ return; }
+        if(!d) return;
+        var state = d.event === 'infoDelivery' && d.info ? d.info.playerState : (d.event === 'onStateChange' ? d.info : undefined);
+        if(state === 1) app.videoPlaying = true;
+        if(state === 2) app.videoPlaying = false;
+        // 0 = acabat: la fase es tanca, com amb un arxiu.
+        if(state === 0){
+            app.videoPlaying = false;
+            if(app.videoLearning) socket.emit('finishVideoLearning');
+        }
+    });
+}
+// Arxiu: en acabar, la fase es tanca sola; el estat de reproducció es segueix amb els esdeveniments del <video>.
+function bindFileVideoEvents(v){
+    if(v.dataset.learnBound) return;
+    v.dataset.learnBound = '1';
+    v.addEventListener('ended', function(){ if(app.videoLearning) socket.emit('finishVideoLearning'); });
+    v.addEventListener('play', function(){ app.videoPlaying = true; });
+    v.addEventListener('pause', function(){ app.videoPlaying = false; });
+}
+
+// Fase «aprén i després respon» (feature 24): el vídeo a la pantalla abans de les respostes.
+function startVideoLearning(data){
+    app.videoLearning = true;
+    app.videoPlaying = false;
+    var startAt = Number(data && data.startAt) || 0;
+    var video = (data && data.video) || '';
+    var ytId = parseYouTubeId(video);
+    app.videoIsYoutube = !!ytId;
+    setMedia(null, video);
+    var v = document.getElementById('questionVideo');
+    var iframe = document.getElementById('questionIframe');
+    bindVideoLearnEvents();
+    if(ytId && iframe){
+        // El segon d'inici va al paràmetre «start»; enablejsapi=1 permet controlar-lo i rebre el final.
+        iframe.src = YT_ORIGIN + '/embed/' + ytId + '?enablejsapi=1' + (startAt > 0 ? '&start=' + startAt : '');
+        iframe.onload = function(){ youtubePost({ event: 'listening' }); };
+    }
+    if(v && !ytId){
+        bindFileVideoEvents(v);
+        if(startAt > 0){
+            var seek = function(){ try{ v.currentTime = startAt; }catch(e){} };
+            if(v.readyState >= 1) seek(); else v.addEventListener('loadedmetadata', seek, { once: true });
+        }
+    }
+}
+socket.on('videoLearn', startVideoLearning);
+
 socket.on('gameQuestions', function(data){
+    app.videoLearning = false;
     clearQuestionCountdown();
     hostQuestionEnded = false;
     hostRankingGongPlayed = false;
@@ -908,27 +1716,99 @@ socket.on('gameQuestions', function(data){
     }
 
     currentQuestionType = data.type || 'quiz';
+    app.questionType = currentQuestionType;
     currentPointsMultiplier = Number(data && data.pointsMultiplier) > 1 ? Number(data.pointsMultiplier) : 1;
     updateQuestionPointsBadge(currentPointsMultiplier);
-    setRichText(document.getElementById('question'), data.q1 || '');
-    setCurrentAnswerTexts([data.a1, data.a2, data.a3, data.a4]);
+    app.questionText = data.q1 || '';
+    setCurrentAnswerTexts(window.EduhootTf ? window.EduhootTf.localize(currentQuestionType, [data.a1, data.a2, data.a3, data.a4]) : [data.a1, data.a2, data.a3, data.a4]);
+    app.matchLeft = currentQuestionType === 'matching' ? (data.matchLeft || []).slice() : [];
+    app.matchRight = currentQuestionType === 'matching' ? (data.matchRight || []).slice() : [];
+    app.orderItems = currentQuestionType === 'order' ? (data.orderItems || []).slice() : [];
+    app.orderSolution = [];
+    currentMatchSolution = currentQuestionType === 'matching' ? (data.matchSolution || []).slice() : [];
+    app.answerHighlight = [null, null, null, null];
     hideAnswerSquares();
     defaultTime = data.time || defaultTime || 20;
     window.hostShowScores = data.showScores !== false;
+    app.showRankingButton = window.hostShowScores;
+    app.showScoresToggle = window.hostShowScores;
     setMedia(data.image, data.video);
-    document.getElementById('playersAnswered').textContent = t('playersAnswered')(0, data.playersInGame);
-    document.getElementById('timerText').style.display = "block";
+    app.playersAnsweredText = t('playersAnswered')(0, data.playersInGame);
+    app.playersAnsweredVisible = true;
+    app.timerVisible = true;
+    app.skipVisible = true;
+    app.skipDisabled = false;
     if (data.questionNumber && data.totalQuestions) {
-        document.getElementById('questionNum').textContent = t('questionXofY')(data.questionNumber, data.totalQuestions);
+        app.questionNumText = t('questionXofY')(data.questionNumber, data.totalQuestions);
     }
+    app.answerStatus = [];
+    socket.emit('getAnswerStatus');
+    socket.emit('getKickedList');
     updateTimer();
 });
 
+// Partida cancelada: el servidor confirma y volvemos a crear.
+socket.on('gameCancelled', function(){
+    stopHostMusicOnCancel();
+    (window.top || window).location.href = '/create/';
+});
+
+// Cancelar la partida para la música: no vuelve a sonar sola al siguiente juego.
+function stopHostMusicOnCancel(){
+    hostAutoMusicShouldPlay = false;
+    hostResumeMusicAfterRanking = false;
+    pauseHostMusicForRanking();
+}
+
+// Avance automático: el servidor pide un paso de resultados; el anfitrión lo da igual que el botón
+// y responde con la etapa en la que queda (clasificación, siguiente pregunta o nada).
+function hostAutoAdvanceStep(){
+    if(!hostQuestionEnded){
+        socket.emit('autoAdvanceStepDone', { stage: 'none' });
+        return;
+    }
+    app.rankingVisible = true;
+    app.rankingNext();
+    socket.emit('autoAdvanceStepDone', { stage: app.rankingVisible ? 'ranking' : 'next' });
+}
+socket.on('autoAdvanceStep', hostAutoAdvanceStep);
+
+// Estado del avance automático (lo recibe también el alumnado).
+socket.on('autoAdvanceState', function(s){
+    s = s || {};
+    app.autoActive = !!s.active;
+    app.autoPaused = !!s.paused;
+    app.autoAdvanceSec = Number(s.seconds) || 0;
+    var ms = Math.max(0, Number(s.remainingMs) || 0);
+    app.autoLeft = Math.ceil(ms / 1000);
+    app.autoEndAt = Date.now() + ms;
+});
+// La cuenta atrás se actualiza en el propio anfitrión; en pausa se queda fija.
+setInterval(function(){
+    if(app.autoActive && !app.autoPaused){
+        app.autoLeft = Math.max(0, Math.ceil((app.autoEndAt - Date.now()) / 1000));
+    }
+}, 250);
+
+socket.on('kickedList', function(list){
+    app.kickedList = Array.isArray(list) ? list : [];
+});
+
+socket.on('answerStatus', function(list){
+    app.answerStatus = Array.isArray(list) ? list : [];
+});
+
 socket.on('updatePlayersAnswered', function(data){
-    document.getElementById('playersAnswered').textContent = t('playersAnswered')(data.playersAnswered, data.playersInGame);
+    app.playersAnsweredText = t('playersAnswered')(data.playersAnswered, data.playersInGame);
 });
 
 socket.on('gamePin', function(data){
+    if(data){
+        app.quizName = (data.quizName || '').toString();
+        app.hasMatching = !!data.hasMatching;
+        app.hasComposite = !!data.hasComposite;
+        if(data.matchingExtraTime) app.matchingExtraTime = Number(data.matchingExtraTime) || 50;
+    }
     if(data && data.pin){
         setPinBadge(data.pin);
         try{ localStorage.setItem(lastPinKey, data.pin); }catch(e){}
@@ -948,88 +1828,66 @@ socket.on('hostSession', function(data){
 });
 
 // Control: botón y tecla Enter para pasar a la siguiente pregunta desde el modal
-function handleResultsModalNext(){
-    if(hostModalStep === 'chart'){
-        if(hostResultsHasRanking){
-            setHostModalStep('ranking');
-            return;
-        }
-        if(hostQuestionEnded){
-            nextQuestion();
-        }
-        closeRankingModal();
-        return;
-    }
-    // Paso ranking
-    if(hostQuestionEnded){
-        nextQuestion();
-    }
-    closeRankingModal();
-}
-
-if(rankingNextBtn){
-    rankingNextBtn.addEventListener('click', function(){
-        handleResultsModalNext();
-    });
-}
-
 document.addEventListener('keydown', function(ev){
-    if(ev.key === 'Enter' && document.getElementById('rankingModal') && document.getElementById('rankingModal').style.display === 'block'){
+    if(ev.key === 'Enter' && app.rankingVisible && !app.autoPaused){
         ev.preventDefault();
-        handleResultsModalNext();
+        app.rankingNext();
     }
 });
 
 socket.on('questionOver', function(playerData, payload){
     hostQuestionEnded = true;
     clearInterval(timer);
-    document.getElementById('playersAnswered').style.display = "none";
-    document.getElementById('timerText').style.display = "none";
+    app.playersAnsweredVisible = false;
+    app.timerVisible = false;
     setMedia(null, null);
     currentQuestionType = (payload && payload.type) || currentQuestionType;
+    app.questionType = currentQuestionType;
     var totalPlayers = Array.isArray(playerData) ? playerData.length : 0;
 
+    if(currentQuestionType === 'order'){
+        hideAnswerSquares();
+        app.resultsMode = 'order';
+        app.orderSolution = payload.showCorrectAnswers === false ? [] : (payload.items || []).slice();
+    }else if(currentQuestionType === 'matching'){
+        hideAnswerSquares();
+        app.resultsMode = 'matching';
+        app.resultsMatching = buildMatchingResults(playerData, payload);
+    }else
     // Tipos libres: no hay buckets 1-4; mostramos resumen simple.
     if(currentQuestionType === 'short-answer' || currentQuestionType === 'numeric'){
         hideAnswerSquares();
-        if(resultsChartEl){
-            var answeredCount = 0;
-            (playerData || []).forEach(function(player){
-                var answer = player && player.gameData ? player.gameData.answer : null;
-                if(!answer) return;
-                if(currentQuestionType === 'short-answer'){
-                    var txt = (answer && typeof answer === 'object') ? (answer.text || '') : String(answer || '');
-                    if(String(txt).trim()) answeredCount += 1;
-                }else{
-                    var n = (answer && typeof answer === 'object') ? answer.number : answer;
-                    if(String(n || '').trim()) answeredCount += 1;
-                }
-            });
-
-            var correctTxt = '';
-            if(payload && payload.type === 'short-answer'){
-                var acc = Array.isArray(payload.acceptedAnswers) ? payload.acceptedAnswers : [];
-                correctTxt = acc.join(', ');
-            }else if(payload && payload.type === 'numeric'){
-                var base = (payload.numericAnswer !== undefined && payload.numericAnswer !== null) ? payload.numericAnswer : '';
-                var tol = (payload.tolerance !== undefined && payload.tolerance !== null) ? payload.tolerance : 0;
-                if(base !== ''){
-                    correctTxt = Number(tol) > 0 ? (String(base) + ' ± ' + String(tol)) : String(base);
-                }
+        var answeredCount = 0;
+        (playerData || []).forEach(function(player){
+            var answer = player && player.gameData ? player.gameData.answer : null;
+            if(!answer) return;
+            if(currentQuestionType === 'short-answer'){
+                var txt = (answer && typeof answer === 'object') ? (answer.text || '') : String(answer || '');
+                if(String(txt).trim()) answeredCount += 1;
+            }else{
+                var n = (answer && typeof answer === 'object') ? answer.number : answer;
+                if(String(n || '').trim()) answeredCount += 1;
             }
+        });
 
-            resultsChartEl.innerHTML = '';
-            var line1 = document.createElement('div');
-            line1.className = 'results-free-line';
-            line1.textContent = t('freeAnswersReceived')(answeredCount, totalPlayers);
-            resultsChartEl.appendChild(line1);
-            if(correctTxt){
-                var line2 = document.createElement('div');
-                line2.className = 'results-free-line';
-                line2.textContent = t('correctAnswerLabel') + ' ' + correctTxt;
-                resultsChartEl.appendChild(line2);
+        var correctTxt = '';
+        if(payload && payload.type === 'short-answer'){
+            var acc = Array.isArray(payload.acceptedAnswers) ? payload.acceptedAnswers : [];
+            correctTxt = acc.join(', ');
+        }else if(payload && payload.type === 'numeric'){
+            var base = (payload.numericAnswer !== undefined && payload.numericAnswer !== null) ? payload.numericAnswer : '';
+            var tol = (payload.tolerance !== undefined && payload.tolerance !== null) ? payload.tolerance : 0;
+            if(base !== ''){
+                correctTxt = Number(tol) > 0 ? (String(base) + ' ± ' + String(tol)) : String(base);
             }
         }
+
+        var freeLines = [t('freeAnswersReceived')(answeredCount, totalPlayers)];
+        if(correctTxt){
+            freeLines.push(t('correctAnswerLabel') + ' ' + correctTxt);
+        }
+        app.resultsMode = 'free';
+        app.resultsFreeLines = freeLines;
     }else{
         highlightCorrectAnswers(payload && payload.correctAnswers);
         var answerCounts = [0, 0, 0, 0];
@@ -1057,13 +1915,10 @@ socket.on('questionOver', function(playerData, payload){
 
     // El avance se hace desde el modal (Resultados -> Ranking -> Siguiente).
     document.getElementById('nextQButton').style.display = "none";
-    document.getElementById('skipQButton').style.display = "none";
+    app.skipVisible = false;
 
-    hostResultsHasRanking = (window.hostShowScores !== false);
-    if(hostResultsHasRanking){
-        // Update ranking list
-        var rankingList = document.getElementById('rankingList');
-        rankingList.innerHTML = '';
+    app.resultsHasRanking = (window.hostShowScores !== false);
+    if(app.resultsHasRanking){
         var sorted = playerData.slice().sort(function(a, b){
             return (b.gameData.score || 0) - (a.gameData.score || 0);
         });
@@ -1072,43 +1927,38 @@ socket.on('questionOver', function(playerData, payload){
         // pintamos flechas (todo el mundo "sube desde la nada", no aporta información).
         var isFirstRanking = !previousRankingPositions;
         var nextRankingPositions = {};
+        var rows = [];
         for(var r = 0; r < top.length; r++){
-            var li = document.createElement('li');
-            li.className = 'ranking-row';
-            li.style.animationDelay = (r * 60) + 'ms';
             var icon = top[r].icon ? top[r].icon + ' ' : '';
-
-            var moveEl = document.createElement('span');
-            moveEl.className = 'ranking-move';
+            var moveClass = '';
+            var moveText = '';
             if(!isFirstRanking && top[r].playerId){
                 var oldIndex = previousRankingPositions[top[r].playerId];
                 if(oldIndex !== undefined){
                     var delta = oldIndex - r;
                     if(delta > 0){
-                        moveEl.className = 'ranking-move ranking-move--up';
-                        moveEl.textContent = '▲' + delta;
+                        moveClass = 'ranking-move--up';
+                        moveText = '▲' + delta;
                     }else if(delta < 0){
-                        moveEl.className = 'ranking-move ranking-move--down';
-                        moveEl.textContent = '▼' + Math.abs(delta);
+                        moveClass = 'ranking-move--down';
+                        moveText = '▼' + Math.abs(delta);
                     }
                 }else{
-                    moveEl.className = 'ranking-move ranking-move--new';
-                    moveEl.textContent = '★';
+                    moveClass = 'ranking-move--new';
+                    moveText = '★';
                 }
             }
-
-            var nameEl = document.createElement('span');
-            nameEl.className = 'ranking-name';
-            nameEl.textContent = icon + top[r].name + ' - ' + (top[r].gameData.score || 0);
-
-            li.appendChild(moveEl);
-            li.appendChild(nameEl);
-            rankingList.appendChild(li);
+            rows.push({
+                moveClass: moveClass,
+                moveText: moveText,
+                name: icon + top[r].name + ' - ' + (top[r].gameData.score || 0)
+            });
             if(top[r].playerId){
                 nextRankingPositions[top[r].playerId] = r;
             }
         }
         previousRankingPositions = nextRankingPositions;
+        app.rankingRows = rows;
     }
 
     // Abrimos el modal primero en el paso de resultados (gráfica)
@@ -1118,9 +1968,7 @@ socket.on('questionOver', function(playerData, payload){
 });
 
 function toggleRanking(){
-    var modal = document.getElementById('rankingModal');
-    if(!modal) return;
-    if(modal.style.display === 'block'){
+    if(app.rankingVisible){
         closeRankingModal();
         return;
     }
@@ -1130,10 +1978,6 @@ function toggleRanking(){
     // Si es fin de pregunta, solo paramos música (gong ya se habrá disparado en la auto-apertura).
     openRankingModal(false);
 }
-
-document.getElementById('closeRanking').onclick = function() {
-    closeRankingModal();
-};
 
 socket.on('questionMedia', function(data){
     setMedia(data.image, data.video);
@@ -1230,8 +2074,8 @@ function parseYouTubeId(url){
 function nextQuestion(){
     closeRankingModal();
     document.getElementById('nextQButton').style.display = "none";
-    document.getElementById('skipQButton').style.display = "inline-block";
-    document.getElementById('skipQButton').disabled = false;
+    app.skipVisible = true;
+    app.skipDisabled = false;
 
     // Activamos la pantalla de espera de forma optimista, sin esperar al evento
     // 'questionCountdown' del servidor: el modal de ranking es semitransparente
@@ -1244,13 +2088,15 @@ function nextQuestion(){
     hideAnswerSquares();
     setMedia(null, null);
     currentQuestionType = 'quiz';
+    app.questionType = 'quiz';
     currentPointsMultiplier = 1;
     updateQuestionPointsBadge(1);
     setCurrentAnswerTexts(['', '', '', '']);
     document.body.classList.add('is-question-countdown');
-    document.getElementById('question').textContent = '';
-    document.getElementById('playersAnswered').textContent = t('questionCountdown');
-    document.getElementById('timerText').style.display = 'none';
+    app.questionText = '';
+    app.playersAnsweredText = t('questionCountdown');
+    app.playersAnsweredVisible = true;
+    app.timerVisible = false;
 
     // Gesto del usuario: si la música debe sonar, este es el momento más fiable para (re)arrancarla.
     if(hostAutoMusicEnabled && hostAutoMusicShouldPlay){
@@ -1261,7 +2107,7 @@ function nextQuestion(){
 }
 
 function skipQuestion(){
-    document.getElementById('skipQButton').disabled = true;
+    app.skipDisabled = true;
     clearInterval(timer);
     if(hostAutoMusicEnabled && hostAutoMusicShouldPlay){
         ensureHostMusicPlaying();
@@ -1272,13 +2118,45 @@ function skipQuestion(){
 function updateTimer(){
     clearInterval(timer);
     time = defaultTime;
+    // Pintar ya el tiempo inicial: si no, hasta el primer segundo se veía el
+    // de la pregunta anterior (o el 20 del HTML) (issue #21).
+    app.timerText = " " + time;
+    app.timerPaused = false;
+    startTimerInterval();
+}
+
+function startTimerInterval(){
+    clearInterval(timer);
     timer = setInterval(function(){
         time -= 1;
-        document.getElementById('num').textContent = " " + time;
+        app.timerText = " " + time;
         if(time == 0){
             socket.emit('timeUp');
         }
     }, 1000);
+}
+
+// Pausa o reanuda el temporizador y avisa a los alumnos del tiempo que queda.
+function hostToggleTimerPause(){
+    if(!app.timerVisible) return;
+    if(app.timerPaused){
+        app.timerPaused = false;
+        startTimerInterval();
+    }else{
+        app.timerPaused = true;
+        clearInterval(timer);
+    }
+    // Partida pausada: no se puede saltar la pregunta hasta reanudarla.
+    app.skipDisabled = app.timerPaused;
+    socket.emit('timerSync', { time: time, paused: app.timerPaused });
+}
+
+// Añade segundos a la pregunta en curso (p. ej. +15 s) y avisa a los alumnos.
+function hostAddTimerSeconds(seconds){
+    if(!app.timerVisible) return;
+    time += seconds;
+    app.timerText = " " + time;
+    socket.emit('timerSync', { time: time, paused: app.timerPaused });
 }
 socket.on('GameOver', function(data){
     document.getElementById('nextQButton').style.display = "none";
@@ -1287,35 +2165,30 @@ socket.on('GameOver', function(data){
     document.getElementById('square3').style.display = "none";
     document.getElementById('square4').style.display = "none";
     
-    document.getElementById('answer1').style.display = "none";
-    document.getElementById('answer2').style.display = "none";
-    document.getElementById('answer3').style.display = "none";
-    document.getElementById('answer4').style.display = "none";
-    document.getElementById('timerText').textContent = "";
-    document.getElementById('question').textContent = t('gameOver');
-    document.getElementById('playersAnswered').textContent = "";
+    // nextQuestion() vuelve a mostrar «Saltar pregunta» al pasar de la última
+    // pregunta, y la celebración de grupo podía seguir encima del podio.
+    app.skipVisible = false;
+    if(groupCelebrationHideTimer) clearTimeout(groupCelebrationHideTimer);
+    app.groupCelebrationVisible = false;
+    app.answers = ['', '', '', ''];
+    app.timerText = "";
+    app.questionText = t('gameOver');
+    // Fi de partida: no es queda cap imatge ni vídeo de la darrera pregunta (ni de la primera).
+    setMedia(null, null);
+    app.playersAnsweredText = "";
     updateQuestionPointsBadge(1);
-    
-    
-    
-    document.getElementById('winner1').style.display = "block";
-    document.getElementById('winner2').style.display = "block";
-    document.getElementById('winner3').style.display = "block";
-    document.getElementById('winner4').style.display = "block";
-    document.getElementById('winner5').style.display = "block";
-    document.getElementById('winnerTitle').style.display = "block";
-    document.getElementById('winnerTitle').textContent = t('topPlayers');
-    
-    document.getElementById('winner1').textContent = "1. " + data.num1;
-    document.getElementById('winner2').textContent = "2. " + data.num2;
-    document.getElementById('winner3').textContent = "3. " + data.num3;
-    document.getElementById('winner4').textContent = "4. " + data.num4; 
-    document.getElementById('winner5').textContent = "5. " + data.num5;
-    var reportBtn = ensureDownloadReportButton();
-    if(reportBtn){
-        reportBtn.textContent = t('downloadReport');
-        reportBtn.style.display = 'inline-block';
-    }
+
+    // Sin puntuaciones entre preguntas tampoco se muestra el podio final.
+    app.winnersVisible = data.showPodium !== false;
+    app.winners = [
+        "1. " + data.num1,
+        "2. " + data.num2,
+        "3. " + data.num3,
+        "4. " + data.num4,
+        "5. " + data.num5
+    ];
+    app.downloadReportVisible = true;
+    app.gameOverMode = true;
     try{
         localStorage.removeItem(lastHostKey);
         localStorage.removeItem(lastPinKey);
@@ -1323,15 +2196,7 @@ socket.on('GameOver', function(data){
 });
 
 function setPinBadge(pin){
-    if(pinBadge){
-        if(pin){
-            pinBadge.textContent = 'PIN ' + pin;
-            pinBadge.style.display = 'inline-flex';
-        }else{
-            pinBadge.textContent = '';
-            pinBadge.style.display = 'none';
-        }
-    }
+    app.pin = pin || '';
 }
 
 

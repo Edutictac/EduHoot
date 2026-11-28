@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <link rel="icon" href="/icons/logo.svg" type="image/svg+xml">
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+        <meta name="robots" content="noindex">
+        <title data-i18n="docTitle">Anfitrión (prueba) | EduHoot</title>
+        <link href="/css/fonts.css" rel="stylesheet">
+        <link rel="stylesheet" href="poc.css">
+    </head>
+    <body>
+<div class="wrap">
+  <header class="top">
+    <h1 data-i18n="h1">Pantalla del anfitrión · prueba de concepto</h1>
+    <p data-i18n="intro">Maqueta de la sala y de la partida del anfitrión.</p>
+  </header>
+
+  <div class="controls" role="group" data-i18n-title="controlsLabel">
+    <label for="poc-lang"><span data-i18n="langLabel">Idioma</span>
+      <select id="poc-lang" data-lang-options="name"></select></label>
+    <label for="opt-layout"><span data-i18n="layoutLabel">Opciones</span>
+      <select id="opt-layout">
+        <option value="a" data-i18n="layoutA">A</option>
+        <option value="b" data-i18n="layoutB">B</option>
+      </select></label>
+    <label for="opt-help"><span data-i18n="helpLabel">Ayuda</span>
+      <select id="opt-help">
+        <option value="both" data-i18n="helpBoth">Ambos</option>
+        <option value="title" data-i18n="helpTitle">Tooltip</option>
+        <option value="icon" data-i18n="helpIcon">Icono</option>
+      </select></label>
+    <label for="opt-matching"><input id="opt-matching" type="checkbox" checked> <span data-i18n="matchingLabel">Correspondencias</span></label>
+    <label for="opt-width"><span data-i18n="widthLabel">Pantalla</span>
+      <select id="opt-width">
+        <option value="desk" data-i18n="widthDesk">Ordenador</option>
+        <option value="tablet" data-i18n="widthTablet">Tableta</option>
+        <option value="phone" data-i18n="widthPhone">Móvil</option>
+      </select></label>
+    <button class="ghost btn-reset" id="btn-reset" type="button" data-i18n="reset">Reiniciar</button>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" data-view="lobby" aria-selected="true" type="button" data-i18n="tabLobby">Sala de espera</button>
+    <button class="tab" role="tab" data-view="game" aria-selected="false" type="button" data-i18n="tabGame">Partida</button>
+  </div>
+
+  <div class="stage" id="stage"></div>
+
+  <section class="notes" id="notes"></section>
+</div>
+
+        <script src="/js/languages.js"></script>
+        <script src="../poc-i18n.js"></script>
+        <script src="texts.js"></script>
+        <script src="poc.js"></script>
+    </body>
+</html>

@@ -4,6 +4,7 @@ const http = require('http');
 const express = require('express');
 const socketIO = require('socket.io');
 const helmet = require('helmet');
+const { cspOptions } = require('./csp');
 
 const { LiveGames } = require('./utils/liveGames');
 const { Players } = require('./utils/players');
@@ -43,6 +44,7 @@ const io = socketIO(server, {
 });
 const games = new LiveGames();
 const players = new Players();
+const gameHistoryService = require('./services/gameHistory')({ getGameHistoryCollection: require('./data/repositories').getGameHistoryCollection });
 const {
   quizToCsv,
   liveSessionToCsv,
@@ -50,8 +52,9 @@ const {
   finishedSessionReports,
   FINISHED_SESSION_REPORT_DIR,
   buildReportFileName,
+  buildQuizCsvFileName,
   slugifyForFilename
-} = require('./services/sessionReport')({ players });
+} = require('./services/sessionReport')({ players, onFinished: (info) => gameHistoryService.recordFinishedGame(info) });
 const { sessions, parseCookies } = require('./services/sessions');
 const createCommonsService = require('./services/commons');
 const createPlayerAuthRouter = require('./routes/playerAuth');
@@ -64,7 +67,9 @@ const createKahootImportService = require('./services/kahootImport');
 const createEphemeralQuizzesService = require('./services/ephemeralQuizzes');
 const { getTopSoloScores, enqueueSoloScore } = require('./services/soloScores');
 const commons = createCommonsService({ normalizePlayerName });
-const kahootImport = createKahootImportService({ publicPath, normalizeQuestions, cleanImportedText });
+// Imatges dels quizzes: QUIZ_IMAGES_DIR si es defineix (dev: volum fora del projecte); si no, la ruta de sempre (stage i producció no canvien).
+const QUIZ_IMAGES_DIR = process.env.QUIZ_IMAGES_DIR || path.join(publicPath, 'uploads', 'quiz-images');
+const kahootImport = createKahootImportService({ imagesDir: QUIZ_IMAGES_DIR, normalizeQuestions, cleanImportedText });
 const { extractKahootId, mirrorExternalImage, mirrorKahootImage, mapKahootQuestions } = kahootImport;
 const ephemeralQuizzes = createEphemeralQuizzesService({
   getEphemeralCollection,
@@ -127,20 +132,41 @@ const {
   findOrCreateGoogleUser
 } = require('./services/oauth')({ PORT });
 const { authRateLimiter, sessionMiddleware, requireRole } = require('./services/authMiddleware')({ authentikOnly });
+const { logger } = require('./logger');
+const { getLogsCollection } = require('./data/repositories');
 
 // Log y absorbe errores no controlados para evitar que el proceso caiga
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('[unhandledRejection]', reason);
+  logger.error('unhandledRejection', { tag: 'unhandledRejection', error: reason && reason.message ? reason.message : String(reason) });
 });
 process.on('uncaughtException', (err) => {
+  // El transport de Mongo del logger és "fire and forget" (no bloqueja el
+  // bucle d'events en l'ús normal), però ací el procés mor just després:
+  // sense esperar explícitament, este és justament el log més probable de
+  // perdre's. S'intenta persistir amb un marge curt abans de eixir.
+  const message = err && err.message ? err.message : String(err);
   console.error('[uncaughtException]', err);
-  process.exit(1);
+  const persist = getLogsCollection()
+    .then((collection) => collection.insertOne({
+      level: 'error',
+      message: 'uncaughtException',
+      tag: 'uncaughtException',
+      pin: null,
+      hostId: null,
+      playerId: null,
+      meta: { error: message, stack: err && err.stack },
+      createdAt: new Date()
+    }))
+    .catch(() => {});
+  Promise.race([persist, new Promise((resolve) => setTimeout(resolve, 1500))]).finally(() => {
+    process.exit(1);
+  });
 });
 io.on('error', (err) => {
-  console.error('[socket-io-error]', err);
+  logger.error('socket-io-error', { tag: 'socket-io-error', error: err && err.message ? err.message : String(err) });
 });
 io.engine.on('connection_error', (err) => {
-  console.error('[socket-connection-error]', err);
+  logger.error('socket-connection-error', { tag: 'socket-connection-error', error: err && err.message ? err.message : String(err) });
 });
 const PUBLIC_IMPORT_SOURCE_URL = (process.env.PUBLIC_IMPORT_SOURCE_URL || '').trim().replace(/\/+$/, '');
 const APP_VERSION = require('../package.json').version;
@@ -161,6 +187,8 @@ const EDUTICTAC_COMMONS_URL = (() => {
 const CHIP_PAGES = {
   '/': 'index.html',
   '/index.html': 'index.html',
+  '/inicio/': 'inicio/index.html',
+  '/inicio/index.html': 'inicio/index.html',
   '/join.html': 'join.html',
   '/solo/': 'solo/index.html',
   '/solo/index.html': 'solo/index.html',
@@ -170,12 +198,13 @@ const CHIP_PAGES = {
   '/host/index.html': 'host/index.html',
   '/player/': 'player/index.html',
   '/player/index.html': 'player/index.html',
-  '/admin/stats': 'admin-stats.html'
+  '/admin/stats': 'admin-stats.html',
+  '/admin/logs': 'admin-logs.html'
 };
 
 // Body parsers (bump limit to allow quizzes con recursos más pesados)
 app.use(helmet({
-  contentSecurityPolicy: false,
+  contentSecurityPolicy: cspOptions(EDUTICTAC_COMMONS_URL, process.env.CSP_REPORT_ONLY === 'true'),
   crossOriginEmbedderPolicy: false
 }));
 app.use(express.json({ limit: BODY_LIMIT }));
@@ -220,6 +249,25 @@ app.get(['/create', '/create/', '/create/index.html'], (req, res) => {
     res.type('html').send(out);
   });
 });
+// Páginas de desarrollo y maquetas (/dev):
+// - desarrollo: se sirven sin sesión;
+// - stage (NODE_ENV=staging): solo con sesión de rol admin;
+// - producción: 404.
+// Va antes de los ficheros estáticos.
+if (process.env.NODE_ENV === 'staging') {
+  const requireAdminPage = (req, res, next) => {
+    res.set('Cache-Control', 'private, no-store');
+    if (!req.user) return res.status(401).type('text').send('Cal una sessió d\'administració. Entra amb el xip d\'EduTicTac.');
+    if (req.user.role !== 'admin') return res.status(403).type('text').send('Cal el rol d\'administració.');
+    return next();
+  };
+  // La entrada rápida de desarrollo no existe en stage, ni siquiera para admin.
+  app.use('/dev/login', (req, res) => res.status(404).type('text').send('Not found'));
+  app.use('/dev', sessionMiddleware, requireAdminPage, express.static(path.join(publicPath, 'dev')));
+} else if (process.env.NODE_ENV !== 'development') {
+  app.use('/dev', (req, res) => res.status(404).type('text').send('Not found'));
+}
+app.use('/uploads/quiz-images', express.static(QUIZ_IMAGES_DIR, { fallthrough: true, maxAge: '1h' }));
 app.use(express.static(publicPath, {
   etag: true,
   lastModified: true,
@@ -252,9 +300,19 @@ if (require.main === module) {
   });
 }
 
-app.use(createGamesRouter({ games, finishedSessionReports, liveSessionToCsv, FINISHED_SESSION_REPORT_DIR, buildReportFileName }));
+app.use(createGamesRouter({ games, players, finishedSessionReports, liveSessionToCsv, FINISHED_SESSION_REPORT_DIR, buildReportFileName }));
 
 app.use('/api/player-auth', createPlayerAuthRouter({ commons, authRateLimiter }));
+
+// Deures asíncrons (feature 1). `buildQuestions` es el mismo que usa la partida en directo
+// (la factoría no abre sockets: io no se usa al construir las preguntas).
+const homeworkService = require('./services/homework')({
+  getHomeworksCollection: require('./data/repositories').getHomeworksCollection,
+  getHomeworkAttemptsCollection: require('./data/repositories').getHomeworkAttemptsCollection,
+  buildQuestions: require('./sockets/gameHelpers')({ io: null, games, players, cleanImportedText }).buildQuestions
+});
+app.use(require('./routes/homework')({ homework: homeworkService, requireRole, findGameById, canUseQuiz, liveSessionToCsv, buildReportFileName }));
+app.use(require('./routes/gameHistory')({ gameHistory: gameHistoryService }));
 
 app.use(createAdminRouter({
   requireRole,
@@ -307,6 +365,7 @@ app.use(createQuizzesRouter({
   quizToCsv,
   quizToMoodleXml,
   slugifyForFilename,
+  buildQuizCsvFileName,
   GLOBAL_OWNER_ID,
   GLOBAL_OWNER_EMAIL,
   PUBLIC_IMPORT_SOURCE_URL
@@ -319,7 +378,6 @@ registerSocketHandlers(io, {
   parseCookies,
   authentikOnly,
   cleanImportedText,
-  isMultiplayerFreeTypeQuestion,
   findGameById,
   canUseQuiz,
   cacheFinishedSessionReport,
@@ -378,7 +436,7 @@ if (process.env.NODE_ENV === 'development') {
 
 // Fallback para errores de rutas no capturados
 app.use((err, req, res, next) => {
-  console.error('[express-error]', err);
+  logger.error('express-error', { tag: 'express-error', error: err && err.message ? err.message : String(err), path: req && req.path });
   if (res.headersSent) return next(err);
   return res.status(500).json({ error: 'Error interno. Inténtalo de nuevo.' });
 });

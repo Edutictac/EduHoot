@@ -1,0 +1,72 @@
+/* Botón de mano levantada durante la pregunta (vista del alumno). */
+
+/* Fuera del flujo: no empuja las respuestas, ni en vertical ni en horizontal. */
+#raiseHandRow{
+    position: fixed;
+    right: 12px;
+    bottom: 12px;
+    z-index: 50;
+}
+.raise-hand-btn{
+    min-height: 44px;
+    padding: 8px 16px;
+    border: 0;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.9);
+    color: #1f2937;
+    font: 600 16px/1 'Inter', 'Poppins', sans-serif;
+    cursor: pointer;
+}
+/* Código de la partida durante el juego: visible y grande, como en Kahoot y Wayground. */
+.game-pin{
+    display: inline-flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: rgba(0,0,0,0.35);
+    color: #fff;
+    white-space: nowrap;
+}
+.game-pin__label{ font-size: 14px; font-weight: 600; opacity: 0.9; }
+.game-pin__code{
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    font-variant-numeric: tabular-nums;
+}
+@media (max-width: 420px){
+    .game-pin__code{ font-size: 22px; }
+    .game-pin__label{ display: none; }
+}
+
+.raise-hand-btn[aria-pressed="true"]{
+    background: #fbbf24;
+    color: #111827;
+}
+
+/* Racha de aciertos (feature 11): insignia junto a la puntuación. */
+.streak-text{ font-size: 1.25em; font-weight: 800; color: #fdba74; }
+
+/* Aviso de avance automático: cuenta atrás hasta la siguiente pregunta. */
+.auto-advance-notice{ font-size: 1.1em; font-weight: 700; margin: 4px 0; }
+
+
+/* Salir de la partida: flotante abajo a la izquierda, rojo del logo (#da4453); pide confirmación. */
+.leave-game-btn{
+    position: fixed;
+    left: 12px;
+    bottom: 12px;
+    z-index: 50;
+    margin: 0;
+    min-height: 44px;
+    padding: 8px 16px;
+    border: 0;
+    border-radius: 12px;
+    background: #da4453;
+    color: #fff;
+    font: 700 16px/1 'Inter', 'Poppins', sans-serif;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+}
+.leave-game-btn.is-confirming{ box-shadow: 0 0 0 3px #fff, 0 4px 14px rgba(0,0,0,0.35); }

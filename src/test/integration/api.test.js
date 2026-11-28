@@ -188,6 +188,13 @@ test('CRUD de quiz: crear, leer y listar en público', async () => {
   assert.equal(quiz.visibility, 'public');
   assert.equal(quiz.questions.length, 1);
 
+  // CSV de preguntes: el nom porta el slug i la data/hora de la descàrrega.
+  const csv = await request(`/api/quizzes/${id}/csv`);
+  assert.equal(csv.status, 200);
+  assert.match(csv.headers.get('content-disposition') || '', /filename="quiz-de-integracion-\d{8}-\d{6}\.csv"/);
+  assert.match(await csv.text(), /^tipo;pregunta;r1;r2;r3;r4;tiempo;correcta;imagen;video;texto;numero;tolerancia\n/,
+    'la capçalera de 13 columnes no canvia: és la que espera importCsv.js');
+
   const pub = await request('/api/public-quizzes');
   assert.equal(pub.status, 200);
   const list = await pub.json();

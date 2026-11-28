@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="utf-8">
+        <title>EduHoot · Inicio rápido</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#6c2bd9">
+        <link rel="manifest" href="/manifest.webmanifest">
+        <link rel="icon" href="/icons/logo.svg" type="image/svg+xml">
+        <link rel="stylesheet" href="/css/landing.css">
+        <link rel="stylesheet" href="/css/inicio.css">
+        <link rel="stylesheet" href="/css/edutictac-footer.css">
+        <link rel="stylesheet" href="/css/edutictac-shared.css">
+        <script src="/js/home-pref.js"></script>
+        <script src="/js/edutictac-chip.js"></script>
+        <script src="https://commons.edutictac.es/assets/account-widget.js" defer></script>
+            <link rel="stylesheet" href="/css/page-fit.css">
+        <link rel="stylesheet" href="/css/lang-more.css">
+</head>
+    <body>
+        <edutictac-account class="site-account site-account--fixed" data-base="https://commons.edutictac.es"></edutictac-account>
+        <main class="landing-shell">
+            <div class="lang-switcher" id="lang-switcher" data-lang-buttons>
+                <span data-i18n="landing_langLabel">Idioma</span>
+            </div>
+            <a class="logo-link" href="/" title="EduHoot"><img class="logo" src="/icons/logo.svg" alt="EduHoot"></a>
+            <h1 data-i18n="landing_title">EduHoot</h1>
+            <p class="tagline" data-i18n="landing_tagline">Juega desde cualquier aula o en solitario.</p>
+            <div class="landing-actions">
+                <a class="btn primary" href="/join.html" data-i18n="landing_play_multi" data-ic="🎮">Jugar en el aula</a>
+                <a class="btn secondary" href="/multiplayer/" data-i18n="landing_play_local_multi" data-ic="👥">Multijugador</a>
+                <a class="btn secondary" href="/solo/" data-i18n="landing_play_solo" data-ic="👤">Jugar solo</a>
+                <a class="btn teacher" href="/create/" data-i18n="landing_prof_access" data-ic="📚">Acceso profesorado</a>
+            </div>
+            <button id="installApp" class="install-button" type="button" data-i18n="landing_install_app" hidden>Instalar app</button>
+        </main>
+        <footer class="ett-footer ett-footer--page ett-footer--bottom">
+            <p class="ett-footer__id">
+                <span class="ett-footer__brand">EduTicTac</span>
+                <span aria-hidden="true">·</span>
+                <span class="ett-footer__service">EduHoot</span>
+                <span class="ett-footer__version" id="app-version" aria-live="polite"></span>
+            </p>
+            <div class="ett-footer__links">
+                <a href="https://edutictac.es/privacitat.html" target="_blank" rel="noopener" data-i18n="footerPrivacy">Privacidad</a>
+                <a href="https://edutictac.es/galetes.html" target="_blank" rel="noopener" data-i18n="footerCookies">Galetes</a>
+                <a href="https://git.edutictac.es/Edutictac/eduhoot" target="_blank" rel="noopener" data-i18n="footerSource">Código fuente</a>
+                <a href="https://git.edutictac.es/Edutictac/eduhoot/src/branch/main/LICENSE" target="_blank" rel="noopener">AGPL-3.0</a>
+            </div>
+        </footer>
+        <script src="/js/languages.js"></script>
+        <script src="/js/chip-align.js"></script>
+        <script src="/js/env-badge.js"></script>
+        <script src="/js/i18n-player.js"></script>
+        <script src="/js/pwa-install.js"></script>
+        <script src="/js/app-version.js"></script>
+        <script src="/js/session-bridge.js"></script>
+        <script src="/js/landing-session.js"></script>
+    </body>
+</html>

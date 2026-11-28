@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
-const { splitAcceptedAnswers, parseLenientNumber, getQuestionMeta } = require('../questionUtils');
+const { joinOrderItemsForCsv } = require('./orderQuestion');
+const { splitAcceptedAnswers, parseLenientNumber, getQuestionMeta, formatMatchingPairs, orderDisplayOf } = require('../questionUtils');
 
 const finishedSessionReports = new Map(); // pin -> { csv, hostId, createdAt, cleanupTimer }
 const FINISHED_SESSION_REPORT_TTL_MS = 6 * 60 * 60 * 1000; // 6 horas
@@ -41,6 +42,12 @@ function buildReportFileName({ quizName, pin, timestampMs }) {
   return `${parts.join('-')}.csv`;
 }
 
+// CSV de preguntes d'un quiz: slug del nom i data/hora de la descàrrega, per a
+// no sobreescriure ni confondre dos exportacions del mateix quiz.
+function buildQuizCsvFileName(quizName, timestampMs) {
+  return `${slugifyForFilename(quizName) || 'quiz'}-${formatTimestampForFilename(timestampMs)}.csv`;
+}
+
 function quizToCsv(quiz) {
   const header = 'tipo;pregunta;r1;r2;r3;r4;tiempo;correcta;imagen;video;texto;numero;tolerancia';
   const lines = (quiz.questions || []).map((q) => {
@@ -62,6 +69,21 @@ function quizToCsv(quiz) {
       texto = accepted.join('|');
       // Compatibilidad: en correctVals también ponemos las respuestas.
       correctVals = texto;
+    }
+
+    // Ordenar: els elements en ordre correcte a `texto`, separats per «|».
+    if (type === 'order') {
+      texto = joinOrderItemsForCsv(q.items);
+      // Puntuació i disposició: les columnes numero i tolerancia (no les usa ordenar).
+      numero = String(Number.isInteger(Number(q.orderGrading)) ? Number(q.orderGrading) : 0);
+      tolerancia = q.layout === 'horizontal' ? 'horizontal' : 'vertical';
+      correctVals = '';
+    }
+
+    // Correspondencia: las parejas en `texto` («a -> b | -> impostora»).
+    if (type === 'matching') {
+      texto = formatMatchingPairs(q.pairs || []);
+      correctVals = '';
     }
 
     if (type === 'numeric') {
@@ -136,7 +158,7 @@ resumeFinishedSessionReportCleanup();
 // registre en viu de jugadors (players.getPlayers) quan no li passen una foto explícita
 // (vore src/test/integration/sessionReport.test.js), i eixe registre és un únic Players()
 // compartit, instanciat una sola vegada en server.js — no es pot duplicar ací.
-module.exports = function createSessionReportService({ players }) {
+module.exports = function createSessionReportService({ players, onFinished }) {
   function liveSessionToCsv(game, playersOverride) {
     const playersInGame = Array.isArray(playersOverride) ? playersOverride : (players.getPlayers(game.hostId) || []);
     const totalQuestions = Math.max(0, Number(game && game.gameData && game.gameData.totalQuestions) || 0);
@@ -164,8 +186,37 @@ module.exports = function createSessionReportService({ players }) {
       return out.join(' | ');
     }
 
+    // Correspondencia: «1 Francia → D París | 2 Italia → (sin pareja)», con los
+    // números y letras que ve el alumnado.
+    function formatMatchingList(meta, rightIndices) {
+      const left = Array.isArray(meta.matchLeft) ? meta.matchLeft : [];
+      const right = Array.isArray(meta.matchRight) ? meta.matchRight : [];
+      const list = Array.isArray(rightIndices) ? rightIndices : [];
+      return left.map((text, i) => {
+        const r = list[i];
+        const chosen = (r === null || r === undefined || !Number.isInteger(Number(r)) || !right[r])
+          ? '(sin pareja)'
+          : `${'ABCDEFGH'.charAt(r) || r + 1} ${right[r]}`;
+        return `${i + 1} ${text} → ${chosen}`;
+      }).join(' | ');
+    }
+
+    // Ordenar: els elements en l'ordre que els ha posat l'alumne («1 A | 2 B | …»).
+    function formatOrderList(texts) {
+      return texts.map((text, i) => `${i + 1} ${text}`).join(' | ');
+    }
+
     function formatSubmissionForCsv(meta, question, submission) {
       if (submission === undefined || submission === null || submission === '') return '';
+      if (meta.type === 'matching') {
+        return formatMatchingList(meta, submission);
+      }
+      if (meta.type === 'order') {
+        // La resposta són posicions de la llista barrejada: es tradueix al text de cada posició.
+        const shown = orderDisplayOf(meta);
+        const placed = Array.isArray(submission) ? submission : [];
+        return formatOrderList(placed.map((p) => String(shown[Number(p)] === undefined ? '' : shown[Number(p)])));
+      }
       if (meta.type === 'short-answer') {
         const text = submission && typeof submission === 'object' && submission.text !== undefined
           ? submission.text
@@ -185,6 +236,12 @@ module.exports = function createSessionReportService({ players }) {
     }
 
     function formatCorrectForCsv(meta, question) {
+      if (meta.type === 'matching') {
+        return formatMatchingList(meta, meta.matchSolution);
+      }
+      if (meta.type === 'order') {
+        return formatOrderList(Array.isArray(meta.items) ? meta.items : []);
+      }
       if (meta.type === 'short-answer') {
         const accepted = Array.isArray(meta.acceptedAnswers) ? meta.acceptedAnswers : [];
         return accepted.join(' | ');
@@ -360,6 +417,11 @@ module.exports = function createSessionReportService({ players }) {
         createdAt: finishedAt,
         cleanupTimer
       });
+      // Registre de partides per usuari (només si la crea un usuari amb compte; la resta no es guarda).
+      if (typeof onFinished === 'function') {
+        const finishedCount = Array.isArray(playersOverride) ? playersOverride.length : (players.getPlayers(game.hostId) || []).length;
+        Promise.resolve(onFinished({ game, csv, playersCount: finishedCount })).catch((recErr) => console.error('gameHistory record error', recErr));
+      }
     } catch (err) {
       console.error('cacheFinishedSessionReport error', err);
     }
@@ -372,6 +434,7 @@ module.exports = function createSessionReportService({ players }) {
     finishedSessionReports,
     FINISHED_SESSION_REPORT_DIR,
     buildReportFileName,
+    buildQuizCsvFileName,
     slugifyForFilename
   };
 };

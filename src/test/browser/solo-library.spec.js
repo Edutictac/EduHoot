@@ -39,8 +39,7 @@ async function mockBackend(page) {
 // directamente con ?id=): listado público, favorito persistente, valoración
 // con estrellas, selección de un quiz y una partida hasta el resultado.
 // Pensado como red de seguridad reutilizable mientras se reparte solo.js en
-// varios ficheros (ver .local/MIGRATION_PROGRESS.md), no como cobertura
-// exhaustiva del frontend.
+// varios ficheros, no como cobertura exhaustiva del frontend.
 test('listado, favorito, valoración, jugar y resultado', async ({ page }) => {
     await mockBackend(page);
     await page.goto('/solo/?lang=es');
@@ -73,5 +72,7 @@ test('listado, favorito, valoración, jugar y resultado', async ({ page }) => {
     await page.locator('#start-btn').click();
     await expect(page.locator('#question-text')).toHaveText(question.question);
     await page.locator('#answers button.answer').nth(0).click();
+    // Al responder se abre la ventana de resultado; con OK se pasa al resumen.
+    await page.locator('#feedback-close').click();
     await expect(page.locator('#result-area')).toBeVisible();
 });

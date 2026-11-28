@@ -2,6 +2,7 @@ const createGameHelpers = require('./gameHelpers');
 const createCommonEvents = require('./common');
 const createHostEvents = require('./hostEvents');
 const createPlayerEvents = require('./playerEvents');
+const createSelfPacedEvents = require('./selfPacedEvents');
 
 // Registre de tots els handlers de Socket.IO. Mou el contingut de
 // io.on('connection', ...) de server.js, repartit en tres grups
@@ -15,7 +16,6 @@ module.exports = function registerSocketHandlers(io, deps) {
     parseCookies,
     authentikOnly,
     cleanImportedText,
-    isMultiplayerFreeTypeQuestion,
     findGameById,
     canUseQuiz,
     cacheFinishedSessionReport,
@@ -35,18 +35,20 @@ module.exports = function registerSocketHandlers(io, deps) {
     selectQuizzesForUser
   } = deps;
 
-  const helpers = createGameHelpers({ io, games, players, cleanImportedText, isMultiplayerFreeTypeQuestion });
+  const helpers = createGameHelpers({ io, games, players, cleanImportedText });
 
   const registerCommonEvents = createCommonEvents({ io, games, players, helpers, selectQuizzesForUser });
+  const selfPaced = createSelfPacedEvents({ io, games, players, helpers, cacheFinishedSessionReport, incrementQuizStats, commons });
   const registerHostEvents = createHostEvents({
+    selfPaced,
     io,
     games,
     players,
     helpers,
     findGameById,
     canUseQuiz,
+    parseCookies,
     cleanImportedText,
-    isMultiplayerFreeTypeQuestion,
     cacheFinishedSessionReport,
     incrementQuizStats,
     commons,
@@ -59,6 +61,7 @@ module.exports = function registerSocketHandlers(io, deps) {
     GLOBAL_OWNER_EMAIL
   });
   const registerPlayerEvents = createPlayerEvents({
+    selfPaced,
     io,
     games,
     players,
@@ -74,11 +77,14 @@ module.exports = function registerSocketHandlers(io, deps) {
     const cookies = parseCookies(socket.handshake.headers.cookie || '');
     const sessionId = cookies.sessionId;
     if (sessionId && sessions.has(sessionId) && (!authentikOnly() || sessions.get(sessionId).provider === 'authentik')) {
-      socket.user = sessions.get(sessionId);
+      // Mateixa forma que req.user (services/authMiddleware.js): id, no userId.
+      const session = sessions.get(sessionId);
+      socket.user = { id: session.userId, email: session.email, role: session.role, nickname: session.nickname || '', provider: session.provider };
     }
 
     registerHostEvents(socket);
     registerPlayerEvents(socket);
+    selfPaced.register(socket);
     registerCommonEvents(socket);
   });
 };

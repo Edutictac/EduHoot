@@ -155,6 +155,19 @@ body{
     align-items: center;
     gap: 10px;
 }
+/* Título del quiz entre el PIN y los botones de arriba. */
+.host-top .spacer{
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.game-quiz-name{
+    margin: 0;
+    text-align: center;
+    font-weight: 700;
+    font-size: 1.2em;
+    color: #ffee70;
+    overflow-wrap: anywhere;
+}
 .pin-badge{
     min-width: 120px;
     padding: 8px 12px;
@@ -411,10 +424,10 @@ h3[id^="answer"]{
     display: block;
     text-align: center;
 }
-#answer1{ background: linear-gradient(135deg, #22c55e, #16a34a); }
-#answer2{ background: linear-gradient(135deg, #f97316, #ea580c); }
-#answer3{ background: linear-gradient(135deg, #3b82f6, #2563eb); }
-#answer4{ background: linear-gradient(135deg, #f43f5e, #e11d48); }
+#answer1{ background: linear-gradient(135deg, #15803d, #166534); }
+#answer2{ background: linear-gradient(135deg, #c2410c, #9a3412); }
+#answer3{ background: linear-gradient(135deg, #2563eb, #1d4ed8); }
+#answer4{ background: linear-gradient(135deg, #e11d48, #be123c); }
 
 /* Icono de forma junto al color: igual que en el mando del alumno, para que
    el color no sea la única pista (accesibilidad para daltonismo y para
@@ -445,10 +458,10 @@ h3[id^="answer"]::before{
     box-shadow: var(--shadow);
     margin-right: 12px;
 }
-#square1{ background: linear-gradient(135deg, #22c55e, #16a34a); }
-#square2{ background: linear-gradient(135deg, #f97316, #ea580c); }
-#square3{ background: linear-gradient(135deg, #3b82f6, #2563eb); }
-#square4{ background: linear-gradient(135deg, #f43f5e, #e11d48); }
+#square1{ background: linear-gradient(135deg, #15803d, #166534); }
+#square2{ background: linear-gradient(135deg, #c2410c, #9a3412); }
+#square3{ background: linear-gradient(135deg, #2563eb, #1d4ed8); }
+#square4{ background: linear-gradient(135deg, #e11d48, #be123c); }
 
 .control-row{
     display: flex;
@@ -457,7 +470,7 @@ h3[id^="answer"]::before{
     justify-content: center;
     margin: 14px 0;
 }
-#nextQButton, #showRanking, #skipQButton, #downloadReportBtn{
+#nextQButton, #showRanking, #skipQButton, #downloadReportBtn, #cancelGameBtn{
     display: none;
     background: rgba(15,23,42,0.8);
     border: 1px solid var(--card-stroke);
@@ -471,7 +484,19 @@ h3[id^="answer"]::before{
 }
 #showRanking{ display: inline-block; }
 #downloadReportBtn{ background: rgba(16,185,129,0.22); }
-#nextQButton:hover, #showRanking:hover, #skipQButton:hover, #downloadReportBtn:hover{ transform: translateY(-2px); filter: brightness(1.05); }
+/* Cancelar partida y volver: se ve siempre; en la confirmación usa el rojo del logo de EduHoot (#da4453). */
+#cancelGameBtn{ display: inline-block; background: rgba(218,68,83,0.22); }
+/* Fila superior: siguiente pregunta (verde, como el informe) y ver ranking (amarillo). */
+.top-row{ display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 8px 0; }
+/* Siguiente pregunta y ver ranking se reparten el ancho, con los colores del logo de EduHoot. */
+#nextQButton, #showRanking{ flex: 1 1 0; min-width: 160px; font-size: 1.1em; }
+/* Verde translúcido, como el botón de informe y el de cancelar (mismo diseño que el resto). */
+#nextQButton{ background: rgba(16,185,129,0.22); color: var(--text-main); }
+#showRanking{ background: #fdbc4b; color: #4d4d4d; }
+#nextQButton:hover{ filter: brightness(1.08); }
+#showRanking:hover{ filter: brightness(1.05); }
+#cancelGameBtn.is-confirming{ background: #da4453; border-color: #da4453; color: #fff; }
+#nextQButton:hover, #showRanking:hover, #skipQButton:hover, #downloadReportBtn:hover, #cancelGameBtn:hover{ transform: translateY(-2px); filter: brightness(1.05); }
 
 #winnerTitle, #winner1, #winner2, #winner3, #winner4, #winner5{
     text-align: center;
@@ -507,12 +532,17 @@ h3[id^="answer"]::before{
     letter-spacing: -0.01em;
     padding: 4px 0;
 }
+/* Botón de siguiente (o ver clasificación) fijo arriba del modal: visible sin buscarlo ni desplazarse. */
 .ranking-next{
-    margin-top: 14px;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: block;
+    margin: 0 0 14px;
+    background: rgba(15,23,42,0.97);
     padding: 12px 18px;
     border-radius: 12px;
     border: 1px solid var(--card-stroke);
-    background: rgba(15,23,42,0.9);
     color: var(--text-main);
     font-weight: 700;
     cursor: pointer;
@@ -711,15 +741,15 @@ h3[id^="answer"]::before{
     font-weight: 700;
 }
 
-.results-bar--1 .results-bar-fill{ background: linear-gradient(135deg, #22c55e, #16a34a); }
-.results-bar--2 .results-bar-fill{ background: linear-gradient(135deg, #f97316, #ea580c); }
-.results-bar--3 .results-bar-fill{ background: linear-gradient(135deg, #3b82f6, #2563eb); }
-.results-bar--4 .results-bar-fill{ background: linear-gradient(135deg, #f43f5e, #e11d48); }
+.results-bar--1 .results-bar-fill{ background: linear-gradient(135deg, #15803d, #166534); }
+.results-bar--2 .results-bar-fill{ background: linear-gradient(135deg, #c2410c, #9a3412); }
+.results-bar--3 .results-bar-fill{ background: linear-gradient(135deg, #2563eb, #1d4ed8); }
+.results-bar--4 .results-bar-fill{ background: linear-gradient(135deg, #e11d48, #be123c); }
 
-.results-bar--1 .results-bar-key{ background: linear-gradient(135deg, #22c55e, #16a34a); }
-.results-bar--2 .results-bar-key{ background: linear-gradient(135deg, #f97316, #ea580c); }
-.results-bar--3 .results-bar-key{ background: linear-gradient(135deg, #3b82f6, #2563eb); }
-.results-bar--4 .results-bar-key{ background: linear-gradient(135deg, #f43f5e, #e11d48); }
+.results-bar--1 .results-bar-key{ background: linear-gradient(135deg, #15803d, #166534); }
+.results-bar--2 .results-bar-key{ background: linear-gradient(135deg, #c2410c, #9a3412); }
+.results-bar--3 .results-bar-key{ background: linear-gradient(135deg, #2563eb, #1d4ed8); }
+.results-bar--4 .results-bar-key{ background: linear-gradient(135deg, #e11d48, #be123c); }
 
 .results-bar--correct .results-bar-track{
     box-shadow: 0 0 0 2px rgba(16,185,129,0.55), var(--shadow);
@@ -751,3 +781,212 @@ h3[id^="answer"]::before{
     .modal-content{ margin: 10vh auto; padding: 18px 14px; max-height: 80vh; }
     .results-bar-track{ height: 170px; }
 }
+
+/* Avance automático durante la partida: desplegable encima de la fila de botones. */
+/* Fila de avance automático (izquierda) y casilla de puntuaciones (derecha), con los bordes de la fila de botones. */
+.auto-advance-row{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 6px 0;
+}
+.scores-toggle{
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+}
+.auto-advance-row select{ min-width: 120px; padding: 6px 10px; border-radius: 10px; }
+/* Cuenta atrás de los resultados, con pausa. */
+.auto-advance-bar{
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    margin: 0 0 12px; padding: 8px 12px; border-radius: 12px;
+    background: rgba(15,23,42,0.6); border: 1px solid var(--card-stroke);
+    font-weight: 700;
+}
+#autoPauseBtn{
+    padding: 8px 14px; border-radius: 10px; border: 1px solid var(--card-stroke);
+    background: rgba(253,188,75,0.22); color: var(--text-main); font-weight: 700; cursor: pointer;
+}
+#rankingNextBtn:disabled{ opacity: 0.6; cursor: not-allowed; }
+
+/* Saltar pregunta, Cancelar partida y Top 10: mismo tamaño en la fila superior de partida. */
+#skipQButton, #cancelGameBtn, #showRanking, #downloadReportBtn{
+    flex: 1 1 0;
+    min-width: 160px;
+    height: 48px;
+    padding: 0 22px;
+    box-sizing: border-box;
+    font-size: 1.1em;
+    line-height: 1;
+}
+
+/* Opciones de respuesta del anfitrión: 2 columnas (2×2) en pantalla ancha; una columna en pantallas estrechas o móviles. */
+.host-answers{
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    width: 100%;
+    max-width: 920px;
+    margin: 0 auto;
+}
+.host-answers h3{ max-width: none; margin: 0; }
+@media (max-width: 800px){
+    .host-answers{ grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Correspondencia (feature 7): columnas numeradas y con letras, y resultados por pareja. */
+.host-matching{
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+.host-matching-col{ display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.host-matching-item{
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-height: 54px;
+    padding: 8px 16px;
+    border-radius: 14px;
+    font-size: clamp(18px, 2.2vw, 30px);
+    font-weight: 700;
+    color: #14101f;
+    background: rgba(255,255,255,0.92);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.2);
+    overflow-wrap: anywhere;
+}
+.host-matching-code{
+    flex: none;
+    display: inline-grid;
+    place-items: center;
+    width: 1.6em;
+    height: 1.6em;
+    border-radius: 0.4em;
+    font-weight: 800;
+    color: #fff;
+    background: #14101f;
+}
+.results-matching{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 820px;
+    margin: 14px auto 0;
+    text-align: left;
+}
+.results-matching-hint,
+.results-matching-impostors,
+.results-matching-summary{ margin: 0; font-weight: 600; }
+.results-matching-row{
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 48px;
+    padding: 6px 14px;
+    overflow: hidden;
+    border-radius: 12px;
+    font-size: 20px;
+    font-weight: 700;
+    color: #14101f;
+    background: rgba(255,255,255,0.92);
+}
+.results-matching-row > *{ position: relative; }
+.results-matching-row .results-matching-fill{
+    position: absolute;
+    inset: 0 auto 0 0;
+    background: rgba(76,175,80,0.4);
+}
+.results-matching-text{ min-width: 0; overflow-wrap: anywhere; }
+.results-matching-pct{ margin-left: auto; font-variant-numeric: tabular-nums; }
+@media (max-width: 800px){
+    .host-matching{ gap: 12px; }
+    .host-matching-item{ font-size: 16px; min-height: 44px; padding: 6px 10px; }
+    .results-matching-row{ font-size: 16px; }
+}
+
+/* Enunciado, respuestas y resultados: el texto sin espacios que no cabe se parte. */
+#question,
+.host-answers h3,
+.results-bar-text,
+.results-free-line{
+    overflow-wrap: anywhere;
+    min-width: 0;
+}
+
+/* Casilla «Puntuaciones y ranking» más grande, como las de la sala. */
+.scores-toggle input[type="checkbox"]{
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: #ffee70;
+}
+
+/* Símbolo de estado junto al tiempo: pausa (⏸) si el profesor ha pausado; reproducción (▶) si la partida sigue. */
+.timer-state{
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+    vertical-align: middle;
+    margin-left: 14px;
+    /* El doble que abans (1.1em -> 2.2em), centrat amb els segundes que queden. */
+    font-size: 2.2em;
+}
+.timer-state svg{ fill: currentColor; }
+.timer-state.is-paused{ color: #ffee70; }
+.timer-state.is-playing{ color: #7ee787; }
+
+/* Text de la pregunta durant la compte arrere (opció «Mostrar pregunta durante la cuenta atrás»). */
+.question-countdown__preview{ margin: 0; max-width: 92%; font-weight: 800; font-size: clamp(22px, 4.2vh, 48px); line-height: 1.22; color: #f8fafc; text-shadow: 0 8px 28px rgba(0,0,0,0.45); overflow-wrap: anywhere; }
+/* Amb la pregunta: l'enunciat a dalt i la compte a sota, centrats i ocupant l'alt de la pantalla (si cap). */
+.question-countdown.is-visible.has-preview{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 18px;
+    width: min(1100px, 100%);
+    min-height: clamp(360px, calc(100vh - 290px), 900px);
+    margin: 12px auto;
+}
+/* Amb l'enunciat, el fons és un rectangle arrodonit (la el·lipse tallaria el text). */
+.question-countdown.is-visible.has-preview::before,
+.question-countdown.is-visible.has-preview::after{ inset: 0; border-radius: 28px; }
+
+/* Botons del vídeo de la fase (aula): el mateix estil i la mateixa fila que Saltar, Cancelar i Top 10. */
+#pauseVideoBtn, #finishVideoBtn{
+    display: inline-block;
+    flex: 1 1 0;
+    min-width: 160px;
+    height: 48px;
+    padding: 0 22px;
+    box-sizing: border-box;
+    background: rgba(15,23,42,0.8);
+    border: 1px solid var(--card-stroke);
+    color: var(--text-main);
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 1.1em;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    transition: transform 0.18s ease, filter 0.18s ease;
+}
+#pauseVideoBtn:hover, #finishVideoBtn:hover{ transform: translateY(-2px); filter: brightness(1.05); }
+
+/* Colors dels botons del vídeo: reproduir (verd, com Siguiente), pausar (ambre, com Top 10) i parar (roig, com Cancelar). */
+#pauseVideoBtn.is-stopped{ background: rgba(16,185,129,0.22); }
+#pauseVideoBtn.is-playing{ background: #fdbc4b; color: #4d4d4d; }
+#finishVideoBtn{ background: rgba(218,68,83,0.22); }
+
+/* Tiempo restante: el icono de pausa/reproducción y los segundos comparten el mismo centro vertical. */
+#timerText{ display: flex; align-items: center; justify-content: center; flex-wrap: wrap; column-gap: 0; }
+#timerText > span{ display: inline-flex; align-items: center; }
+#timerText .timer-state{ margin-left: 14px; }
+#timerText > span:first-child{ margin-right: 0.3em; }

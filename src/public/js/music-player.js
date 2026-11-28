@@ -91,6 +91,9 @@
         });
     }
 
+    // Valor desat quan l'alumnat (o l'anfitrió) tria «sense música». Comparteix la clau de les pistes.
+    var NONE_VALUE = 'off';
+
     function initBackgroundMusic(containerSelector, options){
         var container = document.querySelector(containerSelector);
         if(!container) return null;
@@ -109,6 +112,9 @@
         if(savedTrack && !trackExists(savedTrack)){
             savedTrack = null;
         }
+        // Opció «sense música» (noneOption): si estava triada, no es reprodueix ni es tria una pista a l'atzar.
+        var noneOption = !!opts.noneOption;
+        var noneSelected = noneOption && !!storageKey && safeGetStorage(storageKey) === NONE_VALUE;
 
         var savedVolume = volumeStorageKey ? safeGetStorage(volumeStorageKey) : null;
         var initialVolume = typeof opts.volume === 'number' ? opts.volume : 0.6;
@@ -121,12 +127,12 @@
             }
         }
 
-        var selectedTrack = (sharedTrack && trackExists(sharedTrack)) ? sharedTrack : savedTrack;
+        var selectedTrack = noneSelected ? null : ((sharedTrack && trackExists(sharedTrack)) ? sharedTrack : savedTrack);
         // Solo rotamos aleatoriamente si:
         // - randomStart está activo
         // - NO hay pista guardada
         // - NO hay defaultTrack explícito
-        var randomRotationEnabled = !!opts.randomStart && !savedTrack && !(opts.defaultTrack && trackExists(opts.defaultTrack));
+        var randomRotationEnabled = !!opts.randomStart && !savedTrack && !(opts.defaultTrack && trackExists(opts.defaultTrack)) && !noneSelected;
         var userSelectedTrack = false;
 
         function pickRandomTrack(excludeUrl){
@@ -141,7 +147,7 @@
             return defaultTracks.find(function(t){ return t.url !== excludeUrl; }).url;
         }
 
-        if(!selectedTrack){
+        if(!selectedTrack && !noneSelected){
             if(opts.defaultTrack && trackExists(opts.defaultTrack)){
                 selectedTrack = opts.defaultTrack;
             }else if(opts.randomStart){
@@ -214,15 +220,37 @@
             audio.preload = 'auto';
             audio.loop = !randomRotationEnabled;
             audio.volume = initialVolume;
-            audio.src = selectedTrack;
+            audio.src = selectedTrack || defaultTracks[0].url;
             audio.style.display = 'none';
             wrapper.appendChild(audio);
         }
         container.appendChild(wrapper);
         createTrackOptions(select, selectedTrack);
-        select.value = selectedTrack;
-        var isPlaying = !!sharedAudio && !sharedAudio.paused;
+        if(noneOption){
+            var noneOpt = document.createElement('option');
+            noneOpt.value = '';
+            noneOpt.textContent = labels.none || 'No music';
+            select.insertBefore(noneOpt, select.firstChild);
+        }
+        select.value = noneSelected ? '' : selectedTrack;
+        if(noneSelected && audio) audio.pause();
+        var isPlaying = !!sharedAudio && !sharedAudio.paused && !noneSelected;
         var autoplayBlocked = false;
+        // Sense música: el botó de reproduir no fa res fins que es tria una pista.
+        function updatePlayAvailability(){
+            playBtn.disabled = !!noneSelected;
+        }
+        function applyNoneSelection(){
+            noneSelected = true;
+            randomRotationEnabled = false;
+            pause();
+            select.value = '';
+            if(storageKey){
+                safeSetStorage(storageKey, NONE_VALUE);
+            }
+            updatePlayAvailability();
+        }
+
         function updatePlayButton(){
             if(isPlaying){
                 playBtn.textContent = labels.pause || 'Pause music';
@@ -244,6 +272,8 @@
         function applyUserTrackSelection(url){
             if(!url) return;
             userSelectedTrack = true;
+            noneSelected = false;
+            updatePlayAvailability();
             if(randomRotationEnabled){
                 randomRotationEnabled = false;
                 audio.loop = true;
@@ -288,6 +318,7 @@
 
         function play(forceAttempt){
             if(isPlaying) return Promise.resolve();
+            if(noneSelected) return Promise.resolve(false);
             if(autoplayBlocked && !forceAttempt){
                 return Promise.resolve(false);
             }
@@ -322,7 +353,10 @@
         });
         select.addEventListener('change', function(){
             var value = select.value;
-            if(!value) return;
+            if(!value){
+                if(noneOption) applyNoneSelection();
+                return;
+            }
             applyUserTrackSelection(value);
         });
         volumeInput.addEventListener('input', function(){
@@ -337,6 +371,8 @@
         });
         function updateLabels(newLabels){
             if(!newLabels) return;
+            // Se guardan para que el cambio entre reproducir y pausar use también el idioma nuevo.
+            labels = Object.assign({}, labels, newLabels);
             if(newLabels.title){
                 title.textContent = newLabels.title;
             }
@@ -352,6 +388,10 @@
             if(newLabels.next){
                 nextBtn.textContent = newLabels.next;
             }
+            if(newLabels.none){
+                var noneEl = select.querySelector('option[value=""]');
+                if(noneEl) noneEl.textContent = newLabels.none;
+            }
             if(isPlaying){
                 if(newLabels.pause){
                     playBtn.textContent = newLabels.pause;
@@ -362,6 +402,7 @@
                 }
             }
         }
+        updatePlayAvailability();
         updatePlayButton();
         return {
             audio: audio,

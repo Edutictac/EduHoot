@@ -1,5 +1,7 @@
 # Próximas mejoras de EduHoot
 
+> **Archivado (26-11-2026).** Documento histórico, no se mantiene al día. Documento de octubre de 2026. Para el estado actual, ver `docs/POPULAR_FEATURES.md`.
+
 ## Objetivo
 Convertir EduHoot en una biblioteca pública útil para más profesorado, mejorando descubrimiento de quizzes, calidad del contenido y facilidad para reutilizar materiales.
 

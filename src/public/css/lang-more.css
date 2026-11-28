@@ -1,0 +1,20 @@
+/* Desplegable «más idiomas» de los selectores de botones (languages.js): FR, DE, IT, PT, BG a la derecha de CA VA ES EN. */
+select.lang-more{
+    height: 32px;
+    width: auto;
+    min-width: 54px;
+    text-transform: uppercase;
+    padding: 0 6px;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-weight: 700;
+    font-size: inherit;
+    cursor: pointer;
+}
+select.lang-more:hover{ background: rgba(255,255,255,.14); }
+select.lang-more.active{ background: #ffe670; color: #1b1b1b; }
+select.lang-more option{ color: #14101f; background: #fff; font-weight: 600; }
+select.lang-more:focus-visible{ outline: 3px solid #fdbc4b; outline-offset: 2px; }

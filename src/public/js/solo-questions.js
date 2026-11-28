@@ -73,7 +73,7 @@
 
     function normalizeQuestionMeta(q){
         var type = (q && q.type) ? String(q.type).toLowerCase() : 'quiz';
-        var allowed = { 'quiz': true, 'multiple': true, 'true-false': true, 'short-answer': true, 'numeric': true, 'poll': true };
+        var allowed = { 'quiz': true, 'multiple': true, 'true-false': true, 'short-answer': true, 'numeric': true, 'poll': true, 'matching': true, 'order': true };
         if(!allowed[type]){
             type = 'quiz';
         }
@@ -92,6 +92,41 @@
             numericAnswer = parseLenientNumber(q && (q.numericAnswer !== undefined ? q.numericAnswer : (q.numero !== undefined ? q.numero : q.correct)));
             var tol = parseLenientNumber(q && (q.tolerance !== undefined ? q.tolerance : q.tolerancia));
             tolerance = (tol === null) ? 0 : tol;
+        }
+
+        // Correspondencia (feature 7): lógica compartida en matchingBoard.js (EduhootMatching).
+        if(type === 'matching'){
+            var pairs = EduhootMatching.parsePairs(q && q.pairs);
+            var layout = EduhootMatching.layoutOf(q);
+            return {
+                type: type,
+                correctAnswers: [1],
+                correct: 1,
+                acceptedAnswers: [],
+                numericAnswer: null,
+                tolerance: null,
+                pairs: pairs,
+                matchLeft: layout.matchLeft,
+                matchRight: layout.matchRight,
+                matchSolution: layout.matchSolution
+            };
+        }
+
+        // Ordenar (feature 7): la barreja de la partida (orderShown) i la puntuació de EduhootOrder.
+        if(type === 'order'){
+            var orderLayout = EduhootOrder.layoutOf(q);
+            return {
+                type: type,
+                correctAnswers: [1],
+                correct: 1,
+                acceptedAnswers: [],
+                numericAnswer: null,
+                tolerance: null,
+                items: orderLayout.items,
+                orderItems: orderLayout.orderItems,
+                orderShown: orderLayout.orderShown,
+                orderGrading: Number(q && q.orderGrading) || 0
+            };
         }
 
         // Para tipos no indexados mantenemos compatibilidad (correctAnswers = [1]).
@@ -137,7 +172,7 @@
     }
 
     function getVisibleAnswers(q, type){
-        if(type === 'short-answer' || type === 'numeric'){
+        if(type === 'short-answer' || type === 'numeric' || type === 'matching' || type === 'order'){
             return [];
         }
         var answers = Array.isArray(q && q.answers) ? q.answers.slice(0, 4) : ['', '', '', ''];
@@ -161,6 +196,44 @@
 
     function randomizeOneQuestion(q){
         var meta = normalizeQuestionMeta(q);
+
+        // Correspondencia: se baraja la columna derecha (nunca queda en el orden guardado).
+        if(meta.type === 'matching'){
+            var layout = EduhootMatching.shuffledLayout(meta.pairs);
+            return {
+                question: q.question || '',
+                answers: ['', '', '', ''],
+                correct: 1,
+                correctAnswers: [1],
+                type: 'matching',
+                image: q.image || '',
+                video: q.video || '',
+                time: q.time,
+                pairs: meta.pairs,
+                matchLeft: layout.matchLeft,
+                matchRight: layout.matchRight,
+                matchSolution: layout.matchSolution
+            };
+        }
+
+        // Ordenar: cada partida la baraja de nou (mai en l'ordre guardat).
+        if(meta.type === 'order'){
+            var orderShuffle = EduhootOrder.shuffledLayout(meta.items);
+            return {
+                question: q.question || '',
+                answers: ['', '', '', ''],
+                correct: 1,
+                correctAnswers: [1],
+                type: 'order',
+                image: q.image || '',
+                video: q.video || '',
+                time: q.time,
+                items: meta.items,
+                orderItems: orderShuffle.orderItems,
+                orderShown: orderShuffle.orderShown,
+                orderGrading: meta.orderGrading
+            };
+        }
 
         if(meta.type === 'short-answer' || meta.type === 'numeric'){
             return {
@@ -188,6 +261,7 @@
         var newAnswers = answerOrder.map(function(idx){ return answers[idx]; });
         if(meta.type === 'true-false'){
             while(newAnswers.length < 4) newAnswers.push('');
+            if(window.EduhootTf) newAnswers = window.EduhootTf.localize('true-false', newAnswers);
         }
         var newCorrectAnswers = [];
         meta.correctAnswers.forEach(function(orig){
@@ -216,10 +290,17 @@
         };
     }
 
-    function randomizeQuestions(baseQuestions){
+    // Las respuestas se barajan siempre; el orden de las preguntas solo si se pide.
+    function randomizeQuestions(baseQuestions, shuffleOrder){
         var source = Array.isArray(baseQuestions) ? baseQuestions : [];
-        var shuffledOrder = shuffleArray(source);
-        return shuffledOrder.map(function(q){ return randomizeOneQuestion(q); });
+        // origIdx: la posició de la pregunta al quiz original, perquè el mode fantasma la compare encara que el barajat la mogui.
+        var indexed = source.map(function(q, i){ return { q: q, i: i }; });
+        var shuffledOrder = shuffleOrder ? shuffleArray(indexed) : indexed.slice();
+        return shuffledOrder.map(function(item){
+            var r = randomizeOneQuestion(item.q);
+            r.origIdx = item.i;
+            return r;
+        });
     }
 
     function getQuestions(){

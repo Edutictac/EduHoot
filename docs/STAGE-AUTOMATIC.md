@@ -49,6 +49,16 @@ La imatge porta les etiquetes OCI `org.opencontainers.image.version` (nom de
 l'etiqueta) i `org.opencontainers.image.revision` (commit). Des del navegador,
 el peu de pàgina (o `GET /api/version`) mostra la versió de `package.json`.
 
+## Comprovar la CSP
+
+La CSP (`src/server/csp.js`) bloqueja els scripts i orígens no permesos.
+Després de publicar, recorreu les pantalles en navegadors reals (sobretot
+Safari d'iPhone/iPad) i mireu la consola: un bloqueig apareix com
+«Refused to …» o «Content Security Policy». Si algun origen legítim queda
+bloquejat, `CSP_REPORT_ONLY=true` en el `stage.env` la deixa en mode
+informe (només avisa) sense tocar el codi, mentre s'afig l'origen a
+`csp.js`.
+
 ## Accés: docents i alumnat
 
 ### Docents
@@ -105,7 +115,9 @@ idempotent per `devSeedKey` i es nega a executar-se si `NODE_ENV` no és
 
 ### Instal·lació real al VPS
 
-El stage de producció **no** utilitza el disseny systemd de `STAGE_SETUP.md`
+El stage de producció es desplega automàticament des de GitHub (compose,
+`eduhoot-stage.env`, actualitza cada 2 minuts). El disseny systemd de
+`STAGE_SETUP.md` ja no s'utiliza.
 (pensat per a una instal·lació manual i ja obsolet). Corre amb Docker a
 `/opt/eduhoot-stage/`:
 

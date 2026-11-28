@@ -6,12 +6,17 @@ try{
 }catch(e){
     socket = null;
 }
-var questionNum = 0; // Se incrementa cuando se añaden tarjetas
+// Estado reactivo: las tarjetas de preguntas y el idioma de la interfaz.
+var questionCards = Vue.reactive([]);
+var nextQuestionUid = 1;
 var editingId = null;
-var lang = EduhootLang.init();
-var knownTags = [];
-var isUserAuthenticated = false;
-var moodleExportPendingQuiz = null;
+var ui = Vue.reactive({ lang: EduhootLang.init() });
+// Barra fija de acciones: se ve si ni el bloque de arriba ni el de abajo están en pantalla y no hay teclado virtual.
+var fixedBar = Vue.reactive({ ready: false, topVisible: false, bottomVisible: false, keyboard: false });
+// Datos del quiz (panel «Configuración») y estado de la sesión. La plantilla
+// de Vue los lee y los escribe directamente (Subfase B, bloque 2).
+var form = Vue.reactive({ name: '', tags: '', visibility: 'private', allowClone: false, language: '', license: '', description: '' });
+var session = Vue.reactive({ authenticated: false, knownTags: [] });
 function getAnonOwnerToken(){
     var key = 'anonOwnerToken';
     var existing = localStorage.getItem(key);
@@ -24,7 +29,7 @@ function getAnonOwnerToken(){
 }
 
 function rememberClaimableQuizId(id){
-    if(id === undefined || id === null || isUserAuthenticated) return;
+    if(id === undefined || id === null || session.authenticated) return;
     try{
         var stored = JSON.parse(localStorage.getItem('localQuizzes') || '[]');
         var idText = String(id);
@@ -38,7 +43,7 @@ function rememberClaimableQuizId(id){
 
 var i18n = {
     es: {
-        back: 'Volver',
+        back: 'Biblioteca',
         title: 'Creador de quizzes',
         subtitle: 'Diseña las preguntas y guarda tu juego para lanzarlo cuando quieras.',
         langLabel: 'Idioma',
@@ -63,10 +68,6 @@ var i18n = {
         addQuestion: '+ Añadir pregunta',
         btnSave: 'Guardar quiz',
         btnPlayLocal: 'Jugar sin guardar',
-        btnExportCsv: 'Exportar CSV',
-        btnExportPdf: 'Exportar PDF',
-        btnExportPdfNoAnswers: 'Exportar PDF (sin respuestas)',
-        btnExportMoodleXml: 'Exportar XML (Moodle)',
         btnCancel: 'Cancelar y volver',
         localInfo: 'Sin sesión: “Guardar” o “Jugar sin guardar” crean un quiz anónimo. Si es Solo yo caduca en 24h; Por enlace/Público se guarda globalmente. Con sesión se guarda en tu usuario.',
         questionLabel: 'Enunciado',
@@ -79,6 +80,40 @@ var i18n = {
         questionTypeShort: 'Respuesta corta',
         questionTypeNumeric: 'Numérica',
         questionTypePoll: 'Encuesta (sin puntuación)',
+        questionTypeMatching: 'Correspondencia (emparejar)',
+        matchingHint: 'Escribe cada pareja. En la partida, la columna derecha se baraja.',
+        matchingLeft: 'Izquierda',
+        matchingRight: 'Derecha',
+        matchingAddPair: '+ Añadir pareja',
+        matchingImpostors: 'Impostoras: elementos de la derecha sin pareja (opcional)',
+        matchingAddImpostor: '+ Añadir impostora',
+        matchingCount: '{n} de 8 elementos en la columna derecha',
+        matchingRemove: 'Quitar',
+        matchingErrorPairs: 'Pregunta {n}: la correspondencia necesita al menos 2 parejas completas.',
+        matchingErrorIncomplete: 'Pregunta {n}: completa las dos columnas de cada pareja o quítala.',
+        matchingErrorDuplicate: 'Pregunta {n}: los elementos de la derecha no se pueden repetir.',
+        matchingErrorMax: 'Pregunta {n}: como máximo 8 elementos en la columna derecha.',
+        questionTypeOrder: 'Ordenar',
+        orderHint: 'Escribe los elementos en el orden correcto. En la partida, se barajan.',
+        orderItemLabel: 'Elemento {n}',
+        orderAddItem: '+ Añadir elemento',
+        orderCount: '{n} de 8 elementos',
+        orderGradingLabel: 'Puntuación',
+        orderGradingAbsolute: 'Posición absoluta (parcial)',
+        orderGradingAll: 'Todo o nada',
+        orderGradingRelativeCorrect: 'Relativa a la posición correcta',
+        orderGradingNextExclude: 'Relativa al siguiente (sin contar el último)',
+        orderGradingNextInclude: 'Relativa al siguiente (contando el último)',
+        orderGradingOnePrevNext: 'Relativa al anterior y al siguiente',
+        orderGradingAllPrevNext: 'Relativa a todos los anteriores y siguientes',
+        orderGradingLongestOrdered: 'Subconjunto ordenado más largo',
+        orderGradingLongestContiguous: 'Subconjunto contiguo más largo',
+        orderLayoutLabel: 'Disposición',
+        orderLayoutVertical: 'Vertical',
+        orderLayoutHorizontal: 'Horizontal',
+        orderErrorItems: 'Pregunta {n}: ordenar necesita al menos 2 elementos.',
+        orderErrorMax: 'Pregunta {n}: como máximo 8 elementos.',
+        orderErrorDuplicate: 'Pregunta {n}: los elementos no se pueden repetir.',
         questionTypeMultiHint: 'Marca todas las respuestas correctas.',
         questionTimeLabel: 'Tiempo límite (segundos)',
         shortAnswersLabel: 'Respuestas válidas (separadas por |)',
@@ -99,24 +134,11 @@ var i18n = {
         saveError: 'No se pudo guardar el quiz.',
         saveOk: 'Quiz actualizado',
         confirmCancel: '¿Seguro que quieres salir? Se perderán los cambios.',
-        moodleModalTitle: 'Importar en Moodle',
-        moodleModalDescription: 'Revisa estos pasos antes de descargar el XML para subirlo a tu curso.',
-        moodleModalStep1: 'Accede al curso de Moodle donde quieres importar el quiz.',
-        moodleModalStep2: 'Ve a Administración del curso > Importar y selecciona el tipo "Moodle XML".',
-        moodleModalStep3: 'Sube el archivo descargado y sigue el asistente para confirmar las preguntas.',
-        moodleModalCancel: 'Cerrar',
-        moodleModalConfirm: 'Descargar XML',
-        pdfTags: 'Etiquetas',
-        pdfCorrect: 'Correcta',
-        pdfAcceptedAnswers: 'Respuestas válidas',
-        pdfNumericAnswer: 'Respuesta',
-        pdfTolerance: 'Tolerancia',
-        pdfImage: 'Imagen',
-        pdfVideo: 'Video',
-        pdfMissingLib: 'No se pudo generar el PDF (librería no disponible).'
+        realtimeError: 'No se pudo conectar con el servidor en tiempo real. Recarga la página e inténtalo de nuevo.',
+        fixedActionsLabel: 'Acciones del quiz',
     },
     en: {
-        back: 'Back',
+        back: 'Library',
         title: 'Quiz builder',
         subtitle: 'Design questions and save your game to launch whenever you want.',
         langLabel: 'Language',
@@ -141,10 +163,6 @@ var i18n = {
         addQuestion: '+ Add question',
         btnSave: 'Save quiz',
         btnPlayLocal: 'Play without saving',
-        btnExportCsv: 'Export CSV',
-        btnExportPdf: 'Export PDF',
-        btnExportPdfNoAnswers: 'Export PDF (no answers)',
-        btnExportMoodleXml: 'Export Moodle XML',
         btnCancel: 'Cancel and go back',
         localInfo: 'Without session: “Save” or “Play without saving” create an anonymous quiz. "Only me" expires in 24h; "By link/Public" is stored globally. With session, it is saved to your user.',
         questionLabel: 'Question',
@@ -157,6 +175,40 @@ var i18n = {
         questionTypeShort: 'Short answer',
         questionTypeNumeric: 'Numeric',
         questionTypePoll: 'Poll (unscored)',
+        questionTypeMatching: 'Matching (pair up)',
+        matchingHint: 'Write each pair. During the game, the right column is shuffled.',
+        matchingLeft: 'Left',
+        matchingRight: 'Right',
+        matchingAddPair: '+ Add pair',
+        matchingImpostors: 'Distractors: right-column items with no pair (optional)',
+        matchingAddImpostor: '+ Add distractor',
+        matchingCount: '{n} of 8 items in the right column',
+        matchingRemove: 'Remove',
+        matchingErrorPairs: 'Question {n}: matching needs at least 2 complete pairs.',
+        matchingErrorIncomplete: 'Question {n}: fill in both columns of each pair or remove it.',
+        matchingErrorDuplicate: 'Question {n}: right-column items cannot be repeated.',
+        matchingErrorMax: 'Question {n}: at most 8 items in the right column.',
+        questionTypeOrder: 'Order (sort)',
+        orderHint: 'Write the items in the correct order. During the game, they are shuffled.',
+        orderItemLabel: 'Item {n}',
+        orderAddItem: '+ Add item',
+        orderCount: '{n} of 8 items',
+        orderGradingLabel: 'Scoring',
+        orderGradingAbsolute: 'Absolute position (partial)',
+        orderGradingAll: 'All or nothing',
+        orderGradingRelativeCorrect: 'Relative to the correct position',
+        orderGradingNextExclude: 'Relative to the next item (not counting the last)',
+        orderGradingNextInclude: 'Relative to the next item (counting the last)',
+        orderGradingOnePrevNext: 'Relative to the previous and next items',
+        orderGradingAllPrevNext: 'Relative to all previous and next items',
+        orderGradingLongestOrdered: 'Longest ordered subset',
+        orderGradingLongestContiguous: 'Longest contiguous subset',
+        orderLayoutLabel: 'Layout',
+        orderLayoutVertical: 'Vertical',
+        orderLayoutHorizontal: 'Horizontal',
+        orderErrorItems: 'Question {n}: ordering needs at least 2 items.',
+        orderErrorMax: 'Question {n}: at most 8 items.',
+        orderErrorDuplicate: 'Question {n}: items cannot be repeated.',
         questionTypeMultiHint: 'Check every answer that counts.',
         questionTimeLabel: 'Time limit (seconds)',
         shortAnswersLabel: 'Accepted answers (separated by |)',
@@ -177,24 +229,581 @@ var i18n = {
         saveError: 'Could not save quiz.',
         saveOk: 'Quiz updated',
         confirmCancel: 'Are you sure? Changes will be lost.',
-        moodleModalTitle: 'Import into Moodle',
-        moodleModalDescription: 'Follow these steps before downloading the XML to upload it to your course.',
-        moodleModalStep1: 'Open the Moodle course where you want to import the quiz.',
-        moodleModalStep2: 'Go to Course administration > Import and choose "Moodle XML" as the source.',
-        moodleModalStep3: 'Upload this file and follow the wizard to review questions and settings.',
-        moodleModalCancel: 'Close',
-        moodleModalConfirm: 'Download XML',
-        pdfTags: 'Tags',
-        pdfCorrect: 'Correct',
-        pdfAcceptedAnswers: 'Accepted answers',
-        pdfNumericAnswer: 'Answer',
-        pdfTolerance: 'Tolerance',
-        pdfImage: 'Image',
-        pdfVideo: 'Video',
-        pdfMissingLib: 'Could not generate the PDF (library not available).'
+        realtimeError: 'Could not connect to the real-time server. Reload the page and try again.',
+        fixedActionsLabel: 'Quiz actions',
+    },
+    de: {
+        back: 'Bibliothek',
+        title: 'Quiz-Editor',
+        subtitle: 'Entwirf Fragen und speichere dein Spiel, um es jederzeit zu starten.',
+        langLabel: 'Sprache',
+        configEyebrow: 'Einstellungen',
+        configTitle: 'Quiz-Daten',
+        configDesc: 'Gib ihm einen Namen, um ihn in der Bibliothek zu erkennen.',
+        quizTitle: 'Quiz-Titel',
+        tagsLabel: 'Tags (durch Kommas getrennt)',
+        visibilityLabel: 'Sichtbarkeit des Quiz',
+        visibilityPrivate: 'Nur ich (privat)',
+        visibilityUnlisted: 'Per Link/ID',
+        visibilityPublic: 'Öffentlich in der Bibliothek',
+        publicWarning: 'Öffentliche Quiz werden Teil der globalen Bibliothek und können später nur nach Anmeldung bearbeitet werden.',
+        allowCloneLabel: 'Kopieren erlauben',
+        languageLabel: 'Sprache des Inhalts (optional)',
+        licenseLabel: 'Lizenz (optional)',
+        descriptionLabel: 'Beschreibung (optional)',
+        suggestedTags: 'Vorgeschlagene Tags (zum Hinzufügen tippen)',
+        questionsEyebrow: 'Fragen',
+        questionsTitle: 'Fragen erstellen',
+        questionsDesc: 'Füge Antworten hinzu und wähle für jede Frage einen Modus.',
+        addQuestion: '+ Frage hinzufügen',
+        btnSave: 'Quiz speichern',
+        btnPlayLocal: 'Ohne Speichern spielen',
+        btnCancel: 'Abbrechen und zurück',
+        localInfo: 'Ohne Sitzung erzeugen „Speichern“ oder „Ohne Speichern spielen“ ein anonymes Quiz. „Nur ich“ läuft nach 24 h ab; „Per Link/Öffentlich“ wird global gespeichert. Mit Sitzung wird es in deinem Konto gespeichert.',
+        questionLabel: 'Frage',
+        answerLabel: 'Antwort',
+        correctLabel: 'Richtige Antwort (1-4)',
+        questionTypeLabel: 'Fragemodus',
+        questionTypeSingle: 'Quiz (1 richtig)',
+        questionTypeMultiple: 'Mehrere Antworten',
+        questionTypeTf: 'Wahr / Falsch',
+        questionTypeShort: 'Kurzantwort',
+        questionTypeNumeric: 'Zahl',
+        questionTypePoll: 'Umfrage (ohne Punkte)',
+        questionTypeMatching: 'Zuordnen (Paare bilden)',
+        matchingHint: 'Schreibe jedes Paar. Im Spiel wird die rechte Spalte gemischt.',
+        matchingLeft: 'Links',
+        matchingRight: 'Rechts',
+        matchingAddPair: '+ Paar hinzufügen',
+        matchingImpostors: 'Ablenker: Elemente der rechten Spalte ohne Paar (optional)',
+        matchingAddImpostor: '+ Ablenker hinzufügen',
+        matchingCount: '{n} von 8 Elementen in der rechten Spalte',
+        matchingRemove: 'Entfernen',
+        matchingErrorPairs: 'Frage {n}: Die Zuordnung braucht mindestens 2 vollständige Paare.',
+        matchingErrorIncomplete: 'Frage {n}: Fülle beide Spalten jedes Paars aus oder entferne es.',
+        matchingErrorDuplicate: 'Frage {n}: Elemente der rechten Spalte dürfen sich nicht wiederholen.',
+        matchingErrorMax: 'Frage {n}: höchstens 8 Elemente in der rechten Spalte.',
+        questionTypeOrder: 'Reihenfolge (sortieren)',
+        orderHint: 'Schreibe die Elemente in der richtigen Reihenfolge. Im Spiel werden sie gemischt.',
+        orderItemLabel: 'Element {n}',
+        orderAddItem: '+ Element hinzufügen',
+        orderCount: '{n} von 8 Elementen',
+        orderGradingLabel: 'Bewertung',
+        orderGradingAbsolute: 'Absolute Position (teilweise)',
+        orderGradingAll: 'Alles oder nichts',
+        orderGradingRelativeCorrect: 'Relativ zur richtigen Position',
+        orderGradingNextExclude: 'Relativ zum nächsten Element (ohne das letzte)',
+        orderGradingNextInclude: 'Relativ zum nächsten Element (mit dem letzten)',
+        orderGradingOnePrevNext: 'Relativ zum vorherigen und nächsten Element',
+        orderGradingAllPrevNext: 'Relativ zu allen vorherigen und nächsten Elementen',
+        orderGradingLongestOrdered: 'Längste geordnete Teilmenge',
+        orderGradingLongestContiguous: 'Längste zusammenhängende Teilmenge',
+        orderLayoutLabel: 'Anordnung',
+        orderLayoutVertical: 'Vertikal',
+        orderLayoutHorizontal: 'Horizontal',
+        orderErrorItems: 'Frage {n}: Die Reihenfolge braucht mindestens 2 Elemente.',
+        orderErrorMax: 'Frage {n}: höchstens 8 Elemente.',
+        orderErrorDuplicate: 'Frage {n}: Elemente dürfen sich nicht wiederholen.',
+        questionTypeMultiHint: 'Markiere jede Antwort, die zählt.',
+        questionTimeLabel: 'Zeitlimit (Sekunden)',
+        shortAnswersLabel: 'Akzeptierte Antworten (getrennt durch |)',
+        numericAnswerLabel: 'Zahlenantwort',
+        numericToleranceLabel: 'Toleranz (±)',
+        imageLabel: 'Bild (optionale URL)',
+        videoLabel: 'Video (optionale URL)',
+        namePlaceholder: 'z. B. Wiederholung Energie',
+        tagsPlaceholder: 'z. B. Physik, Klasse8, Energie',
+        languagePlaceholder: 'z. B. Deutsch, español, català',
+        licensePlaceholder: 'z. B. CC BY-SA 4.0',
+        descriptionPlaceholder: 'Kurze Beschreibung des Quiz',
+        urlPlaceholder: 'https://...',
+        playErrorName: 'Gib einen Namen an',
+        playErrorTags: 'Füge mindestens einen Tag hinzu',
+        playErrorQuestions: 'Füge Fragen hinzu',
+        loadError: 'Quiz konnte nicht geladen werden.',
+        saveError: 'Quiz konnte nicht gespeichert werden.',
+        saveOk: 'Quiz aktualisiert',
+        confirmCancel: 'Sicher? Änderungen gehen verloren.',
+        realtimeError: 'Verbindung zum Echtzeit-Server nicht möglich. Lade die Seite neu und versuche es erneut.',
+        fixedActionsLabel: 'Quiz-Aktionen'
+    },
+    it: {
+        back: 'Libreria',
+        title: 'Editor di quiz',
+        subtitle: 'Crea le domande e salva la tua partita per avviarla quando vuoi.',
+        langLabel: 'Lingua',
+        configEyebrow: 'Impostazioni',
+        configTitle: 'Dati del quiz',
+        configDesc: 'Dagli un nome per riconoscerlo nella libreria.',
+        quizTitle: 'Titolo del quiz',
+        tagsLabel: 'Tag (separati da virgole)',
+        visibilityLabel: 'Visibilità del quiz',
+        visibilityPrivate: 'Solo io (privato)',
+        visibilityUnlisted: 'Tramite link/ID',
+        visibilityPublic: 'Pubblico nella libreria',
+        publicWarning: 'I quiz pubblici entrano nella libreria globale e in seguito non si possono modificare senza accedere.',
+        allowCloneLabel: 'Consenti la copia',
+        languageLabel: 'Lingua del contenuto (facoltativa)',
+        licenseLabel: 'Licenza (facoltativa)',
+        descriptionLabel: 'Descrizione (facoltativa)',
+        suggestedTags: 'Tag suggeriti (tocca per aggiungere)',
+        questionsEyebrow: 'Domande',
+        questionsTitle: 'Crea le domande',
+        questionsDesc: 'Aggiungi le risposte e scegli una modalità per ogni domanda.',
+        addQuestion: '+ Aggiungi domanda',
+        btnSave: 'Salva il quiz',
+        btnPlayLocal: 'Gioca senza salvare',
+        btnCancel: 'Annulla e torna indietro',
+        localInfo: 'Senza sessione, «Salva» o «Gioca senza salvare» creano un quiz anonimo. «Solo io» scade dopo 24 h; «Tramite link/Pubblico» viene salvato globalmente. Con una sessione viene salvato nel tuo account.',
+        questionLabel: 'Domanda',
+        answerLabel: 'Risposta',
+        correctLabel: 'Risposta corretta (1-4)',
+        questionTypeLabel: 'Modalità della domanda',
+        questionTypeSingle: 'Quiz (1 corretta)',
+        questionTypeMultiple: 'Risposte multiple',
+        questionTypeTf: 'Vero / Falso',
+        questionTypeShort: 'Risposta breve',
+        questionTypeNumeric: 'Numerica',
+        questionTypePoll: 'Sondaggio (senza punti)',
+        questionTypeMatching: 'Abbinamento (coppie)',
+        matchingHint: 'Scrivi ogni coppia. Durante la partita la colonna di destra viene mescolata.',
+        matchingLeft: 'Sinistra',
+        matchingRight: 'Destra',
+        matchingAddPair: '+ Aggiungi coppia',
+        matchingImpostors: 'Distrattori: elementi della colonna di destra senza coppia (facoltativo)',
+        matchingAddImpostor: '+ Aggiungi distrattore',
+        matchingCount: '{n} su 8 elementi nella colonna di destra',
+        matchingRemove: 'Rimuovi',
+        matchingErrorPairs: 'Domanda {n}: l\'abbinamento richiede almeno 2 coppie complete.',
+        matchingErrorIncomplete: 'Domanda {n}: compila entrambe le colonne di ogni coppia o rimuovila.',
+        matchingErrorDuplicate: 'Domanda {n}: gli elementi della colonna di destra non possono ripetersi.',
+        matchingErrorMax: 'Domanda {n}: al massimo 8 elementi nella colonna di destra.',
+        questionTypeOrder: 'Ordine (ordinare)',
+        orderHint: 'Scrivi gli elementi nell\'ordine corretto. Durante la partita vengono mescolati.',
+        orderItemLabel: 'Elemento {n}',
+        orderAddItem: '+ Aggiungi elemento',
+        orderCount: '{n} su 8 elementi',
+        orderGradingLabel: 'Valutazione',
+        orderGradingAbsolute: 'Posizione assoluta (parziale)',
+        orderGradingAll: 'Tutto o niente',
+        orderGradingRelativeCorrect: 'Relativa alla posizione corretta',
+        orderGradingNextExclude: 'Relativa all\'elemento successivo (escluso l\'ultimo)',
+        orderGradingNextInclude: 'Relativa all\'elemento successivo (compreso l\'ultimo)',
+        orderGradingOnePrevNext: 'Relativa agli elementi precedente e successivo',
+        orderGradingAllPrevNext: 'Relativa a tutti gli elementi precedenti e successivi',
+        orderGradingLongestOrdered: 'Sottoinsieme ordinato più lungo',
+        orderGradingLongestContiguous: 'Sottoinsieme contiguo più lungo',
+        orderLayoutLabel: 'Disposizione',
+        orderLayoutVertical: 'Verticale',
+        orderLayoutHorizontal: 'Orizzontale',
+        orderErrorItems: 'Domanda {n}: l\'ordine richiede almeno 2 elementi.',
+        orderErrorMax: 'Domanda {n}: al massimo 8 elementi.',
+        orderErrorDuplicate: 'Domanda {n}: gli elementi non possono ripetersi.',
+        questionTypeMultiHint: 'Seleziona ogni risposta valida.',
+        questionTimeLabel: 'Limite di tempo (secondi)',
+        shortAnswersLabel: 'Risposte accettate (separate da |)',
+        numericAnswerLabel: 'Risposta numerica',
+        numericToleranceLabel: 'Tolleranza (±)',
+        imageLabel: 'Immagine (URL facoltativo)',
+        videoLabel: 'Video (URL facoltativo)',
+        namePlaceholder: 'es. Ripasso sull\'energia',
+        tagsPlaceholder: 'es. fisica, terza, energia',
+        languagePlaceholder: 'es. italiano, español, català',
+        licensePlaceholder: 'es. CC BY-SA 4.0',
+        descriptionPlaceholder: 'Breve descrizione del quiz',
+        urlPlaceholder: 'https://...',
+        playErrorName: 'Dagli un nome',
+        playErrorTags: 'Aggiungi almeno un tag',
+        playErrorQuestions: 'Aggiungi domande',
+        loadError: 'Impossibile caricare il quiz.',
+        saveError: 'Impossibile salvare il quiz.',
+        saveOk: 'Quiz aggiornato',
+        confirmCancel: 'Sicuro? Le modifiche andranno perse.',
+        realtimeError: 'Impossibile connettersi al server in tempo reale. Ricarica la pagina e riprova.',
+        fixedActionsLabel: 'Azioni del quiz'
+    },
+    pt: {
+        back: 'Biblioteca',
+        title: 'Editor de questionários',
+        subtitle: 'Crie perguntas e guarde o seu jogo para o iniciar quando quiser.',
+        langLabel: 'Idioma',
+        configEyebrow: 'Definições',
+        configTitle: 'Dados do questionário',
+        configDesc: 'Dê-lhe um nome para o identificar na biblioteca.',
+        quizTitle: 'Título do questionário',
+        tagsLabel: 'Etiquetas (separadas por vírgulas)',
+        visibilityLabel: 'Visibilidade do questionário',
+        visibilityPrivate: 'Só eu (privado)',
+        visibilityUnlisted: 'Por ligação/ID',
+        visibilityPublic: 'Público na biblioteca',
+        publicWarning: 'Os questionários públicos passam a fazer parte da biblioteca global e não podem ser editados mais tarde sem iniciar sessão.',
+        allowCloneLabel: 'Permitir cópia',
+        languageLabel: 'Idioma do conteúdo (opcional)',
+        licenseLabel: 'Licença (opcional)',
+        descriptionLabel: 'Descrição (opcional)',
+        suggestedTags: 'Etiquetas sugeridas (toque para adicionar)',
+        questionsEyebrow: 'Perguntas',
+        questionsTitle: 'Crie as perguntas',
+        questionsDesc: 'Adicione respostas e escolha um modo para cada pergunta.',
+        addQuestion: '+ Adicionar pergunta',
+        btnSave: 'Guardar questionário',
+        btnPlayLocal: 'Jogar sem guardar',
+        btnCancel: 'Cancelar e voltar',
+        localInfo: 'Sem sessão, «Guardar» ou «Jogar sem guardar» criam um questionário anónimo. «Só eu» expira em 24 h; «Por ligação/Público» fica guardado globalmente. Com sessão, é guardado na sua conta.',
+        questionLabel: 'Pergunta',
+        answerLabel: 'Resposta',
+        correctLabel: 'Resposta correta (1-4)',
+        questionTypeLabel: 'Modo da pergunta',
+        questionTypeSingle: 'Quiz (1 correta)',
+        questionTypeMultiple: 'Respostas múltiplas',
+        questionTypeTf: 'Verdadeiro / Falso',
+        questionTypeShort: 'Resposta curta',
+        questionTypeNumeric: 'Numérica',
+        questionTypePoll: 'Sondagem (sem pontos)',
+        questionTypeMatching: 'Associação (pares)',
+        matchingHint: 'Escreva cada par. Durante o jogo, a coluna da direita é misturada.',
+        matchingLeft: 'Esquerda',
+        matchingRight: 'Direita',
+        matchingAddPair: '+ Adicionar par',
+        matchingImpostors: 'Distratores: itens da coluna da direita sem par (opcional)',
+        matchingAddImpostor: '+ Adicionar distrator',
+        matchingCount: '{n} de 8 itens na coluna da direita',
+        matchingRemove: 'Remover',
+        matchingErrorPairs: 'Pergunta {n}: a associação precisa de pelo menos 2 pares completos.',
+        matchingErrorIncomplete: 'Pergunta {n}: preencha as duas colunas de cada par ou remova-o.',
+        matchingErrorDuplicate: 'Pergunta {n}: os itens da coluna da direita não podem repetir-se.',
+        matchingErrorMax: 'Pergunta {n}: no máximo 8 itens na coluna da direita.',
+        questionTypeOrder: 'Ordem (ordenar)',
+        orderHint: 'Escreva os itens pela ordem correta. Durante o jogo são misturados.',
+        orderItemLabel: 'Item {n}',
+        orderAddItem: '+ Adicionar item',
+        orderCount: '{n} de 8 itens',
+        orderGradingLabel: 'Pontuação',
+        orderGradingAbsolute: 'Posição absoluta (parcial)',
+        orderGradingAll: 'Tudo ou nada',
+        orderGradingRelativeCorrect: 'Relativa à posição correta',
+        orderGradingNextExclude: 'Relativa ao item seguinte (sem contar o último)',
+        orderGradingNextInclude: 'Relativa ao item seguinte (contando o último)',
+        orderGradingOnePrevNext: 'Relativa aos itens anterior e seguinte',
+        orderGradingAllPrevNext: 'Relativa a todos os itens anteriores e seguintes',
+        orderGradingLongestOrdered: 'Subconjunto ordenado mais longo',
+        orderGradingLongestContiguous: 'Subconjunto contíguo mais longo',
+        orderLayoutLabel: 'Disposição',
+        orderLayoutVertical: 'Vertical',
+        orderLayoutHorizontal: 'Horizontal',
+        orderErrorItems: 'Pergunta {n}: a ordenação precisa de pelo menos 2 itens.',
+        orderErrorMax: 'Pergunta {n}: no máximo 8 itens.',
+        orderErrorDuplicate: 'Pergunta {n}: os itens não podem repetir-se.',
+        questionTypeMultiHint: 'Marque todas as respostas que contam.',
+        questionTimeLabel: 'Limite de tempo (segundos)',
+        shortAnswersLabel: 'Respostas aceites (separadas por |)',
+        numericAnswerLabel: 'Resposta numérica',
+        numericToleranceLabel: 'Tolerância (±)',
+        imageLabel: 'Imagem (URL opcional)',
+        videoLabel: 'Vídeo (URL opcional)',
+        namePlaceholder: 'ex.: Revisão sobre energia',
+        tagsPlaceholder: 'ex.: física, 8ano, energia',
+        languagePlaceholder: 'ex.: português, español, català',
+        licensePlaceholder: 'ex.: CC BY-SA 4.0',
+        descriptionPlaceholder: 'Breve descrição do questionário',
+        urlPlaceholder: 'https://...',
+        playErrorName: 'Dê-lhe um nome',
+        playErrorTags: 'Adicione pelo menos uma etiqueta',
+        playErrorQuestions: 'Adicione perguntas',
+        loadError: 'Não foi possível carregar o questionário.',
+        saveError: 'Não foi possível guardar o questionário.',
+        saveOk: 'Questionário atualizado',
+        confirmCancel: 'Tem a certeza? As alterações perder-se-ão.',
+        realtimeError: 'Não foi possível ligar ao servidor em tempo real. Recarregue a página e tente novamente.',
+        fixedActionsLabel: 'Ações do questionário'
+    },
+    bg: {
+        back: 'Библиотека',
+        title: 'Създател на куизове',
+        subtitle: 'Създай въпроси и запази играта си, за да я стартираш когато поискаш.',
+        langLabel: 'Език',
+        configEyebrow: 'Настройки',
+        configTitle: 'Данни за куиза',
+        configDesc: 'Дай му име, за да го разпознаваш в библиотеката.',
+        quizTitle: 'Заглавие на куиза',
+        tagsLabel: 'Тагове (разделени със запетаи)',
+        visibilityLabel: 'Видимост на куиза',
+        visibilityPrivate: 'Само аз (личен)',
+        visibilityUnlisted: 'Чрез връзка/ID',
+        visibilityPublic: 'Публичен в библиотеката',
+        publicWarning: 'Публичните куизове стават част от глобалната библиотека и по-късно не могат да се редактират, освен ако не влезеш в профила си.',
+        allowCloneLabel: 'Разреши копиране',
+        languageLabel: 'Език на съдържанието (по избор)',
+        licenseLabel: 'Лиценз (по избор)',
+        descriptionLabel: 'Описание (по избор)',
+        suggestedTags: 'Предложени тагове (докосни, за да добавиш)',
+        questionsEyebrow: 'Въпроси',
+        questionsTitle: 'Създай въпросите',
+        questionsDesc: 'Добави отговори и избери режим за всеки въпрос.',
+        addQuestion: '+ Добави въпрос',
+        btnSave: 'Запази куиза',
+        btnPlayLocal: 'Играй без запазване',
+        btnCancel: 'Отказ и назад',
+        localInfo: 'Без сесия „Запази“ или „Играй без запазване“ създават анонимен куиз. „Само аз“ изтича след 24 ч; „Чрез връзка/Публичен“ се съхранява глобално. С влязъл профил се запазва в акаунта ти.',
+        questionLabel: 'Въпрос',
+        answerLabel: 'Отговор',
+        correctLabel: 'Верен отговор (1-4)',
+        questionTypeLabel: 'Режим на въпроса',
+        questionTypeSingle: 'Куиз (1 вярен)',
+        questionTypeMultiple: 'Няколко отговора',
+        questionTypeTf: 'Вярно / Грешно',
+        questionTypeShort: 'Кратък отговор',
+        questionTypeNumeric: 'Число',
+        questionTypePoll: 'Анкета (без точки)',
+        questionTypeMatching: 'Съответствие (двойки)',
+        matchingHint: 'Напиши всяка двойка. По време на играта дясната колона се разбърква.',
+        matchingLeft: 'Ляво',
+        matchingRight: 'Дясно',
+        matchingAddPair: '+ Добави двойка',
+        matchingImpostors: 'Разсейвания: елементи от дясната колона без двойка (по избор)',
+        matchingAddImpostor: '+ Добави разсейване',
+        matchingCount: '{n} от 8 елемента в дясната колона',
+        matchingRemove: 'Премахни',
+        matchingErrorPairs: 'Въпрос {n}: съответствието изисква поне 2 пълни двойки.',
+        matchingErrorIncomplete: 'Въпрос {n}: попълни и двете колони на всяка двойка или я премахни.',
+        matchingErrorDuplicate: 'Въпрос {n}: елементите в дясната колона не могат да се повтарят.',
+        matchingErrorMax: 'Въпрос {n}: най-много 8 елемента в дясната колона.',
+        questionTypeOrder: 'Подредба (сортиране)',
+        orderHint: 'Напиши елементите в правилния ред. По време на играта се разбъркват.',
+        orderItemLabel: 'Елемент {n}',
+        orderAddItem: '+ Добави елемент',
+        orderCount: '{n} от 8 елемента',
+        orderGradingLabel: 'Оценяване',
+        orderGradingAbsolute: 'Абсолютна позиция (частично)',
+        orderGradingAll: 'Всичко или нищо',
+        orderGradingRelativeCorrect: 'Спрямо правилната позиция',
+        orderGradingNextExclude: 'Спрямо следващия елемент (без последния)',
+        orderGradingNextInclude: 'Спрямо следващия елемент (с последния)',
+        orderGradingOnePrevNext: 'Спрямо предишния и следващия елемент',
+        orderGradingAllPrevNext: 'Спрямо всички предишни и следващи елементи',
+        orderGradingLongestOrdered: 'Най-дълго подредено подмножество',
+        orderGradingLongestContiguous: 'Най-дълго съседно подмножество',
+        orderLayoutLabel: 'Подредба на екрана',
+        orderLayoutVertical: 'Вертикално',
+        orderLayoutHorizontal: 'Хоризонтално',
+        orderErrorItems: 'Въпрос {n}: подредбата изисква поне 2 елемента.',
+        orderErrorMax: 'Въпрос {n}: най-много 8 елемента.',
+        orderErrorDuplicate: 'Въпрос {n}: елементите не могат да се повтарят.',
+        questionTypeMultiHint: 'Отбележи всеки отговор, който важи.',
+        questionTimeLabel: 'Времево ограничение (секунди)',
+        shortAnswersLabel: 'Приемани отговори (разделени с |)',
+        numericAnswerLabel: 'Числов отговор',
+        numericToleranceLabel: 'Допуск (±)',
+        imageLabel: 'Изображение (по избор, URL)',
+        videoLabel: 'Видео (по избор, URL)',
+        namePlaceholder: 'напр. Преговор за енергията',
+        tagsPlaceholder: 'напр. физика, 8клас, енергия',
+        languagePlaceholder: 'напр. български, español, català',
+        licensePlaceholder: 'напр. CC BY-SA 4.0',
+        descriptionPlaceholder: 'Кратко описание на куиза',
+        urlPlaceholder: 'https://...',
+        playErrorName: 'Дай му име',
+        playErrorTags: 'Добави поне един таг',
+        playErrorQuestions: 'Добави въпроси',
+        loadError: 'Куизът не можа да се зареди.',
+        saveError: 'Куизът не можа да се запази.',
+        saveOk: 'Куизът е обновен',
+        confirmCancel: 'Сигурен ли си? Промените ще се загубят.',
+        realtimeError: 'Не може да се свърже със сървъра в реално време. Презареди страницата и опитай отново.',
+        fixedActionsLabel: 'Действия с куиза'
+    },
+    ar: {
+        back: 'المكتبة',
+        title: 'محرّر الاختبارات',
+        subtitle: 'صمّم الأسئلة واحفظ لعبتك لتطلقها متى شئت.',
+        langLabel: 'اللغة',
+        configEyebrow: 'الإعدادات',
+        configTitle: 'بيانات الاختبار',
+        configDesc: 'أعطه اسماً لتتعرف عليه في المكتبة.',
+        quizTitle: 'عنوان الاختبار',
+        tagsLabel: 'الوسوم (مفصولة بفواصل)',
+        visibilityLabel: 'ظهور الاختبار',
+        visibilityPrivate: 'أنا فقط (خاص)',
+        visibilityUnlisted: 'عبر رابط/معرّف',
+        visibilityPublic: 'عام في المكتبة',
+        publicWarning: 'تصبح الاختبارات العامة جزءاً من المكتبة العالمية ولا يمكن تعديلها لاحقاً إلا بتسجيل الدخول.',
+        allowCloneLabel: 'السماح بالنسخ',
+        languageLabel: 'لغة المحتوى (اختياري)',
+        licenseLabel: 'الرخصة (اختياري)',
+        descriptionLabel: 'الوصف (اختياري)',
+        suggestedTags: 'وسوم مقترحة (المس للإضافة)',
+        questionsEyebrow: 'الأسئلة',
+        questionsTitle: 'أنشئ الأسئلة',
+        questionsDesc: 'أضف الإجابات واختر نمطاً لكل سؤال.',
+        addQuestion: '+ إضافة سؤال',
+        btnSave: 'حفظ الاختبار',
+        btnPlayLocal: 'العب دون حفظ',
+        btnCancel: 'إلغاء والعودة',
+        localInfo: 'دون جلسة، يُنشئ «حفظ» أو «العب دون حفظ» اختباراً مجهولاً. «أنا فقط» ينتهي بعد 24 ساعة؛ و«عبر رابط/عام» يُخزَّن عالمياً. ومع الجلسة يُحفظ في حسابك.',
+        questionLabel: 'السؤال',
+        answerLabel: 'الإجابة',
+        correctLabel: 'الإجابة الصحيحة (1-4)',
+        questionTypeLabel: 'نمط السؤال',
+        questionTypeSingle: 'اختبار (إجابة صحيحة واحدة)',
+        questionTypeMultiple: 'إجابات متعددة',
+        questionTypeTf: 'صحيح / خطأ',
+        questionTypeShort: 'إجابة قصيرة',
+        questionTypeNumeric: 'رقمي',
+        questionTypePoll: 'استطلاع (بدون نقاط)',
+        questionTypeMatching: 'مطابقة (أزواج)',
+        matchingHint: 'اكتب كل زوج. أثناء اللعبة يُخلط العمود الأيمن.',
+        matchingLeft: 'يسار',
+        matchingRight: 'يمين',
+        matchingAddPair: '+ إضافة زوج',
+        matchingImpostors: 'عناصر مضلِّلة: عناصر في العمود الأيمن بلا زوج (اختياري)',
+        matchingAddImpostor: '+ إضافة عنصر مضلِّل',
+        matchingCount: '{n} من 8 عناصر في العمود الأيمن',
+        matchingRemove: 'إزالة',
+        matchingErrorPairs: 'السؤال {n}: تحتاج المطابقة إلى زوجين كاملين على الأقل.',
+        matchingErrorIncomplete: 'السؤال {n}: املأ عمودي كل زوج أو أزله.',
+        matchingErrorDuplicate: 'السؤال {n}: لا يمكن تكرار عناصر العمود الأيمن.',
+        matchingErrorMax: 'السؤال {n}: 8 عناصر كحد أقصى في العمود الأيمن.',
+        questionTypeOrder: 'ترتيب (فرز)',
+        orderHint: 'اكتب العناصر بالترتيب الصحيح. أثناء اللعبة تُخلط.',
+        orderItemLabel: 'العنصر {n}',
+        orderAddItem: '+ إضافة عنصر',
+        orderCount: '{n} من 8 عناصر',
+        orderGradingLabel: 'التقييم',
+        orderGradingAbsolute: 'الموضع المطلق (جزئي)',
+        orderGradingAll: 'الكل أو لا شيء',
+        orderGradingRelativeCorrect: 'نسبةً إلى الموضع الصحيح',
+        orderGradingNextExclude: 'نسبةً إلى العنصر التالي (دون الأخير)',
+        orderGradingNextInclude: 'نسبةً إلى العنصر التالي (مع الأخير)',
+        orderGradingOnePrevNext: 'نسبةً إلى العنصرين السابق والتالي',
+        orderGradingAllPrevNext: 'نسبةً إلى كل العناصر السابقة والتالية',
+        orderGradingLongestOrdered: 'أطول مجموعة جزئية مرتبة',
+        orderGradingLongestContiguous: 'أطول مجموعة جزئية متجاورة',
+        orderLayoutLabel: 'التخطيط',
+        orderLayoutVertical: 'عمودي',
+        orderLayoutHorizontal: 'أفقي',
+        orderErrorItems: 'السؤال {n}: يحتاج الترتيب إلى عنصرين على الأقل.',
+        orderErrorMax: 'السؤال {n}: 8 عناصر كحد أقصى.',
+        orderErrorDuplicate: 'السؤال {n}: لا يمكن تكرار العناصر.',
+        questionTypeMultiHint: 'حدّد كل إجابة صحيحة.',
+        questionTimeLabel: 'الحد الزمني (ثوانٍ)',
+        shortAnswersLabel: 'الإجابات المقبولة (مفصولة بـ |)',
+        numericAnswerLabel: 'الإجابة الرقمية',
+        numericToleranceLabel: 'التفاوت (±)',
+        imageLabel: 'صورة (رابط اختياري)',
+        videoLabel: 'فيديو (رابط اختياري)',
+        namePlaceholder: 'مثال: مراجعة الطاقة',
+        tagsPlaceholder: 'مثال: فيزياء، ثانية إعدادي، طاقة',
+        languagePlaceholder: 'مثال: العربية، español، català',
+        licensePlaceholder: 'مثال: CC BY-SA 4.0',
+        descriptionPlaceholder: 'وصف مختصر للاختبار',
+        urlPlaceholder: 'https://...',
+        playErrorName: 'أعطه اسماً',
+        playErrorTags: 'أضف وسماً واحداً على الأقل',
+        playErrorQuestions: 'أضف أسئلة',
+        loadError: 'تعذّر تحميل الاختبار.',
+        saveError: 'تعذّر حفظ الاختبار.',
+        saveOk: 'تم تحديث الاختبار',
+        confirmCancel: 'هل أنت متأكد؟ ستضيع التغييرات.',
+        realtimeError: 'تعذّر الاتصال بالخادم الفوري. أعد تحميل الصفحة وحاول مرة أخرى.',
+        fixedActionsLabel: 'إجراءات الاختبار'
+    },
+    fr: {
+        back: 'Bibliothèque',
+        title: 'Créateur de quiz',
+        subtitle: 'Conçois des questions et enregistre ta partie pour la lancer quand tu veux.',
+        langLabel: 'Langue',
+        configEyebrow: 'Réglages',
+        configTitle: 'Données du quiz',
+        configDesc: 'Donne-lui un nom pour l\'identifier dans la bibliothèque.',
+        quizTitle: 'Titre du quiz',
+        tagsLabel: 'Tags (séparés par des virgules)',
+        visibilityLabel: 'Visibilité du quiz',
+        visibilityPrivate: 'Moi seul (privé)',
+        visibilityUnlisted: 'Par lien/ID',
+        visibilityPublic: 'Public dans la bibliothèque',
+        publicWarning: 'Les quiz publics font partie de la bibliothèque globale et ne peuvent plus être modifiés sauf si tu te connectes.',
+        allowCloneLabel: 'Autoriser la copie',
+        languageLabel: 'Langue du contenu (facultatif)',
+        licenseLabel: 'Licence (facultatif)',
+        descriptionLabel: 'Description (facultatif)',
+        suggestedTags: 'Tags suggérés (touche pour ajouter)',
+        questionsEyebrow: 'Questions',
+        questionsTitle: 'Crée les questions',
+        questionsDesc: 'Ajoute des réponses et choisis un mode pour chaque question.',
+        addQuestion: '+ Ajouter une question',
+        btnSave: 'Enregistrer le quiz',
+        btnPlayLocal: 'Jouer sans enregistrer',
+        btnCancel: 'Annuler et revenir',
+        localInfo: 'Sans session : « Enregistrer » ou « Jouer sans enregistrer » créent un quiz anonyme. « Moi seul » expire en 24 h ; « Par lien/Public » est stocké globalement. Avec une session, il est enregistré sur ton compte.',
+        questionLabel: 'Question',
+        answerLabel: 'Réponse',
+        correctLabel: 'Bonne réponse (1-4)',
+        questionTypeLabel: 'Mode de question',
+        questionTypeSingle: 'Quiz (1 correcte)',
+        questionTypeMultiple: 'Réponses multiples',
+        questionTypeTf: 'Vrai / Faux',
+        questionTypeShort: 'Réponse courte',
+        questionTypeNumeric: 'Numérique',
+        questionTypePoll: 'Sondage (sans points)',
+        questionTypeMatching: 'Association (relier)',
+        matchingHint: 'Écris chaque paire. Pendant la partie, la colonne de droite est mélangée.',
+        matchingLeft: 'Gauche',
+        matchingRight: 'Droite',
+        matchingAddPair: '+ Ajouter une paire',
+        matchingImpostors: 'Leurres : éléments de la colonne de droite sans paire (facultatif)',
+        matchingAddImpostor: '+ Ajouter un leurre',
+        matchingCount: '{n} sur 8 éléments dans la colonne de droite',
+        matchingRemove: 'Supprimer',
+        matchingErrorPairs: 'Question {n} : l\'association demande au moins 2 paires complètes.',
+        matchingErrorIncomplete: 'Question {n} : remplis les deux colonnes de chaque paire ou supprime-la.',
+        matchingErrorDuplicate: 'Question {n} : les éléments de la colonne de droite ne peuvent pas se répéter.',
+        matchingErrorMax: 'Question {n} : 8 éléments maximum dans la colonne de droite.',
+        questionTypeOrder: 'Ordre (classer)',
+        orderHint: 'Écris les éléments dans le bon ordre. Pendant la partie, ils sont mélangés.',
+        orderItemLabel: 'Élément {n}',
+        orderAddItem: '+ Ajouter un élément',
+        orderCount: '{n} sur 8 éléments',
+        orderGradingLabel: 'Notation',
+        orderGradingAbsolute: 'Position absolue (partielle)',
+        orderGradingAll: 'Tout ou rien',
+        orderGradingRelativeCorrect: 'Relative à la bonne position',
+        orderGradingNextExclude: 'Relative à l\'élément suivant (sans compter le dernier)',
+        orderGradingNextInclude: 'Relative à l\'élément suivant (en comptant le dernier)',
+        orderGradingOnePrevNext: 'Relative aux éléments précédent et suivant',
+        orderGradingAllPrevNext: 'Relative à tous les éléments précédents et suivants',
+        orderGradingLongestOrdered: 'Plus long sous-ensemble ordonné',
+        orderGradingLongestContiguous: 'Plus long sous-ensemble contigu',
+        orderLayoutLabel: 'Disposition',
+        orderLayoutVertical: 'Verticale',
+        orderLayoutHorizontal: 'Horizontale',
+        orderErrorItems: 'Question {n} : l\'ordre demande au moins 2 éléments.',
+        orderErrorMax: 'Question {n} : 8 éléments maximum.',
+        orderErrorDuplicate: 'Question {n} : les éléments ne peuvent pas se répéter.',
+        questionTypeMultiHint: 'Coche toutes les réponses qui comptent.',
+        questionTimeLabel: 'Limite de temps (secondes)',
+        shortAnswersLabel: 'Réponses acceptées (séparées par |)',
+        numericAnswerLabel: 'Réponse numérique',
+        numericToleranceLabel: 'Tolérance (±)',
+        imageLabel: 'Image (URL facultative)',
+        videoLabel: 'Vidéo (URL facultative)',
+        namePlaceholder: 'ex. : Révision sur l\'énergie',
+        tagsPlaceholder: 'ex. : physique, 4e, énergie',
+        languagePlaceholder: 'ex. : français, español, català',
+        licensePlaceholder: 'ex. : CC BY-SA 4.0',
+        descriptionPlaceholder: 'Brève description du quiz',
+        urlPlaceholder: 'https://...',
+        playErrorName: 'Donne-lui un nom',
+        playErrorTags: 'Ajoute au moins un tag',
+        playErrorQuestions: 'Ajoute des questions',
+        loadError: 'Impossible de charger le quiz.',
+        saveError: 'Impossible d\'enregistrer le quiz.',
+        saveOk: 'Quiz mis à jour',
+        confirmCancel: 'Sûr ? Les modifications seront perdues.',
+        realtimeError: 'Impossible de se connecter au serveur en temps réel. Recharge la page et réessaie.',
+        fixedActionsLabel: 'Actions du quiz'
     },
     ca: {
-        back: 'Tornar',
+        back: "Biblioteca",
         title: 'Creador de quizzes',
         subtitle: 'Dissenya les preguntes i desa el joc per llançar-lo quan vulguis.',
         langLabel: 'Idioma',
@@ -219,10 +828,6 @@ var i18n = {
         addQuestion: '+ Afegir pregunta',
         btnSave: 'Desar quiz',
         btnPlayLocal: 'Jugar sense desar',
-        btnExportCsv: 'Exportar CSV',
-        btnExportPdf: 'Exportar PDF',
-        btnExportPdfNoAnswers: 'Exportar PDF (sense respostes)',
-        btnExportMoodleXml: 'Exportar XML (Moodle)',
         btnCancel: 'Cancel·lar i tornar',
         localInfo: 'Sense sessió: “Desar” o “Jugar sense desar” creen un quiz anònim. "Només jo" caduca en 24h; "Per enllaç/Públic" es guarda globalment. Amb sessió, queda al teu usuari.',
         questionLabel: 'Enunciat',
@@ -235,6 +840,40 @@ var i18n = {
         questionTypeShort: 'Resposta curta',
         questionTypeNumeric: 'Numèrica',
         questionTypePoll: 'Enquesta (sense puntuació)',
+        questionTypeMatching: 'Correspondència (emparellar)',
+        matchingHint: 'Escriu cada parella. En la partida, la columna dreta es barreja.',
+        matchingLeft: 'Esquerra',
+        matchingRight: 'Dreta',
+        matchingAddPair: '+ Afegir parella',
+        matchingImpostors: 'Impostores: elements de la dreta sense parella (opcional)',
+        matchingAddImpostor: '+ Afegir impostora',
+        matchingCount: '{n} de 8 elements en la columna dreta',
+        matchingRemove: 'Llevar',
+        matchingErrorPairs: 'Pregunta {n}: la correspondència necessita almenys 2 parelles completes.',
+        matchingErrorIncomplete: 'Pregunta {n}: completa les dues columnes de cada parella o lleva-la.',
+        matchingErrorDuplicate: 'Pregunta {n}: els elements de la dreta no es poden repetir.',
+        matchingErrorMax: 'Pregunta {n}: com a màxim 8 elements en la columna dreta.',
+        questionTypeOrder: 'Ordenar',
+        orderHint: "Escriu els elements en l'ordre correcte. En la partida, es barregen.",
+        orderItemLabel: 'Element {n}',
+        orderAddItem: '+ Afegir element',
+        orderCount: '{n} de 8 elements',
+        orderGradingLabel: 'Puntuació',
+        orderGradingAbsolute: 'Posició absoluta (parcial)',
+        orderGradingAll: 'Tot o res',
+        orderGradingRelativeCorrect: 'Relativa a la posició correcta',
+        orderGradingNextExclude: 'Relativa a l\'element següent (sense comptar l\'últim)',
+        orderGradingNextInclude: 'Relativa a l\'element següent (comptant l\'últim)',
+        orderGradingOnePrevNext: 'Relativa a l\'anterior i al següent',
+        orderGradingAllPrevNext: 'Relativa a tots els anteriors i següents',
+        orderGradingLongestOrdered: 'Subconjunt ordenat més llarg',
+        orderGradingLongestContiguous: 'Subconjunt contigu més llarg',
+        orderLayoutLabel: 'Disposició',
+        orderLayoutVertical: 'Vertical',
+        orderLayoutHorizontal: 'Horitzontal',
+        orderErrorItems: 'Pregunta {n}: ordenar necessita almenys 2 elements.',
+        orderErrorMax: 'Pregunta {n}: com a màxim 8 elements.',
+        orderErrorDuplicate: 'Pregunta {n}: els elements no es poden repetir.',
         questionTypeMultiHint: 'Marca totes les respostes correctes.',
         questionTimeLabel: 'Temps límit (segons)',
         shortAnswersLabel: 'Respostes vàlides (separades per |)',
@@ -255,21 +894,8 @@ var i18n = {
         saveError: 'No s\'ha pogut desar el quiz.',
         saveOk: 'Quiz actualitzat',
         confirmCancel: 'Segur que vols sortir? Es perdran els canvis.',
-        moodleModalTitle: 'Importar a Moodle',
-        moodleModalDescription: 'Segueix aquests passos abans de descarregar l\'XML per pujar-lo al teu curs.',
-        moodleModalStep1: 'Accedeix al curs de Moodle on vols importar el quiz.',
-        moodleModalStep2: 'Vés a Administració del curs > Importa i tria "Moodle XML".',
-        moodleModalStep3: 'Carrega aquest fitxer i segueix l\'assistència per revisar les preguntes.',
-        moodleModalCancel: 'Tancar',
-        moodleModalConfirm: 'Descarregar XML',
-        pdfTags: 'Etiquetes',
-        pdfCorrect: 'Correcta',
-        pdfAcceptedAnswers: 'Respostes vàlides',
-        pdfNumericAnswer: 'Resposta',
-        pdfTolerance: 'Tolerància',
-        pdfImage: 'Imatge',
-        pdfVideo: 'Vídeo',
-        pdfMissingLib: 'No s\'ha pogut generar el PDF (llibreria no disponible).'
+        realtimeError: 'No s\'ha pogut connectar amb el servidor en temps real. Recarrega la pàgina i torna-ho a provar.',
+        fixedActionsLabel: 'Accions del quiz',
     },
     va: {
         subtitle: 'Dissenya les preguntes i guarda el joc per llançar-lo quan vulgues.',
@@ -277,222 +903,12 @@ var i18n = {
         btnPlayLocal: 'Jugar sense guardar',
         localInfo: 'Sense sessió: “Guardar” o “Jugar sense guardar” creen un quiz anònim. "Només jo" caduca en 24h; "Per enllaç/Públic" es guarda globalment. Amb sessió, queda al teu usuari.',
         confirmCancel: 'Segur que vols eixir? Es perdran els canvis.',
-        moodleModalStep3: 'Carrega este fitxer i segueix l\'assistència per revisar les preguntes.'
+        realtimeError: 'No s\'ha pogut connectar amb el servidor en temps real. Recarrega la pàgina i torna-ho a intentar.',
     }
 };
 
-function getJsPdf(){
-    try{
-        if(window.jspdf && window.jspdf.jsPDF){
-            return window.jspdf.jsPDF;
-        }
-    }catch(e){
-        // ignore
-    }
-    return null;
-}
-
-function sanitizeFilename(name, fallback){
-    var base = (name || '').toString().trim();
-    if(!base) base = fallback || 'quiz';
-    // Quitar caracteres típicamente problemáticos en descargas
-    base = base.replace(/[\\/\n\r\t\0]+/g, ' ');
-    base = base.replace(/[:*?"<>|]+/g, '');
-    base = base.replace(/\s+/g, ' ').trim();
-    if(!base) base = fallback || 'quiz';
-    return base;
-}
-
-function toLetterAnswer(n){
-    var num = parseInt(n, 10);
-    if(!isFinite(num)) return '';
-    if(num === 1) return 'A';
-    if(num === 2) return 'B';
-    if(num === 3) return 'C';
-    if(num === 4) return 'D';
-    return String(num);
-}
-
-function getTfLabelsForPdf(question){
-    var raw = Array.isArray(question && question.answers) ? question.answers : [];
-    var a = (raw[0] || '').toString().trim();
-    var b = (raw[1] || '').toString().trim();
-    var fallback = getTfFallbackAnswers();
-    return [a || fallback[0], b || fallback[1]];
-}
-
-function pdfAddWrapped(doc, text, x, y, maxWidth, opts){
-    opts = opts || {};
-    var fontSize = opts.fontSize || 11;
-    var lineHeight = opts.lineHeight || Math.round(fontSize * 1.25);
-    var isBold = !!opts.bold;
-    var marginBottom = (opts.marginBottom === undefined ? 0 : opts.marginBottom);
-
-    doc.setFontSize(fontSize);
-    try{
-        doc.setFont('helvetica', isBold ? 'bold' : 'normal');
-    }catch(e){
-        // ignore if font set fails
-    }
-
-    var pageHeight = doc.internal.pageSize.getHeight();
-    var marginTop = opts.marginTop || 40;
-    var bottomLimit = pageHeight - (opts.marginBottomLimit || 40);
-
-    var safeText = (text === undefined || text === null) ? '' : String(text);
-    var lines = doc.splitTextToSize(safeText, maxWidth);
-    for(var i = 0; i < lines.length; i++){
-        if(y + lineHeight > bottomLimit){
-            doc.addPage();
-            y = marginTop;
-        }
-        doc.text(lines[i], x, y);
-        y += lineHeight;
-    }
-    y += marginBottom;
-    return y;
-}
-
-function getImageFormatFromDataUrl(dataUrl){
-    var match = /^data:image\/(png|jpeg|jpg|webp);/i.exec(dataUrl || '');
-    if(!match) return '';
-    var ext = match[1].toLowerCase();
-    if(ext === 'png') return 'PNG';
-    if(ext === 'webp') return 'WEBP';
-    return 'JPEG';
-}
-
-function extractSvgTextFromDataUrl(dataUrl){
-    var comma = dataUrl.indexOf(',');
-    if(comma === -1) return '';
-    var header = dataUrl.slice(0, comma);
-    var payload = dataUrl.slice(comma + 1);
-    try{
-        if(/;base64/i.test(header)){
-            return atob(payload);
-        }
-        return decodeURIComponent(payload);
-    }catch(e){
-        return '';
-    }
-}
-
-function getSvgSizeFromText(svgText){
-    if(!svgText) return { width: 0, height: 0 };
-    var widthMatch = svgText.match(/\bwidth=["']?([\d.]+)/i);
-    var heightMatch = svgText.match(/\bheight=["']?([\d.]+)/i);
-    var width = widthMatch ? parseFloat(widthMatch[1]) : 0;
-    var height = heightMatch ? parseFloat(heightMatch[1]) : 0;
-    if(width > 0 && height > 0) return { width: width, height: height };
-
-    var viewBoxMatch = svgText.match(/\bviewBox=["']?([-\d.\s,]+)["']?/i);
-    if(viewBoxMatch && viewBoxMatch[1]){
-        var parts = viewBoxMatch[1].trim().split(/[,\s]+/).map(function(n){ return parseFloat(n); });
-        if(parts.length === 4 && isFinite(parts[2]) && isFinite(parts[3])){
-            return { width: Math.abs(parts[2]), height: Math.abs(parts[3]) };
-        }
-    }
-    return { width: 0, height: 0 };
-}
-
-function rasterizeSvgDataUrl(dataUrl){
-    return new Promise(function(resolve){
-        var svgText = extractSvgTextFromDataUrl(dataUrl);
-        if(!svgText) return resolve('');
-        var size = getSvgSizeFromText(svgText);
-        var img = new Image();
-        img.onload = function(){
-            var width = size.width || img.naturalWidth || img.width || 800;
-            var height = size.height || img.naturalHeight || img.height || 600;
-            var canvas = document.createElement('canvas');
-            canvas.width = Math.max(1, Math.round(width));
-            canvas.height = Math.max(1, Math.round(height));
-            var ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            resolve(canvas.toDataURL('image/png'));
-        };
-        img.onerror = function(){ resolve(''); };
-        img.src = dataUrl;
-    });
-}
-
-function blobToDataUrl(blob){
-    return new Promise(function(resolve){
-        var reader = new FileReader();
-        reader.onload = function(){ resolve(reader.result || ''); };
-        reader.onerror = function(){ resolve(''); };
-        reader.readAsDataURL(blob);
-    });
-}
-
-function loadImageForPdf(url){
-    return new Promise(function(resolve){
-        var raw = (url || '').toString().trim();
-        if(!raw) return resolve(null);
-        var normalized = normalizeSvgDataUrlForImg(raw);
-        var isDataUrl = normalized.toLowerCase().startsWith('data:image/');
-    var dataUrlPromise = isDataUrl
-        ? Promise.resolve(normalized)
-        : fetch(normalized, { mode: 'cors', cache: 'no-store' })
-            .then(function(res){ return res && res.ok ? res.blob() : null; })
-            .then(function(blob){ return blob ? blobToDataUrl(blob) : ''; })
-            .catch(function(){ return ''; });
-
-    dataUrlPromise.then(function(dataUrl){
-        if(!dataUrl) return resolve(null);
-        var lower = dataUrl.toLowerCase();
-        var finalize = function(finalUrl){
-            var format = getImageFormatFromDataUrl(finalUrl);
-            if(!format) return resolve(null);
-            var img = new Image();
-            img.onload = function(){
-                resolve({
-                    dataUrl: finalUrl,
-                    format: format,
-                    width: img.naturalWidth || img.width || 0,
-                    height: img.naturalHeight || img.height || 0
-                });
-            };
-            img.onerror = function(){ resolve(null); };
-            img.src = finalUrl;
-        };
-
-        if(lower.startsWith('data:image/svg+xml')){
-            rasterizeSvgDataUrl(dataUrl).then(function(pngUrl){
-                if(!pngUrl) return resolve(null);
-                finalize(pngUrl);
-            });
-        }else{
-            finalize(dataUrl);
-        }
-    });
-});
-}
-
-function pdfAddImage(doc, image, x, y, maxWidth, opts){
-    opts = opts || {};
-    var marginTop = opts.marginTop || 40;
-    var bottomLimit = doc.internal.pageSize.getHeight() - (opts.marginBottomLimit || 40);
-    var maxHeight = opts.maxHeight || 240;
-    var marginBottom = opts.marginBottom === undefined ? 6 : opts.marginBottom;
-    if(!image || !image.width || !image.height) return y;
-
-    var scale = Math.min(maxWidth / image.width, maxHeight / image.height, 1);
-    var drawWidth = image.width * scale;
-    var drawHeight = image.height * scale;
-
-    if(y + drawHeight > bottomLimit){
-        doc.addPage();
-        y = marginTop;
-    }
-
-    doc.addImage(image.dataUrl, image.format, x, y, drawWidth, drawHeight);
-    y += drawHeight + marginBottom;
-    return y;
-}
-
 function t(key){
-    var chain = lang === 'va' ? ['va', 'ca', 'es'] : [lang, 'es'];
+    var chain = ui.lang === 'va' ? ['va', 'ca', 'es'] : [ui.lang, 'en', 'es'];
     for(var i = 0; i < chain.length; i++){
         var dict = i18n[chain[i]];
         if(dict && dict[key]) return dict[key];
@@ -500,44 +916,20 @@ function t(key){
     return key;
 }
 
+// Solo traduce lo que queda fuera de la app de Vue (cabecera y subtítulo);
+// dentro, la plantilla usa t() y se repinta sola al cambiar ui.lang.
 function applyI18n(){
     document.querySelectorAll('[data-i18n]').forEach(function(el){
+        if(el.closest('#creator-app')) return;
         var key = el.getAttribute('data-i18n');
-        // skip labels with form controls to avoid hiding inputs
-        if(el.tagName === 'LABEL' && el.querySelector('input,select,textarea,textarea')){
-            return;
-        }
-        if(key === 'subtitle' || key === 'localInfo'){
+        if(key === 'subtitle'){
             el.innerHTML = t(key);
         }else{
             el.textContent = t(key);
         }
     });
-    var nameInput = document.getElementById('name');
-    if(nameInput) nameInput.placeholder = t('namePlaceholder');
-    var tagsInput = document.getElementById('tags');
-    if(tagsInput) tagsInput.placeholder = t('tagsPlaceholder');
-    var languageInput = document.getElementById('language');
-    if(languageInput) languageInput.placeholder = t('languagePlaceholder');
-    var licenseInput = document.getElementById('license');
-    if(licenseInput) licenseInput.placeholder = t('licensePlaceholder');
-    var descriptionInput = document.getElementById('description');
-    if(descriptionInput) descriptionInput.placeholder = t('descriptionPlaceholder');
     var langSelect = document.getElementById('lang-select');
-    if(langSelect) langSelect.value = lang;
-    renderTagSuggestions();
-}
-
-function updateVisibilityWarning(){
-    var warning = document.getElementById('public-warning');
-    if(!warning) return;
-    var visibilitySelect = document.getElementById('visibility');
-    var show = false;
-    if(visibilitySelect){
-        var value = visibilitySelect.value;
-        show = !isUserAuthenticated && value && value !== 'private';
-    }
-    warning.classList.toggle('hidden', !show);
+    if(langSelect) langSelect.value = ui.lang;
 }
 
 function updateTitleUserId(name){
@@ -552,13 +944,11 @@ function refreshAuthStatus(){
             return res.json();
         })
         .then(function(user){
-            isUserAuthenticated = true;
-            updateVisibilityWarning();
+            session.authenticated = true;
             updateTitleUserId(user && (user.nickname || user.email));
         })
         .catch(function(){
-            isUserAuthenticated = false;
-            updateVisibilityWarning();
+            session.authenticated = false;
             updateTitleUserId(null);
         });
 }
@@ -585,7 +975,7 @@ function updateDatabase(){
             if(socket){
                 socket.emit('newQuiz', quiz);
             }else{
-                alert('No se pudo conectar con el servidor en tiempo real. Recarga la página e inténtalo de nuevo.');
+                alert(t('realtimeError'));
             }
         })
         .catch(function(){
@@ -595,39 +985,27 @@ function updateDatabase(){
 
 function buildQuizPayload(){
     var questions = [];
-    var name = document.getElementById('name').value;
+    var name = form.name;
     var tags = parseTagsInput();
-    var visibility = document.getElementById('visibility') ? document.getElementById('visibility').value : 'private';
-    var allowClone = document.getElementById('allow-clone') ? document.getElementById('allow-clone').checked : false;
-    var language = document.getElementById('language') ? document.getElementById('language').value.trim() : '';
-    var license = document.getElementById('license') ? document.getElementById('license').value.trim() : '';
-    var description = document.getElementById('description') ? document.getElementById('description').value.trim() : '';
-    for(var i = 1; i <= questionNum; i++){
-        var question = document.getElementById('q' + i).value;
-        var answer1 = document.getElementById(i + 'a1').value;
-        var answer2 = document.getElementById(i + 'a2').value;
-        var answer3 = document.getElementById(i + 'a3').value;
-        var answer4 = document.getElementById(i + 'a4').value;
-        var correct = document.getElementById('correct' + i).value;
-        var shortText = document.getElementById('short' + i) ? document.getElementById('short' + i).value : '';
-        var numText = document.getElementById('num' + i) ? document.getElementById('num' + i).value : '';
-        var tolText = document.getElementById('tol' + i) ? document.getElementById('tol' + i).value : '';
-        var timeText = document.getElementById('time' + i) ? document.getElementById('time' + i).value : '';
-        var image = document.getElementById('img' + i) ? document.getElementById('img' + i).value : '';
-        var video = document.getElementById('vid' + i) ? document.getElementById('vid' + i).value : '';
-        var card = document.querySelector('.question-card[data-question="' + i + '"]');
-        var typeEl = document.getElementById('type' + i);
-        var questionType = typeEl ? typeEl.value : 'quiz';
+    var visibility = form.visibility || 'private';
+    var allowClone = !!form.allowClone;
+    var language = form.language.trim();
+    var license = form.license.trim();
+    var description = form.description.trim();
+    questionCards.forEach(function(card){
+        var question = card.question;
+        var correct = card.correct;
+        var shortText = card.short;
+        var numText = card.num;
+        var tolText = card.tol;
+        var timeText = card.time;
+        var image = card.image;
+        var video = card.video;
+        var questionType = card.type || 'quiz';
         var correctValues = [];
-        if(questionType === 'multiple' && card){
-            var checkboxes = card.querySelectorAll('.multi-correct input[type="checkbox"]');
-            checkboxes.forEach(function(cb){
-                if(cb.checked){
-                    var val = parseInt(cb.value, 10);
-                    if(!Number.isNaN(val)){
-                        correctValues.push(val);
-                    }
-                }
+        if(questionType === 'multiple'){
+            card.multi.forEach(function(checked, idx){
+                if(checked) correctValues.push(idx + 1);
             });
         }
         if(!correctValues.length && questionType !== 'poll'){
@@ -637,7 +1015,7 @@ function buildQuizPayload(){
             }
             correctValues.push(single);
         }
-        var answers = [answer1, answer2, answer3, answer4];
+        var answers = card.answers.slice();
         var time = parseInt(timeText, 10);
         if(Number.isNaN(time) || time < 5) time = 20;
         if(time > 120) time = 120;
@@ -690,6 +1068,24 @@ function buildQuizPayload(){
             base.acceptedAnswers = splitAccepted(shortText);
         }
 
+        // Correspondencia: parejas completas y, al final, impostoras (sin izquierda).
+        if(questionType === 'matching'){
+            base.answers = ['', '', '', ''];
+            base.correct = 1;
+            base.correctAnswers = [1];
+            base.pairs = matchingPairsOf(card);
+        }
+
+        // Ordenar: els elements en l'ordre correcte (les files buides no es guarden); a la partida es barregen.
+        if(questionType === 'order'){
+            base.answers = ['', '', '', ''];
+            base.correct = 1;
+            base.correctAnswers = [1];
+            base.items = orderItemsOf(card);
+            base.orderGrading = card.orderGrading;
+            base.layout = card.orderLayout;
+        }
+
         if(questionType === 'numeric'){
             base.answers = ['', '', '', ''];
             base.correct = 1;
@@ -700,7 +1096,7 @@ function buildQuizPayload(){
         }
 
         questions.push(base);
-    }
+    });
     return {
         name: name,
         tags: tags,
@@ -711,6 +1107,66 @@ function buildQuizPayload(){
         description: description,
         questions: questions
     };
+}
+
+var MATCHING_MAX_ITEMS = 8;
+var ORDER_MAX_ITEMS = 8;
+
+function trimText(v){
+    return (v === undefined || v === null) ? '' : String(v).trim();
+}
+
+function matchingPairsOf(card){
+    var out = [];
+    (card.pairs || []).forEach(function(p){
+        var left = trimText(p.left);
+        var right = trimText(p.right);
+        if(left && right) out.push({ left: left, right: right });
+    });
+    (card.impostors || []).forEach(function(text){
+        var right = trimText(text);
+        if(right) out.push({ left: '', right: right });
+    });
+    return out;
+}
+
+// Mensaje de error de la primera correspondencia mal hecha, o '' si están bien.
+function matchingCardError(card, num){
+    var msg = function(key){ return t(key).replace('{n}', num); };
+    var incomplete = (card.pairs || []).some(function(p){
+        return !trimText(p.left) !== !trimText(p.right);
+    });
+    if(incomplete) return msg('matchingErrorIncomplete');
+    var pairs = matchingPairsOf(card);
+    if(pairs.filter(function(p){ return p.left; }).length < 2) return msg('matchingErrorPairs');
+    if(pairs.length > MATCHING_MAX_ITEMS) return msg('matchingErrorMax');
+    var seen = {};
+    var duplicate = pairs.some(function(p){
+        var key = p.right.toLowerCase();
+        if(seen[key]) return true;
+        seen[key] = true;
+        return false;
+    });
+    return duplicate ? msg('matchingErrorDuplicate') : '';
+}
+
+function orderItemsOf(card){
+    return (card.orderItems || []).map(trimText).filter(function(v){ return v; });
+}
+
+// Mensaje de error de la pregunta de ordenar, o '' si está bien.
+function orderCardError(card, num){
+    var msg = function(key){ return t(key).replace('{n}', num); };
+    var items = orderItemsOf(card);
+    if(items.length < 2) return msg('orderErrorItems');
+    if(items.length > ORDER_MAX_ITEMS) return msg('orderErrorMax');
+    var seen = Object.create(null);
+    var duplicate = items.some(function(v){
+        if(seen[v]) return true;
+        seen[v] = true;
+        return false;
+    });
+    return duplicate ? msg('orderErrorDuplicate') : '';
 }
 
 function validateQuizBasics(quiz){
@@ -725,6 +1181,15 @@ function validateQuizBasics(quiz){
     if(!quiz.questions.length){
         alert(t('playErrorQuestions'));
         return false;
+    }
+    for(var i = 0; i < questionCards.length; i++){
+        var error = '';
+        if(questionCards[i].type === 'matching') error = matchingCardError(questionCards[i], i + 1);
+        if(questionCards[i].type === 'order') error = orderCardError(questionCards[i], i + 1);
+        if(error){
+            alert(error);
+            return false;
+        }
     }
     return true;
 }
@@ -762,69 +1227,6 @@ async function saveLocal(){
     }
 }
 
-function quizToCsv(quiz){
-    var header = ['tipo','pregunta','r1','r2','r3','r4','tiempo','correcta','imagen','video','texto','numero','tolerancia'].join(';');
-    var lines = (quiz.questions || []).map(function(q){
-        var answers = q.answers || [];
-        var type = q.type || 'quiz';
-        var correctVals = Array.isArray(q.correctAnswers) && q.correctAnswers.length
-            ? q.correctAnswers.join(',')
-            : (q.correct || 1);
-
-        var texto = '';
-        var numero = '';
-        var tolerancia = '';
-        if(type === 'short-answer'){
-            var acc = Array.isArray(q.acceptedAnswers) ? q.acceptedAnswers : [];
-            texto = acc.join('|');
-            correctVals = texto;
-        }else if(type === 'numeric'){
-            numero = (q.numericAnswer === undefined || q.numericAnswer === null) ? '' : String(q.numericAnswer);
-            tolerancia = (q.tolerance === undefined || q.tolerance === null) ? '0' : String(q.tolerance);
-            correctVals = numero;
-        }
-        function esc(v){
-            if(v === undefined || v === null) return '';
-            var s = String(v);
-            if(s.indexOf(';') >= 0 || s.indexOf('"') >= 0 || s.indexOf('\n') >= 0){
-                return '"' + s.replace(/"/g, '""') + '"';
-            }
-            return s;
-        }
-        return [
-            type,
-            esc(q.question||''),
-            esc(answers[0]||''),
-            esc(answers[1]||''),
-            esc(answers[2]||''),
-            esc(answers[3]||''),
-            esc(q.time||20),
-            esc(correctVals),
-            esc(q.image||''),
-            esc(q.video||''),
-            esc(texto),
-            esc(numero),
-            esc(tolerancia)
-        ].join(';');
-    });
-    return [header].concat(lines).join('\n');
-}
-
-function escapeHtmlText(value){
-    return String(value || '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
-}
-
-function escapeAttrValue(value){
-    return String(value || '')
-        .replace(/&/g, '&amp;')
-        .replace(/"/g, '&quot;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
-}
-
 function normalizeSvgDataUrlForImg(url){
     if(!url) return url;
     var raw = String(url).trim();
@@ -860,723 +1262,68 @@ function normalizeSvgDataUrlForImg(url){
     return raw;
 }
 
-function wrapCdata(value){
-    var str = String(value || '');
-    var safe = str.replace(/]]>/g, ']]]]><![CDATA[>');
-    return '<![CDATA[' + safe + ']]>';
+// Tarjetas de preguntas (Subfase B, bloque 1). Cada tarjeta es un objeto de
+// questionCards y la plantilla #creator-tpl lo pinta; buildQuizPayload lee
+// de aquí, no del DOM. Los campos de texto se guardan como texto, igual que
+// los valores de los <input> de antes.
+function clampTime(value){
+    var time = Number(value);
+    if(!Number.isFinite(time) || time < 5) return 20;
+    if(time > 120) return 120;
+    return Math.round(time);
 }
 
-function buildQuestionHtml(question){
-    var parts = [];
-    var text = (question.question || '').trim();
-    if(text){
-        parts.push('<p>' + escapeHtmlText(text) + '</p>');
+// Lo que antes hacía refreshTypeDependent al cambiar de tipo: V/F solo usa
+// dos respuestas y respuesta corta/numérica ninguna.
+function applyTypeRules(card){
+    if(card.type === 'true-false'){
+        card.answers[2] = '';
+        card.answers[3] = '';
     }
-    if(question.image){
-        parts.push('<p><img src="' + escapeAttrValue(normalizeSvgDataUrlForImg(question.image)) + '" alt=""/></p>');
+    if(card.type === 'short-answer' || card.type === 'numeric' || card.type === 'matching'){
+        card.answers = ['', '', '', ''];
     }
-    if(question.video){
-        parts.push('<p><video controls="controls" preload="metadata" src="' + escapeAttrValue(question.video) + '"></video></p>');
+    if(card.type === 'matching'){
+        while(card.pairs.length < 2) card.pairs.push({ left: '', right: '' });
     }
-    return parts.join('');
-}
-
-function normalizeCorrectAnswersForExport(question, maxAnswerIndex){
-    var limit = Math.max(1, parseInt(maxAnswerIndex, 10) || 4);
-    var list = [];
-    if(question && Array.isArray(question.correctAnswers) && question.correctAnswers.length){
-        list = question.correctAnswers.slice();
-    }else if(question && typeof question.correct !== 'undefined'){
-        list = [question.correct];
+    if(card.type === 'order'){
+        card.answers = ['', '', '', ''];
+        while(card.orderItems.length < 2) card.orderItems.push('');
     }
-    var map = {};
-    var out = [];
-    list.forEach(function(v){
-        var num = parseInt(v, 10);
-        if(!isFinite(num)) return;
-        num = Math.max(1, Math.min(limit, num));
-        if(map[num]) return;
-        map[num] = true;
-        out.push(num);
-    });
-    if(!out.length) out = [1];
-    out.sort(function(a, b){ return a - b; });
-    return out;
 }
 
-function getNonEmptyAnswersForExport(question, maxCount){
-    var raw = Array.isArray(question && question.answers) ? question.answers.slice(0, maxCount) : [];
-    while(raw.length < maxCount) raw.push('');
-    var out = [];
-    raw.forEach(function(text, idx){
-        var clean = (text || '').toString().trim();
-        if(!clean) return;
-        out.push({ index: idx + 1, text: clean });
-    });
-    return out;
-}
-
-function getTfFallbackAnswers(){
-    if(lang === 'ca' || lang === 'va') return ['Cert', 'Fals'];
-    if(lang === 'en') return ['True', 'False'];
-    return ['Verdadero', 'Falso'];
-}
-
-function splitAcceptedAnswersForExport(raw){
-    var text = (raw || '').toString().trim();
-    if(!text) return [];
-    var parts = text.split(/[|\n]+/g);
-    var out = [];
-    var seen = {};
-    parts.forEach(function(p){
-        p.split(',').forEach(function(pp){
-            var clean = (pp || '').toString().trim();
-            if(!clean) return;
-            var key = clean.toLowerCase();
-            if(seen[key]) return;
-            seen[key] = true;
-            out.push(clean);
-        });
-    });
-    return out;
-}
-
-function parseLenientNumberForExport(value){
-    if(value === undefined || value === null) return null;
-    if(typeof value === 'number' && isFinite(value)) return value;
-    var raw = String(value).trim();
-    if(!raw) return null;
-    raw = raw.replace(/\s+/g, '').replace(',', '.');
-    var n = parseFloat(raw);
-    return isFinite(n) ? n : null;
-}
-
-function buildMoodleXml(quiz){
-    var title = (quiz.name || 'EduHoot quiz').trim() || 'EduHoot quiz';
-    var lines = ['<?xml version="1.0" encoding="UTF-8"?>', '<quiz>'];
-    var questions = Array.isArray(quiz.questions) ? quiz.questions : [];
-    questions.forEach(function(question, index){
-        var qType = (question && question.type) ? String(question.type) : 'quiz';
-        var nameText = title + ' pregunta ' + (index + 1);
-        var html = buildQuestionHtml(question) || '<p>' + escapeHtmlText((question && question.question) || '') + '</p>';
-
-        if(qType === 'short-answer'){
-            lines.push('  <question type="shortanswer">');
-            lines.push('    <name><text>' + wrapCdata(nameText) + '</text></name>');
-            lines.push('    <questiontext format="html">');
-            lines.push('      <text>' + wrapCdata(html) + '</text>');
-            lines.push('    </questiontext>');
-            lines.push('    <defaultgrade>1</defaultgrade>');
-            lines.push('    <penalty>0.0</penalty>');
-            lines.push('    <hidden>0</hidden>');
-            lines.push('    <usecase>0</usecase>');
-
-            var accepted = Array.isArray(question.acceptedAnswers) && question.acceptedAnswers.length
-                ? question.acceptedAnswers
-                : splitAcceptedAnswersForExport(question.texto || question.correctText || question.correcta || '');
-            if(!accepted.length) accepted = [''];
-            accepted.forEach(function(ans){
-                lines.push('    <answer fraction="100" format="html">');
-                lines.push('      <text>' + wrapCdata(escapeHtmlText(ans || '')) + '</text>');
-                lines.push('      <feedback><text><![CDATA[]]></text></feedback>');
-                lines.push('    </answer>');
-            });
-            lines.push('  </question>');
-            return;
-        }
-
-        if(qType === 'numeric'){
-            lines.push('  <question type="numerical">');
-            lines.push('    <name><text>' + wrapCdata(nameText) + '</text></name>');
-            lines.push('    <questiontext format="html">');
-            lines.push('      <text>' + wrapCdata(html) + '</text>');
-            lines.push('    </questiontext>');
-            lines.push('    <defaultgrade>1</defaultgrade>');
-            lines.push('    <penalty>0.0</penalty>');
-            lines.push('    <hidden>0</hidden>');
-
-            var n = parseLenientNumberForExport(question.numericAnswer);
-            var tol = parseLenientNumberForExport(question.tolerance);
-            if(tol === null) tol = 0;
-            lines.push('    <answer fraction="100" format="html">');
-            lines.push('      <text>' + wrapCdata(escapeHtmlText(n === null ? '' : String(n))) + '</text>');
-            lines.push('      <tolerance>' + wrapCdata(escapeHtmlText(String(tol))) + '</tolerance>');
-            lines.push('      <feedback><text><![CDATA[]]></text></feedback>');
-            lines.push('    </answer>');
-            lines.push('  </question>');
-            return;
-        }
-
-        if(qType === 'true-false'){
-            lines.push('  <question type="truefalse">');
-            lines.push('    <name><text>' + wrapCdata(nameText) + '</text></name>');
-            lines.push('    <questiontext format="html">');
-            lines.push('      <text>' + wrapCdata(html) + '</text>');
-            lines.push('    </questiontext>');
-            lines.push('    <defaultgrade>1</defaultgrade>');
-            lines.push('    <penalty>0.0</penalty>');
-            lines.push('    <hidden>0</hidden>');
-
-            var tfAnswers = getNonEmptyAnswersForExport(question, 2);
-            var tfFallback = getTfFallbackAnswers();
-            var trueLabel = (tfAnswers[0] && tfAnswers[0].text) ? tfAnswers[0].text : tfFallback[0];
-            var falseLabel = (tfAnswers[1] && tfAnswers[1].text) ? tfAnswers[1].text : tfFallback[1];
-            var tfCorrect = normalizeCorrectAnswersForExport(question, 2);
-            var correctIsTrue = tfCorrect[0] === 1;
-
-            lines.push('    <answer fraction="' + (correctIsTrue ? '100' : '0') + '" format="html">');
-            lines.push('      <text>' + wrapCdata(escapeHtmlText(trueLabel)) + '</text>');
-            lines.push('      <feedback><text><![CDATA[]]></text></feedback>');
-            lines.push('    </answer>');
-            lines.push('    <answer fraction="' + (correctIsTrue ? '0' : '100') + '" format="html">');
-            lines.push('      <text>' + wrapCdata(escapeHtmlText(falseLabel)) + '</text>');
-            lines.push('      <feedback><text><![CDATA[]]></text></feedback>');
-            lines.push('    </answer>');
-            lines.push('  </question>');
-            return;
-        }
-
-        // Por defecto: multichoice (single o multiple)
-        var isMultiple = qType === 'multiple';
-        lines.push('  <question type="multichoice">');
-        lines.push('    <name><text>' + wrapCdata(nameText) + '</text></name>');
-        lines.push('    <questiontext format="html">');
-        lines.push('      <text>' + wrapCdata(html) + '</text>');
-        lines.push('    </questiontext>');
-        lines.push('    <defaultgrade>1</defaultgrade>');
-        lines.push('    <penalty>0.0</penalty>');
-        lines.push('    <hidden>0</hidden>');
-        lines.push('    <single>' + (isMultiple ? 'false' : 'true') + '</single>');
-        lines.push('    <shuffleanswers>true</shuffleanswers>');
-        lines.push('    <answernumbering>abc</answernumbering>');
-
-        var answerItems = getNonEmptyAnswersForExport(question, 4);
-        if(answerItems.length < 2){
-            // Moodle requiere al menos 2 respuestas en multichoice
-            var fallback = getTfFallbackAnswers();
-            answerItems = [
-                { index: 1, text: fallback[0] },
-                { index: 2, text: fallback[1] }
-            ];
-        }
-
-        var correctAnswers = normalizeCorrectAnswersForExport(question, 4);
-        var correctMap = {};
-        correctAnswers.forEach(function(n){ correctMap[n] = true; });
-        // Si la correcta apunta a una respuesta vacía, cae a la primera no-vacía
-        var anyCorrectVisible = answerItems.some(function(it){ return !!correctMap[it.index]; });
-        if(!anyCorrectVisible){
-            correctMap = {};
-            correctMap[answerItems[0].index] = true;
-        }
-
-        var correctCount = answerItems.reduce(function(acc, it){ return acc + (correctMap[it.index] ? 1 : 0); }, 0);
-        if(correctCount <= 0) correctCount = 1;
-        var perCorrect = isMultiple ? (100 / correctCount) : 100;
-
-        answerItems.forEach(function(item){
-            var fraction = correctMap[item.index] ? perCorrect : 0;
-            // Moodle acepta float en fraction
-            var fractionStr = (Math.round(fraction * 100000) / 100000).toString();
-            lines.push('    <answer fraction="' + fractionStr + '" format="html">');
-            lines.push('      <text>' + wrapCdata(escapeHtmlText(item.text || '')) + '</text>');
-            lines.push('      <feedback><text><![CDATA[]]></text></feedback>');
-            lines.push('    </answer>');
-        });
-        lines.push('  </question>');
-    });
-    lines.push('</quiz>');
-    return lines.join('\n');
-}
-
-function exportCsv(){
-    var quiz = buildQuizPayload();
-    if(!quiz.questions.length){
-        alert('Añade preguntas');
-        return;
-    }
-    var csv = quizToCsv(quiz);
-    var blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = (quiz.name || 'quiz') + '.csv';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-}
-
-function exportMoodleXml(){
-    var quiz = buildQuizPayload();
-    if(!quiz.questions.length){
-        alert('Añade preguntas');
-        return;
-    }
-    openMoodleExportModal(quiz);
-}
-
-async function exportPdf(options){
-    options = options || {};
-    var includeAnswers = options.includeAnswers !== false;
-
-    var quiz = buildQuizPayload();
-    if(!quiz.questions.length){
-        alert(t('playErrorQuestions'));
-        return;
-    }
-
-    var JsPdfCtor = getJsPdf();
-    if(!JsPdfCtor){
-        alert(t('pdfMissingLib'));
-        return;
-    }
-
-    var title = (quiz.name || '').toString().trim() || 'EduHoot quiz';
-    var doc = new JsPdfCtor({ unit: 'pt', format: 'a4' });
-    var pageWidth = doc.internal.pageSize.getWidth();
-    var margin = 40;
-    var maxWidth = pageWidth - (margin * 2);
-    var y = margin;
-
-    y = pdfAddWrapped(doc, title, margin, y, maxWidth, { fontSize: 18, bold: true, marginBottom: 10 });
-
-    if(Array.isArray(quiz.tags) && quiz.tags.length){
-        y = pdfAddWrapped(
-            doc,
-            t('pdfTags') + ': ' + quiz.tags.join(', '),
-            margin,
-            y,
-            maxWidth,
-            { fontSize: 11, bold: false, marginBottom: 12 }
-        );
-    }else{
-        y += 6;
-    }
-
-    for(var idx = 0; idx < quiz.questions.length; idx++){
-        var q = quiz.questions[idx];
-        var qNum = idx + 1;
-        var qText = (q && q.question) ? String(q.question).trim() : '';
-        var qType = (q && q.type) ? String(q.type) : 'quiz';
-
-        y = pdfAddWrapped(doc, qNum + '. ' + (qText || ''), margin, y, maxWidth, { fontSize: 12, bold: true, marginBottom: 6 });
-
-        if(qType === 'short-answer'){
-            var accepted = Array.isArray(q.acceptedAnswers) ? q.acceptedAnswers : [];
-            if(includeAnswers && accepted.length){
-                y = pdfAddWrapped(doc, t('pdfAcceptedAnswers') + ': ' + accepted.join(' | '), margin, y, maxWidth, { fontSize: 11 });
-                y = pdfAddWrapped(doc, t('pdfCorrect') + ': ' + accepted.join(' | '), margin, y, maxWidth, { fontSize: 10, marginBottom: 8 });
-            }else{
-                y += 8;
-            }
-        }else if(qType === 'numeric'){
-            var n = (q.numericAnswer === undefined || q.numericAnswer === null) ? '' : String(q.numericAnswer);
-            var tol = (q.tolerance === undefined || q.tolerance === null) ? '0' : String(q.tolerance);
-            if(includeAnswers){
-                y = pdfAddWrapped(doc, t('pdfNumericAnswer') + ': ' + n + ' (± ' + t('pdfTolerance') + ': ' + tol + ')', margin, y, maxWidth, { fontSize: 11 });
-                y = pdfAddWrapped(doc, t('pdfCorrect') + ': ' + n + ' (± ' + tol + ')', margin, y, maxWidth, { fontSize: 10, marginBottom: 8 });
-            }else{
-                y += 8;
-            }
-        }else if(qType === 'true-false'){
-            var tf = getTfLabelsForPdf(q);
-            y = pdfAddWrapped(doc, 'A) ' + tf[0], margin, y, maxWidth, { fontSize: 11 });
-            y = pdfAddWrapped(doc, 'B) ' + tf[1], margin, y, maxWidth, { fontSize: 11, marginBottom: 6 });
-        }else{
-            var answers = Array.isArray(q.answers) ? q.answers : [];
-            var labels = ['A', 'B', 'C', 'D'];
-            for(var i = 0; i < 4; i++){
-                var ans = (answers[i] || '').toString().trim();
-                if(!ans) continue;
-                y = pdfAddWrapped(doc, labels[i] + ') ' + ans, margin, y, maxWidth, { fontSize: 11 });
-            }
-            y += 6;
-        }
-
-        // URLs como texto (no embebemos imágenes/vídeos en PDF para mantenerlo simple y robusto)
-        if(q && q.image){
-            var imageData = await loadImageForPdf(q.image);
-            if(imageData){
-                y = pdfAddImage(doc, imageData, margin, y, maxWidth);
-            }else{
-                y = pdfAddWrapped(doc, t('pdfImage') + ': ' + String(q.image), margin, y, maxWidth, { fontSize: 10 });
-            }
-        }
-        if(q && q.video){
-            y = pdfAddWrapped(doc, t('pdfVideo') + ': ' + String(q.video), margin, y, maxWidth, { fontSize: 10 });
-        }
-
-        // Mostrar solución (índices/letters) para quizzes
-        if(includeAnswers && (qType === 'quiz' || qType === 'multiple' || qType === 'true-false')){
-            var correct = (Array.isArray(q.correctAnswers) && q.correctAnswers.length) ? q.correctAnswers : [q.correct];
-            var printable = [];
-            correct.forEach(function(v){
-                if(qType === 'true-false'){
-                    var num = parseInt(v, 10);
-                    if(num === 1) printable.push('A');
-                    else if(num === 2) printable.push('B');
-                }else{
-                    var letter = toLetterAnswer(v);
-                    if(letter) printable.push(letter);
-                }
-            });
-            if(printable.length){
-                // unique
-                var seen = {};
-                printable = printable.filter(function(x){ if(seen[x]) return false; seen[x] = true; return true; });
-                y = pdfAddWrapped(doc, t('pdfCorrect') + ': ' + printable.join(', '), margin, y, maxWidth, { fontSize: 10, marginBottom: 10 });
-            }else{
-                y += 6;
-            }
-        }else{
-            y += 10;
-        }
-    }
-
-    var baseName = sanitizeFilename(title, 'quiz');
-    var filename = baseName + (includeAnswers ? '' : '_sin_respuestas') + '.pdf';
-    doc.save(filename);
-}
-
-function downloadMoodleXmlFile(quiz){
-    var xml = buildMoodleXml(quiz);
-    var blob = new Blob([xml], { type: 'application/xml;charset=utf-8' });
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = (quiz.name || 'quiz') + '.xml';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-}
-
-function closeMoodleExportModal(){
-    var modal = document.getElementById('moodleModal');
-    if(!modal) return;
-    modal.classList.add('hidden');
-    modal.setAttribute('aria-hidden', 'true');
-    document.body.classList.remove('modal-open');
-    moodleExportPendingQuiz = null;
-}
-
-function openMoodleExportModal(quiz){
-    moodleExportPendingQuiz = quiz;
-    var modal = document.getElementById('moodleModal');
-    if(!modal){
-        downloadMoodleXmlFile(quiz);
-        moodleExportPendingQuiz = null;
-        return;
-    }
-    modal.classList.remove('hidden');
-    modal.setAttribute('aria-hidden', 'false');
-    document.body.classList.add('modal-open');
-}
-
-function confirmMoodleExport(){
-    if(moodleExportPendingQuiz){
-        downloadMoodleXmlFile(moodleExportPendingQuiz);
-    }
-    closeMoodleExportModal();
-}
-
-function buildQuestionCard(num, data){
-    var card = document.createElement('div');
-    card.className = 'question-card';
-    card.setAttribute('data-question', String(num));
-
-    var head = document.createElement('div');
-    head.className = 'question-card-head';
-    var pill = document.createElement('span');
-    pill.className = 'pill pill-muted';
-    pill.textContent = (lang === 'en' ? 'Question ' : (lang === 'ca' ? 'Pregunta ' : 'Pregunta ')) + String(num);
-    head.appendChild(pill);
-    var removeBtn = document.createElement('button');
-    removeBtn.className = 'btn btn-ghost btn-small';
-    removeBtn.type = 'button';
-    removeBtn.textContent = '✕';
-    removeBtn.title = 'Eliminar';
-    removeBtn.onclick = function(){
-        var confirmMsg = lang === 'en' ? 'Delete this question?' : (lang === 'va' ? 'Eliminar esta pregunta?' : (lang === 'ca' ? 'Eliminar aquesta pregunta?' : '¿Eliminar esta pregunta?'));
-        if(window.confirm(confirmMsg)){
-            card.remove();
-            renumberQuestions();
-        }
+function makeQuestionCard(data){
+    data = data || {};
+    var correctAnswers = Array.isArray(data.correctAnswers) ? data.correctAnswers : [];
+    var card = {
+        uid: nextQuestionUid++,
+        question: data.question || '',
+        type: data.type || 'quiz',
+        answers: [0, 1, 2, 3].map(function(i){ return (data.answers && data.answers[i]) || ''; }),
+        multi: [1, 2, 3, 4].map(function(n){ return correctAnswers.indexOf(n) !== -1; }),
+        correct: correctAnswers.length ? correctAnswers[0] : (data.correct || 1),
+        time: String(clampTime(data.time)),
+        short: Array.isArray(data.acceptedAnswers) ? data.acceptedAnswers.join('|') : '',
+        num: (data.numericAnswer !== undefined && data.numericAnswer !== null) ? String(data.numericAnswer) : '',
+        tol: (data.tolerance !== undefined && data.tolerance !== null) ? String(data.tolerance) : '0',
+        // Correspondencia: parejas (izquierda y derecha) e impostoras (solo derecha).
+        pairs: (Array.isArray(data.pairs) ? data.pairs : [])
+            .filter(function(p){ return p && trimText(p.left); })
+            .map(function(p){ return { left: trimText(p.left), right: trimText(p.right) }; }),
+        impostors: (Array.isArray(data.pairs) ? data.pairs : [])
+            .filter(function(p){ return p && !trimText(p.left) && trimText(p.right); })
+            .map(function(p){ return trimText(p.right); }),
+        // Ordenar: elementos en l'ordre correcte, puntuació (0 = posició absoluta, -1 = tot o res) i disposició.
+        orderItems: (Array.isArray(data.items) ? data.items : []).map(trimText).filter(function(v){ return v; }),
+        orderGrading: (data.orderGrading === undefined || data.orderGrading === null) ? 0 : Number(data.orderGrading),
+        orderLayout: String(data.layout || '').toLowerCase() === 'horizontal' ? 'horizontal' : 'vertical',
+        image: data.image || '',
+        video: data.video || '',
+        imageOk: false,
+        videoOk: false
     };
-    head.appendChild(removeBtn);
-
-    var questionLabel = document.createElement('label');
-    questionLabel.textContent = t('questionLabel');
-    var questionField = document.createElement('textarea');
-    questionField.className = 'question';
-    questionField.id = 'q' + String(num);
-    questionField.rows = 3;
-    questionField.placeholder = '?';
-    questionField.value = (data && data.question) || '';
-
-    var typeRow = document.createElement('div');
-    typeRow.className = 'question-type-row';
-    var typeLabel = document.createElement('label');
-    typeLabel.textContent = t('questionTypeLabel');
-    var typeSelect = document.createElement('select');
-    typeSelect.className = 'question-type';
-    typeSelect.id = 'type' + String(num);
-    [['quiz', 'questionTypeSingle'], ['multiple', 'questionTypeMultiple'], ['true-false', 'questionTypeTf'], ['short-answer', 'questionTypeShort'], ['numeric', 'questionTypeNumeric'], ['poll', 'questionTypePoll']].forEach(function(pair){
-        var option = document.createElement('option');
-        option.value = pair[0];
-        option.textContent = t(pair[1]);
-        typeSelect.appendChild(option);
-    });
-    typeRow.appendChild(typeLabel);
-    typeRow.appendChild(typeSelect);
-
-    var answersWrap = document.createElement('div');
-    answersWrap.className = 'answers';
-    var answerGroups = [];
-    for(var n = 1; n <= 4; n++){
-        var answerLabel = document.createElement('label');
-        answerLabel.textContent = t('answerLabel') + ' ' + n;
-        var answerField = document.createElement('input');
-        answerField.id = String(num) + 'a' + n;
-        answerField.type = 'text';
-        answerField.placeholder = t('answerLabel') + ' ' + n;
-        var ans = data && data.answers && data.answers[n-1];
-        answerField.value = ans || '';
-        answerLabel.appendChild(answerField);
-        answersWrap.appendChild(answerLabel);
-        answerGroups.push({ label: answerLabel, input: answerField });
-    }
-
-    var multiCorrect = document.createElement('div');
-    multiCorrect.className = 'multi-correct hidden';
-    var multiHint = document.createElement('p');
-    multiHint.className = 'multi-correct__hint';
-    multiHint.textContent = t('questionTypeMultiHint');
-    multiCorrect.appendChild(multiHint);
-    var multiCheckboxes = [];
-    for(var m = 1; m <= 4; m++){
-        var multiLabel = document.createElement('label');
-        multiLabel.className = 'multi-correct__label';
-        var multiInput = document.createElement('input');
-        multiInput.type = 'checkbox';
-        multiInput.value = String(m);
-        multiInput.dataset.answer = String(m);
-        multiLabel.appendChild(multiInput);
-        multiLabel.append(' ' + t('answerLabel') + ' ' + m);
-        multiCorrect.appendChild(multiLabel);
-        multiCheckboxes.push(multiInput);
-    }
-
-    var correctLabel = document.createElement('label');
-    correctLabel.textContent = t('correctLabel');
-    var correctField = document.createElement('input');
-    correctField.className = 'correct';
-    correctField.id = 'correct' + String(num);
-    correctField.type = 'number';
-    correctField.min = '1';
-    correctField.max = '4';
-    var providedCorrect = (data && Array.isArray(data.correctAnswers) && data.correctAnswers.length)
-        ? data.correctAnswers[0]
-        : ((data && data.correct) ? data.correct : 1);
-    correctField.value = providedCorrect;
-
-    var timeLabel = document.createElement('label');
-    timeLabel.textContent = t('questionTimeLabel');
-    var timeField = document.createElement('input');
-    timeField.className = 'question-time';
-    timeField.id = 'time' + String(num);
-    timeField.type = 'number';
-    timeField.min = '5';
-    timeField.max = '120';
-    timeField.step = '1';
-    var providedTime = data && Number(data.time);
-    if(!Number.isFinite(providedTime) || providedTime < 5){
-        providedTime = 20;
-    }else if(providedTime > 120){
-        providedTime = 120;
-    }
-    timeField.value = String(Math.round(providedTime));
-    timeLabel.appendChild(timeField);
-
-    var shortLabel = document.createElement('label');
-    shortLabel.textContent = t('shortAnswersLabel');
-    var shortField = document.createElement('input');
-    shortField.id = 'short' + String(num);
-    shortField.type = 'text';
-    shortField.placeholder = 'madrid|barcelona';
-    shortField.value = (data && Array.isArray(data.acceptedAnswers)) ? data.acceptedAnswers.join('|') : '';
-    shortLabel.appendChild(shortField);
-
-    var numLabel = document.createElement('label');
-    numLabel.textContent = t('numericAnswerLabel');
-    var numField = document.createElement('input');
-    numField.id = 'num' + String(num);
-    numField.type = 'text';
-    numField.placeholder = '3,14';
-    numField.value = (data && data.numericAnswer !== undefined && data.numericAnswer !== null) ? String(data.numericAnswer) : '';
-    numLabel.appendChild(numField);
-
-    var tolLabel = document.createElement('label');
-    tolLabel.textContent = t('numericToleranceLabel');
-    var tolField = document.createElement('input');
-    tolField.id = 'tol' + String(num);
-    tolField.type = 'text';
-    tolField.placeholder = '0,1';
-    tolField.value = (data && data.tolerance !== undefined && data.tolerance !== null) ? String(data.tolerance) : '0';
-    tolLabel.appendChild(tolField);
-
-    var initialType = (data && data.type) ? data.type : 'quiz';
-    typeSelect.value = initialType;
-    var initialCorrectAnswers = data && Array.isArray(data.correctAnswers) ? data.correctAnswers : [];
-    multiCheckboxes.forEach(function(cb){
-        cb.checked = initialCorrectAnswers.indexOf(parseInt(cb.value, 10)) !== -1;
-    });
-    function refreshTypeDependent(){
-        var currentType = typeSelect.value;
-        var showMultiple = currentType === 'multiple';
-        var showTf = currentType === 'true-false';
-        var showShort = currentType === 'short-answer';
-        var showNumeric = currentType === 'numeric';
-        var showPoll = currentType === 'poll';
-        multiCorrect.classList.toggle('hidden', !showMultiple);
-        correctLabel.style.display = (showMultiple || showShort || showNumeric || showPoll) ? 'none' : '';
-        correctField.style.display = (showMultiple || showShort || showNumeric || showPoll) ? 'none' : '';
-
-        answersWrap.style.display = (showShort || showNumeric) ? 'none' : '';
-
-        shortLabel.style.display = showShort ? '' : 'none';
-        numLabel.style.display = showNumeric ? '' : 'none';
-        tolLabel.style.display = showNumeric ? '' : 'none';
-
-        answerGroups.forEach(function(group, idx){
-            if(showTf && idx >= 2){
-                group.label.style.display = 'none';
-                group.input.value = '';
-            }else{
-                group.label.style.display = '';
-            }
-        });
-
-        if(showShort || showNumeric){
-            answerGroups.forEach(function(group){ group.input.value = ''; });
-        }
-    }
-    typeSelect.addEventListener('change', refreshTypeDependent);
-    refreshTypeDependent();
-
-    var imageLabel = document.createElement('label');
-    imageLabel.textContent = t('imageLabel');
-    var imageField = document.createElement('input');
-    imageField.id = 'img' + String(num);
-    imageField.type = 'text';
-    imageField.placeholder = t('urlPlaceholder');
-    imageField.value = (data && data.image) || '';
-
-    var imagePreview = document.createElement('div');
-    imagePreview.className = 'image-preview';
-    var imageTag = document.createElement('img');
-    imageTag.alt = 'Vista previa';
-    imageTag.className = 'image-thumb hidden';
-    imagePreview.appendChild(imageTag);
-
-    var videoLabel = document.createElement('label');
-    videoLabel.textContent = t('videoLabel');
-    var videoField = document.createElement('input');
-    videoField.id = 'vid' + String(num);
-    videoField.type = 'text';
-    videoField.placeholder = t('urlPlaceholder');
-    videoField.value = (data && data.video) || '';
-    var videoPreview = document.createElement('div');
-    videoPreview.className = 'video-preview';
-    var videoTag = document.createElement('video');
-    videoTag.controls = true;
-    videoTag.className = 'video-thumb hidden';
-    var videoFrame = document.createElement('iframe');
-    videoFrame.className = 'video-thumb hidden';
-    videoFrame.allowFullscreen = true;
-    videoFrame.loading = 'lazy';
-    videoPreview.appendChild(videoTag);
-    videoPreview.appendChild(videoFrame);
-
-    imageField.addEventListener('input', function(){
-        updateImagePreview(imageField, imageTag);
-    });
-    // set initial preview
-    updateImagePreview(imageField, imageTag);
-    videoField.addEventListener('input', function(){
-        updateVideoPreview(videoField, videoTag, videoFrame);
-    });
-    updateVideoPreview(videoField, videoTag, videoFrame);
-
-    card.appendChild(head);
-    card.appendChild(questionLabel);
-    card.appendChild(questionField);
-    card.appendChild(typeRow);
-    card.appendChild(answersWrap);
-    card.appendChild(multiCorrect);
-    card.appendChild(correctLabel);
-    card.appendChild(correctField);
-    card.appendChild(timeLabel);
-    card.appendChild(shortLabel);
-    card.appendChild(numLabel);
-    card.appendChild(tolLabel);
-    card.appendChild(imageLabel);
-    card.appendChild(imageField);
-    card.appendChild(imagePreview);
-    card.appendChild(videoLabel);
-    card.appendChild(videoField);
-    card.appendChild(videoPreview);
-
+    applyTypeRules(card);
     return card;
-}
-
-function updateImagePreview(inputEl, imgEl){
-    if(!inputEl || !imgEl) return;
-    var url = (inputEl.value || '').trim();
-    if(!url){
-        imgEl.classList.add('hidden');
-        imgEl.src = '';
-        return;
-    }
-    // Usar la misma normalización que en la exportación y el juego. Los SVG
-    // introducidos como data URL pueden contener #, comillas o markup sin
-    // codificar, lo que rompe el atributo src si se asignan directamente.
-    imgEl.src = normalizeSvgDataUrlForImg(url);
-    imgEl.onload = function(){ imgEl.classList.remove('hidden'); };
-    imgEl.onerror = function(){ imgEl.classList.add('hidden'); };
-}
-
-function updateVideoPreview(inputEl, videoEl, iframeEl){
-    if(!inputEl || !videoEl) return;
-    var url = (inputEl.value || '').trim();
-    if(!url){
-        videoEl.classList.add('hidden');
-        videoEl.removeAttribute('src');
-        videoEl.load();
-        if(iframeEl){
-            iframeEl.classList.add('hidden');
-            iframeEl.removeAttribute('src');
-        }
-        return;
-    }
-    var ytId = parseYouTubeId(url);
-    if(ytId && iframeEl){
-        videoEl.classList.add('hidden');
-        videoEl.removeAttribute('src');
-        videoEl.pause();
-        iframeEl.src = 'https://www.youtube-nocookie.com/embed/' + ytId;
-        iframeEl.classList.remove('hidden');
-    }else{
-        if(iframeEl){
-            iframeEl.classList.add('hidden');
-            iframeEl.removeAttribute('src');
-        }
-        videoEl.src = url;
-        videoEl.load();
-        videoEl.onloadeddata = function(){ videoEl.classList.remove('hidden'); };
-        videoEl.onerror = function(){ videoEl.classList.add('hidden'); };
-    }
 }
 
 function parseYouTubeId(url){
@@ -1597,49 +1344,152 @@ function parseYouTubeId(url){
 }
 
 function addQuestion(prefill){
-    questionNum += 1;
-    var questionsDiv = document.getElementById('allQuestions');
-    var card = buildQuestionCard(questionNum, prefill);
-    questionsDiv.appendChild(card);
-    card.querySelector('.question').focus();
-}
-
-function renumberQuestions(){
-    var cards = document.querySelectorAll('.question-card');
-    questionNum = 0;
-    cards.forEach(function(card, idx){
-        var num = idx + 1;
-        questionNum = num;
-        card.setAttribute('data-question', String(num));
-        var pill = card.querySelector('.pill');
-        if(pill){
-            pill.textContent = (lang === 'en' ? 'Question ' : (lang === 'ca' ? 'Pregunta ' : 'Pregunta ')) + String(num);
-        }
-        // update ids to keep order consistent
-        var qField = card.querySelector('.question');
-        if(qField) qField.id = 'q' + num;
-        ['a1','a2','a3','a4'].forEach(function(suffix, idxAns){
-            var inp = card.querySelector('input[id$="'+suffix+'"]');
-            if(inp) inp.id = num + suffix;
-        });
-        var typeSelect = card.querySelector('.question-type');
-        if(typeSelect) typeSelect.id = 'type' + num;
-        var correct = card.querySelector('.correct');
-        if(correct) correct.id = 'correct' + num;
-        var shortField = card.querySelector('input[id^="short"]');
-        if(shortField) shortField.id = 'short' + num;
-        var numField = card.querySelector('input[id^="num"]');
-        if(numField) numField.id = 'num' + num;
-        var tolField = card.querySelector('input[id^="tol"]');
-        if(tolField) tolField.id = 'tol' + num;
-        var timeField = card.querySelector('input[id^="time"]');
-        if(timeField) timeField.id = 'time' + num;
-        var img = card.querySelector('input[id^="img"]');
-        if(img) img.id = 'img' + num;
-        var vid = card.querySelector('input[id^="vid"]');
-        if(vid) vid.id = 'vid' + num;
+    questionCards.push(makeQuestionCard(prefill));
+    Vue.nextTick(function(){
+        var fields = document.querySelectorAll('#allQuestions .question');
+        if(fields.length) fields[fields.length - 1].focus();
     });
 }
+
+// Vigila los dos bloques de acciones (arriba y abajo) y el teclado virtual para mostrar u ocultar la barra fija.
+function watchFixedActions(topEl, bottomEl){
+    if(typeof IntersectionObserver === 'function' && topEl && bottomEl){
+        var observer = new IntersectionObserver(function(entries){
+            entries.forEach(function(entry){
+                if(entry.target === topEl) fixedBar.topVisible = entry.isIntersecting;
+                if(entry.target === bottomEl) fixedBar.bottomVisible = entry.isIntersecting;
+            });
+            fixedBar.ready = true;
+        });
+        observer.observe(topEl);
+        observer.observe(bottomEl);
+    }
+    // Teclado virtual (móvil): se oculta la barra mientras se escribe, para no tapar el campo.
+    var coarse = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+    function typing(){
+        var el = document.activeElement;
+        if(!el) return false;
+        var tag = el.tagName;
+        if(tag === 'TEXTAREA') return true;
+        if(tag !== 'INPUT') return false;
+        return ['checkbox', 'radio', 'button', 'submit', 'file', 'range', 'color'].indexOf((el.type || '').toLowerCase()) === -1;
+    }
+    function updateKeyboard(){
+        var vv = window.visualViewport;
+        var shrunk = !!(vv && vv.height < window.innerHeight * 0.75);
+        fixedBar.keyboard = shrunk || (coarse && typing());
+    }
+    document.addEventListener('focusin', function(){ setTimeout(updateKeyboard, 0); });
+    document.addEventListener('focusout', function(){ setTimeout(updateKeyboard, 0); });
+    if(window.visualViewport) window.visualViewport.addEventListener('resize', updateKeyboard);
+}
+
+Vue.createApp({
+    template: '#creator-tpl',
+    data: function(){
+        return {
+            cards: questionCards,
+            ui: ui,
+            fixedBar: fixedBar,
+            form: form,
+            session: session,
+            // Els nou modes de puntuació de Moodle (gradingtype), amb el seu valor numèric.
+            orderGradingChoices: [
+                { value: 0, key: 'orderGradingAbsolute' }, { value: -1, key: 'orderGradingAll' },
+                { value: 7, key: 'orderGradingRelativeCorrect' }, { value: 1, key: 'orderGradingNextExclude' },
+                { value: 2, key: 'orderGradingNextInclude' }, { value: 3, key: 'orderGradingOnePrevNext' },
+                { value: 4, key: 'orderGradingAllPrevNext' }, { value: 5, key: 'orderGradingLongestOrdered' },
+                { value: 6, key: 'orderGradingLongestContiguous' }
+            ],
+            typeOptions: [
+                ['quiz', 'questionTypeSingle'], ['multiple', 'questionTypeMultiple'],
+                ['true-false', 'questionTypeTf'], ['short-answer', 'questionTypeShort'],
+                ['numeric', 'questionTypeNumeric'], ['poll', 'questionTypePoll'],
+                ['matching', 'questionTypeMatching'], ['order', 'questionTypeOrder']
+            ]
+        };
+    },
+    computed: {
+        showFixedActions: function(){
+            var f = this.fixedBar;
+            return f.ready && !f.topVisible && !f.bottomVisible && !f.keyboard;
+        },
+        showPublicWarning: function(){
+            return !this.session.authenticated && this.form.visibility !== 'private';
+        },
+        selectedTags: function(){
+            return parseTagsInput();
+        }
+    },
+    mounted: function(){
+        watchFixedActions(this.$refs.topActions, this.$refs.bottomActions);
+    },
+    methods: {
+        t: function(key){
+            return t(key);
+        },
+        addTag: addTagToInput,
+        addQuestion: function(){ addQuestion(); },
+        save: function(){ updateDatabase(); },
+        playLocal: function(){ saveLocal(); },
+        cancel: function(){ cancelQuiz(); },
+        pillText: function(num){
+            return (this.ui.lang === 'en' ? 'Question ' : 'Pregunta ') + num;
+        },
+        removeCard: function(index){
+            var l = this.ui.lang;
+            var msg = l === 'en' ? 'Delete this question?' : { fr: 'Supprimer cette question ?', de: 'Diese Frage löschen?', it: 'Eliminare questa domanda?', pt: 'Eliminar esta pergunta?', bg: 'Да се изтрие ли този въпрос?', ar: 'هل تريد حذف هذا السؤال؟' }[l] || (l === 'va' ? 'Eliminar esta pregunta?' : (l === 'ca' ? 'Eliminar aquesta pregunta?' : '¿Eliminar esta pregunta?'));
+            if(window.confirm(msg)){
+                this.cards.splice(index, 1);
+            }
+        },
+        onTypeChange: function(card){
+            applyTypeRules(card);
+        },
+        showCorrect: function(card){
+            return ['multiple', 'short-answer', 'numeric', 'poll', 'matching', 'order'].indexOf(card.type) === -1;
+        },
+        // Elementos de la columna derecha (parejas e impostoras); como máximo 8.
+        rightCount: function(card){
+            return card.pairs.length + card.impostors.length;
+        },
+        matchingCountText: function(card){
+            return t('matchingCount').replace('{n}', this.rightCount(card));
+        },
+        addPair: function(card){
+            if(this.rightCount(card) < MATCHING_MAX_ITEMS) card.pairs.push({ left: '', right: '' });
+        },
+        addImpostor: function(card){
+            if(this.rightCount(card) < MATCHING_MAX_ITEMS) card.impostors.push('');
+        },
+        orderCountText: function(card){
+            return t('orderCount').replace('{n}', card.orderItems.length);
+        },
+        addOrderItem: function(card){
+            if(card.orderItems.length < ORDER_MAX_ITEMS) card.orderItems.push('');
+        },
+        imageSrc: function(card){
+            var url = (card.image || '').trim();
+            // Misma normalización que en el juego: un SVG en data URL con #,
+            // comillas o markup sin codificar rompe el src.
+            return url ? normalizeSvgDataUrlForImg(url) : null;
+        },
+        youTubeEmbed: function(card){
+            var id = parseYouTubeId((card.video || '').trim());
+            return id ? 'https://www.youtube-nocookie.com/embed/' + id : null;
+        },
+        videoSrc: function(card){
+            var url = (card.video || '').trim();
+            return (url && !parseYouTubeId(url)) ? url : null;
+        },
+        onImageInput: function(card){
+            if(!(card.image || '').trim()) card.imageOk = false;
+        },
+        onVideoInput: function(card){
+            if(!(card.video || '').trim() || parseYouTubeId(card.video.trim())) card.videoOk = false;
+        }
+    }
+}).mount('#creator-app');
 
 //Called when user wants to exit quiz creator
 function cancelQuiz(){
@@ -1702,41 +1552,31 @@ async function loadQuiz(id){
             return;
         }
         editingId = quiz.id;
-        document.getElementById('name').value = quiz.name || '';
-        if(quiz.tags && quiz.tags.length){
-            document.getElementById('tags').value = quiz.tags.join(', ');
-            renderTagSuggestions();
-        }
-        if(document.getElementById('visibility')){
-            document.getElementById('visibility').value = quiz.visibility || 'public';
-        }
-        if(document.getElementById('allow-clone')){
-            document.getElementById('allow-clone').checked = !!quiz.allowClone;
-        }
-        if(document.getElementById('language')){
-            document.getElementById('language').value = quiz.language || '';
-        }
-        if(document.getElementById('license')){
-            document.getElementById('license').value = quiz.license || '';
-        }
-        if(document.getElementById('description')){
-            document.getElementById('description').value = quiz.description || '';
-        }
-        var container = document.getElementById('allQuestions');
-        container.innerHTML = '';
-        questionNum = 0;
+        form.name = quiz.name || '';
+        form.tags = (quiz.tags && quiz.tags.length) ? quiz.tags.join(', ') : form.tags;
+        form.visibility = quiz.visibility || 'public';
+        form.allowClone = !!quiz.allowClone;
+        form.language = quiz.language || '';
+        form.license = quiz.license || '';
+        form.description = quiz.description || '';
+        questionCards.splice(0);
         (quiz.questions || []).forEach(function(q){
             addQuestion(q);
         });
-        if(questionNum === 0){
+        if(questionCards.length === 0){
             addQuestion();
         }
+        // Al editar, el cursor va al títol (addQuestion el posa a la última pregunta; aquest nextTick va després).
+        Vue.nextTick(function(){
+            var nameInput = document.getElementById('name');
+            if(nameInput) nameInput.focus();
+        });
         var subtitle = document.getElementById('subtitle');
         if(subtitle){
             subtitle.textContent = 'Editando quiz ID ' + id;
         }
     }catch(err){
-        alert('No se pudo cargar el quiz.');
+        alert(t('loadError'));
     }
 }
 
@@ -1753,100 +1593,37 @@ initQuizCreator();
 fetchKnownTags();
 
 function parseTagsInput(){
-    var raw = document.getElementById('tags') ? document.getElementById('tags').value : '';
+    var raw = form.tags;
     if(!raw) return [];
     return raw.split(',').map(function(t){ return t.trim().toLowerCase(); }).filter(function(t){ return t.length; });
 }
 
 function addTagToInput(tag){
-    var input = document.getElementById('tags');
-    if(!input) return;
     var tags = parseTagsInput();
     if(tags.indexOf(tag) !== -1) return;
     tags.push(tag);
-    input.value = tags.join(', ');
-}
-
-function renderTagSuggestions(){
-    var wrap = document.getElementById('tag-suggestions');
-    if(!wrap) return;
-    wrap.innerHTML = '';
-    if(!knownTags.length){
-        return;
-    }
-    var label = document.createElement('span');
-    label.className = 'label';
-    label.textContent = t('suggestedTags');
-    wrap.appendChild(label);
-    knownTags.forEach(function(tag){
-        var btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'tag' + (parseTagsInput().indexOf(tag) !== -1 ? ' active' : '');
-        btn.textContent = tag;
-        btn.onclick = function(){ addTagToInput(tag); renderTagSuggestions(); };
-        wrap.appendChild(btn);
-    });
-}
-
-function setupMoodleExportModal(){
-    var modal = document.getElementById('moodleModal');
-    if(!modal) return;
-    var confirmBtn = document.getElementById('moodleModalConfirm');
-    var cancelBtn = document.getElementById('moodleModalCancel');
-    if(confirmBtn){
-        confirmBtn.type = 'button';
-        confirmBtn.addEventListener('click', function(event){
-            event.preventDefault();
-            confirmMoodleExport();
-        });
-    }
-    if(cancelBtn){
-        cancelBtn.type = 'button';
-        cancelBtn.addEventListener('click', function(event){
-            event.preventDefault();
-            closeMoodleExportModal();
-        });
-    }
-    modal.addEventListener('click', function(event){
-        if(event.target === modal){
-            closeMoodleExportModal();
-        }
-    });
+    form.tags = tags.join(', ');
 }
 
 function fetchKnownTags(){
     return fetch('/api/tags', { credentials: 'include' })
         .then(function(res){ return res.json(); })
         .then(function(data){
-            knownTags = Array.isArray(data.tags) ? data.tags : [];
-            renderTagSuggestions();
+            session.knownTags = Array.isArray(data.tags) ? data.tags : [];
         })
         .catch(function(){
-            knownTags = [];
-            renderTagSuggestions();
+            session.knownTags = [];
         });
 }
 
 var langSelector = document.getElementById('lang-select');
 if(langSelector){
-    langSelector.value = lang;
+    langSelector.value = ui.lang;
     langSelector.addEventListener('change', function(){
-        lang = langSelector.value;
-        EduhootLang.persist(lang);
+        ui.lang = langSelector.value;
+        EduhootLang.persist(ui.lang);
         applyI18n();
     });
 }
-var tagsInputEl = document.getElementById('tags');
-if(tagsInputEl){
-    tagsInputEl.addEventListener('input', function(){
-        renderTagSuggestions();
-    });
-}
-var visibilitySelect = document.getElementById('visibility');
-if(visibilitySelect){
-    visibilitySelect.addEventListener('change', updateVisibilityWarning);
-}
-setupMoodleExportModal();
 applyI18n();
-updateVisibilityWarning();
 refreshAuthStatus();

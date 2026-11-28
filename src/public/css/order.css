@@ -1,0 +1,27 @@
+/* Tauler d'ordenar (feature 7): llista vertical amb asa i fletxes. */
+.order-board{ width: 100%; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.order-list{ list-style: none; margin: 0; padding: 0; width: 100%; max-width: 520px; display: flex; flex-direction: column; gap: 8px; }
+.order-item{
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; border-radius: 12px;
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18);
+    color: #fff; font-weight: 700; cursor: grab;
+}
+.order-handle{ opacity: 0.7; font-size: 18px; user-select: none; }
+.order-text{ flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.order-move{
+    border: 1px solid rgba(255,255,255,0.3); background: rgba(0,0,0,0.25); color: #fff;
+    border-radius: 8px; min-width: 40px; min-height: 40px; font-size: 16px; cursor: pointer;
+}
+.order-move:disabled{ opacity: 0.35; cursor: default; }
+.order-move:focus-visible{ outline: 3px solid #ffee70; outline-offset: 2px; }
+/* Botó propi: el tauler es veu igual a totes les pàgines (no depèn de .button de /player/game/). */
+.order-submit{ min-width: 180px; padding: 10px 18px; border: 0; border-radius: 12px; background: #fdbc4b; color: #1f2937; font: inherit; font-weight: 800; cursor: pointer; }
+.order-submit:disabled{ opacity: 0.5; cursor: not-allowed; }
+.order-board--horizontal .order-list{ flex-direction: row; flex-wrap: wrap; justify-content: center; }
+
+/* Projector: la llista d'ordenar (durant la pregunta) i la solució (en mostrar el resultat). */
+.host-order{ list-style: none; margin: 12px auto; padding: 0; display: flex; flex-direction: column; gap: 8px; max-width: 640px; }
+.host-order-item{ display: flex; align-items: center; gap: 12px; padding: 8px 12px; border-radius: 10px; background: rgba(255,255,255,0.1); color: #fff; font-size: 1.1em; font-weight: 700; }
+.host-order--solution .host-order-item{ background: rgba(34,197,94,0.22); }
+.results-order-hint{ text-align: center; font-weight: 700; margin: 8px 0 0; }

@@ -1,0 +1,30 @@
+/* Pàgines de llista (Mis partidas i Mis deberes): mateixa tipografia, mides, enllaços i controls que la biblioteca.
+   Només els colors són propis de cada pàgina (partidas.css, homeworkManage.css). */
+.lp-title{ font-size: 50px; margin: 0.67em 0 6px; display: flex; align-items: center; gap: 0.28em; min-width: 0; }
+.lp-title span{ min-width: 0; }
+.lp-title .title-logo{ height: 1.1em; width: auto; border-radius: 0.18em; flex: none; }
+
+.lp-toolbar{ display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between; margin: 6px 0 14px; }
+.lp-view{ display: inline-flex; gap: 6px; }
+.lp-view .btn.is-active{ background: rgba(255,255,255,0.22); border-color: rgba(255,255,255,0.45); color: #fff; }
+.lp-cover{ display: inline-flex; align-items: center; gap: 8px; font-weight: 600; }
+.lp-cover select{
+    padding: 6px 12px; border-radius: 999px; font: inherit; font-weight: 600;
+    border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.08); color: #fff;
+}
+.lp-cover select option{ color: #14101f; background: #fff; }
+
+/* Botons de les llistes: mateixa tipografia i una sola línia; en mòbil, emoticona (el text queda accessible però ocult). */
+.hw-actions .btn, .hw-d-actions .btn, .pt-table .btn, .pt-game .btn, .lp-view .btn, .pagination .btn, .pagination-fixed .btn{
+    font: inherit; font-size: 13px; font-weight: 700; line-height: 1.2; white-space: nowrap;
+    padding: 6px 12px; min-height: 34px; text-decoration: none;
+    display: inline-flex; align-items: center; justify-content: center; gap: 5px; box-sizing: border-box;
+}
+.lp-txt{ position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.lp-ico{ display: inline; font-size: 17px; line-height: 1; }
+.hw-actions .btn, .hw-d-actions .btn, .pt-table .btn, .pt-game .btn{ min-width: 38px; }
+
+
+@media (max-width: 760px){
+    .lp-title{ font-size: 32px; margin: 6px 0 0; }
+}

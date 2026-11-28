@@ -1,9 +1,13 @@
 const { getGamesCollection } = require('../data/repositories');
+const { logger, quizFields } = require('../logger');
+const { buildAnswerStatus, leftListOf } = require('./answerStatus');
+const { recordKick, listKicked, unkick } = require('./kick');
+const { normalizeTimings } = require('../services/gameTimings');
 
 // disconnect, getScore, time, timeUp, requestDbNames — esdeveniments de
 // socket que no són específics ni d'amfitrió ni d'alumnat.
 module.exports = function createCommonEvents({ io, games, players, helpers, selectQuizzesForUser }) {
-  const { scheduleHostReconnectCleanup, HOST_RECONNECT_GRACE_MS, PLAYER_RECONNECT_GRACE_MS, scheduleGameCleanup, GAME_INACTIVITY_TIMEOUT, emitQuestionOverPayloadDeferred, logGames } = helpers;
+  const { scheduleHostReconnectCleanup, timingsFor, scheduleGameCleanup, emitQuestionOverPayloadDeferred, logGames, stopAutoAdvance } = helpers;
 
   return function registerCommonEvents(socket) {
     socket.on('disconnect', () => {
@@ -12,12 +16,12 @@ module.exports = function createCommonEvents({ io, games, players, helpers, sele
         if (game.gameLive === false) {
           scheduleHostReconnectCleanup(game, socket.id);
           io.to(game.pin).emit('hostReconnecting', {
-            reconnectGraceMs: HOST_RECONNECT_GRACE_MS
+            reconnectGraceMs: timingsFor(socket.id).hostReconnectMs
           });
         } else {
           scheduleHostReconnectCleanup(game, socket.id);
           io.to(game.pin).emit('hostReconnecting', {
-            reconnectGraceMs: HOST_RECONNECT_GRACE_MS
+            reconnectGraceMs: timingsFor(socket.id).hostReconnectMs
           });
         }
       } else {
@@ -33,6 +37,7 @@ module.exports = function createCommonEvents({ io, games, players, helpers, sele
               const stillMissing = players.getPlayer(socket.id);
               if (stillMissing) {
                 players.removePlayer(socket.id);
+                logger.info('Jugador eliminat tras el marge de reconnexió', { tag: 'player-leave', pin, hostId, playerId: socket.id });
                 const playersInGame = players.getPlayers(hostId);
                 io.to(pin).emit('updatePlayerLobby', playersInGame);
                 io.to(hostId).emit('updatePlayerLobby', playersInGame);
@@ -47,7 +52,7 @@ module.exports = function createCommonEvents({ io, games, players, helpers, sele
                   }
                 }
               }
-            }, PLAYER_RECONNECT_GRACE_MS);
+            }, timingsFor(hostId).playerReconnectMs);
             socket.leave(pin);
           }
         }
@@ -68,6 +73,116 @@ module.exports = function createCommonEvents({ io, games, players, helpers, sele
       // Scoring is computed on playerAnswer using server time.
     });
 
+    // Solo el anfitrión (su socket es el id de la partida): pide el estado de respuesta de la pregunta actual.
+    socket.on('getAnswerStatus', () => {
+      const game = games.getGame(socket.id);
+      if (!game || !game.gameData) return;
+      socket.emit('answerStatus', buildAnswerStatus(players.getPlayers(socket.id), game.gameData.question, leftListOf(game, players.getPlayers(socket.id))));
+    });
+
+    // Solo el anfitrión: pausa o tiempo restante del temporizador, para que los alumnos lo sigan.
+    socket.on('timerSync', (data) => {
+      const game = games.getGame(socket.id);
+      if (!game || !game.gameData) return;
+      // Partida pausada: no se aceptan respuestas ni avance mientras dure la pausa.
+      game.paused = !!(data && data.paused);
+      const time = Math.max(0, Math.min(600, Math.round(Number(data && data.time) || 0)));
+      io.to(game.pin).emit('timerSync', { time, paused: !!(data && data.paused) });
+    });
+
+    // Solo el anfitrión de la partida puede expulsar a un alumno (issue #29).
+    // Se bloquea su token y su nombre, y se le avisa solo a él.
+    socket.on('kick-player', (data) => {
+      const game = games.getGame(socket.id);
+      const target = players.getPlayer(data && data.playerId);
+      if (!game || !target || target.hostId !== socket.id) return;
+      recordKick(game, target);
+      players.removePlayer(target.playerId);
+      const targetSocket = io.sockets.sockets.get(target.playerId);
+      if (targetSocket) targetSocket.leave(game.pin);
+      io.to(target.playerId).emit('kicked');
+      const playersInGame = players.getPlayers(socket.id);
+      io.to(game.pin).emit('updatePlayerLobby', playersInGame);
+      io.to(socket.id).emit('updatePlayerLobby', playersInGame);
+      io.to(game.pin).emit('playersUpdated', playersInGame.length);
+      if (game.gameData) {
+        io.to(socket.id).emit('answerStatus', buildAnswerStatus(playersInGame, game.gameData.question, leftListOf(game, playersInGame)));
+      }
+      io.to(socket.id).emit('kickedList', listKicked(game));
+      logger.info('Jugador expulsat per l\'amfitrió', { tag: 'player-kick', pin: game.pin, hostId: socket.id, playerId: target.playerId, ...quizFields(game) });
+    });
+
+    // Solo el anfitrión: lista de expulsados (sin tokens) y desbloqueo de uno de ellos.
+    // Solo el anfitrión: cancela la partida (tras confirmar en la pantalla). Se cierra para todos.
+    socket.on('cancelGame', () => {
+      const game = games.getGame(socket.id);
+      if (!game) return;
+      const pin = game.pin;
+      stopAutoAdvance(game);
+      if (game.cleanupTimer) clearTimeout(game.cleanupTimer);
+      games.removeGame(socket.id);
+      players.getPlayers(socket.id).forEach((p) => players.removePlayer(p.playerId));
+      io.to(pin).emit('hostDisconnect');
+      socket.emit('gameCancelled');
+      logger.info('Partida cancel·lada per l\'amfitrió', { tag: 'game-cancel', pin, hostId: socket.id, ...quizFields(game) });
+    });
+
+    // Solo el anfitrión: ampliación de tiempos de esta partida (issue #13). Vacío = mínimos.
+    // Solo afecta a temporizadores que se programen después.
+    socket.on('setGameTimings', (data) => {
+      const game = games.getGame(socket.id);
+      if (!game) return;
+      game.timingOverrides = normalizeTimings(data);
+    });
+
+    // Solo el anfitrión: nombres aleatorios para el alumnado (feature 12). Se puede cambiar en el lobby
+    // mientras no haya ningún alumno unido.
+    socket.on('setRandomNames', (data) => {
+      const game = games.getGame(socket.id);
+      if (!game) return;
+      if (players.getPlayers(socket.id).length > 0) return;
+      game.randomNames = !!(data && data.enabled);
+    });
+
+    socket.on('getKickedList', () => {
+      const game = games.getGame(socket.id);
+      if (!game) return;
+      socket.emit('kickedList', listKicked(game));
+    });
+
+    // El alumnado sale de la partida (con confirmación en su pantalla): se le quita de la lista del anfitrión.
+    socket.on('playerLeave', () => {
+      const player = players.getPlayer(socket.id);
+      if (!player) return;
+      const hostId = player.hostId;
+      const hostGame = games.getGame(hostId);
+      if (hostGame) {
+        // Lista de abandonos del anfitrión (aparte de los expulsados). Sin tokens.
+        hostGame.leftPlayers = (hostGame.leftPlayers || []).filter((l) => l.id !== socket.id);
+        hostGame.leftPlayers.push({ id: socket.id, name: player.name, icon: player.icon || '', token: player.token || '' });
+      }
+      if (player.token) players.tokens.delete(player.token);
+      players.removePlayer(socket.id);
+      socket.leave(hostGame ? hostGame.pin : '');
+      if (hostGame) {
+        const playersInGame = players.getPlayers(hostId);
+        io.to(hostGame.pin).emit('updatePlayerLobby', playersInGame);
+        io.to(hostId).emit('updatePlayerLobby', playersInGame);
+        io.to(hostId).emit('answerStatus', buildAnswerStatus(playersInGame, hostGame.gameData ? hostGame.gameData.question : 0, leftListOf(hostGame, playersInGame)));
+        logger.info('Alumne ha sortit de la partida', { tag: 'player-leave', pin: hostGame.pin, hostId, playerId: socket.id, ...quizFields(hostGame) });
+      }
+      socket.emit('playerLeft');
+    });
+
+    socket.on('unkick-player', (data) => {
+      const game = games.getGame(socket.id);
+      if (!game) return;
+      if (unkick(game, data && data.id)) {
+        logger.info('Expulsió retirada per l\'amfitrió', { tag: 'player-unkick', pin: game.pin, hostId: socket.id, ...quizFields(game) });
+      }
+      socket.emit('kickedList', listKicked(game));
+    });
+
     socket.on('timeUp', async () => {
       const game = games.getGame(socket.id);
       if (!game) {
@@ -85,9 +200,9 @@ module.exports = function createCommonEvents({ io, games, players, helpers, sele
           return;
         }
         emitQuestionOverPayloadDeferred(game);
-        scheduleGameCleanup(socket.id, GAME_INACTIVITY_TIMEOUT);
+        scheduleGameCleanup(socket.id, timingsFor(socket.id).inactivityMs);
       } catch (err) {
-        console.error('timeUp error', err);
+        logger.error('timeUp error', { tag: 'timeUp', error: err && err.message ? err.message : String(err) });
         socket.emit('noGameFound');
       }
     });
@@ -99,7 +214,7 @@ module.exports = function createCommonEvents({ io, games, players, helpers, sele
         const filtered = selectQuizzesForUser(res, socket.user);
         socket.emit('gameNamesData', filtered);
       } catch (err) {
-        console.error('requestDbNames error', err);
+        logger.error('requestDbNames error', { tag: 'requestDbNames', error: err && err.message ? err.message : String(err) });
         socket.emit('gameNamesData', []);
       }
     });

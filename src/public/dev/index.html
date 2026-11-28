@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <link rel="icon" href="/icons/logo.svg" type="image/svg+xml">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex">
+    <title>Entorno de desarrollo | EduHoot</title>
+    <link href="/css/fonts.css" rel="stylesheet">
+    <style>
+        /* Mateix llenguatge visual que la biblioteca (/create/), amb un fons una mica més clar. */
+        body{
+            margin: 0; min-height: 100vh; box-sizing: border-box; padding: 32px 20px 48px;
+            font-family: 'Raleway', sans-serif; color: #e5e7eb;
+            background: linear-gradient(135deg, #16203a, #26395c);
+        }
+        main{ max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 6px; }
+        h1{ margin: 18px 0 4px; font-size: 40px; line-height: 1.1; color: #fdbc4b; font-weight: 800; }
+        h2{ margin: 26px 0 10px; font-size: 16px; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; font-weight: 700; }
+        p.note{ margin: 0; font-size: 14px; line-height: 1.5; color: #94a3b8; }
+        ul{ list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+        a.card{
+            display: block; padding: 14px 16px; border-radius: 14px; text-decoration: none; color: #f1f5f9;
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.10);
+            box-shadow: 0 14px 30px rgba(0,0,0,0.25);
+        }
+        a.card:hover, a.card:focus-visible{ background: rgba(255,255,255,0.09); border-color: #fdbc4b; outline: none; }
+        a.card strong{ display: block; font-size: 17px; color: #fff; }
+        a.card span{ display: block; font-size: 14px; color: #94a3b8; margin-top: 4px; }
+        .chip{
+            display: inline-block; align-self: flex-start; padding: 8px 14px; border-radius: 999px;
+            background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.14); color: #e2e8f0;
+            text-decoration: none; font-weight: 700; font-size: 14px;
+        }
+        .chip:hover{ border-color: #fdbc4b; }
+    </style>
+</head>
+<body>
+    <main>
+        <a class="chip" href="/create/">Inicio</a>
+        <h1>Entorno de desarrollo</h1>
+        <p class="note">Solo disponible en desarrollo. En preproducción (stage) hace falta una sesión de administración; en producción, 404.</p>
+
+        <h2>Entrada de desarrollo</h2>
+        <ul>
+            <li><a class="card" href="/dev/login"><strong>Login de desarrollo</strong><span>Entrada rápida con los usuarios de prueba (sembrados por seed-dev-data).</span></a></li>
+        </ul>
+
+        <h2>Pruebas de concepto</h2>
+        <ul>
+            <li><a class="card" href="./anfitrion/"><strong>Anfitrión</strong><span>Sala y partida desde el punto de vista del docente (maqueta, sin servidor).</span></a></li>
+            <li><a class="card" href="./cabecera-lobby/"><strong>Cabecera del lobby</strong><span>Prototipo: disposición del icono de EduHoot, el título del quiz, el PIN y el QR en el lobby del anfitrión (sin servidor).</span></a></li>
+            <li><a class="card" href="./correspondencia/"><strong>Correspondencia</strong><span>Pregunta de emparejar (feature 7): columnas, impostores y puntuación.</span></a></li>
+            <li><a class="card" href="./fantasma/"><strong>Mode fantasma</strong><span>Millor marca personal en Solo: diferència pregunta a pregunta, amb l'aspecte de Solo.</span></a></li>
+            <li><a class="card" href="./ordenar/"><strong>Ordenar</strong><span>Pregunta de ordenar (feature 7) con el tablero real: flechas y arrastrar, cinco preguntas de informática.</span></a></li>
+        </ul>
+    </main>
+</body>
+</html>

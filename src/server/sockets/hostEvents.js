@@ -1,15 +1,22 @@
 const { getGamesCollection } = require('../data/repositories');
+const { logger, quizFields } = require('../logger');
+const { normalizeAutoAdvance } = require('../services/autoAdvance');
+// El lobby mostra l'inici del vídeo només si alguna pregunta en té.
+const hasVideoQuestion = (list) => (Array.isArray(list) ? list : []).some((q) => !!(q && q.video));
+const { hasMatchingQuestion, hasCompositeQuestion, isCompositeType, normalizeMatchingBlindStyle, normalizeMatchingExtraTime } = require('../questionUtils');
+const { ghostStartInfo } = require('../services/ghostMark');
 
 // host-join, host-join-game, startGame, nextQuestion, skipQuestion, newQuiz.
 module.exports = function createHostEvents({
+  selfPaced,
   io,
   games,
   players,
   helpers,
   findGameById,
   canUseQuiz,
+  parseCookies,
   cleanImportedText,
-  isMultiplayerFreeTypeQuestion,
   cacheFinishedSessionReport,
   incrementQuizStats,
   commons,
@@ -22,15 +29,33 @@ module.exports = function createHostEvents({
   GLOBAL_OWNER_EMAIL
 }) {
   const {
-    GAME_INACTIVITY_TIMEOUT,
+    timingsFor,
+    stopAutoAdvance,
+    emitAutoAdvanceState,
+    onAutoAdvanceStepDone,
+    setAutoAdvancePaused,
     markHostConnected,
     scheduleGameCleanup,
     getCurrentQuestionPayload,
     buildQuestions,
     buildStudentPlayerPayload,
     scheduleQuestionCountdown,
-    logGames
+    logGames,
+    finishVideoLearning,
+    countdownPreviewOf
   } = helpers;
+
+  // En reconnectar l'anfitrió, la partida torna a estar oberta… excepte l'autoritme ja acabat (no es reobri).
+  function reopenUnlessEnded(game) {
+    if (game.gameData && game.gameData.selfPacedEnded) return;
+    game.gameOver = false;
+  }
+
+  // Qui demana la partida: l'usuari del socket i el token del dispositiu (cookie), per als quizzes privats.
+  function viewerOfSocket(socket) {
+    const cookies = parseCookies((socket.handshake && socket.handshake.headers && socket.handshake.headers.cookie) || '');
+    return { ...(socket.user || {}), ownerToken: cookies.eduh_owner || '' };
+  }
 
   return function registerHostEvents(socket) {
     socket.on('host-join', async (data) => {
@@ -41,8 +66,8 @@ module.exports = function createHostEvents({
           const previousHostId = existingByPin.hostId;
           markHostConnected(existingByPin);
           existingByPin.hostId = socket.id;
-          existingByPin.gameOver = false;
-          scheduleGameCleanup(socket.id, GAME_INACTIVITY_TIMEOUT);
+          reopenUnlessEnded(existingByPin);
+          scheduleGameCleanup(socket.id, timingsFor(socket.id).inactivityMs);
           socket.join(existingByPin.pin);
 
           for (let i = 0; i < Object.keys(players.players).length; i++) {
@@ -52,7 +77,13 @@ module.exports = function createHostEvents({
           }
 
           const playersInGame = players.getPlayers(socket.id);
-          socket.emit('showGamePin', { pin: existingByPin.pin });
+          socket.emit('showGamePin', {
+            pin: existingByPin.pin,
+            quizName: (existingByPin.gameData && existingByPin.gameData.quizName) || '',
+            hasMatching: hasMatchingQuestion(existingByPin.gameData && existingByPin.gameData.originalQuestions),
+            hasVideo: hasVideoQuestion(existingByPin.gameData && existingByPin.gameData.originalQuestions),
+            hasComposite: hasCompositeQuestion(existingByPin.gameData && existingByPin.gameData.originalQuestions)
+          });
           socket.emit('updatePlayerLobby', playersInGame);
           io.to(existingByPin.pin).emit('hostReconnected');
           return;
@@ -60,7 +91,7 @@ module.exports = function createHostEvents({
 
         const kahoot = await findGameById(data.id);
 
-        if (kahoot && canUseQuiz(kahoot, socket.user)) {
+        if (kahoot && canUseQuiz(kahoot, viewerOfSocket(socket))) {
           let gamePin = null;
           for (let attempt = 0; attempt < 30; attempt++) {
             const candidate = Math.floor(Math.random() * 90000) + 10000;
@@ -77,24 +108,18 @@ module.exports = function createHostEvents({
           }
 
           const originalQuestions = Array.isArray(kahoot.questions) ? kahoot.questions : [];
-          const multiplayerQuestions = originalQuestions.filter((q) => !isMultiplayerFreeTypeQuestion(q));
-          if (multiplayerQuestions.length === 0) {
-            socket.emit('hostError', {
-              error: 'Este quiz no tiene preguntas compatibles con multijugador (se omiten las de escribir: respuesta corta/numérica).'
-            });
-            socket.emit('noGameFound');
-            return;
-          }
 
           games.addGame(gamePin, socket.id, false, {
             playersAnswered: 0,
             questionLive: false,
             gameid: data.id,
+            // Usuari amb compte que crea la partida (per al registre); buit si és anònim.
+            ownerUserId: socket.user && socket.user.id ? String(socket.user.id) : '',
             quizName: cleanImportedText(kahoot.name || ''),
             question: 1,
             questions: [],
-            originalQuestions: multiplayerQuestions,
-            totalQuestions: multiplayerQuestions.length,
+            originalQuestions: originalQuestions,
+            totalQuestions: originalQuestions.length,
             options: {
               randomQuestions: false,
               randomAnswers: true,
@@ -105,21 +130,26 @@ module.exports = function createHostEvents({
 
           const game = games.getGame(socket.id);
           game.gameOver = false;
-          scheduleGameCleanup(socket.id, GAME_INACTIVITY_TIMEOUT);
+          scheduleGameCleanup(socket.id, timingsFor(socket.id).inactivityMs);
 
           socket.join(game.pin);
 
-          console.log('Game Created with pin:', game.pin);
+          logger.info('Partida creada', { tag: 'host-join', pin: game.pin, hostId: game.hostId, ...quizFields(game) });
           logGames('host-join');
 
+          // hasMatching: el lobby ofrece cómo responder a ciegas las correspondencias.
           socket.emit('showGamePin', {
-            pin: game.pin
+            pin: game.pin,
+            quizName: game.gameData.quizName || '',
+            hasMatching: hasMatchingQuestion(originalQuestions),
+            hasVideo: hasVideoQuestion(originalQuestions),
+            hasComposite: hasCompositeQuestion(originalQuestions)
           });
         } else {
           socket.emit('noGameFound');
         }
       } catch (err) {
-        console.error('host-join error', err);
+        logger.error('host-join error', { tag: 'host-join', error: err && err.message ? err.message : String(err) });
         socket.emit('noGameFound');
       }
     });
@@ -132,8 +162,8 @@ module.exports = function createHostEvents({
         const previousHostId = game.hostId;
         markHostConnected(game);
         game.hostId = socket.id;
-        game.gameOver = false;
-        scheduleGameCleanup(socket.id, GAME_INACTIVITY_TIMEOUT);
+        reopenUnlessEnded(game);
+        scheduleGameCleanup(socket.id, timingsFor(socket.id).inactivityMs);
         socket.join(game.pin);
         const playerData = players.getPlayers(previousHostId);
         for (let i = 0; i < Object.keys(players.players).length; i++) {
@@ -149,17 +179,41 @@ module.exports = function createHostEvents({
             return;
           }
 
+          // Autoritme: no hay pregunta común; el anfitrión solo vuelve a ver el progreso.
+          if (game.gameData.options && game.gameData.options.mode === 'selfPaced') {
+            socket.emit('gamePin', {
+              pin: game.pin,
+              quizName: game.gameData.quizName || '',
+              hasMatching: false,
+              matchingExtraTime: normalizeMatchingExtraTime(game.gameData.options.matchingExtraTime)
+            });
+            socket.emit('hostSession', { hostId: game.hostId, pin: game.pin });
+            io.to(game.pin).emit('hostReconnected');
+            selfPaced.emitProgress(game);
+            if (game.gameData.selfPacedEnded) socket.emit('GameOver', selfPaced.podiumOf(game));
+            return;
+          }
           const currentIdx = Math.max(0, Math.min((game.gameData.question || 1) - 1, kahootQuestions.length - 1));
           const currentQuestion = kahootQuestions[currentIdx];
           const countdownRemaining = game.gameData.questionPending
             ? Math.max(0, Math.ceil(((game.gameData.questionCountdownEndsAt || Date.now()) - Date.now()) / 1000))
             : 0;
 
-          if (game.gameData.questionPending) {
+          // Fase del vídeo (feature 24): l'anfitrió torna a veure el vídeo; l'alumnat no rep ni pregunta ni vídeo.
+          const learning = !!game.gameData.questionLearning;
+          if (learning) {
+            socket.emit('videoLearn', {
+              questionNumber: game.gameData.question,
+              video: currentQuestion.video || '',
+              image: currentQuestion.image || '',
+              startAt: Number(game.gameData.options && game.gameData.options.videoStartSec) || 0
+            });
+          } else if (game.gameData.questionPending) {
             socket.emit('questionCountdown', {
               seconds: countdownRemaining,
               questionNumber: game.gameData.question,
-              totalQuestions: game.gameData.totalQuestions || kahootQuestions.length || 0
+              totalQuestions: game.gameData.totalQuestions || kahootQuestions.length || 0,
+              preview: countdownPreviewOf(game)
             });
           } else {
             const payload = getCurrentQuestionPayload(game);
@@ -170,33 +224,91 @@ module.exports = function createHostEvents({
               });
             }
           }
-          socket.emit('gamePin', { pin: game.pin });
+          // Título del quiz y, si hay correspondencias, el margen de tiempo (se puede cambiar).
+          socket.emit('gamePin', {
+            pin: game.pin,
+            quizName: game.gameData.quizName || '',
+            hasMatching: (game.gameData.questions || []).some((q) => q && q.type === 'matching'),
+            hasVideo: hasVideoQuestion(game.gameData.questions),
+            hasComposite: (game.gameData.questions || []).some((q) => q && isCompositeType(q.type)),
+            matchingExtraTime: normalizeMatchingExtraTime(game.gameData.options && game.gameData.options.matchingExtraTime)
+          });
           socket.emit('hostSession', { hostId: game.hostId, pin: game.pin });
           io.to(game.pin).emit('hostReconnected');
-          if (!game.gameData.questionPending) {
-            io.to(game.pin).emit('questionMedia', { image: currentQuestion.image || '', video: currentQuestion.video || '' });
+          if (!game.gameData.questionPending && !learning) {
+            // El vídeo ja l'ha vist l'anfitrió: l'alumnat rep només la imatge i la pregunta.
+            io.to(game.pin).emit('questionMedia', { image: currentQuestion.image || '', video: '' });
             const fullPlayerPayload = {
               question: currentQuestion.question,
               answers: currentQuestion.answers,
               type: currentQuestion.type || 'quiz',
               image: currentQuestion.image || '',
-              video: currentQuestion.video || '',
-              pointsMultiplier: Number(currentQuestion.pointsMultiplier) > 1 ? 2 : 1
+              video: '',
+              pointsMultiplier: Number(currentQuestion.pointsMultiplier) > 1 ? 2 : 1,
+              ...(currentQuestion.type === 'matching'
+                ? { matchLeft: currentQuestion.matchLeft, matchRight: currentQuestion.matchRight }
+                : {})
             };
             io.to(game.pin).emit('playerQuestion', buildStudentPlayerPayload(fullPlayerPayload, game.gameData.options));
           }
         } catch (err) {
-          console.error('host-join-game error', err);
+          logger.error('host-join-game error', { tag: 'host-join-game', error: err && err.message ? err.message : String(err) });
           socket.emit('noGameFound');
         }
 
-        io.to(game.pin).emit('gameStartedPlayer');
+        io.to(game.pin).emit('gameStartedPlayer', { mode: (game.gameData.options && game.gameData.options.mode) || 'live' });
       } else {
         socket.emit('noGameFound');
       }
     });
 
+    // Avance automático: el servidor pide un paso de resultados y el anfitrión responde.
+    socket.on('autoAdvanceStepDone', (data) => {
+      const game = games.getGame(socket.id);
+      if (!game) return;
+      onAutoAdvanceStepDone(game, data && data.stage);
+    });
+
+    // Pausar o reanudar también durante los resultados (cuenta del avance automático).
+    socket.on('autoAdvancePause', (data) => {
+      const game = games.getGame(socket.id);
+      if (!game || !game.gameData) return;
+      setAutoAdvancePaused(game, !!(data && data.paused));
+    });
+
+    // Puntuaciones y ranking durante la partida: cambia la opción de la partida (podio y resultados siguientes).
+    socket.on('setShowScores', (data) => {
+      const game = games.getGame(socket.id);
+      if (!game || !game.gameData) return;
+      game.gameData.options = game.gameData.options || {};
+      game.gameData.options.showScoresBetween = !!(data && data.enabled);
+    });
+
+    // Cambiar el avance automático durante la partida: se aplica desde la siguiente pregunta.
+    socket.on('setAutoAdvance', (data) => {
+      const game = games.getGame(socket.id);
+      if (!game || !game.gameData) return;
+      game.gameData.options = game.gameData.options || {};
+      game.gameData.options.autoAdvanceSec = normalizeAutoAdvance(data && data.seconds);
+      emitAutoAdvanceState(game);
+    });
+
+    // Más tiempo en las correspondencias durante la partida: se aplica desde la siguiente pregunta.
+    socket.on('setMatchingExtraTime', (data) => {
+      const game = games.getGame(socket.id);
+      if (!game || !game.gameData) return;
+      game.gameData.options = game.gameData.options || {};
+      game.gameData.options.matchingExtraTime = normalizeMatchingExtraTime(data && data.percent);
+    });
+
     socket.on('nextQuestion', async () => {
+      const pausedGame = games.getGame(socket.id);
+      if (pausedGame && pausedGame.paused) {
+        socket.emit('gamePaused');
+        return;
+      }
+      // Avance manual o automático: se para la cuenta de resultados en curso.
+      if (pausedGame) stopAutoAdvance(pausedGame);
       for (let i = 0; i < Object.keys(players.players).length; i++) {
         if (players.players[i].hostId === socket.id) {
           players.players[i].gameData.answer = 0;
@@ -215,7 +327,7 @@ module.exports = function createHostEvents({
         if (questions.length >= game.gameData.question) {
           io.to(game.pin).emit('nextQuestionPlayer');
           scheduleQuestionCountdown(game);
-          scheduleGameCleanup(socket.id, GAME_INACTIVITY_TIMEOUT);
+          scheduleGameCleanup(socket.id, timingsFor(socket.id).inactivityMs);
           return;
         } else {
           const playersInGame = players.getPlayers(game.hostId);
@@ -287,10 +399,12 @@ module.exports = function createHostEvents({
             num2: second.name,
             num3: third.name,
             num4: fourth.name,
-            num5: fifth.name
+            num5: fifth.name,
+            showPodium: game.gameData.options ? game.gameData.options.showScoresBetween !== false : true
           });
           game.gameLive = false;
           game.gameOver = true;
+          logger.info('Partida finalitzada', { tag: 'game-end', pin: game.pin, hostId: game.hostId, playersCount: Array.isArray(playersInGame) ? playersInGame.length : 0, ...quizFields(game) });
           // Congelamos el informe con la foto de jugadores de este instante: si esperamos a los
           // await de abajo, los alumnos ya han recibido "GameOver" y sus dispositivos pueden
           // desconectarse (bloqueo de pantalla, cierre de pestaña...), vaciando players.getPlayers()
@@ -302,13 +416,27 @@ module.exports = function createHostEvents({
           scheduleGameCleanup(socket.id);
         }
       } catch (err) {
-        console.error('nextQuestion error', err);
+        logger.error('nextQuestion error', { tag: 'nextQuestion', error: err && err.message ? err.message : String(err) });
         socket.emit('noGameFound');
       }
     });
 
+    // El profesorat tanca la fase del vídeo (botó «Finalitzar vídeo» o el final del vídeo): comencen les respostes.
+    socket.on('finishVideoLearning', () => {
+      const game = games.getGame(socket.id);
+      if (!game) {
+        socket.emit('noGameFound');
+        return;
+      }
+      finishVideoLearning(game);
+    });
+
     socket.on('skipQuestion', async () => {
       const game = games.getGame(socket.id);
+      if (game && game.paused) {
+        socket.emit('gamePaused');
+        return;
+      }
       if (!game) {
         socket.emit('noGameFound');
         return;
@@ -324,9 +452,9 @@ module.exports = function createHostEvents({
         }
         io.to(game.pin).emit('hostSkipped');
         helpers.emitQuestionOverPayloadDeferred(game);
-        scheduleGameCleanup(socket.id, GAME_INACTIVITY_TIMEOUT);
+        scheduleGameCleanup(socket.id, timingsFor(socket.id).inactivityMs);
       } catch (err) {
-        console.error('skipQuestion error', err);
+        logger.error('skipQuestion error', { tag: 'skipQuestion', error: err && err.message ? err.message : String(err) });
         socket.emit('noGameFound');
       }
     });
@@ -356,8 +484,25 @@ module.exports = function createHostEvents({
         randomQuestions: false,
         randomAnswers: true,
         sendToStudents: true,
-        showScoresBetween: true
+        showScoresBetween: true,
+        showCorrectAnswers: true,
+        streak: true,
+        autoAdvanceSec: 0
       }, opts || {});
+      // Avance automático entre preguntas: 0 = manual; si no, entero de 5 a 20 s.
+      options.autoAdvanceSec = normalizeAutoAdvance(options.autoAdvanceSec);
+      // Correspondencia a ciegas: desplegables, toques con códigos (por defecto) o paso a paso.
+      options.matchingBlindStyle = normalizeMatchingBlindStyle(options.matchingBlindStyle);
+      // Más tiempo en las correspondencias: 25, 50, 75 o 100 % (50 % por defecto).
+      options.matchingExtraTime = normalizeMatchingExtraTime(options.matchingExtraTime);
+      // Modo de la partida: en vivo (por defecto) o autoritme (cada alumno a su ritmo).
+      options.mode = options.mode === 'selfPaced' ? 'selfPaced' : 'live';
+      // Mode fantasma en aula: opcional (desactivat per defecte); la marca és al navegador de cada alumne.
+      options.ghostMode = options.ghostMode === true || options.ghostMode === 'true';
+      // Opció «Mostrar pregunta durante la cuenta atrás»: la pregunta es veu durant els 3-2-1 (per defecte, sí des del lobby).
+      options.showQuestionDuringCountdown = options.showQuestionDuringCountdown === true || options.showQuestionDuringCountdown === 'true';
+      // Fase del vídeo (feature 24): segon d'inici del vídeo, de 0 a 3600 (0 = des del principi).
+      options.videoStartSec = Math.max(0, Math.min(3600, parseInt(options.videoStartSec, 10) || 0));
       if (options.timePerQuestion !== undefined && options.timePerQuestion !== null && String(options.timePerQuestion).trim() !== '') {
         const parsedTime = parseInt(options.timePerQuestion, 10);
         if (Number.isNaN(parsedTime)) {
@@ -394,9 +539,16 @@ module.exports = function createHostEvents({
       }
       game.gameLive = true;
       game.gameOver = false;
-      scheduleGameCleanup(socket.id, GAME_INACTIVITY_TIMEOUT);
-      io.to(game.pin).emit('gameStartedPlayer');
+      logger.info('Partida iniciada', { tag: 'game-start', pin: game.pin, hostId: game.hostId, playersCount: gamePlayers.length, questionsCount: game.gameData.questions.length, ...quizFields(game) });
+      scheduleGameCleanup(socket.id, timingsFor(socket.id).inactivityMs);
+      io.to(game.pin).emit('gameStartedPlayer', { mode: options.mode, ...ghostStartInfo(game) });
       socket.emit('gameStarted', game.hostId);
+      // Autoritme: no hay pregunta común; cada alumno pide la suya.
+      if (options.mode === 'selfPaced') {
+        selfPaced.startPlayers(game);
+        game.gameData.questionPending = false;
+        return;
+      }
       scheduleQuestionCountdown(game);
     });
 
@@ -431,7 +583,7 @@ module.exports = function createHostEvents({
         await collection.insertOne(quiz);
         socket.emit('startGameFromCreator', newId);
       } catch (err) {
-        console.error('newQuiz error', err);
+        logger.error('newQuiz error', { tag: 'newQuiz', error: err && err.message ? err.message : String(err) });
         socket.emit('noGameFound');
       }
     });

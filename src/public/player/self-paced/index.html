@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="icon" href="/icons/logo.svg" type="image/svg+xml">
+        <meta charset="utf-8">
+        <title>Game | EduHoot</title>
+        <link rel="stylesheet" href="/css/answers.css">
+        <link rel="stylesheet" href="/css/matching.css">
+        <link rel="stylesheet" href="/css/order.css">
+        <link rel="stylesheet" href="../../css/playerGameView.css">
+        <link rel="stylesheet" href="../../css/playerLiveStatus.css">
+        <link rel="stylesheet" href="../../css/playerSelfPaced.css">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link href="/css/fonts.css" rel="stylesheet">
+        <link rel="stylesheet" href="/css/page-fit.css">
+        <link href="/css/brand-unify.css" rel="stylesheet">
+        <link rel="stylesheet" href="/css/lang-more.css">
+</head>
+    <body>
+        <!-- Modo autoritme (feature 3): cada alumno avanza a su ritmo. Pantalla propia, separada de
+             /player/game/ (partida en vivo); comparte con ella estilos, el tablero de correspondencia
+             y las piezas de js/playerCommon.js. -->
+        <!-- Deures asíncrons (?hw=CÓDIGO): entrada del alumnado; la pantalla de juego es la de abajo. -->
+        <div id="hw-entry"></div>
+        <template id="hw-entry-tpl">
+            <main id="hwEntry" class="hw-entry" v-if="visible">
+                <img class="hw-entry__logo" src="/icons/logo.svg" alt="EduHoot" width="64" height="64">
+                <div class="hw-entry__card">
+                    <p id="hwHeading" class="hw-entry__kicker">{{ t('hw_heading') }}</p>
+                    <h1 id="hwTitle" class="hw-entry__title">{{ title }}</h1>
+                    <p id="hwDeadline" class="hw-entry__line" v-if="info">{{ deadlineText }}</p>
+                    <p id="hwMeta" class="hw-entry__line" v-if="info">{{ metaText }}</p>
+                    <p id="hwClosed" class="hw-entry__closed" v-if="info && !info.open">{{ t('hw_closed_info') }}</p>
+                    <form id="hwForm" class="hw-entry__form" autocomplete="off" v-if="formVisible" @submit.prevent="submit">
+                        <label id="hwNameLabel" for="hwName">{{ t('hw_name_label') }}</label>
+                        <input id="hwName" type="text" maxlength="20" autocapitalize="words" autocorrect="off" spellcheck="false" required v-model="name">
+                        <p id="hwNameHint" class="hw-entry__hint">{{ t('hw_name_hint') }}</p>
+                        <div id="hwRecoveryRow" v-if="returning">
+                            <label id="hwRecoveryLabel" for="hwRecovery">{{ t('hw_code_label') }}</label>
+                            <input id="hwRecovery" type="text" maxlength="12" autocapitalize="characters" autocorrect="off" spellcheck="false" v-model="recovery">
+                        </div>
+                        <button id="hwSubmit" type="submit" class="button" :disabled="submitDisabled">{{ returning ? t('hw_enter') : t('hw_start') }}</button>
+                        <button id="hwModeToggle" type="button" class="hw-entry__link" @click="toggleMode">{{ returning ? t('hw_new_here') : t('hw_have_code') }}</button>
+                    </form>
+                    <p id="hwError" class="hw-entry__error" role="alert" v-if="errorKey">{{ t(errorKey) }}</p>
+                    <div id="hwCodeBox" class="hw-entry__code" v-if="showCode">
+                        <h2 id="hwCodeTitle">{{ t('hw_code_title') }}</h2>
+                        <p id="hwCodeValue" class="hw-entry__code-value">{{ codeValue }}</p>
+                        <p id="hwCodeText">{{ t('hw_code_text') }}</p>
+                        <button id="hwCodeGo" type="button" class="button" @click="go">{{ t('hw_code_go') }}</button>
+                    </div>
+                </div>
+            </main>
+        </template>
+        <div id="player-sp"></div>
+        <template id="player-sp-tpl">
+            <p id="quizNameText" class="quiz-name-text" v-if="quizName">{{ quizName }}</p>
+            <p id="attemptText" class="sp-attempt" v-if="attemptText">{{ attemptText }}</p>
+            <div id="stats">
+                <h4 id="nameText">{{ nameDisplay }}</h4>
+                <h4 id="scoreText">{{ scoreDisplay }}</h4>
+                <h4 id="streakText" class="streak-text" v-show="streak > 0">🔥 {{ streak }}</h4>
+                <h4 id="progressText" class="sp-progress" v-if="questionNumber > 0 && !done">{{ progressText }}</h4>
+            </div>
+
+            <!-- Resumen final -->
+            <section id="spDone" class="sp-done" v-if="done">
+                <div class="result-icon" aria-hidden="true">{{ summary.rank === 1 ? '🏆' : '🎉' }}</div>
+                <h2>{{ t('sp_done_title') }}</h2>
+                <p class="sp-done__line sp-done__line--score">{{ fmt('sp_done_score', { n: summary.score }) }}</p>
+                <p class="sp-done__line">{{ fmt('sp_done_correct', { c: summary.correctCount, t: summary.total }) }}</p>
+                <div class="sp-done__bar" role="presentation"><span :style="{ width: donePct + '%' }"></span></div>
+                <p class="sp-done__line" v-if="summary.bestStreak > 1">{{ fmt('sp_done_streak', { n: summary.bestStreak }) }}</p>
+                <p class="sp-done__line" v-if="summary.rank">{{ fmt('sp_done_rank', { r: summary.rank, p: summary.players }) }}</p>
+                <template v-if="summary.homework">
+                    <p class="sp-done__line" v-if="summary.maxAttempts !== 1">{{ summary.scoring === 'average' ? fmt('hw_average', { n: summary.averageScore }) : (summary.scoring === 'first' || summary.scoring === 'last' ? fmt('hw_' + summary.scoring, { n: summary.countedScore }) : fmt('hw_best', { n: summary.bestScore })) }}</p>
+                    <p class="sp-done__hint">{{ summary.closed ? t('hw_done_closed') : t('hw_done_saved') }}</p>
+                    <p class="sp-done__hint" v-if="hwRecovery()">{{ fmt('hw_your_code', { n: playerName, c: hwRecovery() }) }}</p>
+                    <button type="button" id="hwRetryBtn" class="button sp-next" v-if="summary.canRetry" @click="newAttempt">{{ t('hw_retry') }}</button>
+                </template>
+                <p class="sp-done__hint" v-else>{{ closed ? t('sp_closed') : t('sp_done_wait') }}</p>
+            </section>
+
+            <template v-else>
+                <h3 id="questionText" v-if="state !== 'learning'" v-html="questionHtml"></h3>
+                <div id="playerStatusRow" v-show="state === 'question'">
+                    <div class="tts-timer-wrap" :class="{ 'has-tts': ttsAvailable }">
+                        <div id="playerTimer" class="game-timer">
+                            <div id="playerTimerFill" class="game-timer__fill" :style="{ width: timerPct + '%', background: timerColor }"></div>
+                            <span id="playerTimerText" class="game-timer__text">{{ timerText }}</span>
+                        </div>
+                        <button v-if="ttsAvailable" id="ttsButton" type="button" class="tts-btn" :aria-pressed="ttsSpeaking ? 'true' : 'false'" :aria-label="ttsSpeaking ? t('tts_stop') : t('tts_listen')" :title="ttsSpeaking ? t('tts_stop') : t('tts_listen')" @click="toggleSpeech"><span aria-hidden="true">{{ ttsSpeaking ? '⏹' : '🔊' }}</span></button>
+                    </div>
+                </div>
+                <div id="playerImageWrap">
+                    <img id="playerQuestionImage" alt="">
+                    <video id="playerQuestionVideo" controls></video>
+                    <iframe referrerpolicy="strict-origin-when-cross-origin" id="playerQuestionIframe" allowfullscreen loading="lazy"></iframe>
+                </div>
+
+                <!-- Fase de vídeo (feature 24): mira el vídeo; la pregunta comença en acabar-lo. -->
+                <div id="spLearning" class="sp-learning" v-if="state === 'learning'">
+                    <p class="sp-learning__hint">{{ t('sp_learn_watch') }}</p>
+                    <button type="button" id="spLearnedBtn" class="button sp-learning__btn" @click="finishLearning">{{ t('sp_learn_finish') }}</button>
+                </div>
+
+                <!-- Resultado de la pregunta -->
+                <div id="spResult" class="sp-result" v-if="state === 'result'">
+                    <div class="result-icon" v-if="resultIcon" aria-hidden="true">{{ resultIcon }}</div>
+                    <h2 id="message" :class="'message--' + result.kind">{{ result.message }}<span v-if="result.detailHtml" class="player-correct-answer" v-html="result.detailHtml"></span></h2>
+                    <p id="spPoints" class="sp-result__points" v-if="result.points > 0">{{ fmt('sp_points_gained', { n: result.points + result.bonus }) }}</p>
+                    <p id="spHint" class="result-sub" v-if="resultHint">{{ resultHint }}</p>
+                    <div id="spRanking" class="sp-ranking" v-if="result.ranking && result.ranking.length">
+                        <h3>{{ t('player_ranking_title') }}</h3>
+                        <ol>
+                            <li v-for="(r, i) in result.ranking" :key="i" :class="{ 'is-me': r.me }">{{ (r.icon ? r.icon + ' ' : '') + r.name + ' - ' + r.score }}<span v-if="r.me"> ({{ t('player_ranking_you') }})</span></li>
+                        </ol>
+                        <p v-if="result.rank > result.ranking.length" class="sp-ranking__me">{{ fmt('sp_done_rank', { r: result.rank, p: result.players }) }}</p>
+                    </div>
+                    <button type="button" id="spNextBtn" class="button sp-next" @click="next">{{ isLast ? t('sp_finish') : t('sp_next') }}</button>
+                </div>
+                <h2 id="message" v-else-if="message" class="message--info">{{ message }}</h2>
+
+                <template v-if="state === 'question'">
+                    <div id="freeSubmitRow" :style="{ display: freeAnswerType ? 'flex' : 'none' }">
+                        <input id="freeAnswerInput" ref="freeAnswerInput" type="text" autocomplete="off" :inputmode="questionType === 'numeric' ? 'decimal' : 'text'" :placeholder="freePlaceholder" v-model="freeAnswerValue" @keydown.enter.prevent="submitFree" />
+                        <button type="button" id="freeSubmitBtn" class="button free-submit" @click="submitFree">{{ t('submit_free') }}</button>
+                    </div>
+                    <order-board v-if="questionType === 'order' && !blind" :key="'order-' + orderKey" :items="orderItems" :layout="orderLayout" :t="t" @submit="submitOrder"></order-board>
+                    <order-board v-if="questionType === 'order' && blind" :key="'order-blind-' + orderKey" :count="orderCount" :layout="orderLayout" :t="t" @submit="submitOrder"></order-board>
+                    <matching-board v-if="questionType === 'matching'" :key="'match-' + matchKey" :left="matchLeft" :right="matchRight" :left-count="matchLeftCount" :right-count="matchRightCount" :blind-style="matchBlindStyle" :t="t" @submit="submitMatching"></matching-board>
+                    <div id="answerGrid" class="answer-grid">
+                        <button v-for="i in 4" :key="i" :id="'answer' + i" class="button answer-shape" :class="['answer-shape--' + i, { 'multi-selected': multiSelections.indexOf(i) !== -1 }]" v-show="buttonVisible(i - 1)" v-html="buttonHtml(i - 1)" @click="onAnswerClick(i)"></button>
+                    </div>
+                    <div id="multiSubmitRow" :style="{ display: questionType === 'multiple' ? 'flex' : 'none' }">
+                        <button type="button" id="multiSubmitBtn" class="button multi-submit" @click="submitMulti">{{ t('submit_multiple') }}</button>
+                    </div>
+                </template>
+                <!-- Respondida y sin resultado a la vista (p. ej. tras reconectar) -->
+                <div class="sp-result" v-if="state === 'answered'">
+                    <h2 class="message--info">{{ t('status_submitted') }}</h2>
+                    <button type="button" id="spNextBtn" class="button sp-next" @click="next">{{ isLast ? t('sp_finish') : t('sp_next') }}</button>
+                </div>
+            </template>
+            <div id="raiseHandRow" v-if="state === 'question' && !done && !isHomework">
+                <button type="button" id="raiseHandBtn" class="raise-hand-btn" :aria-pressed="handRaised ? 'true' : 'false'" @click="toggleHand">✋ {{ handRaised ? t('handLower') : t('handRaise') }}</button>
+            </div>
+            <button type="button" id="leaveGameBtn" class="leave-game-btn" :class="{ 'is-confirming': leaveConfirming }" @click="askLeave">{{ leaveConfirming ? t('lobby_leave_confirm') : t('lobby_leave') }}</button>
+        </template>
+        <div id="lang-switcher" data-lang-buttons></div>
+        <script src="/js/languages.js"></script>
+        <script src="/js/env-badge.js"></script>
+        <script src="../../js/i18n-player.js"></script>
+        <script src="../../js/viewport-fit.js"></script>
+        <script src="../../socket.io/socket.io.js"></script>
+        <script src="../../js/libs/jqueryLibrary.js"></script>
+        <script src="../../js/libs/deparam.js"></script>
+        <script src="../../js/libs/vue.global.prod.js"></script>
+        <script src="../../js/matchingBoard.js"></script>
+        <script src="../../js/orderBoard.js"></script>
+        <script src="../../js/tts.js"></script>
+        <script src="../../js/playerCommon.js"></script>
+        <script src="../../js/homeworkTransport.js"></script>
+        <script src="/js/tfLabels.js"></script>
+        <script src="../../js/playerSelfPaced.js"></script>
+    </body>
+</html>

@@ -26,8 +26,9 @@ function extractKahootId(raw = '') {
 // Factoria d'importació de Kahoot: mirroritza imatges externes/de Kahoot i
 // mapeja preguntes del format Kahoot al format propi. Mou el contingut de
 // server.js, sense canviar comportament.
-module.exports = function createKahootImportService({ publicPath, normalizeQuestions, cleanImportedText }) {
-  const uploadsPath = path.join(publicPath, 'uploads', 'quiz-images');
+module.exports = function createKahootImportService({ imagesDir, normalizeQuestions, cleanImportedText }) {
+  // Les imatges dels quizzes van fora del projecte (QUIZ_IMAGES_DIR); server.js les serveix a /uploads/quiz-images/.
+  const uploadsPath = imagesDir;
   fs.mkdirSync(uploadsPath, { recursive: true });
 
   async function mirrorExternalImage(imageUrl) {

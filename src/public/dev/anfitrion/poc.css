@@ -1,0 +1,150 @@
+/* Prueba de concepto de la pantalla del anfitrión. Imita el aspecto de EduHoot (degradado, tarjetas de cristal).
+   Un solo aspecto oscuro, deliberado: es el de la aplicación. */
+:root{
+  color-scheme: dark;
+  --grad-1:#6c2bd9; --grad-2:#b83280; --grad-3:#ff6b00; --grad-4:#2c89d9;
+  --card:rgba(255,255,255,0.10); --card-stroke:rgba(255,255,255,0.18);
+  --text:#e9eefb; --muted:#cbd5e1; --ink:#14101f; --accent:#ffee70;
+  --ok:#2f9e44; --bad:#c92a2a;
+  --panel:#1b1530; --panel-2:#251d40;
+  --font-body:'Inter', system-ui, sans-serif;
+  --font-display:'Poppins', 'Inter', system-ui, sans-serif;
+}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{margin:0; background:var(--panel); color:var(--text); font-family:var(--font-body); font-size:15px;
+  padding:16px max(16px, env(safe-area-inset-right, 0px)) 32px max(16px, env(safe-area-inset-left, 0px))}
+button,select,input{font:inherit; color:inherit}
+button:focus-visible, select:focus-visible, input:focus-visible, summary:focus-visible{outline:3px solid #fff; outline-offset:2px}
+
+.wrap{max-width:1180px; margin:0 auto; display:flex; flex-direction:column; gap:16px}
+header.top h1{font-family:var(--font-display); font-size:22px; margin:0; text-wrap:balance}
+header.top p{margin:4px 0 0; color:var(--muted); max-width:70ch}
+.controls{display:flex; flex-wrap:wrap; gap:10px 18px; align-items:center; background:var(--panel-2); border:1px solid var(--card-stroke); border-radius:14px; padding:12px 14px}
+.controls label{display:flex; gap:8px; align-items:center; color:var(--muted)}
+.controls select{background:var(--panel); color:var(--text); border:1px solid var(--card-stroke); border-radius:8px; padding:6px 8px}
+.controls .btn-reset{margin-left:auto}
+.tabs{display:flex; gap:6px; flex-wrap:wrap}
+.tab{border:1px solid var(--card-stroke); background:transparent; border-radius:999px; padding:8px 14px; cursor:pointer; color:var(--muted); font-weight:600}
+.tab[aria-selected="true"]{background:#fff; color:var(--ink); border-color:#fff}
+.ghost{border:1px solid rgba(255,255,255,0.45); background:transparent; border-radius:12px; padding:8px 14px; cursor:pointer; font-weight:600}
+.stage{display:flex; justify-content:center}
+
+/* ---------- Pantalla (marco) ---------- */
+.screen{
+  width:100%; border-radius:22px; padding:18px; border:1px solid var(--card-stroke); box-shadow:0 18px 50px rgba(0,0,0,0.35);
+  background:linear-gradient(120deg,var(--grad-1),var(--grad-2),var(--grad-3),var(--grad-4)); background-size:400% 400%;
+  animation:gradientMove 16s ease infinite; display:flex; flex-direction:column; gap:14px; position:relative;
+}
+@keyframes gradientMove{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@media (prefers-reduced-motion: reduce){.screen{animation:none}}
+.screen[data-w="desk"]{max-width:1100px}
+.screen[data-w="tablet"]{max-width:760px}
+.screen[data-w="phone"]{max-width:390px; padding:12px}
+
+/* ---------- Cabecera de la sala ---------- */
+.join-cta{display:flex; align-items:center; gap:18px; flex-wrap:wrap; justify-content:space-between}
+.logo{width:64px; height:64px; border-radius:6px; display:grid; grid-template-columns:1fr 1fr; overflow:hidden; flex:none}
+.logo i:nth-child(1){background:#d94452}.logo i:nth-child(2){background:#3a82b0}.logo i:nth-child(3){background:#e8a93f}.logo i:nth-child(4){background:#39a35b}
+.join-text{flex:1 1 220px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:4px}
+.quiz-name{margin:0; font-size:1.5em; font-weight:700; color:var(--accent); overflow-wrap:anywhere}
+.join-text h2{margin:0; font-family:var(--font-display); font-size:28px}
+.pin{display:inline-flex; align-items:center; gap:10px; padding:8px 14px; background:rgba(0,0,0,0.28); border:1px solid rgba(255,255,255,0.28); border-radius:999px}
+.pin small{background:linear-gradient(135deg,#2dd4bf,#6366f1); color:#14101f; font-weight:800; padding:4px 10px; border-radius:999px}
+.pin b{font-size:34px; letter-spacing:0.06em}
+.qr{background:rgba(0,0,0,0.3); border:1px solid var(--card-stroke); border-radius:14px; padding:10px; text-align:center; font-weight:600; font-size:13px; width:190px}
+.qr .code{width:110px; height:110px; margin:6px auto; background:
+  conic-gradient(from 90deg at 3px 3px,#0000 90deg,#111 0) 0 0/10px 10px, #f1e7e3; border-radius:6px}
+.screen[data-w="phone"] .qr{width:100%}
+
+/* ---------- Opciones ---------- */
+.opts{background:var(--card); border:1px solid var(--card-stroke); border-radius:14px; padding:12px; backdrop-filter:blur(12px); display:flex; flex-direction:column; gap:12px}
+.group{display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:8px 28px; align-items:start}
+.group + .group{border-top:1px solid var(--card-stroke); padding-top:12px}
+.group-title{grid-column:1/-1; margin:0; font-size:0.78em; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--accent)}
+.opt{display:flex; align-items:center; gap:8px; font-weight:600; flex-wrap:wrap; min-width:0}
+.opt .grow{flex:1}
+.opt small{flex-basis:100%; font-weight:400; font-size:0.8em; opacity:0.75}
+.opt select, .opt input[type=number]{background:rgba(0,0,0,0.3); color:#fff; border:1px solid rgba(255,255,255,0.25); border-radius:8px; padding:5px 8px}
+.opt input[type=number]{width:80px}
+fieldset.opt{border:2px solid rgba(255,255,255,0.7); border-radius:6px; margin:0; padding:4px 10px 8px; flex-direction:column; align-items:flex-start; gap:4px}
+fieldset.opt legend{padding:0 4px}
+fieldset.opt label{display:flex; gap:8px; align-items:center}
+.opt.is-disabled{opacity:0.5}
+/* Variante B: tarjetas por tema */
+.cards{display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:12px}
+.card{background:rgba(0,0,0,0.2); border:1px solid var(--card-stroke); border-radius:12px; padding:10px 12px; display:flex; flex-direction:column; gap:8px; align-content:start}
+.card h3{margin:0; font-size:0.85em; letter-spacing:0.06em; text-transform:uppercase; color:var(--accent); display:flex; gap:6px; align-items:center}
+.screen[data-w="phone"] .group, .screen[data-w="phone"] .cards{grid-template-columns:1fr}
+.screen[data-w="tablet"] .cards{grid-template-columns:1fr}
+
+/* Ayuda «?»: se abre con toque, clic o teclado (el tooltip nativo no sale en móvil). */
+.help{position:relative; display:inline-flex}
+.help > button{width:20px; height:20px; border-radius:50%; border:1px solid rgba(255,255,255,0.7); background:transparent; font-size:12px; font-weight:800; line-height:1; cursor:pointer; padding:0}
+.help > button[aria-expanded="true"]{background:#fff; color:var(--ink)}
+.help .pop{position:absolute; z-index:5; left:50%; bottom:calc(100% + 8px); transform:translateX(-50%); width:min(280px, 70vw);
+  background:#fff; color:var(--ink); border-radius:10px; padding:10px 12px; font-weight:500; font-size:13px; line-height:1.35; box-shadow:0 10px 30px rgba(0,0,0,0.4)}
+.help .pop[hidden]{display:none}
+
+/* ---------- Jugadores y botones ---------- */
+.players{display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:10px}
+.player{display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:14px; background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.22); font-weight:600}
+.player .ico{font-size:22px}
+.player .kick{margin-left:auto; border:1px solid rgba(255,255,255,0.4); background:transparent; border-radius:8px; padding:4px 8px; cursor:pointer; font-size:12px}
+.player .kick.is-confirm{background:var(--bad); border-color:var(--bad)}
+.empty{opacity:0.8; text-align:center; padding:10px}
+.actions{display:flex; gap:12px}
+.actions button{flex:1; padding:14px; border-radius:12px; border:0; font-weight:800; font-size:17px; cursor:pointer; color:#fff}
+.btn-cancel{background:rgba(255,255,255,0.2)}
+.btn-start{background:var(--ok)}
+.btn-start:disabled{opacity:0.55; cursor:default}
+.btn-sim{align-self:center}
+
+/* ---------- Partida ---------- */
+.host-top{display:flex; align-items:center; gap:10px}
+.host-top .pin-badge{padding:6px 12px; border-radius:999px; background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.18); font-weight:700}
+.host-top .mid{flex:1; text-align:center; min-width:0}
+.host-top .mid p{margin:0; color:var(--accent); font-weight:700; font-size:1.2em; overflow-wrap:anywhere}
+.qnum{margin:0; font-weight:700}
+.rowc{display:flex; gap:10px 16px; flex-wrap:wrap; align-items:center}
+.rowc label{display:flex; gap:8px; align-items:center}
+.rowc select{background:rgba(0,0,0,0.3); color:#fff; border:1px solid rgba(255,255,255,0.25); border-radius:8px; padding:4px 8px}
+.rowc .right{margin-left:auto}
+.toprow{display:grid; grid-template-columns:repeat(3,1fr); gap:10px}
+.toprow button{padding:12px; border-radius:12px; border:0; font-weight:700; cursor:pointer}
+.b-skip{background:#2a2140; color:#fff}.b-cancel{background:rgba(255,255,255,0.2); color:#fff}.b-next{background:#e8a93f; color:var(--ink)}
+.timer{font-size:20px; font-weight:700; margin:0}
+.timer b{font-size:34px}
+.timer-ctl{display:flex; gap:8px; justify-content:center}
+.timer-ctl button{border:0; border-radius:10px; padding:8px 14px; background:rgba(255,255,255,0.2); cursor:pointer; font-weight:600}
+.question{font-family:var(--font-display); font-size:26px; text-align:center; margin:4px 0; text-wrap:balance}
+.answers{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+.screen[data-w="phone"] .answers{grid-template-columns:1fr}
+.ans{padding:16px; border-radius:12px; font-weight:700; font-size:18px; color:#fff; display:flex; gap:10px; align-items:center}
+.ans:nth-child(1){background:#2e7d32}.ans:nth-child(2){background:#ef6c00}.ans:nth-child(3){background:#1565c0}.ans:nth-child(4){background:#c62828}
+.answered{margin:0; font-weight:700}
+
+.notes{background:var(--panel-2); border:1px solid var(--card-stroke); border-radius:14px; padding:12px 16px; color:var(--muted)}
+.notes h2{margin:0 0 6px; font-size:15px; color:var(--text)}
+.notes ul{margin:0; padding-left:20px; display:grid; gap:4px}
+
+/* Casillas y botones de opción grandes */
+.opts input[type="checkbox"], .opts input[type="radio"], .rowc input[type="checkbox"]{width:20px; height:20px; flex:none; margin:0; cursor:pointer; accent-color:var(--accent)}
+.opt{cursor:pointer; font-size:1.05em}
+
+/* Fila de la URL d'entrada: tot l'ample de la sala; la URL cap sencera o es parteix en dues línies en mòbil. */
+.join-url-row{ display:flex; align-items:center; gap:12px; width:100%; background:rgba(0,0,0,0.22); border:1px solid var(--card-stroke); border-radius:12px; padding:8px 12px; box-sizing:border-box }
+.join-url{ flex:1 1 auto; min-width:0; font-family:inherit; font-size:15px; color:#fff; overflow-wrap:anywhere; word-break:break-word; white-space:normal; user-select:all }
+.copy-url{ flex:none; border-radius:999px; border:none; padding:6px 12px; min-height:34px; background:linear-gradient(135deg,#ffee70,#ffb347); color:#1b1b1b; font-weight:700; font-size:13px; font-family:inherit; cursor:pointer; box-shadow:0 8px 25px rgba(0,0,0,0.2) }
+
+/* Mòbil, tauleta i tàctil: el botó de copiar només mostra la icona (el text és al títol i a aria-label). */
+@media (max-width:1280px), (pointer:coarse){
+  .copy-url .cu-txt{ display:none }
+  .copy-url{ font-size:17px; line-height:1; min-width:40px; padding:6px 10px }
+}
+
+/* Opció 1: la URL i el botó, en una sola línia, sense fons ni reborde; el botó just a la dreta de la URL. */
+.join-url-row{ display:flex; align-items:center; justify-content:center; flex-wrap:nowrap; gap:6px; width:100%; min-width:0; background:none; border:none; padding:0; box-sizing:border-box }
+.join-url{ flex:0 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; overflow-wrap:normal; word-break:normal; font-size:15px; color:#fff; user-select:all }
+.join-url-row .copy-url{ flex:none }
+@media (max-width:600px){ .join-url{ font-size:13px } }

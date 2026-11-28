@@ -1,3 +1,5 @@
+> **Arxivat (26-11-2026).** Document històric, no es manté al dia. Text del correu de la migració (finestra del 12 al 26 d'octubre de 2026, ja tancada). Per al pla, vore `docs/PLA-MIGRACIO-AUTHENTIK-2026-10.md`.
+
 **Assumpte: EduHoot: canvi a l’accés únic amb EduTicTac**
 
 Hola,

@@ -1,6 +1,6 @@
 var socket = io({
     reconnection: true,
-    reconnectionAttempts: 30,
+    reconnectionAttempts: 200,
     reconnectionDelay: 500,
     reconnectionDelayMax: 3000
 });
@@ -17,12 +17,8 @@ var baseJoinUrl = (function(){
     }catch(e){}
     return 'https://eduhoot.edutictac.es/join.html';
 })();
-var joinQrImg = document.getElementById('join-qr');
-var joinUrlAnchor = document.getElementById('join-url');
-var gamePinText = document.getElementById('gamePinText');
-var hostError = document.getElementById('host-error');
-var pinLoaded = false;
 var hostErrorTimeout = null;
+var copyUrlTimer = null;
 var hostStartClicked = false;
 var hostStartGameEmitted = false;
 var hostStartWatchdog = null;
@@ -103,8 +99,8 @@ function emitStartGameWhenGongEnds(opts){
         hostStartWatchdog = setTimeout(function(){
             hostStartGameEmitted = false;
             hostStartWatchdog = null;
-            var msg = (window.getHostTranslation && window.getHostTranslation('host_error')) || 'No se pudo iniciar la partida. Vuelve a intentarlo.';
-            showHostError(msg);
+            lobby.starting = false;
+            lobby.showErrorKey('host_error');
         }, HOST_START_ACK_TIMEOUT_MS);
         socket.emit('startGame', opts);
     }
@@ -150,7 +146,8 @@ var hostLobbyMusicI18n = {
         bgMusicPause: 'Pausar música',
         bgMusicPrev: 'Anterior',
         bgMusicNext: 'Siguiente',
-        bgMusicVolume: 'Volumen'
+        bgMusicVolume: 'Volumen',
+        bgMusicNone: 'Sin música',
     },
     en: {
         bgMusicTitle: 'Background music',
@@ -159,7 +156,68 @@ var hostLobbyMusicI18n = {
         bgMusicPause: 'Pause music',
         bgMusicPrev: 'Prev',
         bgMusicNext: 'Next',
-        bgMusicVolume: 'Volume'
+        bgMusicVolume: 'Volume',
+        bgMusicNone: 'No music',
+    },
+    de: {
+        bgMusicTitle: 'Hintergrundmusik',
+        bgMusicChoose: 'Titel wählen',
+        bgMusicPlay: 'Musik abspielen',
+        bgMusicPause: 'Musik pausieren',
+        bgMusicPrev: 'Zurück',
+        bgMusicNext: 'Weiter',
+        bgMusicVolume: 'Lautstärke',
+        bgMusicNone: 'Keine Musik'
+    },
+    it: {
+        bgMusicTitle: 'Musica di sottofondo',
+        bgMusicChoose: 'Scegli un brano',
+        bgMusicPlay: 'Riproduci musica',
+        bgMusicPause: 'Metti in pausa la musica',
+        bgMusicPrev: 'Prec.',
+        bgMusicNext: 'Succ.',
+        bgMusicVolume: 'Volume',
+        bgMusicNone: 'Nessuna musica'
+    },
+    pt: {
+        bgMusicTitle: 'Música de fundo',
+        bgMusicChoose: 'Escolher uma faixa',
+        bgMusicPlay: 'Reproduzir música',
+        bgMusicPause: 'Pausar música',
+        bgMusicPrev: 'Ant.',
+        bgMusicNext: 'Seg.',
+        bgMusicVolume: 'Volume',
+        bgMusicNone: 'Sem música'
+    },
+    bg: {
+        bgMusicTitle: 'Фонова музика',
+        bgMusicChoose: 'Избери парче',
+        bgMusicPlay: 'Пусни музика',
+        bgMusicPause: 'Пауза на музиката',
+        bgMusicPrev: 'Назад',
+        bgMusicNext: 'Напред',
+        bgMusicVolume: 'Сила на звука',
+        bgMusicNone: 'Без музика'
+    },
+    ar: {
+        bgMusicTitle: 'موسيقى الخلفية',
+        bgMusicChoose: 'اختر مقطعاً',
+        bgMusicPlay: 'شغّل الموسيقى',
+        bgMusicPause: 'أوقف الموسيقى مؤقتاً',
+        bgMusicPrev: 'السابق',
+        bgMusicNext: 'التالي',
+        bgMusicVolume: 'مستوى الصوت',
+        bgMusicNone: 'بدون موسيقى'
+    },
+    fr: {
+        bgMusicTitle: 'Musique de fond',
+        bgMusicChoose: 'Choisir un morceau',
+        bgMusicPlay: 'Lire la musique',
+        bgMusicPause: 'Mettre la musique en pause',
+        bgMusicPrev: 'Préc.',
+        bgMusicNext: 'Suiv.',
+        bgMusicVolume: 'Volume',
+        bgMusicNone: 'Pas de musique'
     },
     ca: {
         bgMusicTitle: 'Música de fons',
@@ -168,7 +226,8 @@ var hostLobbyMusicI18n = {
         bgMusicPause: 'Atura la música',
         bgMusicPrev: 'Anterior',
         bgMusicNext: 'Següent',
-        bgMusicVolume: 'Volum'
+        bgMusicVolume: 'Volum',
+        bgMusicNone: 'Sense música',
     },
     va: {
         bgMusicTitle: 'Música de fons',
@@ -177,7 +236,8 @@ var hostLobbyMusicI18n = {
         bgMusicPause: 'Atura la música',
         bgMusicPrev: 'Anterior',
         bgMusicNext: 'Següent',
-        bgMusicVolume: 'Volum'
+        bgMusicVolume: 'Volum',
+        bgMusicNone: 'Sense música',
     }
 };
 
@@ -212,6 +272,7 @@ function initHostLobbyMusicPlayer(){
         storageKey: 'eduhoot-host-music',
         randomStart: true,
         volume: 0.7,
+        noneOption: true,
         labels: {
             title: hostLobbyT('bgMusicTitle'),
             choose: hostLobbyT('bgMusicChoose'),
@@ -219,54 +280,10 @@ function initHostLobbyMusicPlayer(){
             pause: hostLobbyT('bgMusicPause'),
             prev: hostLobbyT('bgMusicPrev'),
             next: hostLobbyT('bgMusicNext'),
-            volume: hostLobbyT('bgMusicVolume')
+            volume: hostLobbyT('bgMusicVolume'),
+            none: hostLobbyT('bgMusicNone')
         }
     });
-}
-
-function buildJoinUrl(pin){
-    var l = getHostLobbyLang();
-    var qs = [];
-    if(pin){
-        qs.push('pin=' + encodeURIComponent(pin));
-    }
-    if(l){
-        qs.push('lang=' + encodeURIComponent(l));
-    }
-    return qs.length ? baseJoinUrl + '?' + qs.join('&') : baseJoinUrl;
-}
-
-function updateJoinQr(pin){
-    var url = buildJoinUrl(pin);
-    var qrSize = 240;
-    if(joinQrImg){
-        joinQrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=' + qrSize + 'x' + qrSize + '&data=' + encodeURIComponent(url);
-        joinQrImg.setAttribute('aria-label', url);
-    }
-    if(joinUrlAnchor){
-        joinUrlAnchor.href = url;
-        try{
-            var parsed = new URL(url);
-            joinUrlAnchor.textContent = parsed.host + (pin ? (' · PIN ' + pin) : '');
-        }catch(e){
-            joinUrlAnchor.textContent = (pin ? ('PIN ' + pin) : 'Unirse');
-        }
-    }
-}
-
-function setDisplayedPin(pin){
-    var safePin = (pin || '').toString();
-    pinLoaded = !!pin;
-    if(gamePinText){
-        gamePinText.textContent = safePin || '—';
-    }
-    updateJoinQr(safePin);
-}
-
-function showHostError(msg){
-    if(!hostError) return;
-    hostError.textContent = msg || '';
-    hostError.style.display = 'block';
 }
 
 function syncLangStorage(val){
@@ -274,15 +291,253 @@ function syncLangStorage(val){
     EduhootLang.persist(val);
 }
 
+// Lobby (Vue): PIN, QR, error, opciones y jugadores salen de estos datos y
+// Vue repinta solo cuando cambian. Los textos se traducen con t(), que lee
+// Temporizador que cancela la confirmación de expulsión si no se confirma a tiempo.
+var kickResetTimer = null;
+
+// `lang` para que Vue sepa que debe repintar al cambiar de idioma.
+// Vista de les opcions de la partida: A (dos blocs) o B (targetes per tema). Es recorda en este dispositiu.
+var HOST_OPTIONS_VIEW_KEY = 'eduhoot-host-options-view';
+function readHostOptionsView(){
+    try{ return localStorage.getItem(HOST_OPTIONS_VIEW_KEY) === 'b' ? 'b' : 'a'; }catch(e){ return 'a'; }
+}
+// Mostrar la pregunta durant la compte arrere (partida en vivo): marcada per defecte; es recorda en este navegador.
+function readShowQuestionCountdownHost(){
+    try{
+        if(localStorage.getItem('eduhoot-host-show-question-countdown') === '0') return false;
+    }catch(e){}
+    return true;
+}
+function saveHostOptionsView(view){
+    try{ localStorage.setItem(HOST_OPTIONS_VIEW_KEY, view); }catch(e){}
+}
+// Con sesión, la vista también se guarda en la cuenta (/api/auth/preferences, igual que la biblioteca).
+function saveAccountOptionsView(view){
+    fetch('/api/auth/preferences', {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hostOptionsView: view })
+    }).catch(function(){});
+}
+
+var lobby = Vue.createApp({
+    template: '#host-lobby-tpl',
+    data: function(){
+        return {
+            lang: getHostLobbyLang(),
+            // Clave de la ayuda «?» abierta (null = ninguna).
+            helpOpen: null,
+            // Estat del botó «Copiar enlace» (copiat, no copiat o res): nivell superior, no és una opció de partida.
+            copyState: '',
+            optionsView: readHostOptionsView(),
+            // true mientras se aplica la vista que llega de la cuenta (así no se vuelve a guardar).
+            optionsViewFromAccount: false,
+            pin: '',
+            players: [],
+            // Alumno pendiente de confirmar la expulsión (dos pasos, issue #29).
+            pendingKickId: '',
+            cancelConfirming: false,
+            // Al pulsar «Iniciar partida», mientras suena el gong y llega la confirmación.
+            starting: false,
+            // Alumnado expulsado en esta partida (sin tokens), para poder desbloquearlo.
+            kickedList: [],
+            // El quiz tiene alguna correspondencia: se ofrece cómo responderla a ciegas.
+            hasMatching: false,
+            hasComposite: false,
+            // El quiz té alguna pregunta amb vídeo: només aleshores es mostra l'inici del vídeo.
+            hasVideo: false,
+            // Título del quiz elegido (lo envía el servidor con el PIN).
+            quizName: '',
+            matchingExtraChoices: [25, 50, 75, 100],
+            errorKey: '',
+            errorText: '',
+            options: {
+                randomQuestions: false,
+                randomAnswers: true,
+                sendToStudents: true,
+                showScoresBetween: true,
+                // Mostrar respuestas: por defecto activado; si se desactiva, el alumnado no ve la correcta.
+                showCorrectAnswers: true,
+                // typed: el alumnado escribe su nombre; random: nombre aleatorio de la lista (feature 12).
+                nameMode: 'typed',
+                // Racha de aciertos (feature 11): bonificación para quien encadena aciertos.
+                streak: true,
+                // Mode fantasma en aula (opcional): cada alumne compara amb la seua millor marca, al seu navegador.
+                ghostMode: false,
+                // Avance automático entre preguntas: 0 = manual; 3–20 s.
+                autoAdvanceSec: 0,
+                // Modo de la partida: 'live' (en directo) o 'selfPaced' (cada alumno a su ritmo).
+                mode: 'live',
+                // Correspondencia a ciegas: codes (toques, por defecto), select o steps.
+                matchingBlindStyle: 'codes',
+                // Más tiempo en las correspondencias: 25, 50, 75 o 100 % (por defecto, 50 %).
+                matchingExtraTime: 50,
+                // Tiempos ampliados de esta partida (issue #13). Vacío = mínimo.
+                timings: { hostReconnectSec: '', playerReconnectSec: '', cleanupSec: '', inactivityMin: '' },
+                time: '',
+                // Fase del vídeo: segon en què comença el vídeo (0 = des del principi).
+                videoStartSec: 0,
+                // Mostrar la pregunta durant la compte arrere: marcada per defecte; es recorda en este navegador.
+                showQuestionDuringCountdown: readShowQuestionCountdownHost()
+            }
+        };
+    },
+    watch: {
+        'options.showQuestionDuringCountdown': function(value){
+            try{ localStorage.setItem('eduhoot-host-show-question-countdown', value ? '1' : '0'); }catch(e){}
+        },
+        optionsView: function(view){
+            saveHostOptionsView(view);
+            if(this.optionsViewFromAccount){
+                this.optionsViewFromAccount = false;
+                return;
+            }
+            saveAccountOptionsView(view);
+        }
+    },
+    // Sin sesión la petición falla o no trae la vista: se queda la del dispositivo.
+    mounted: function(){
+        var app = this;
+        fetch('/api/auth/preferences', { credentials: 'include' })
+            .then(function(res){ return res.ok ? res.json() : null; })
+            .then(function(data){
+                var v = data && data.hostOptionsView;
+                if(v !== 'a' && v !== 'b') return;
+                if(app.optionsView === v) return;
+                app.optionsViewFromAccount = true;
+                app.optionsView = v;
+            })
+            .catch(function(){});
+    },
+    computed: {
+        autoAdvanceChoices: function(){
+            var list = [];
+            for(var n = 3; n <= 20; n++) list.push(n);
+            return list;
+        },
+        joinUrl: function(){
+            var qs = [];
+            if(this.pin){
+                qs.push('pin=' + encodeURIComponent(this.pin));
+            }
+            if(this.lang){
+                qs.push('lang=' + encodeURIComponent(this.lang));
+            }
+            return qs.length ? baseJoinUrl + '?' + qs.join('&') : baseJoinUrl;
+        },
+        joinLabel: function(){
+            try{
+                return new URL(this.joinUrl).host + (this.pin ? (' · PIN ' + this.pin) : '');
+            }catch(e){
+                return this.pin ? ('PIN ' + this.pin) : 'Unirse';
+            }
+        },
+        // Copia l'enllaç d'entrada complet (amb el PIN); si el navegador no té el portapapers, selecciona el camp.
+        qrSrc: function(){
+            var qrSize = 240;
+            return 'https://api.qrserver.com/v1/create-qr-code/?size=' + qrSize + 'x' + qrSize + '&data=' + encodeURIComponent(this.joinUrl);
+        },
+        // Se guarda la clave (no el texto) para que el error cambie de idioma
+        // con el resto; los errores que envía el servidor llegan ya escritos.
+        errorMessage: function(){
+            return this.errorKey ? this.t(this.errorKey) : this.errorText;
+        },
+        // Con alumnado unido no se puede cambiar cómo se llaman (nombres escritos o aleatorios).
+        nameModeLocked: function(){
+            return this.players.length > 0;
+        }
+    },
+    methods: {
+        // Igual que a deures: el botó canvia d'estat en fer clic (copiada o no) i torna al text normal als 2 s.
+        // Selecciona tot el text de l'enllaç (per copiar-lo a mà).
+        selectJoinUrl: function(){
+            var el = document.getElementById('join-url-text');
+            if(!el || !window.getSelection) return;
+            var range = document.createRange();
+            range.selectNodeContents(el);
+            var sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+        },
+        copyJoinUrl: function(){
+            var self = this;
+            var link = this.joinUrl;
+            var done = function(state){
+                self.copyState = state;
+                clearTimeout(copyUrlTimer);
+                copyUrlTimer = setTimeout(function(){ self.copyState = ''; }, 2000);
+            };
+            var fallback = function(){
+                var ok = false;
+                self.selectJoinUrl();
+                try{ ok = document.execCommand('copy'); }catch(e){}
+                done(ok ? 'copied' : 'failed');
+            };
+            if(navigator.clipboard && navigator.clipboard.writeText){
+                navigator.clipboard.writeText(link).then(function(){ done('copied'); }, fallback);
+            }else{
+                fallback();
+            }
+        },
+        toggleHelp: function(key){ this.helpOpen = (this.helpOpen === key) ? null : key; },
+        // Expulsión en dos pasos: el primer toque pide confirmación durante unos segundos.
+        askKick: function(player){
+            this.pendingKickId = player.playerId;
+            clearTimeout(kickResetTimer);
+            kickResetTimer = setTimeout(function(){
+                lobby.pendingKickId = '';
+            }, 4000);
+        },
+        emitGameTimings: function(){
+            var payload = {};
+            var t = this.options.timings;
+            Object.keys(t).forEach(function(key){
+                if(t[key] !== '' && t[key] !== null && t[key] !== undefined) payload[key] = Number(t[key]);
+            });
+            socket.emit('setGameTimings', payload);
+        },
+        emitNameMode: function(){
+            socket.emit('setRandomNames', { enabled: this.options.nameMode === 'random' });
+        },
+        unkick: function(entry){
+            socket.emit('unkick-player', { id: entry.id });
+        },
+        confirmKick: function(player){
+            clearTimeout(kickResetTimer);
+            this.pendingKickId = '';
+            socket.emit('kick-player', { playerId: player.playerId });
+        },
+        t: function(key){
+            void this.lang;
+            return window.getHostTranslation ? window.getHostTranslation(key) : key;
+        },
+        showErrorKey: function(key){
+            this.errorText = '';
+            this.errorKey = key;
+            // Si el error llega al intentar iniciar, la partida no arranca: se reactiva el botón.
+            this.starting = false;
+        },
+        showErrorText: function(text){
+            this.errorKey = '';
+            this.errorText = text || '';
+        },
+        startGame: function(){
+            startGame();
+        },
+        askCancelLobby: function(){
+            askCancelLobbyStep();
+        }
+    }
+}).mount('#host-lobby');
+
 // Mostrar botón de reanudar si hay partida activa guardada
 try{
-    var savedHost = localStorage.getItem(lastHostKey);
     var storedPin = localStorage.getItem(lastPinKey);
     if(storedPin){
         params.pin = params.pin || storedPin;
-        setDisplayedPin(storedPin);
-    }else{
-        updateJoinQr();
+        lobby.pin = storedPin;
     }
     // inicializar selector de idioma con preferencia previa
     var storedLang = EduhootLang.fromStorage('lang-host');
@@ -298,7 +553,7 @@ if(hostLangSelect){
         if(window.applyHostTranslations){
             window.applyHostTranslations(hostLangSelect.value);
         }
-        updateJoinQr(params.pin || '');
+        lobby.lang = getHostLobbyLang();
         updateHostLobbyMusicLabels();
     });
 }
@@ -308,57 +563,54 @@ initHostLobbyMusicPlayer();
 //When host connects to server
 socket.on('connect', function() {
     hostStartGameEmitted = false;
+    lobby.starting = false;
     if(hostStartWatchdog){
         clearTimeout(hostStartWatchdog);
         hostStartWatchdog = null;
     }
-    document.getElementById('players').value = "";
     if(!params.id){
-        showHostError((window.getHostTranslation && window.getHostTranslation('host_error_missing_id')) || 'Falta el quiz para generar la partida. Vuelve a elegirlo.');
+        lobby.showErrorKey('host_error_missing_id');
         return;
     }
     //Tell server that it is host connection
     socket.emit('host-join', params);
     setTimeout(function(){
-        if(!pinLoaded){
+        if(!lobby.pin){
             socket.emit('host-join', params);
         }
     }, 2000);
     clearTimeout(hostErrorTimeout);
     hostErrorTimeout = setTimeout(function(){
-        if(!pinLoaded){
-            showHostError((window.getHostTranslation && window.getHostTranslation('host_error_timeout')) || 'No pudimos obtener el PIN. Revisa la conexión y vuelve a elegir el quiz.');
+        if(!lobby.pin){
+            lobby.showErrorKey('host_error_timeout');
         }
     }, 4000);
 });
 
 socket.on('showGamePin', function(data){
-   setDisplayedPin(data.pin);
+    lobby.pin = (data.pin || '').toString();
+    lobby.hasMatching = !!data.hasMatching;
+    lobby.hasComposite = !!data.hasComposite;
+    lobby.hasVideo = !!data.hasVideo;
+    lobby.quizName = (data.quizName || '').toString();
     params.pin = data.pin;
-   try{ localStorage.setItem(lastPinKey, data.pin); }catch(e){}
+    try{ localStorage.setItem(lastPinKey, data.pin); }catch(e){}
 });
 
 //Adds player's name to screen and updates player count
 socket.on('updatePlayerLobby', function(data){
-    
-    var container = document.getElementById('players');
-    if(!container) return;
-    container.innerHTML = '';
-    for(var i = 0; i < data.length; i++){
-        var icon = data[i].icon ? data[i].icon : '';
-        var item = document.createElement('div');
-        item.className = 'player-item';
-        var iconEl = document.createElement('span');
-        iconEl.className = 'player-icon';
-        iconEl.textContent = icon;
-        var nameEl = document.createElement('span');
-        nameEl.className = 'player-name';
-        nameEl.textContent = data[i].name || '';
-        item.appendChild(iconEl);
-        item.appendChild(nameEl);
-        container.appendChild(item);
-    }
-    
+    lobby.players = Array.isArray(data) ? data : [];
+    socket.emit('getKickedList');
+});
+
+// Al crearse la partida, el servidor conoce ya la opción de nombres: se sincroniza la elegida.
+socket.on('gamePin', function(){
+    if(lobby && lobby.emitNameMode) lobby.emitNameMode();
+    if(lobby && lobby.emitGameTimings) lobby.emitGameTimings();
+});
+
+socket.on('kickedList', function(list){
+    lobby.kickedList = Array.isArray(list) ? list : [];
 });
 
 //Tell server to start game if button is clicked
@@ -367,6 +619,8 @@ function startGame(){
         return;
     }
     hostStartClicked = true;
+    // Respuesta inmediata: el botón se bloquea y se avisa de que la partida está arrancando.
+    lobby.starting = true;
     try{
         sessionStorage.setItem(HOST_AUTOPLAY_MUSIC_KEY, '1');
         // Requisitos:
@@ -381,11 +635,18 @@ function startGame(){
         hostLobbyMusicPlayerInstance.play();
     }
 
+    var options = lobby.options;
     var opts = {
-        randomQuestions: document.getElementById('opt-rand-q') ? document.getElementById('opt-rand-q').checked : false,
-        randomAnswers: document.getElementById('opt-rand-a') ? document.getElementById('opt-rand-a').checked : true,
-        sendToStudents: document.getElementById('opt-send-students') ? document.getElementById('opt-send-students').checked : true,
-        showScoresBetween: document.getElementById('opt-show-scores') ? document.getElementById('opt-show-scores').checked : true,
+        randomQuestions: !!options.randomQuestions,
+        randomAnswers: !!options.randomAnswers,
+        sendToStudents: !!options.sendToStudents,
+        showScoresBetween: !!options.showScoresBetween,
+        showCorrectAnswers: !!options.showCorrectAnswers,
+        streak: !!options.streak,
+        ghostMode: !!options.ghostMode,
+        showQuestionDuringCountdown: !!options.showQuestionDuringCountdown,
+        autoAdvanceSec: parseInt(options.autoAdvanceSec, 10) || 0,
+        mode: options.mode === 'selfPaced' ? 'selfPaced' : 'live',
         pin: (function(){
             try{
                 return (params && params.pin) || localStorage.getItem(lastPinKey) || '';
@@ -394,8 +655,14 @@ function startGame(){
             }
         })()
     };
-    var timeInput = document.getElementById('opt-time');
-    var rawTime = timeInput && typeof timeInput.value === 'string' ? timeInput.value.trim() : '';
+    if(lobby.hasMatching && !opts.sendToStudents){
+        opts.matchingBlindStyle = options.matchingBlindStyle || 'codes';
+    }
+    if(lobby.hasComposite){
+        opts.matchingExtraTime = parseInt(options.matchingExtraTime, 10) || 50;
+    }
+    // v-model en un input numérico da un número o '' si está vacío.
+    var rawTime = options.time == null ? '' : String(options.time).trim();
     if(rawTime){
         var parsedTime = parseInt(rawTime, 10);
         if(!isNaN(parsedTime)){
@@ -404,11 +671,27 @@ function startGame(){
             opts.timePerQuestion = parsedTime;
         }
     }
+    opts.videoStartSec = Math.max(0, Math.min(3600, parseInt(options.videoStartSec, 10) || 0));
     emitStartGameWhenGongEnds(opts);
 }
-function endGame(){
-    window.location.href = "/";
+// Cancelar desde el lobby: pide confirmación (dos pasos) y el servidor cierra la partida.
+var lobbyCancelResetTimer = null;
+function askCancelLobbyStep(){
+    if(!lobby.cancelConfirming){
+        lobby.cancelConfirming = true;
+        clearTimeout(lobbyCancelResetTimer);
+        lobbyCancelResetTimer = setTimeout(function(){ lobby.cancelConfirming = false; }, 4000);
+        return;
+    }
+    clearTimeout(lobbyCancelResetTimer);
+    lobby.cancelConfirming = false;
+    socket.emit('cancelGame');
 }
+socket.on('gameCancelled', function(){
+    // Cerrar el lobby para la música.
+    if(hostLobbyMusicPlayerInstance && typeof hostLobbyMusicPlayerInstance.pause === 'function') hostLobbyMusicPlayerInstance.pause();
+    window.location.href = "/";
+});
 
 //When server starts the game
 socket.on('gameStarted', function(id){
@@ -423,14 +706,23 @@ socket.on('gameStarted', function(id){
     try{ pin = localStorage.getItem(lastPinKey); }catch(e){}
     var qs = '?id=' + encodeURIComponent(id);
     if(pin) qs += '&pin=' + encodeURIComponent(pin);
-    if(!openEmbeddedHostGame("/host/game/" + qs)){
-        window.location.href="/host/game/" + qs;
+    // Autoritme: pantalla propia del anfitrión (progreso por alumno).
+    var gameUrl = (lobby.options.mode === 'selfPaced' ? "/host/self-paced/" : "/host/game/") + qs;
+    if(!openEmbeddedHostGame(gameUrl)){
+        window.location.href = gameUrl;
     }
 });
 
 // Carga la vista de juego en un iframe sin salir de esta página. Así la música y el
 // gong siguen siendo los <audio> que desbloqueó el clic en "Iniciar partida" y el
 // navegador no vuelve a bloquear el autoplay al cambiar de página.
+// Títol de la pàgina durant una partida a su ritmo: «EduHoot | <títol del quiz>». Buit en els altres casos.
+function hostEmbeddedTitle(){
+    if(lobby.options.mode !== 'selfPaced') return '';
+    var name = (lobby.quizName || '').trim();
+    return name ? 'EduHoot | ' + name : 'EduHoot';
+}
+
 function openEmbeddedHostGame(url){
     if(!hostStartClicked || document.getElementById('host-game-frame')) return false;
     var music = hostLobbyMusicPlayerInstance;
@@ -447,10 +739,11 @@ function openEmbeddedHostGame(url){
         frame.setAttribute('allowfullscreen', '');
         frame.addEventListener('load', function(){
             try{
-                document.title = frame.contentDocument.title || document.title;
+                document.title = hostEmbeddedTitle() || frame.contentDocument.title || document.title;
                 frame.contentWindow.focus();
             }catch(e){}
         });
+        document.title = hostEmbeddedTitle() || document.title;
         frame.src = url;
         document.body.classList.add('host-game-embedded');
         document.body.appendChild(frame);
@@ -462,6 +755,14 @@ function openEmbeddedHostGame(url){
     }
 }
 
+// La ayuda «?» se cierra al pulsar fuera o con Esc.
+document.addEventListener('click', function(e){
+    if(lobby.helpOpen && !e.target.closest('.help')){ lobby.helpOpen = null; }
+});
+document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape' && lobby.helpOpen){ lobby.helpOpen = null; }
+});
+
 // Precarga del gong al cargar la portada
 initHostLobbyGong();
 
@@ -471,16 +772,19 @@ socket.on('noGameFound', function(){
        clearTimeout(hostStartWatchdog);
        hostStartWatchdog = null;
    }
-   var msg = (window.getHostTranslation && window.getHostTranslation('host_error')) || 'No se pudo iniciar la partida. Vuelve a elegir el quiz y prueba de nuevo.';
-   showHostError(msg);
+   lobby.showErrorKey('host_error');
 });
 
 socket.on('hostError', function(payload){
     hostStartGameEmitted = false;
+    lobby.starting = false;
     if(hostStartWatchdog){
         clearTimeout(hostStartWatchdog);
         hostStartWatchdog = null;
     }
-    var msg = payload && payload.error ? payload.error : ((window.getHostTranslation && window.getHostTranslation('host_error')) || 'No se pudo iniciar la partida. Vuelve a elegir el quiz y prueba de nuevo.');
-    showHostError(msg);
+    if(payload && payload.error){
+        lobby.showErrorText(payload.error);
+    }else{
+        lobby.showErrorKey('host_error');
+    }
 });

@@ -1,0 +1,45 @@
+/* Inicio rápido (/inicio/): la portada de siempre con el aspecto de la promo (/):
+   tarjeta de cristal con borde blanco, botones con los emoticonos de la app y los mismos efectos. */
+.landing-shell{
+    position: relative;
+    border-radius: 14px;
+    border: 1px solid #fff;
+    background: rgba(255,255,255,.06);
+    box-shadow: 0 14px 30px rgba(0,0,0,.3);
+}
+.logo-link{ display: block; line-height: 0; border-radius: 0.18em; margin-bottom: 1rem; }
+.logo-link .logo{ transition: transform .5s; margin-bottom: 0; }
+.logo-link:hover .logo{ transform: rotate(360deg); }
+.logo-link:focus-visible{ outline: 3px solid #fdbc4b; outline-offset: 4px; }
+.landing-shell h1{ font-weight: 800; }
+.landing-actions .btn{ align-items: center; }
+.landing-actions .btn.secondary{ background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.35); }
+.landing-actions .btn:active{ transform: translateY(1px) scale(.97); }
+
+/* Emoticonos: los mismos que la biblioteca, las partidas y los deberes. Van por CSS para no pisar las traducciones. */
+[data-ic]::before{
+    content: attr(data-ic) " ";
+    font-style: normal;
+    display: inline-block;
+    margin-inline-end: .45em;
+    transition: transform .3s cubic-bezier(.3,1.8,.5,1);
+}
+.btn:hover[data-ic]::before{ transform: scale(1.3) rotate(-10deg); }
+.install-button[hidden]{ display: none; }
+a:focus-visible, button:focus-visible{ outline: 3px solid #fdbc4b; outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce){
+    *, *::before, *::after{ animation: none !important; transition: none !important; }
+}
+
+/* El selector de idioma va dentro del recuadro de los botones, en la esquina superior derecha. */
+.landing-shell #lang-switcher,
+html.has-account-chip:not(.account-home-only) .landing-shell #lang-switcher{
+    position: absolute;
+    top: 14px;
+    right: auto;
+    inset-inline-end: 14px;
+}
+
+/* Los <button> no heredan la tipografía: «Instalar app» y el selector de idioma usan Raleway como el resto. */
+.landing-shell button,
+.install-button{ font-family: inherit; }

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Admin Logs | EduHoot</title>
+    <link rel="stylesheet" href="/css/admin.css">
+    <link rel="stylesheet" href="/css/dropdowns.css">
+    <link rel="icon" href="/icons/logo.svg" type="image/svg+xml">
+    <link href="/css/fonts.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/edutictac-footer.css">
+    <link rel="stylesheet" href="/css/edutictac-shared.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="/js/edutictac-chip.js"></script>
+    <script src="https://commons.edutictac.es/assets/account-widget.js" defer></script>
+      <link href="/css/brand-unify.css" rel="stylesheet">
+    </head>
+  <body>
+    <edutictac-account class="site-account site-account--top" data-base="https://commons.edutictac.es"></edutictac-account>
+    <!-- Subfase B, Vue (admin-logs.js): tot el panell és una app de Vue. -->
+    <div id="logs-app"></div>
+    <template id="logs-tpl">
+    <header class="admin-header">
+      <div>
+        <h1>Logs del servidor</h1>
+        <p>Eventos de partidas, jugadores, importaciones y errores del servidor.</p>
+        <nav class="admin-nav"><a href="/admin/stats">&larr; Panel de estadísticas</a></nav>
+      </div>
+      <div class="login-inline" id="auth-area">
+        <button type="button" id="login-fallback" v-show="fallbackVisible" @click="login">Entrar con EduTicTac</button>
+        <span id="login-status">{{ loginStatus }}</span>
+      </div>
+    </header>
+    <main class="admin-content">
+      <section class="panel" id="logs-settings">
+        <h4>Configuración</h4>
+        <div class="logs-settings-row">
+          <label>Nivel mínimo
+            <select id="logs-level-select" v-model="settings.level">
+              <option value="error">error</option>
+              <option value="warn">warn</option>
+              <option value="info">info</option>
+              <option value="debug">debug</option>
+            </select>
+          </label>
+          <label>Tamaño máximo (MB)
+            <input type="number" id="logs-capped-mb" min="1" step="1" v-model="settings.cappedMb">
+          </label>
+          <button type="button" id="logs-settings-save" @click="saveSettings">Guardar</button>
+          <span id="logs-settings-status">{{ settingsStatus }}</span>
+        </div>
+      </section>
+      <section class="panel" id="logs-filters">
+        <h4>Filtros</h4>
+        <div class="logs-filters-row">
+          <select id="logs-filter-level" v-model="filters.level">
+            <option value="">Cualquier nivel</option>
+            <option value="error">error</option>
+            <option value="warn">warn</option>
+            <option value="info">info</option>
+            <option value="debug">debug</option>
+          </select>
+          <select id="logs-filter-tag" v-model="filters.tag" @change="loadLogs">
+            <option value="">Cualquier tag</option>
+            <optgroup label="Partida">
+              <option value="host-join">host-join</option>
+              <option value="host-join-game">host-join-game</option>
+              <option value="game-start">game-start</option>
+              <option value="game-end">game-end</option>
+              <option value="nextQuestion">nextQuestion</option>
+              <option value="skipQuestion">skipQuestion</option>
+              <option value="newQuiz">newQuiz</option>
+            </optgroup>
+            <optgroup label="Jugador">
+              <option value="player-join">player-join</option>
+              <option value="player-rejoin">player-rejoin</option>
+              <option value="player-rejoin-stale">player-rejoin-stale</option>
+              <option value="player-leave">player-leave</option>
+              <option value="playerAnswer">playerAnswer</option>
+            </optgroup>
+            <optgroup label="Importación CSV">
+              <option value="upload-csv:start">upload-csv:start</option>
+              <option value="upload-csv:empty">upload-csv:empty</option>
+              <option value="upload-csv:public-anon">upload-csv:public-anon</option>
+              <option value="upload-csv:local">upload-csv:local</option>
+              <option value="upload-csv:success">upload-csv:success</option>
+            </optgroup>
+            <optgroup label="Sistema">
+              <option value="admin-settings">admin-settings</option>
+              <option value="express-error">express-error</option>
+              <option value="uncaughtException">uncaughtException</option>
+              <option value="unhandledRejection">unhandledRejection</option>
+              <option value="socket-io-error">socket-io-error</option>
+              <option value="socket-connection-error">socket-connection-error</option>
+              <option value="timeUp">timeUp</option>
+              <option value="requestDbNames">requestDbNames</option>
+            </optgroup>
+          </select>
+          <input type="text" id="logs-filter-q" v-model="filters.q" placeholder="Buscar texto, nombre, hostId o playerId...">
+          <input type="text" id="logs-filter-pin" v-model="filters.pin" placeholder="PIN">
+          <button type="button" id="logs-filter-apply" @click="loadLogs">Filtrar</button>
+          <button type="button" id="logs-filter-refresh" @click="loadLogs">Refrescar</button>
+          <button type="button" id="logs-export-csv" @click="download('csv')">Descargar CSV</button>
+          <button type="button" id="logs-export-ndjson" @click="download('ndjson')">Descargar NDJSON</button>
+        </div>
+      </section>
+      <section class="panel" id="logs-table-wrap">
+        <table id="logs-table">
+          <thead>
+            <tr><th>Detalle</th><th>Fecha</th><th>Nivel</th><th>Tag</th><th>Mensaje</th><th>PIN</th><th>hostId</th><th>playerId</th></tr>
+          </thead>
+          <tbody id="logs-tbody">
+            <tr v-for="(row, index) in rows" :key="index">
+              <td class="logs-detail-btn-cell"><button v-if="hasDetail(row)" type="button" class="logs-detail-btn" @click="openDetail(row)">Ver</button></td>
+              <td>{{ formatDate(row.createdAt) }}</td>
+              <td :class="'level-' + row.level">{{ row.level }}</td>
+              <td>{{ row.tag }}</td>
+              <td>{{ row.message }}</td>
+              <td>{{ row.pin }}</td>
+              <td>{{ row.hostId }}</td>
+              <td>{{ row.playerId }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <div id="logs-more" class="logs-more" v-if="hasMore">
+          <p>Se muestran los {{ rows.length }} más recientes. Hay más: cárgalos, filtra o descarga el CSV/NDJSON, que incluye todos.</p>
+          <button type="button" id="logs-load-more" :disabled="loadingMore" @click="loadMore">{{ loadingMore ? 'Cargando...' : 'Cargar más' }}</button>
+        </div>
+      </section>
+    </main>
+    <div id="logs-error" class="error">{{ error }}</div>
+    <dialog id="logs-detail-modal" ref="detailModal" class="logs-detail-modal">
+      <form method="dialog" class="logs-detail-modal__form">
+        <header class="logs-detail-modal__header">
+          <h3 id="logs-detail-modal-title">{{ detail.title }}</h3>
+          <button type="submit" class="logs-detail-modal__close" aria-label="Cerrar">&times;</button>
+        </header>
+        <dl id="logs-detail-modal-meta" class="logs-detail-modal__meta">
+          <template v-for="field in detail.fields" :key="field[0]"><dt>{{ field[0] }}</dt><dd>{{ field[1] }}</dd></template>
+        </dl>
+        <pre id="logs-detail-modal-stack" class="logs-detail-modal__stack">{{ detail.stack }}</pre>
+      </form>
+    </dialog>
+    </template>
+    <script src="/js/libs/vue.global.prod.js"></script>
+    <script src="/js/session-bridge.js"></script>
+    <script src="/js/admin-logs.js"></script>
+    <script src="/js/env-badge.js"></script>
+  </body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <link rel="icon" href="/icons/logo.svg" type="image/svg+xml">
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+        <meta name="robots" content="noindex">
+        <title data-i18n="docTitle">Correspondencia (prueba) | EduHoot</title>
+        <link href="/css/fonts.css" rel="stylesheet">
+        <link rel="stylesheet" href="poc.css">
+    </head>
+    <body>
+<div class="wrap">
+  <header class="top">
+    <h1 data-i18n="h1">Pregunta de correspondencia · prueba de concepto</h1>
+    <p data-i18n="intro">Maqueta de la feature 7.</p>
+  </header>
+
+  <div class="controls" role="group" data-i18n-title="controlsLabel">
+    <label for="poc-lang"><span data-i18n="langLabel">Idioma</span>
+      <select id="poc-lang" data-lang-options="name"></select></label>
+    <label for="opt-pairs"><span data-i18n="pairsLabel">Parejas</span>
+      <select id="opt-pairs"></select></label>
+    <label for="opt-imp"><span data-i18n="impLabel">Impostoras</span>
+      <select id="opt-imp"></select></label>
+    <label for="opt-show"><input id="opt-show" type="checkbox" checked> <span data-i18n="showLabel">Mostrar respuestas</span></label>
+    <label for="opt-blind"><span data-i18n="blindLabel">A ciegas</span>
+      <select id="opt-blind">
+        <option value="codes" data-i18n="blindCodes">Toques con códigos</option>
+        <option value="select" data-i18n="blindSelect">Desplegables</option>
+        <option value="steps" data-i18n="blindSteps">Paso a paso</option>
+      </select></label>
+    <button class="ghost btn-reset" id="btn-reset" type="button" data-i18n="newGame">Nueva partida</button>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" data-view="student" aria-selected="true" type="button" data-i18n="tabStudent">Móvil del alumno</button>
+    <button class="tab" role="tab" data-view="blind" aria-selected="false" type="button" data-i18n="tabBlind">Móvil a ciegas</button>
+    <button class="tab" role="tab" data-view="projector" aria-selected="false" type="button" data-i18n="tabProjector">Proyector</button>
+    <button class="tab" role="tab" data-view="results" aria-selected="false" type="button" data-i18n="tabResults">Resultados en el proyector</button>
+  </div>
+
+  <div class="stage" id="stage"></div>
+
+  <section class="notes" id="notes"></section>
+</div>
+
+        <script src="/js/languages.js"></script>
+        <script src="../poc-i18n.js"></script>
+        <script src="texts.js"></script>
+        <script src="poc.js"></script>
+    </body>
+</html>

@@ -41,7 +41,7 @@ function sortPublicQuizzes(list){
 
 function getAllTagsFromQuizzes(){
         var map = {};
-        state.quizzes.forEach(function(q){
+        Vue.toRaw(state.quizzes).forEach(function(q){
             var list = Array.isArray(q.tags) ? q.tags : [];
             list.forEach(function(tag){
                 var clean = (tag || '').toString().trim();
@@ -58,8 +58,6 @@ function getAllTagsFromQuizzes(){
         });
         return items;
     }
-
-    var tagFilterExpanded = false;
 
     function parseTagFiltersFromUrl(){
         try{
@@ -117,90 +115,220 @@ function getAllTagsFromQuizzes(){
         }catch(e){}
     }
 
-    function ensureTagToggleButton(total){
-        var clearBtn = document.getElementById('tags-clear');
-        if(!clearBtn || !clearBtn.parentElement) return;
-        var actions = clearBtn.parentElement;
-        var btn = document.getElementById('tags-toggle');
-        if(!btn){
-            btn = document.createElement('button');
-            btn.id = 'tags-toggle';
-            btn.type = 'button';
-            btn.className = 'tag-filter__btn is-icon';
-            btn.setAttribute('aria-label', t('filterTagShowMore'));
-            btn.innerHTML = '<span class="tag-filter__icon" aria-hidden="true">▾</span><span class="sr-only"></span>';
-            btn.addEventListener('click', function(){
-                tagFilterExpanded = !tagFilterExpanded;
-                updateTagFilterOptions();
-            });
-            actions.insertBefore(btn, clearBtn);
-        }
-        var label = tagFilterExpanded ? t('filterTagShowLess') : t('filterTagShowMore');
-        var icon = tagFilterExpanded ? '▴' : '▾';
-        btn.setAttribute('aria-label', label);
-        var iconEl = btn.querySelector('.tag-filter__icon');
-        if(iconEl) iconEl.textContent = icon;
-        var sr = btn.querySelector('.sr-only');
-        if(sr) sr.textContent = label;
-        btn.style.display = total > 0 ? '' : 'none';
-    }
+// Normaliza tildes y mayúsculas para comparar etiquetas
+function normalizeTag(str) {
+    return (str || '').toString().trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+}
 
-    function getVisibleTagItems(allItems){
-        return tagFilterExpanded ? allItems : [];
-    }
+// Lleva las etiquetas del filtro a la grafía exacta que usan los quizzes
+// (p. ej. «SOCIALS» de la URL → «socials»); si no existe, la conserva para
+// no perder filtros cargados desde la URL.
+function normalizeTagFilters(){
+    var allKeys = {};
+    getAllTagsFromQuizzes().forEach(function(it){ allKeys[normalizeTag(it.tag)] = it.tag; });
+    state.filters.tags = state.filters.tags.map(function(tag){
+        return allKeys[normalizeTag(tag)] || tag;
+    }).filter(function(tag){
+        return !!(tag && tag.toString().trim());
+    });
+}
 
-    // Normaliza tildes y mayúsculas para comparar etiquetas
-    function normalizeTag(str) {
-        return (str || '').toString().trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    }
-
-    function updateTagFilterOptions(){
-        var wrap = document.getElementById('tag-filter');
-        if(!wrap) return;
-        var allItems = getAllTagsFromQuizzes();
-        var allKeys = {};
-        allItems.forEach(function(it){ allKeys[normalizeTag(it.tag)] = it.tag; });
-        wrap.innerHTML = '';
-        state.filters.tags = state.filters.tags.map(function(tag){
-            var key = normalizeTag(tag);
-            // Normalizar al caso exacto que usan los quizzes; si no se encuentra,
-            // conservar el valor original para no perder filtros cargados desde URL.
-            return allKeys[key] || tag;
-        }).filter(function(tag){
-            return !!(tag && tag.toString().trim());
-        });
-        syncSoloUrl();
-
-        ensureTagToggleButton(allItems.length);
-        if(!tagFilterExpanded) return;
-        var items = getVisibleTagItems(allItems);
-
-        items.forEach(function(item){
-            var tag = item.tag;
-            var label = document.createElement('label');
-            label.className = 'tag-filter__item';
-            var input = document.createElement('input');
-            input.type = 'checkbox';
-            input.value = tag;
-            input.checked = state.filters.tags.indexOf(tag) !== -1;
-            input.addEventListener('change', function(){
-                var selected = [];
-                var inputs = wrap.querySelectorAll('input[type="checkbox"]');
-                Array.prototype.forEach.call(inputs, function(el){
-                    if(el.checked) selected.push(el.value);
-                });
-                state.filters.tags = selected;
+    function fetchPublicQuizzes(){
+        var params = getSoloTagQueryParams();
+        var qs = params.toString();
+        var endpoint = '/api/public-quizzes' + (qs ? '?' + qs : '');
+        state.loading = true;
+        state.loadError = false;
+        fetch(endpoint)
+            .then(function(res){ return res.json(); })
+            .then(function(data){
+                state.quizzes = shuffleArray(Array.isArray(data) ? data : []);
                 state.page = 0;
-                syncSoloUrl();
-                renderList();
+                state.loading = false;
+                normalizeTagFilters();
+                if(qs){
+                    fetch('/api/public-quizzes')
+                        .then(function(res){ return res.json(); })
+                        .then(function(allData){
+                            state.quizzes = shuffleArray(Array.isArray(allData) ? allData : []);
+                            normalizeTagFilters();
+                        })
+                        .catch(function(){});
+                }
+            })
+            .catch(function(){
+                state.quizzes = [];
+                state.loading = false;
+                state.loadError = true;
             });
-            var span = document.createElement('span');
-            span.textContent = tag;
-            label.appendChild(input);
-            label.appendChild(span);
-            wrap.appendChild(label);
-        });
     }
+
+// Miniatura de cada tarjeta: la portada del quiz o, si no tiene, el logo
+// mientras se busca una imagen/vídeo entre sus preguntas. Se calcula una
+// vez por quiz (antes se repetía la petición en cada repintado).
+function ensureThumb(q){
+    var key = String(q.id);
+    if(state.thumbs[key]) return;
+    var direct = mediaThumb(q.coverImage || q.coverVideo);
+    state.thumbs[key] = { src: direct || '/icons/logo.svg', loaded: false, fallback: !direct };
+    if(direct) return;
+    fetch('/api/quizzes/' + encodeURIComponent(q.id))
+        .then(function(res){ return res.json(); })
+        .then(function(body){
+            var altThumb = findMediaInQuestions(body.questions || []);
+            if(altThumb){
+                state.thumbs[key].src = altThumb;
+                state.thumbs[key].fallback = false;
+                state.thumbs[key].loaded = false;
+            }
+        })
+        .catch(function(){});
+}
+
+// Parte del catálogo de la app de Vue de /solo/ (Subfase B, bloque 1). La
+// lista se filtra y ordena sobre los datos «en crudo» (Vue.toRaw), así que
+// marcar un favorito o valorar no reordena al instante: como antes, solo
+// se reordena al cambiar búsqueda, filtros u orden.
+var soloCatalog = {
+    computed: {
+        allTags: function(){
+            this.s.quizzes;
+            return getAllTagsFromQuizzes();
+        },
+        tagToggleLabel: function(){
+            return this.s.tagFilterExpanded ? this.t('filterTagShowLess') : this.t('filterTagShowMore');
+        },
+        filteredQuizzes: function(){
+            var s = this.s;
+            var searchVal = (s.search || '').toLowerCase();
+            var filterTagsNorm = s.filters.tags.map(normalizeTag);
+            var tagMode = s.filters.tagMode;
+            var minQ = parseInt(s.filters.minQuestions, 10);
+            var maxQ = parseInt(s.filters.maxQuestions, 10);
+            var onlyImage = s.filters.onlyImage;
+            s.sortOrder; // sortPublicQuizzes lo lee de state: así el orden es dependencia.
+            var favorites = Vue.toRaw(s.favoriteIds);
+            var list = Vue.toRaw(s.quizzes).filter(function(q){
+                if(searchVal){
+                    var haystack = (q.name || '') + ' ' + (Array.isArray(q.tags) ? q.tags.join(' ') : '');
+                    if(!haystack.toLowerCase().includes(searchVal)) return false;
+                }
+                if(filterTagsNorm.length){
+                    var tags = (Array.isArray(q.tags) ? q.tags : []).map(normalizeTag);
+                    var hasTag = function(tag){ return tags.indexOf(tag) !== -1; };
+                    if(tagMode === 'all' ? !filterTagsNorm.every(hasTag) : !filterTagsNorm.some(hasTag)) return false;
+                }
+                var count = typeof q.questionsCount === 'number' ? q.questionsCount : 0;
+                if(!Number.isNaN(minQ) && count < minQ) return false;
+                if(!Number.isNaN(maxQ) && count > maxQ) return false;
+                if(onlyImage && !q.coverImage) return false;
+                return true;
+            });
+            var favs = list.filter(function(q){ return favorites.has(String(q.id)); });
+            var rest = list.filter(function(q){ return !favorites.has(String(q.id)); });
+            return sortPublicQuizzes(favs).concat(sortPublicQuizzes(rest));
+        },
+        // Barra flotant: quan el paginador de baix no es veu (com a la biblioteca).
+        showFixedPager: function(){
+            return catalogFixedPager.ready && this.totalPages > 1 && !catalogFixedPager.bottomVisible;
+        },
+        totalPages: function(){
+            return Math.max(1, Math.ceil(this.filteredQuizzes.length / this.s.pageSize));
+        },
+        currentPage: function(){
+            return Math.min(this.s.page, this.totalPages - 1);
+        },
+        pageItems: function(){
+            var start = this.currentPage * this.s.pageSize;
+            return this.filteredQuizzes.slice(start, start + this.s.pageSize).map(function(q){ return Vue.reactive(q); });
+        },
+        emptyText: function(){
+            if(this.s.loading) return this.t('loading');
+            if(this.s.loadError || !this.filteredQuizzes.length) return this.t('publicEmpty');
+            return '';
+        }
+    },
+    watch: {
+        pageItems: {
+            handler: function(items){ items.forEach(ensureThumb); },
+            immediate: true
+        },
+        's.filters.tags': {
+            handler: function(){ syncSoloUrl(); },
+            deep: true
+        }
+    },
+    methods: {
+        pagerT: function(key, vars){
+            return catalogPagerT(key, vars);
+        },
+        setSoloPage: function(n){
+            this.s.page = n;
+        },
+        setPageSize: function(ev){
+            this.s.pageSize = Number(ev.target.value);
+            this.s.page = 0;
+        },
+        resetPage: function(){
+            this.s.page = 0;
+        },
+        selectAllTags: function(){
+            this.s.filters.tags = this.allTags.map(function(it){ return it.tag; });
+            this.s.tagFilterExpanded = true;
+            this.s.page = 0;
+        },
+        clearTags: function(){
+            this.s.filters.tags = [];
+            this.s.page = 0;
+        },
+        thumb: function(q){
+            return this.s.thumbs[String(q.id)] || { src: null, loaded: false };
+        },
+        onThumbError: function(q){
+            var th = this.s.thumbs[String(q.id)];
+            if(!th || th.fallback) return;
+            th.loaded = false;
+            th.src = null;
+        },
+        cleanTags: function(q){
+            return Array.isArray(q.tags) ? q.tags : [];
+        },
+        isFavorite: function(id){
+            return isFavorite(id);
+        },
+        favoriteLabel: function(id){
+            return isFavorite(id) ? this.t('favoriteRemove') : this.t('favoriteAdd');
+        },
+        toggleFavorite: function(id){
+            toggleFavorite(id);
+        },
+        displayRating: function(q){
+            var own = getUserRating(q.id);
+            if(own) return own;
+            var avg = Number(q.ratingAvg);
+            return Math.round(Number.isFinite(avg) ? avg : 0);
+        },
+        ratingSummary: function(q){
+            var avg = Number(q && q.ratingAvg);
+            if(!Number.isFinite(avg)) avg = 0;
+            var count = Number(q && q.ratingCount);
+            if(!Number.isFinite(count)) count = 0;
+            return formatRatingSummary(avg, Math.max(0, Math.round(count)));
+        },
+        rate: function(q, stars){
+            setUserRating(q.id, stars);
+            submitRating(q.id, stars, q);
+        },
+        play: function(id){
+            ensureSoloMusicPlaying();
+            selectQuiz(id);
+        },
+        showRanking: function(id){
+            showQuizRanking(id);
+        }
+    }
+};
+
 
 function clampInt(val, min, max){
     var n = parseInt(val, 10);
@@ -215,38 +343,20 @@ function getQuizTotalQuestions(){
     return 0;
 }
 
+// El campo «Preguntas a responder»: por defecto el total del quiz.
 function syncQuestionCountControls(){
-    var input = document.getElementById('question-count');
-    var totalEl = document.getElementById('question-count-total');
     var total = getQuizTotalQuestions();
-
-    if(totalEl){
-        totalEl.textContent = total ? format(t('questionCountTotal'), { total: total }) : '';
-    }
-    if(!input) return;
-
     if(total > 0){
-        input.max = String(total);
-        input.disabled = false;
-        // Por defecto: máximo.
         if(state.desiredQuestionCount == null){
-            input.value = String(total);
+            state.countInput = String(total);
         }
     }else{
-        input.max = '';
-        input.value = '';
-        input.disabled = true;
+        state.countInput = '';
     }
 }
 
 function syncQuestionTimeControls(){
-    var input = document.getElementById('question-time');
-    if(!input) return;
-    if(state.desiredQuestionTime == null){
-        input.value = '';
-        return;
-    }
-    input.value = String(state.desiredQuestionTime);
+    state.timeInput = state.desiredQuestionTime == null ? '' : String(state.desiredQuestionTime);
 }
 
 function getDesiredQuestionCount(){
@@ -258,330 +368,41 @@ function getDesiredQuestionCount(){
         return Math.max(1, Math.min(total, Math.round(state.desiredQuestionCount)));
     }
 
-    var input = document.getElementById('question-count');
-    var chosen = input ? clampInt(input.value, 1, total) : null;
+    var chosen = clampInt(state.countInput, 1, total);
     if(chosen == null) chosen = total;
     return chosen;
 }
 
 function renderSelectedMeta(){
-    var meta = document.getElementById('selected-meta');
-    if(!meta) return;
-    if(!state.quizData){
-        meta.textContent = t('startSelect');
-        syncQuestionCountControls();
-        syncQuestionTimeControls();
-        return;
-    }
-    var count = Array.isArray(state.quizData.questions) ? state.quizData.questions.length : 0;
-    var tags = Array.isArray(state.quizData.tags) ? state.quizData.tags.join(', ') : (Array.isArray(state.quizData.questionsTags) ? state.quizData.questionsTags.join(', ') : '');
-    meta.textContent = format(t('selectedMeta'), { count: count, tags: tags || '—' });
     syncQuestionCountControls();
     syncQuestionTimeControls();
 }
 
-    function fetchPublicQuizzes(){
-        var list = document.getElementById('public-list');
-        var empty = document.getElementById('public-empty');
-        var params = getSoloTagQueryParams();
-        var qs = params.toString();
-        var endpoint = '/api/public-quizzes' + (qs ? '?' + qs : '');
-        if(empty) empty.textContent = t('loading');
-        fetch(endpoint)
-            .then(function(res){ return res.json(); })
-            .then(function(data){
-                state.quizzes = shuffleArray(Array.isArray(data) ? data : []);
-                state.page = 0;
-                updateTagFilterOptions();
-                renderList();
-                if(qs){
-                    fetch('/api/public-quizzes')
-                        .then(function(res){ return res.json(); })
-                        .then(function(allData){
-                            state.quizzes = shuffleArray(Array.isArray(allData) ? allData : []);
-                            updateTagFilterOptions();
-                            renderList();
-                        })
-                        .catch(function(){});
-                }
-            })
-            .catch(function(){
-                if(list) list.innerHTML = '';
-                if(empty) empty.textContent = t('publicEmpty');
-            });
-    }
-
-function renderList(){
-    var list = document.getElementById('public-list');
-        var empty = document.getElementById('public-empty');
-        if(!list) return;
-        list.innerHTML = '';
-        var searchVal = (document.getElementById('search') && document.getElementById('search').value || '').toLowerCase();
-        var minQ = parseInt(state.filters.minQuestions, 10);
-        var maxQ = parseInt(state.filters.maxQuestions, 10);
-        if(Number.isNaN(minQ)) minQ = null;
-        if(Number.isNaN(maxQ)) maxQ = null;
-        var filtered = state.quizzes.filter(function(q){
-            if(!searchVal) return true;
-            var haystack = (q.name || '') + ' ' + (Array.isArray(q.tags) ? q.tags.join(' ') : '');
-            return haystack.toLowerCase().includes(searchVal);
-        });
-        if(state.filters.tags.length){
-            var filterTagsNorm = state.filters.tags.map(normalizeTag);
-            filtered = filtered.filter(function(q){
-                var tags = (Array.isArray(q.tags) ? q.tags : []).map(normalizeTag);
-                if(state.filters.tagMode === 'all'){
-                    return filterTagsNorm.every(function(tag){ return tags.indexOf(tag) !== -1; });
-                }
-                return filterTagsNorm.some(function(tag){ return tags.indexOf(tag) !== -1; });
-            });
-        }
-        if(minQ !== null){
-            filtered = filtered.filter(function(q){
-                var count = typeof q.questionsCount === 'number' ? q.questionsCount : 0;
-                return count >= minQ;
-            });
-        }
-        if(maxQ !== null){
-            filtered = filtered.filter(function(q){
-                var count = typeof q.questionsCount === 'number' ? q.questionsCount : 0;
-                return count <= maxQ;
-            });
-        }
-        if(state.filters.onlyImage){
-            filtered = filtered.filter(function(q){
-                return !!(q.coverImage);
-            });
-        }
-        if(filtered.length === 0){
-            if(empty) empty.textContent = t('publicEmpty');
-            return;
-        }
-        if(empty) empty.textContent = '';
-        var totalPages = Math.max(1, Math.ceil(filtered.length / state.pageSize));
-        if(state.page >= totalPages){
-            state.page = totalPages - 1;
-        }
-        var favorites = [];
-        var nonFavorites = [];
-        filtered.forEach(function(q){
-            if(isFavorite(q.id)){
-                favorites.push(q);
-            }else{
-                nonFavorites.push(q);
-            }
-        });
-        favorites = sortPublicQuizzes(favorites);
-        nonFavorites = sortPublicQuizzes(nonFavorites);
-        filtered = favorites.concat(nonFavorites);
-        var start = state.page * state.pageSize;
-        var pageItems = filtered.slice(start, start + state.pageSize);
-        pageItems.forEach(function(q){
-            var card = document.createElement('div');
-            card.className = 'card';
-            var thumb = document.createElement('div');
-            thumb.className = 'card-thumb placeholder';
-            var img = document.createElement('img');
-            img.alt = '';
-            var thumbUrl = mediaThumb(q.coverImage || q.coverVideo);
-            if(thumbUrl){
-                img.onload = function(){
-                    thumb.classList.add('has-media');
-                    thumb.classList.remove('placeholder');
-                };
-                img.onerror = function(){
-                    thumb.classList.remove('has-media');
-                    thumb.classList.add('placeholder');
-                    img.removeAttribute('src');
-                };
-                img.src = thumbUrl;
-            } else {
-                img.onload = function(){
-                    thumb.classList.add('has-media');
-                    thumb.classList.remove('placeholder');
-                };
-                img.src = '/icons/logo.svg';
-                // keep placeholder background without text
-                // Fallback: intenta obtener media del quiz completo
-                fetch('/api/quizzes/' + encodeURIComponent(q.id))
-                    .then(function(res){ return res.json(); })
-                    .then(function(body){
-                        var altThumb = findMediaInQuestions(body.questions || []);
-                        if(altThumb){
-                            img.onload = function(){
-                                thumb.classList.add('has-media');
-                                thumb.classList.remove('placeholder');
-                            };
-                            img.onerror = function(){
-                                thumb.classList.remove('has-media');
-                                thumb.classList.add('placeholder');
-                                img.removeAttribute('src');
-                            };
-                            img.src = altThumb;
-                        }
-                    })
-                    .catch(function(){});
-            }
-            thumb.appendChild(img);
-            card.appendChild(thumb);
-            var header = document.createElement('div');
-            header.className = 'card-header';
-            var title = document.createElement('h3');
-            title.textContent = q.name || 'Quiz';
-            var favBtn = document.createElement('button');
-            favBtn.type = 'button';
-            favBtn.className = 'favorite-btn';
-            favBtn.addEventListener('click', function(ev){
-                ev.stopPropagation();
-                toggleFavorite(q.id);
-                updateFavoriteButton(favBtn, q.id);
-            });
-            updateFavoriteButton(favBtn, q.id);
-            header.appendChild(title);
-            header.appendChild(favBtn);
-            var meta = document.createElement('p');
-            meta.className = 'muted';
-            meta.textContent = format(t('byline'), { count: q.questionsCount || 0 });
-            var tagsWrap = document.createElement('div');
-            if(Array.isArray(q.tags)){
-                q.tags.forEach(function(tag){
-                    var el = document.createElement('span');
-                    el.className = 'tag';
-                    el.textContent = tag;
-                    tagsWrap.appendChild(el);
-                });
-            }
-            var ratingWrap = document.createElement('div');
-            ratingWrap.className = 'card-rating';
-            var ratingStars = document.createElement('div');
-            ratingStars.className = 'rating-stars';
-            for(var i = 1; i <= 5; i++){
-                (function(stars){
-                    var starBtn = document.createElement('button');
-                    starBtn.type = 'button';
-                    starBtn.className = 'rating-star';
-                    starBtn.setAttribute('data-value', String(stars));
-                    starBtn.textContent = '★';
-                    var label = format(t('ratingStarLabel'), { stars: stars });
-                    starBtn.setAttribute('aria-label', label);
-                    starBtn.title = label;
-                    starBtn.addEventListener('click', function(ev){
-                        ev.stopPropagation();
-                        updateRatingStars(ratingStars, stars);
-                        setUserRating(q.id, stars);
-                        submitRating(q.id, stars, ratingSummary, ratingStars, q);
-                    });
-                    ratingStars.appendChild(starBtn);
-                })(i);
-            }
-            var ratingSummary = document.createElement('span');
-            ratingSummary.className = 'rating-summary muted';
-            var avg = Number(q && q.ratingAvg);
-            if(!Number.isFinite(avg)) avg = 0;
-            var count = Number(q && q.ratingCount);
-            if(!Number.isFinite(count)) count = 0;
-            count = Math.max(0, Math.round(count));
-            ratingSummary.textContent = formatRatingSummary(avg, count);
-            var userRating = getUserRating(q.id);
-            var displayRating = userRating ? userRating : Math.round(avg || 0);
-            updateRatingStars(ratingStars, displayRating);
-            ratingWrap.appendChild(ratingStars);
-            ratingWrap.appendChild(ratingSummary);
-            var stats = document.createElement('div');
-            stats.className = 'card-stats';
-            var plays = q.playsCount || 0;
-            var players = q.playersCount || 0;
-            stats.textContent = plays + ' ' + t('playsShort') + ' · ' + players + ' ' + t('playersShort');
-            var btn = document.createElement('button');
-            btn.className = 'btn btn-primary';
-            btn.textContent = t('playCta');
-            btn.onclick = function(){ ensureSoloMusicPlaying(); selectQuiz(q.id); };
-            card.appendChild(header);
-            card.appendChild(meta);
-            card.appendChild(tagsWrap);
-            card.appendChild(ratingWrap);
-            card.appendChild(stats);
-            var cardLinks = document.createElement('div');
-            cardLinks.className = 'card-links';
-            var rankingLink = document.createElement('button');
-            rankingLink.type = 'button';
-            rankingLink.className = 'card-link';
-            rankingLink.textContent = t('viewRanking');
-            rankingLink.onclick = function(e){
-                e.stopPropagation();
-                showQuizRanking(q.id);
-            };
-            cardLinks.appendChild(rankingLink);
-            card.appendChild(cardLinks);
-            card.appendChild(btn);
-            list.appendChild(card);
-        });
-        renderPagination(filtered.length);
-    }
-
-    function renderPagination(totalFiltered){
-        var controls = document.getElementById('public-pagination');
-        if(!controls) return;
-        controls.innerHTML = '';
-        var totalPages = Math.max(1, Math.ceil(totalFiltered / state.pageSize));
-        if(totalPages <= 1){
-            controls.classList.add('hidden');
-            return;
-        }
-        controls.classList.remove('hidden');
-        var prev = document.createElement('button');
-        prev.textContent = '<';
-        prev.disabled = state.page === 0;
-        prev.onclick = function(){
-            if(state.page > 0){
-                state.page -= 1;
-                renderList();
-            }
-        };
-        var info = document.createElement('span');
-        info.textContent = (state.page + 1) + ' / ' + totalPages;
-        var next = document.createElement('button');
-        next.textContent = '>';
-        next.disabled = state.page >= totalPages - 1;
-        next.onclick = function(){
-            if(state.page < totalPages - 1){
-                state.page += 1;
-                renderList();
-            }
-        };
-        controls.appendChild(prev);
-        controls.appendChild(info);
-        controls.appendChild(next);
-    }
-
     function selectQuiz(id){
-        var title = document.getElementById('selected-title');
-        var startForm = document.getElementById('start-form');
-        var gameArea = document.getElementById('game-area');
-        var resultArea = document.getElementById('result-area');
-        var gamePanel = document.getElementById('game-panel');
-        if(title) title.textContent = t('loading');
-        if(startForm) startForm.classList.add('hidden');
-        if(gameArea) gameArea.classList.add('hidden');
-        if(resultArea) resultArea.classList.add('hidden');
+        state.title = { key: 'loading' };
+        state.view = 'none';
         fetch('/api/quizzes/' + encodeURIComponent(id))
             .then(function(res){ return res.json().then(function(body){ return { ok: res.ok, body: body }; }); })
             .then(function(payload){
                 if(!payload.ok){
-                    if(title) title.textContent = t('startError');
+                    // Si no carga, se vuelve a enseñar el catálogo.
+                    document.body.classList.remove('playing');
+                    document.documentElement.classList.remove('quiz-from-url');
+                    state.title = { key: 'startError' };
                     return;
                 }
                 state.quizData = payload.body;
                 state.currentQuiz = payload.body.id;
-                if(title) title.textContent = payload.body.name || t('soloTitle');
+                state.title = payload.body.name ? { text: payload.body.name } : { key: 'soloTitle' };
                 document.body.classList.add('playing');
-                if(gamePanel) gamePanel.classList.remove('hidden');
                 // Nuevo flujo: antes de empezar, elegir cuántas preguntas jugar.
                 state.desiredQuestionCount = null;
                 renderSelectedMeta();
-                if(startForm) startForm.classList.remove('hidden');
+                state.view = 'start';
             })
             .catch(function(){
-                if(title) title.textContent = t('startError');
+                document.body.classList.remove('playing');
+                document.documentElement.classList.remove('quiz-from-url');
+                state.title = { key: 'startError' };
             });
     }

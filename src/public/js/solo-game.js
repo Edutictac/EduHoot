@@ -9,31 +9,37 @@ function startQuiz(){
         state.idx = 0;
         state.score = 0;
         state.correct = 0;
+        state.streak = 0;
+        state.streakBonus = 0;
         state.locked = false;
+        // Mode fantasma: la millor marca d'este qüestionari (null si no n'hi ha o si el quiz ha canviat).
+        state.runOrigs = [];
+        state.runPoints = {};
+        state.ghostDiff = null;
+        state.ghost = state.ghostEnabled && window.EduhootGhost && state.quizData
+            ? EduhootGhost.loadGhost(ghostStorage(), EduhootGhost.fingerprint(state.quizData.questions))
+            : null;
         var desiredCount = getDesiredQuestionCount();
         state.desiredQuestionCount = desiredCount;
-        var randomized = randomizeQuestions(state.quizData.questions || []);
+        var randomized = randomizeQuestions(state.quizData.questions || [], state.shuffleQuestions);
         if(desiredCount > 0 && desiredCount < randomized.length){
             state.questions = randomized.slice(0, desiredCount);
         }else{
             state.questions = randomized;
         }
-        var nameInput = document.getElementById('player-name');
-        var cleanName = nameInput && nameInput.value ? normalizeName(nameInput.value) : '';
-        state.playerName = cleanName || t('namePlaceholder');
-        if(nameInput){
-            nameInput.value = cleanName;
-        }
-        var startForm = document.getElementById('start-form');
-        var gameArea = document.getElementById('game-area');
-        var resultArea = document.getElementById('result-area');
-        if(startForm) startForm.classList.add('hidden');
-        if(resultArea) resultArea.classList.add('hidden');
-        if(gameArea) gameArea.classList.remove('hidden');
+        var cleanName = state.nameInput ? normalizeName(state.nameInput) : '';
+        // Si se entró desde Commons, el código público es el nombre por defecto.
+        state.playerName = cleanName || state.commonsPublicCode || t('namePlaceholder');
+        state.nameInput = cleanName;
+        state.view = 'game';
         renderQuestion();
     }
 
     function renderQuestion(){
+    // Lectura en veu alta: la pregunta anterior no es llig sobre la nova.
+    EduhootTTS.cancel();
+    state.ttsSpeaking = false;
+    state.capturedImage = '';
         var questions = getQuestions();
         if(state.idx >= questions.length){
             finishQuiz();
@@ -42,30 +48,110 @@ function startQuiz(){
         state.locked = false;
         var q = questions[state.idx];
         var meta = normalizeQuestionMeta(q);
-        var questionEl = document.getElementById('question-text');
-        if(questionEl) questionEl.textContent = q.question || '';
-        setMedia(q.image, q.video);
-        var progress = document.getElementById('question-progress');
-        if(progress){
-            var current = state.idx + 1;
-            var total = questions.length;
-            progress.textContent = format(t('questionOf'), { current: current, total: total });
-            progress.setAttribute('aria-label', current + ' / ' + total);
-        }
-        updateScorePill();
         state.multiSelections = [];
-        renderAnswers(q, meta);
-        updateSoloSelectionStyles();
-        updateSoloMultiSubmitVisibility(meta);
+        state.marks = { correct: [], wrong: [] };
+        state.freeText = '';
+        state.feedback = { text: '', kind: '' };
         var time = (typeof state.desiredQuestionTime === 'number' && state.desiredQuestionTime > 0)
             ? state.desiredQuestionTime
             : ((typeof q.time === 'number' && q.time > 0) ? q.time : 20);
-        startTimer(time);
-        var feedback = document.getElementById('feedback');
-        if(feedback){
-            feedback.textContent = '';
-            feedback.classList.remove('feedback--success', 'feedback--error', 'feedback--muted');
+        time = Math.max(5, Math.min(120, time));
+        // Correspondencia: más margen (+25/50/75/100 %), elegido por el alumno.
+        // Preguntas compuestas (correspondencia y ordenar): más margen, elegido por el alumno.
+        if(meta.type === 'matching' || meta.type === 'order'){
+            time = Math.round(time * (1 + (state.matchingExtraTime || 0) / 100));
         }
+        state.timerTotal = time;
+        state.timerLeft = state.timerTotal;
+        // Compte arrere 3-2-1 (com en «Jugar a l'aula»): la pregunta, les
+        // respostes i el temporitzador no comencen fins que acaba.
+        state.locked = true;
+        state.learning = false;
+        var startAnswering = function(){
+            runCountdown(SOLO_COUNTDOWN_SECONDS, function(){
+                state.locked = false;
+                startTimer(time);
+                if(meta.type === 'short-answer' || meta.type === 'numeric'){
+                    setTimeout(function(){
+                        var input = document.getElementById('solo-free-input');
+                        try{ if(input) input.focus(); }catch(e){}
+                    }, 50);
+                }
+            });
+        };
+        // Amb vídeo, primer es mira (sense pregunta ni temps); en acabar, comença el compte arrere.
+        if(q.video){
+            state.learning = true;
+            pendingLearnedStart = startAnswering;
+            return;
+        }
+        startAnswering();
+    }
+
+    // Fase de vídeo (feature 24): en acabar el vídeo (botó o final de l'arxiu) comencen la pregunta i el temps.
+    var pendingLearnedStart = null;
+    // Fotograma d'un vídeo de fitxer (JPEG), si el navegador el deixa dibuixar. Un vídeo d'un altre origen
+    // sense CORS no es pot exportar (toDataURL llança): aleshores no hi ha imatge. Amb YouTube no es pot.
+    function captureVideoFrame(v){
+        if(!v || !v.videoWidth || !v.videoHeight) return '';
+        try{
+            var scale = Math.min(1, 640 / v.videoWidth);
+            var c = document.createElement('canvas');
+            c.width = Math.round(v.videoWidth * scale);
+            c.height = Math.round(v.videoHeight * scale);
+            c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
+            return c.toDataURL('image/jpeg', 0.8);
+        }catch(e){ return ''; }
+    }
+    function finishLearningPhase(){
+        if(!state.learning) return;
+        state.learning = false;
+        state.capturedImage = captureVideoFrame(document.getElementById('solo-learn-video'));
+        var go = pendingLearnedStart;
+        pendingLearnedStart = null;
+        if(go) go();
+    }
+
+    var SOLO_COUNTDOWN_SECONDS = 3;
+    var countdownTimer = null;
+    var countdownDone = null;
+
+    function runCountdown(seconds, done){
+        stopCountdown();
+        countdownDone = done;
+        state.countdown = seconds;
+        countdownTimer = setInterval(function(){
+            state.countdown -= 1;
+            if(state.countdown <= 0){
+                stopCountdown();
+                if(state.view === 'game') done();
+            }
+        }, 1000);
+    }
+
+    function stopCountdown(){
+        if(countdownTimer){
+            clearInterval(countdownTimer);
+            countdownTimer = null;
+        }
+        state.countdown = 0;
+    }
+
+    // Lo que se muestra de la pregunta actual (texto, medios, respuestas); lo
+    // lee la plantilla de Vue.
+    function currentQuestion(){
+        if(state.view !== 'game') return null;
+        return getQuestions()[state.idx] || null;
+    }
+
+    function mediaFor(q){
+        var media = { image: '', youtube: '', video: '' };
+        if(!q) return media;
+        if(q.image) media.image = normalizeSvgDataUrlForImg(q.image);
+        var ytId = parseYouTubeId(q.video);
+        if(ytId) media.youtube = 'https://www.youtube-nocookie.com/embed/' + ytId;
+        else if(q.video) media.video = q.video;
+        return media;
     }
 
     function parseYouTubeId(url){
@@ -120,95 +206,7 @@ function startQuiz(){
         return raw;
     }
 
-    function setMedia(imageUrl, videoUrl){
-        var wrap = document.getElementById('question-media');
-        var img = document.getElementById('question-image');
-        var vid = document.getElementById('question-video');
-        var iframe = document.getElementById('question-iframe');
-        if(!wrap || !img || !vid || !iframe) return;
-        wrap.classList.add('hidden');
-        img.style.display = 'none';
-        vid.style.display = 'none';
-        iframe.style.display = 'none';
-        img.removeAttribute('src');
-        vid.removeAttribute('src');
-        iframe.removeAttribute('src');
 
-        var hasMedia = false;
-        if(imageUrl){
-            img.src = normalizeSvgDataUrlForImg(imageUrl);
-            img.style.display = 'block';
-            hasMedia = true;
-        }
-        var ytId = parseYouTubeId(videoUrl);
-        if(ytId){
-            iframe.src = 'https://www.youtube-nocookie.com/embed/' + ytId;
-            iframe.style.display = 'block';
-            hasMedia = true;
-        }else if(videoUrl){
-            vid.src = videoUrl;
-            vid.style.display = 'block';
-            hasMedia = true;
-        }
-        if(hasMedia){
-            wrap.classList.remove('hidden');
-            wrap.classList.add('show');
-        }else{
-            wrap.classList.remove('show');
-        }
-    }
-
-    function renderAnswers(q, meta){
-        var answersWrap = document.getElementById('answers');
-        if(!answersWrap) return;
-        answersWrap.innerHTML = '';
-        var metaInfo = meta || normalizeQuestionMeta(q);
-
-        if(metaInfo.type === 'short-answer' || metaInfo.type === 'numeric'){
-            var row = document.createElement('div');
-            row.className = 'free-answer-row';
-
-            var input = document.createElement('input');
-            input.id = 'solo-free-input';
-            input.className = 'free-answer-input';
-            input.type = 'text';
-            input.autocomplete = 'off';
-            input.placeholder = metaInfo.type === 'numeric' ? t('freeNumberPlaceholder') : t('freeTextPlaceholder');
-            input.addEventListener('keydown', function(ev){
-                if(ev.key === 'Enter'){
-                    ev.preventDefault();
-                    submitSoloFreeAnswer();
-                }
-            });
-
-            var btn = document.createElement('button');
-            btn.id = 'solo-free-submit';
-            btn.className = 'free-answer-submit';
-            btn.type = 'button';
-            btn.textContent = t('submitFreeAnswer');
-            btn.addEventListener('click', function(){ submitSoloFreeAnswer(); });
-
-            row.appendChild(input);
-            row.appendChild(btn);
-            answersWrap.appendChild(row);
-
-            setTimeout(function(){
-                try{ input.focus(); }catch(e){}
-            }, 50);
-            return;
-        }
-
-        var answers = getVisibleAnswers(q, metaInfo.type);
-        answers.forEach(function(ans, idx){
-            var btn = document.createElement('button');
-            btn.className = 'answer';
-            btn.type = 'button';
-            btn.textContent = ans || ('Respuesta ' + (idx + 1));
-            btn.setAttribute('data-answer', String(idx + 1));
-            btn.addEventListener('click', function(){ handleSoloAnswerInteraction(idx + 1); });
-            answersWrap.appendChild(btn);
-        });
-    }
 
     function submitSoloFreeAnswer(){
         if(state.locked) return;
@@ -217,41 +215,10 @@ function startQuiz(){
         if(!q) return;
         var meta = normalizeQuestionMeta(q);
         if(meta.type !== 'short-answer' && meta.type !== 'numeric') return;
-        var input = document.getElementById('solo-free-input');
-        if(!input) return;
-        answerQuestion((input.value || '').toString(), false);
+        answerQuestion((state.freeText || '').toString(), false);
     }
 
-    function updateSoloSelectionStyles(){
-        var answersWrap = document.getElementById('answers');
-        if(!answersWrap) return;
-        Array.prototype.slice.call(answersWrap.querySelectorAll('button.answer')).forEach(function(btn, idx){
-            var n = idx + 1;
-            if(Array.isArray(state.multiSelections) && state.multiSelections.indexOf(n) !== -1){
-                btn.classList.add('multi-selected');
-            }else{
-                btn.classList.remove('multi-selected');
-            }
-        });
-    }
 
-    function updateSoloMultiSubmitVisibility(meta){
-        var btn = document.getElementById('multi-submit');
-        if(!btn) return;
-        var questions = getQuestions();
-        var question = questions[state.idx] || {};
-        var currentMeta = meta || normalizeQuestionMeta(question);
-        var isMultiple = currentMeta && currentMeta.type === 'multiple';
-        var show = isMultiple && !state.locked;
-        btn.classList.toggle('hidden', !show);
-        var hasSelection = Array.isArray(state.multiSelections) && state.multiSelections.length > 0;
-        btn.disabled = !hasSelection;
-        if(show){
-            btn.classList.toggle('has-selection', hasSelection);
-        }else{
-            btn.classList.remove('has-selection');
-        }
-    }
 
     function toggleSoloMultiSelection(choice){
         if(state.locked) return;
@@ -265,8 +232,6 @@ function startQuiz(){
         }else{
             state.multiSelections.splice(idx, 1);
         }
-        updateSoloSelectionStyles();
-        updateSoloMultiSubmitVisibility();
     }
 
     function handleSoloAnswerInteraction(choice){
@@ -287,13 +252,11 @@ function startQuiz(){
     }
 
     function startTimer(seconds){
-        state.timerTotal = Math.max(5, Math.min(120, seconds));
+        state.timerTotal = Math.max(5, Math.min(240, seconds));
         state.timerLeft = state.timerTotal;
-        updateTimerPill();
         if(state.timer) clearInterval(state.timer);
         state.timer = setInterval(function(){
             state.timerLeft = Math.max(0, state.timerLeft - 0.1);
-            updateTimerPill();
             if(state.timerLeft <= 0){
                 clearInterval(state.timer);
                 state.timer = null;
@@ -309,45 +272,155 @@ function startQuiz(){
         }
     }
 
-    function updateTimerPill(){
-        var pill = document.getElementById('timer-pill');
-        if(!pill) return;
-        pill.textContent = t('timer') + ': ' + Math.ceil(state.timerLeft) + 's';
+    // Sigue contando desde el tiempo que quedaba (tras una pausa).
+    function resumeTimer(){
+        if(state.timer) clearInterval(state.timer);
+        state.timer = setInterval(function(){
+            state.timerLeft = Math.max(0, state.timerLeft - 0.1);
+            if(state.timerLeft <= 0){
+                clearInterval(state.timer);
+                state.timer = null;
+                answerQuestion(null, true);
+            }
+        }, 100);
     }
 
-    function updateScorePill(){
-        var scorePill = document.getElementById('score-pill');
-        if(scorePill){
-            scorePill.textContent = t('score') + ': ' + state.score;
+    // Pausa: se puede mientras corre el tiempo de una pregunta o la cuenta atrás.
+    // La pregunta se tapa (no se puede leer ni responder) y el tiempo se congela.
+    function canPauseSolo(){
+        return state.view === 'game' && !state.paused && (!!state.timer || state.countdown > 0);
+    }
+
+    // «Pasar»: salta a la siguiente pregunta sin responder (no suma puntos ni aciertos y corta la racha).
+    // Se puede mientras corre el tiempo o la cuenta atrás; no con la partida en pausa.
+    function canSkipSolo(){
+        return state.view === 'game' && !state.paused && !state.feedbackModalOpen && (!!state.timer || state.countdown > 0);
+    }
+
+    function skipQuestion(){
+        if(!canSkipSolo()) return;
+        stopTimer();
+        stopCountdown();
+        var q = getQuestions()[state.idx];
+        if(normalizeQuestionMeta(q).type !== 'poll') state.streak = 0;
+        state.streakBonus = 0;
+        state.locked = true;
+        state.idx += 1;
+        renderQuestion();
+    }
+
+    var pausedCountdown = 0;
+    var musicWasPlaying = false;
+    function pauseSolo(){
+        if(!canPauseSolo()) return;
+        // La música de fondo también se pausa; al reanudar vuelve solo si sonaba.
+        musicWasPlaying = !!(soloMusicPlayerInstance && soloMusicPlayerInstance.audio && !soloMusicPlayerInstance.audio.paused);
+        pauseSoloMusic();
+        EduhootTTS.cancel();
+        state.ttsSpeaking = false;
+        if(state.countdown > 0){
+            pausedCountdown = state.countdown;
+            if(countdownTimer){
+                clearInterval(countdownTimer);
+                countdownTimer = null;
+            }
+        }else{
+            pausedCountdown = 0;
+            stopTimer();
+        }
+        state.paused = true;
+    }
+
+    function resumeSolo(){
+        if(!state.paused) return;
+        state.paused = false;
+        if(musicWasPlaying){
+            musicWasPlaying = false;
+            ensureSoloMusicPlaying();
+        }
+        if(pausedCountdown > 0){
+            var seconds = pausedCountdown;
+            pausedCountdown = 0;
+            runCountdown(seconds, countdownDone);
+        }else{
+            resumeTimer();
         }
     }
+
+    // Cancelar la partida: primer toque pide confirmación unos segundos; el segundo
+    // la termina sin guardar la puntuación y vuelve al formulario del quiz.
+    var cancelResetTimer = null;
+    function askCancelSolo(){
+        if(!state.cancelConfirming){
+            state.cancelConfirming = true;
+            clearTimeout(cancelResetTimer);
+            cancelResetTimer = setTimeout(function(){ state.cancelConfirming = false; }, 4000);
+            return;
+        }
+        clearTimeout(cancelResetTimer);
+        cancelSolo();
+    }
+
+    function cancelSolo(){
+        state.cancelConfirming = false;
+        state.paused = false;
+        pausedCountdown = 0;
+        musicWasPlaying = false;
+        pauseSoloMusic();
+        stopTimer();
+        stopCountdown();
+        EduhootTTS.cancel();
+        state.ttsSpeaking = false;
+        clearFeedbackTimer();
+        state.feedbackModalOpen = false;
+        state.awaitingConfirm = false;
+        state.lastResult = null;
+        state.locked = false;
+        state.multiSelections = [];
+        state.feedback = { text: '', kind: '' };
+        state.questions = [];
+        state.idx = 0;
+        // El formulario del quiz también se ve en modo «playing»: no se quita.
+        state.view = 'start';
+    }
+
+
 
     function answerQuestion(choice, timedOut){
         if(state.locked) return;
         state.locked = true;
+        var scoreBefore = state.score;
         stopTimer();
         var questions = getQuestions();
         var q = questions[state.idx];
         var meta = normalizeQuestionMeta(q);
-        var answersWrap = document.getElementById('answers');
-        var feedback = document.getElementById('feedback');
 
         var isCorrect = false;
         var scoreRatio = 0;
         var correctAnswerText = '';
 
-        if(meta.type === 'short-answer'){
+        if(meta.type === 'matching'){
+            // Proporcional: cada pareja acertada suma; las mal hechas no restan.
+            var solution = meta.matchSolution || [];
+            var matchResult = EduhootMatching.score(solution, timedOut ? [] : choice);
+            scoreRatio = matchResult.ratio;
+            isCorrect = matchResult.total > 0 && matchResult.hits === matchResult.total;
+            correctAnswerText = solution.map(function(r, i){
+                return (i + 1) + ' ' + meta.matchLeft[i] + ' → ' + (meta.matchRight[r] || '');
+            }).join(' · ');
+            state.lastMatchHits = { hits: matchResult.hits, total: matchResult.total };
+        }else if(meta.type === 'order'){
+            // Proporcional, com la correspondència: el mode de puntuació el marca la pregunta.
+            scoreRatio = timedOut ? 0 : EduhootOrder.scoreRatio(meta, choice);
+            isCorrect = scoreRatio === 1;
+            correctAnswerText = meta.items.map(function(text, i){ return (i + 1) + ' ' + text; }).join(' · ');
+        }else if(meta.type === 'short-answer'){
             var rawText = timedOut ? '' : (typeof choice === 'string' ? choice : String(choice || ''));
             var normalized = normalizeFreeText(rawText);
             var accepted = Array.isArray(meta.acceptedAnswers) ? meta.acceptedAnswers : splitAcceptedAnswers(meta.acceptedAnswers);
             isCorrect = !!normalized && accepted.some(function(ans){ return normalizeFreeText(ans) === normalized; });
             scoreRatio = isCorrect ? 1 : 0;
             correctAnswerText = accepted.join(', ');
-
-            var input = document.getElementById('solo-free-input');
-            var btn = document.getElementById('solo-free-submit');
-            if(input) input.disabled = true;
-            if(btn) btn.disabled = true;
         }else if(meta.type === 'numeric'){
             var rawNum = timedOut ? '' : (typeof choice === 'string' ? choice : String(choice || ''));
             var num = parseLenientNumber(rawNum);
@@ -362,11 +435,6 @@ function startQuiz(){
             if(target !== null){
                 correctAnswerText = (tol && tol > 0) ? (String(target) + ' ± ' + String(tol)) : String(target);
             }
-
-            var input2 = document.getElementById('solo-free-input');
-            var btn2 = document.getElementById('solo-free-submit');
-            if(input2) input2.disabled = true;
-            if(btn2) btn2.disabled = true;
         }else{
             var selected = [];
             if(timedOut){
@@ -389,18 +457,10 @@ function startQuiz(){
                 scoreRatio = isCorrect ? 1 : 0;
             }
 
-            if(answersWrap){
-                Array.prototype.slice.call(answersWrap.querySelectorAll('button.answer')).forEach(function(btnEl, idx){
-                    var n = idx + 1;
-                    btnEl.disabled = true;
-                    if(correctList.indexOf(n) !== -1){
-                        btnEl.classList.add('correct');
-                    }
-                    if(meta.type !== 'poll' && selected.indexOf(n) !== -1 && correctList.indexOf(n) === -1){
-                        btnEl.classList.add('wrong');
-                    }
-                });
-            }
+            state.marks = {
+                correct: state.showAnswers ? correctList.slice() : [],
+                wrong: meta.type === 'poll' ? [] : selected.filter(function(n){ return correctList.indexOf(n) === -1; })
+            };
 
             if(Array.isArray(q.answers)){
                 var list = [];
@@ -423,47 +483,65 @@ function startQuiz(){
             var bonus = Math.round(1000 * Math.max(0, Math.min(1, state.timerLeft / state.timerTotal)));
             state.score += Math.round(bonus * scoreRatio);
         }
-        if(feedback){
-            if(timedOut){
-                feedback.classList.remove('feedback--success', 'feedback--error');
-                feedback.classList.add('feedback--muted');
-                feedback.textContent = t('timeup');
-            }else if(meta.type === 'poll'){
-                feedback.classList.remove('feedback--error', 'feedback--success');
-                feedback.classList.add('feedback--muted');
-                feedback.textContent = t('pollThanks');
-            }else if(isCorrect){
-                feedback.classList.remove('feedback--muted', 'feedback--error');
-                feedback.classList.add('feedback--success');
-                feedback.textContent = t('correctText');
-            }else if(meta.type === 'multiple' && scoreRatio > 0){
-                feedback.classList.remove('feedback--muted', 'feedback--error');
-                feedback.classList.add('feedback--success');
-                feedback.textContent = t('partialText');
-            }else{
-                feedback.classList.remove('feedback--muted', 'feedback--success');
-                feedback.classList.add('feedback--error');
-                var label = t('correctLabel');
-                feedback.textContent = correctAnswerText
-                    ? t('wrongText') + ' · ' + (label === 'correctLabel' ? '' : label + ' ') + correctAnswerText
-                    : t('wrongText');
+        // Racha de aciertos (feature 11). Misma regla que el servidor (server/services/scoring.js):
+        // acierto completo suma 1 a la racha; cualquier otro resultado la reinicia; una encuesta no la cambia.
+        state.streakBonus = 0;
+        if(meta.type !== 'poll'){
+            state.streak = isCorrect ? (state.streak || 0) + 1 : 0;
+            if(isCorrect && state.streak >= 3){
+                state.streakBonus = Math.min(250, (state.streak - 2) * 50);
+                state.score += state.streakBonus;
             }
         }
+        if(timedOut){
+            state.feedback = { text: t('timeup'), kind: 'muted' };
+        }else if(meta.type === 'poll'){
+            state.feedback = { text: t('pollThanks'), kind: 'muted' };
+        }else if(isCorrect){
+            state.feedback = { text: t('correctText'), kind: 'success' };
+        }else if((meta.type === 'multiple' || meta.type === 'matching' || meta.type === 'order') && scoreRatio > 0){
+            var partialText = t('partialText');
+            if(meta.type === 'matching'){
+                partialText += ' · ' + format(t('matchingPairsResult'), state.lastMatchHits);
+            }
+            state.feedback = { text: partialText, kind: 'partial' };
+        }else{
+            var label = t('correctLabel');
+            state.feedback = {
+                text: correctAnswerText
+                    ? t('wrongText') + ' · ' + (label === 'correctLabel' ? '' : label + ' ') + correctAnswerText
+                    : t('wrongText'),
+                kind: 'error'
+            };
+        }
+        // «Mostrar respuestas» desmarcado: no se revela cuál era la correcta.
+        if(!state.showAnswers && state.feedback.kind === 'error'){
+            state.feedback = { text: t('wrongText'), kind: 'error' };
+            correctAnswerText = '';
+        }
+        // Mode fantasma: els punts d'esta pregunta i la diferència amb la marca (les enquestes no puntuen).
+        if(meta.type !== 'poll' && state.ghostEnabled && window.EduhootGhost){
+            state.runOrigs.push(q.origIdx);
+            state.runPoints[q.origIdx] = state.score - scoreBefore;
+            state.ghostDiff = EduhootGhost.diffFor(state.ghost, state.runOrigs, state.score);
+        }
         state.multiSelections = [];
-        updateSoloSelectionStyles();
-        updateSoloMultiSubmitVisibility();
-        state.lastWrong = null;
-        if(isCorrect || meta.type === 'poll'){
-            updateScorePill();
+        state.lastResult = null;
+        if(meta.type === 'poll'){
+            var runAt = state.questions;
             setTimeout(function(){
+                // Si se ha cancelado la partida mientras tanto, no se sigue.
+                if(state.view !== 'game' || state.questions !== runAt) return;
                 state.idx += 1;
                 renderQuestion();
             }, 1200);
             return;
         }
-        updateScorePill();
+        // Acierto, acierto parcial o fallo: ventana de resultado en el centro; al cerrarse (sola o con OK) sigue la partida.
         state.awaitingConfirm = true;
-        state.lastWrong = {
+        state.lastResult = {
+            kind: isCorrect ? 'correct' : (scoreRatio > 0 ? 'partial' : 'wrong'),
+            partial: !isCorrect && scoreRatio > 0,
             correct: Array.isArray(meta.correctAnswers) ? meta.correctAnswers : [1],
             correctText: correctAnswerText,
             question: q.question || ''
@@ -471,30 +549,38 @@ function startQuiz(){
         showFeedbackModal();
     }
 
+    function ghostResultText(ghost, t){
+        if(ghost.newBest) return t('ghostNewBest');
+        return format(t('ghostBest'), { score: ghost.best, diff: EduhootGhost.signed(ghost.diff) });
+    }
+
+    // localStorage del navegador (la marca es perd si s'esborra; no es guarda res al servidor).
+    function ghostStorage(){
+        try{
+            return window.localStorage;
+        }catch(e){
+            return null;
+        }
+    }
+
     function finishQuiz(){
         stopTimer();
-        setMedia(null, null);
-        var gameArea = document.getElementById('game-area');
-        var resultArea = document.getElementById('result-area');
-        if(gameArea) gameArea.classList.add('hidden');
-        if(resultArea) resultArea.classList.remove('hidden');
-        var summary = document.getElementById('result-summary');
-        if(summary){
-            var totalQs = getScoredQuestionCount();
-            var pollCount = getQuestions().length - totalQs;
-            var scoredSummary = totalQs ? format(t('resultSummary'), {
-                correct: state.correct,
-                total: totalQs,
-                score: state.score
-            }) : '';
-            var pollSummary = pollCount ? format(t('pollSummary'), { total: pollCount }) : '';
-            summary.textContent = [scoredSummary, pollSummary].filter(Boolean).join(' · ');
+        var totalQs = getScoredQuestionCount();
+        state.result = {
+            correct: state.correct,
+            total: totalQs,
+            score: state.score,
+            polls: getQuestions().length - totalQs
+        };
+        state.view = 'result';
+        state.rankingBox = { visible: false, items: [] };
+        if(totalQs > 0 && state.ghostEnabled && window.EduhootGhost){
+            var newBest = EduhootGhost.saveGhost(ghostStorage(), EduhootGhost.fingerprint(state.quizData.questions), state.score, state.runPoints);
+            state.result.ghost = state.ghost
+                ? { best: state.ghost.total, diff: state.score - state.ghost.total, newBest: newBest }
+                : { best: state.score, diff: 0, newBest: true };
         }
-        var ranking = document.getElementById('ranking');
-        var rankingList = document.getElementById('ranking-list');
-        if(ranking) ranking.classList.add('hidden');
-        if(rankingList) rankingList.innerHTML = '';
-        if(getScoredQuestionCount() > 0) prepareScoreSubmission();
+        if(totalQs > 0) prepareScoreSubmission();
     }
 
     function getScoredQuestionCount(){
@@ -502,3 +588,247 @@ function startQuiz(){
             return normalizeQuestionMeta(question).type !== 'poll';
         }).length;
     }
+
+// Parte del panel de juego de la app de Vue de /solo/ (Subfase B, bloque 2):
+// formulario de inicio, pregunta, respuestas, resultado y los tres modales.
+var soloPlay = {
+    computed: {
+        titleText: function(){
+            return this.s.title.text || this.t(this.s.title.key);
+        },
+        // Imagen representativa del quiz: la misma de su tarjeta; si no hay, la portada o la primera pregunta con imagen.
+        quizImage: function(){
+            var quiz = this.s.quizData;
+            if(!quiz) return '';
+            var th = this.s.thumbs[String(quiz.id)];
+            if(th && th.src && !th.fallback) return th.src;
+            var direct = mediaThumb(quiz.coverImage || quiz.coverVideo);
+            if(direct) return direct;
+            var questions = Array.isArray(quiz.questions) ? quiz.questions : [];
+            for(var i = 0; i < questions.length; i++){
+                var q = questions[i];
+                if(q && (q.image || q.video)) return mediaThumb(q.image || q.video);
+            }
+            return '';
+        },
+        // Resum del quiz en dues línies: el nombre de preguntes i les etiquetes.
+        selectedMetaCount: function(){
+            var quiz = this.s.quizData;
+            if(!quiz) return this.t('startSelect');
+            var count = Array.isArray(quiz.questions) ? quiz.questions.length : 0;
+            return format(this.t('selectedMetaCount'), { count: count });
+        },
+        selectedMetaTags: function(){
+            var quiz = this.s.quizData;
+            if(!quiz) return '';
+            var tags = Array.isArray(quiz.tags) ? quiz.tags.join(', ') : (Array.isArray(quiz.questionsTags) ? quiz.questionsTags.join(', ') : '');
+            return format(this.t('selectedMetaTags'), { tags: tags || '—' });
+        },
+        quizTotal: function(){
+            var quiz = this.s.quizData;
+            return quiz && Array.isArray(quiz.questions) ? quiz.questions.length : 0;
+        },
+        question: function(){
+            return currentQuestion();
+        },
+        meta: function(){
+            return this.question ? normalizeQuestionMeta(this.question) : { type: 'quiz' };
+        },
+        isFree: function(){
+            return this.meta.type === 'short-answer' || this.meta.type === 'numeric';
+        },
+        // Preguntas compuestas (correspondencia y ordenar): el selector de tiempo extra es visible si n'hi ha.
+        hasComposite: function(){
+            return (this.s.quizData && Array.isArray(this.s.quizData.questions) ? this.s.quizData.questions : [])
+                .some(function(q){ return q && (q.type === 'matching' || q.type === 'order'); });
+        },
+        showMatching: function(){
+            return this.meta.type === 'matching' && !this.s.locked && !(this.s.countdown > 0);
+        },
+        showOrder: function(){
+            return this.meta.type === 'order' && !this.s.locked && !(this.s.countdown > 0);
+        },
+        feedbackLeftSec: function(){
+            return Math.ceil((this.s.feedbackLeftMs || 0) / 1000);
+        },
+        feedbackBarWidth: function(){
+            var total = (this.s.feedbackSeconds || 5) * 1000;
+            return Math.max(0, Math.min(100, 100 * (this.s.feedbackLeftMs || 0) / total)) + '%';
+        },
+        feedbackKind: function(){
+            return this.s.lastResult ? this.s.lastResult.kind : 'wrong';
+        },
+        feedbackIcon: function(){
+            return { correct: '✓', partial: '◐', wrong: '✕' }[this.feedbackKind] || '✕';
+        },
+        feedbackTitle: function(){
+            if(this.feedbackKind === 'correct') return this.t('correctText');
+            return this.feedbackKind === 'partial' ? this.t('partialTitle') : this.t('wrongText');
+        },
+        answers: function(){
+            return this.question && !this.isFree ? getVisibleAnswers(this.question, this.meta.type) : [];
+        },
+        media: function(){
+            var m = mediaFor(this.question);
+            // La pregunta mostra una imatge: la miniatura de YouTube o el fotograma del vídeo; mai el vídeo.
+            if(!m.image){
+                var yt = parseYouTubeId(this.question && this.question.video);
+                if(yt) m.image = 'https://img.youtube.com/vi/' + yt + '/hqdefault.jpg';
+                else if(this.s.capturedImage) m.image = this.s.capturedImage;
+            }
+            return m;
+        },
+        hasMedia: function(){
+            return !!this.media.image;
+        },
+        // Lectura en veu alta (proposta 13). Només amb la pregunta visible.
+        ttsAvailable: function(){
+            // Només mentre la pregunta està en pantalla: ni durant la cuenta
+            // atrás (locked i countdown) ni després de contestar (locked).
+            return !!(this.question && this.question.question) && !!this.s.ttsReady && !this.s.locked && !(this.s.countdown > 0);
+        },
+        // Barra de temps: mateix percentatge i colors que en «Jugar a l'aula».
+        timerPct: function(){
+            var total = this.s.timerTotal || 1;
+            return Math.max(0, Math.min(100, (this.s.timerLeft / total) * 100));
+        },
+        timerColor: function(){
+            var pct = this.timerPct;
+            if(pct < 35) return 'linear-gradient(135deg, #f97316, #ef4444)';
+            if(pct < 60) return 'linear-gradient(135deg, #facc15, #f97316)';
+            return 'linear-gradient(135deg, #22c55e, #16a34a)';
+        },
+        progressText: function(){
+            var total = getQuestions().length;
+            return format(this.t('questionOf'), { current: this.s.idx + 1, total: total });
+        },
+        canPause: function(){
+            return this.s.paused || canPauseSolo();
+        },
+        canSkip: function(){
+            return canSkipSolo();
+        },
+        showMultiSubmit: function(){
+            return this.meta.type === 'multiple' && !this.s.locked;
+        },
+        resultSummary: function(){
+            var r = this.s.result;
+            var scored = r.total ? format(this.t('resultSummary'), { correct: r.correct, total: r.total, score: r.score }) : '';
+            var polls = r.polls ? format(this.t('pollSummary'), { total: r.polls }) : '';
+            return [scored, polls].filter(Boolean).join(' · ');
+        },
+        // Mode fantasma: la marca al resum final (en el seu propi paragraf, sense canviar el resum).
+        resultGhostText: function(){
+            var r = this.s.result;
+            return r && r.ghost ? ghostResultText(r.ghost, this.t) : '';
+        },
+        // Mode fantasma: diferència amb la millor marca, després de cada pregunta puntuada.
+        ghostDiffText: function(){
+            var d = this.s.ghostDiff;
+            if(!this.s.ghost || d === null || d === undefined || !this.s.lastResult) return '';
+            return format(this.t('ghostDiff'), { diff: EduhootGhost.signed(d) });
+        },
+        feedbackBody: function(){
+            var label = this.t('correctLabel');
+            var text = this.s.lastResult ? (this.s.lastResult.correctText || '') : '';
+            // Sin respuesta que mostrar («Mostrar respuestas» desmarcado), tampoco la etiqueta.
+            if(!text) return '';
+            return (label === 'correctLabel' ? '' : label + ' ') + text;
+        }
+    },
+    methods: {
+        toggleSpeech: function(){
+            if(this.s.ttsSpeaking){
+                EduhootTTS.cancel();
+                this.s.ttsSpeaking = false;
+                return;
+            }
+            if(!this.question) return;
+            var parts = [this.question.question || ''].concat(this.answers || []);
+            this.s.ttsSpeaking = true;
+            var started = EduhootTTS.speakParts(parts, document.documentElement.lang, function(){
+                state.ttsSpeaking = false;
+                unduckSoloMusic();
+            });
+            if(started){
+                duckSoloMusic();
+            } else {
+                this.s.ttsSpeaking = false;
+            }
+        },
+        answerClass: function(n){
+            return {
+                correct: this.s.marks.correct.indexOf(n) !== -1,
+                wrong: this.s.marks.wrong.indexOf(n) !== -1,
+                'multi-selected': this.s.multiSelections.indexOf(n) !== -1
+            };
+        },
+        itemText: function(item){
+            if(item.row) return (item.row.playerName || this.t('namePlaceholder')) + ' — ' + (item.row.score || 0) + ' ' + this.t('scoreLabel');
+            return item.text || this.t(item.key);
+        },
+        onCountInput: function(ev){
+            var total = getQuizTotalQuestions();
+            if(total <= 0) return;
+            var v = clampInt(ev.target.value, 1, total);
+            if(v == null) return;
+            this.s.countInput = ev.target.value = String(v);
+            this.s.desiredQuestionCount = v;
+        },
+        onTimeInput: function(ev){
+            if(!ev.target.value){
+                this.s.timeInput = '';
+                this.s.desiredQuestionTime = null;
+                return;
+            }
+            var v = clampInt(ev.target.value, 5, 120);
+            if(v == null) return;
+            this.s.timeInput = ev.target.value = String(v);
+            this.s.desiredQuestionTime = v;
+        },
+        onShowQuestionCountdownChange: function(ev){
+            this.s.showQuestionCountdown = !!ev.target.checked;
+            try{ localStorage.setItem('eduhoot-solo-show-question-countdown', ev.target.checked ? '1' : '0'); }catch(e){}
+        },
+        onFeedbackSecondsInput: function(ev){
+            var v = clampInt(ev.target.value, 1, 30);
+            if(v == null) return;
+            this.s.feedbackSecondsInput = ev.target.value = String(v);
+            this.s.feedbackSeconds = v;
+            try{ localStorage.setItem('eduhoot-solo-feedback-seconds', String(v)); }catch(e){}
+        },
+        onMatchingExtra: function(ev){
+            this.s.matchingExtraTime = parseInt(ev.target.value, 10) || 50;
+        },
+        onNameInput: function(ev){
+            this.s.nameInput = ev.target.value = normalizeName(ev.target.value);
+        },
+        start: function(){ startQuiz(); },
+        playAgain: function(){ if(this.s.quizData) startQuiz(); },
+        pickAnother: function(){ resetSelection(); },
+        // Sortir del repàs: si s'va entrar des de la biblioteca (?from=library), es torna a la biblioteca; si no, al catàleg.
+        exitCards: function(){
+            var fromLibrary = new URLSearchParams(window.location.search || '').get('from') === 'library';
+            resetSelection();
+            if(fromLibrary) window.location.href = '/create/';
+        },
+        answer: function(n){ handleSoloAnswerInteraction(n); },
+        submitFree: function(){ submitSoloFreeAnswer(); },
+        submitMulti: function(){ submitSoloMultiAnswers(); },
+        togglePause: function(){ if(this.s.paused) resumeSolo(); else pauseSolo(); },
+        askCancel: function(){ askCancelSolo(); },
+        submitMatching: function(answers){ answerQuestion(answers); },
+        submitOrder: function(order){ answerQuestion(order); },
+        // Textos del tablero de correspondencia (matchingBoard.js) con el diccionario de /solo/.
+        boardT: function(key){
+            var map = { matching_hint: 'matchingHint', matching_count: 'matchingCount', submit_free: 'submitFreeAnswer', order_board_label: 'orderBoardLabel', order_up: 'orderUp', order_down: 'orderDown', submit_order: 'submitOrder' };
+            return t(map[key] || key);
+        },
+        skip: function(){ skipQuestion(); },
+        finishLearning: function(){ finishLearningPhase(); },
+        closeFeedback: function(){ hideFeedbackModal(); },
+        closeRanking: function(){ hideRankingModal(); },
+        saveName: function(){ saveNameAndSubmit(); },
+        skipName: function(){ skipNameAndSubmit(); }
+    }
+};

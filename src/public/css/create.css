@@ -36,11 +36,16 @@ body {
 }
 
 .page-shell{
-    max-width: 1100px;
+    /* Mismo margen lateral que la portada (page-fit.css): 10 % de la ventana a cada lado, 12 px en móvil.
+       Con ese ancho caben 2 o 3 columnas de quizzes. */
+    --page-gutter: 12px;
+    width: calc(100% - 2 * var(--page-gutter));
     margin: 30px auto 70px auto;
-    padding: 0 20px 40px;
-    width: 100%;
+    padding: 0 0 40px;
     flex: 1;
+}
+@media (min-width: 600px) and (min-height: 500px){
+    .page-shell{ --page-gutter: 10vw; }
 }
 
 .hidden{
@@ -49,7 +54,7 @@ body {
 
 #back{
     display: inline-block;
-    margin: 16px 0 0 16px;
+    margin: 16px 0 0 var(--back-left, 16px);
     color: white;
     text-decoration: none;
     font-weight: 600;
@@ -64,11 +69,20 @@ body {
     transform: translateY(-1px);
 }
 #title{
-    color: white;
+    color: #ffc800; /* amarillo más intenso que el de los títulos de quiz (#fdbc4b) */
     text-align: center;
     font-size: 50px;
     margin-bottom: 6px;
 }
+/* Logo de EduHoot delante del título (mismo alto que el texto). */
+#title{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.28em;
+}
+#title span{ min-width: 0; }
+#title .title-logo{ height: 1.1em; width: auto; border-radius: 0.18em; flex: none; }
 .top-row{
     display: flex;
     align-items: center;
@@ -85,6 +99,11 @@ body {
     padding: 8px 10px;
     font-size: 14px;
 }
+/* «Mis deberes» (enlace) y «Preferencias» (botón) con la misma tipografía y subrayado. */
+.top-actions .btn-small{
+    font-family: inherit;
+    text-decoration: underline;
+}
 .lang-switch{
     display: inline-flex;
     align-items: center;
@@ -95,10 +114,10 @@ body {
     border: 1px solid rgba(255,255,255,0.14);
 }
 .lang-switch select{
-    padding: 6px 8px;
-    border-radius: 8px;
-    border: 1px solid rgba(255,255,255,0.2);
-    background: rgba(255,255,255,0.1);
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.08);
     color: #fff;
 }
 #subtitle{
@@ -142,6 +161,12 @@ body {
 .panel-header h3{
     margin: 0;
 }
+/* Títulos de sección en amarillo suave (el del título de página es más intenso). */
+.panel-header h3,
+#kahoot-form-title,
+.signin-callout h2{
+    color: #ffdb70;
+}
 .auth-grid{
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -150,9 +175,9 @@ body {
 }
 .auth-grid input{
     width: 100%;
-    padding: 10px 12px;
-    border-radius: 10px;
-    border: 1px solid rgba(255,255,255,0.2);
+    padding: 10px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.15);
     background: rgba(255,255,255,0.08);
     color: #fff;
     box-sizing: border-box;
@@ -192,9 +217,9 @@ body {
     margin-top: 10px;
 }
 .share-controls select{
-    padding: 8px 10px;
-    border-radius: 8px;
-    border: 1px solid rgba(255,255,255,0.2);
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.15);
     background: rgba(255,255,255,0.08);
     color: #fff;
 }
@@ -231,6 +256,40 @@ body {
     opacity: 1;
 }
 
+.stage-notice{
+    margin: 24px 0;
+    padding: 20px;
+    border: 2px solid #fbbf24;
+    border-radius: 16px;
+    background: #49330d;
+}
+.stage-notice h2{
+    margin: 0 0 10px;
+    font-size: 1.2rem;
+    color: #fde68a;
+}
+.stage-notice p{
+    margin: 0 0 16px;
+    line-height: 1.6;
+    color: #e2e8f0;
+}
+.stage-notice .btn{
+    color: #1c1917;
+    background: #fbbf24;
+    border-color: #fbbf24;
+}
+.stage-notice .btn:hover,
+.stage-notice .btn:focus-visible{
+    color: #1c1917;
+    background: #fde68a;
+    border-color: #fde68a;
+}
+.stage-notice__actions{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
 .signin-callout{
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
@@ -247,7 +306,6 @@ body {
     margin: 0;
     font-size: 25px;
     line-height: 1.15;
-    color: #fff;
 }
 .signin-callout .subtext{
     max-width: 660px;
@@ -340,8 +398,8 @@ details.panel[open] .panel-toggle__chevron{
 #kahoot-form #kahoot-url{
     flex: 1 1 420px;
     min-width: 280px;
-    padding: 10px 12px;
-    border-radius: 10px;
+    padding: 10px 14px;
+    border-radius: 999px;
     border: 1px solid rgba(255,255,255,0.15);
     background: rgba(255,255,255,0.08);
     color: #fff;
@@ -351,11 +409,14 @@ details.panel[open] .panel-toggle__chevron{
     width: 100%;
     box-sizing: border-box;
     margin-top: 4px;
-    padding: 6px;
-    border-radius: 10px;
-    border: 1px solid rgba(255,255,255,0.2);
-    background: rgba(255,255,255,0.1);
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.08);
     color: #fff;
+}
+#ia-box textarea{
+    border-radius: 18px;
 }
 #ia-box button{
     margin: 6px 6px 6px 0;
@@ -441,8 +502,8 @@ details.panel[open] .panel-toggle__chevron{
     margin: 5px;
 }
 #csv-form input{
-    padding: 10px 12px;
-    border-radius: 10px;
+    padding: 10px 14px;
+    border-radius: 999px;
     border: 1px solid rgba(255,255,255,0.15);
     background: rgba(255,255,255,0.08);
     color: #fff;
@@ -482,6 +543,19 @@ details.panel[open] .panel-toggle__chevron{
     background: rgba(255,255,255,0.08);
     border: 1px solid rgba(255,255,255,0.15);
 }
+/* «Eliminar filtros» y «Todas las etiquetas» con el mismo aspecto que «Sin filtros». */
+#clear-filters, #tag-mode-toggle{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font: inherit;
+    font-weight: 700;
+    color: inherit;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+}
 .moodle-icon-img{
     width: 20px;
     height: 20px;
@@ -502,9 +576,11 @@ details.panel[open] .panel-toggle__chevron{
     gap: 14px;
 }
 .filter-bar input[type="search"]{
-    padding: 8px 10px;
-    border-radius: 10px;
-    border: 1px solid rgba(0,0,0,0.08);
+    padding: 6px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.08);
+    color: #fff;
     flex: 1;
     min-width: 220px;
 }
@@ -521,12 +597,14 @@ details.panel[open] .panel-toggle__chevron{
     text-transform: uppercase;
 }
 .sort-control select{
-    padding: 8px 10px;
-    border-radius: 8px;
-    border: 1px solid rgba(255,255,255,0.2);
-    background: rgba(255,255,255,0.1);
-    color: #fff;
-    font-weight: 600;
+    /* Mismo aspecto de píldora que «Sin filtros» y los botones de filtro. */
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.08);
+    color: inherit;
+    font: inherit;
+    font-weight: 700;
 }
 .filter-bar .checkbox-inline{
     margin: 0;
@@ -571,18 +649,43 @@ details.panel[open] .panel-toggle__chevron{
 
 .game-grid{
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    /* Como mucho 3 columnas; menos si no caben (mínimo 340 px). Una sola en pantallas estrechas. */
+    grid-template-columns: repeat(auto-fill, minmax(max(min(340px, 100%), calc((100% - 28px) / 3)), 1fr));
     gap: 14px;
 }
 .game-card{
     background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.12);
+    border: 1px solid #fff;
     border-radius: 14px;
     padding: 14px 14px 12px;
     box-shadow: 0 14px 30px rgba(0,0,0,0.22);
     display: flex;
     flex-direction: column;
     gap: 10px;
+    /* Fons de la portada: capa pròpia sota el contingut (vore .game-card__cover). */
+    position: relative;
+    isolation: isolate;
+}
+/* Portada o logo de fons: opacitat des de --cover-opacity (20 % per defecte; 10, 20 o 30 %). Degradat fosc per a la llegibilitat. */
+.game-card__cover{
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: inherit;
+    opacity: var(--cover-opacity, 0.2);
+    z-index: -1;
+    pointer-events: none;
+}
+.game-card::after{
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(rgba(15,23,42,0.45), rgba(15,23,42,0.75));
+    z-index: -1;
+    pointer-events: none;
 }
 .game-card-head{
     display: flex;
@@ -591,6 +694,7 @@ details.panel[open] .panel-toggle__chevron{
     gap: 10px;
 }
 .game-title{
+    color: #fdbc4b; /* amarillo del logo */
     font-size: 20px;
     font-weight: 800;
     margin: 0;
@@ -622,6 +726,16 @@ details.panel[open] .panel-toggle__chevron{
     flex:1;
     min-width: 180px;
     max-width: 100%;
+    /* Mismo aspecto de píldora oscura que «Ordenar por» y los botones de filtro. */
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.08);
+    color: inherit;
+    font-family: inherit;
+}
+.tag-editor input::placeholder{
+    color: rgba(255,255,255,0.55);
 }
 
 .tag.tag-editable{
@@ -673,6 +787,19 @@ details.panel[open] .panel-toggle__chevron{
     opacity: 0.9;
     margin-top: -4px;
 }
+/* Dates de creació i modificació: discretes, una sola línia. */
+.game-dates{
+    font-size: 11px;
+    line-height: 1.3;
+    opacity: 0.72;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+/* El número de preguntas i la paraula, en el groc corporatiu d'EduTicTac (el mateix del peu comú), més grans. */
+.game-stats__item.game-stats__item--questions{ color: #ffe670; font-size: 15px; font-weight: 700; }
+.game-stats__num{ color: #ffe670; font-weight: 700; }
 .game-stats__item{
     padding: 4px 10px;
     border-radius: 999px;
@@ -713,6 +840,7 @@ details.panel[open] .panel-toggle__chevron{
 .btn.btn-with-icon{
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
 }
 .btn-icon{
@@ -722,9 +850,9 @@ details.panel[open] .panel-toggle__chevron{
     border-radius: 4px;
 }
 .export-select{
-    padding: 8px 10px;
-    border-radius: 10px;
-    border: 1px solid rgba(255,255,255,0.16);
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.15);
     background: rgba(255,255,255,0.08);
     color: #fff;
     font-weight: 600;
@@ -809,6 +937,14 @@ details.panel[open] .panel-toggle__chevron{
     font-weight: 600;
     color: #fff;
 }
+.pagination .page-size{ display: inline-flex; align-items: center; gap: 8px; margin-left: 8px; font-weight: 600; }
+.pagination .page-size select{
+    padding: 6px 12px; border-radius: 999px; font: inherit; font-weight: 600;
+    border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.08); color: #fff;
+}
+.pagination .page-size select option{ color: #14101f; background: #fff; }
+.library-main > .pagination:first-of-type{ margin-top: 14px; margin-bottom: 14px; }
+.pagination .btn{ font-family: inherit; font-weight: 700; }
 .pagination button:disabled{
     opacity: 0.5;
     cursor: not-allowed;
@@ -825,7 +961,8 @@ body.modal-open{
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 20px;
+    /* Por debajo del distintivo DEV/STAGE (si está visible) para que no tape «Cerrar». */
+    padding: max(20px, var(--env-badge-space, 0px)) 20px 20px;
 }
 .modal__backdrop{
     position: absolute;
@@ -835,13 +972,22 @@ body.modal-open{
 .modal__content{
     position: relative;
     width: min(920px, 100%);
-    max-height: 90vh;
+    max-height: 100%;
     overflow: auto;
 }
+/* Fondo opaco: con el 92 % se leía el título de la página a través del cuadro. */
 .modal .panel{
-    background: rgba(15,22,42,0.92);
+    background: #0f162a;
     border: 1px solid rgba(255,255,255,0.18);
+    margin-bottom: 0;
 }
+/* Hueco para el botón «Cerrar» (sin pisar el título en ningún idioma). */
+.modal .panel-header{ padding-right: 96px; }
+.modal #auth-status{ background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #fff; max-width: 100%; overflow-wrap: anywhere; }
+/* Casillas y archivos dentro de la rejilla: la casilla conserva su tamaño y va con su texto. */
+.auth-grid input[type="checkbox"]{ width: 18px; height: 18px; flex: none; accent-color: #ffc800; }
+.auth-grid input[type="file"]{ border-radius: 14px; }
+.auth-grid label:not(.checkbox-inline){ display: grid; gap: 6px; }
 .modal__close{
     position: absolute;
     top: 10px;
@@ -1007,13 +1153,18 @@ body.modal-open{
 }
 
 @media (max-width: 600px){
+    /* En dev/stage, el distintiu fix (dalt) no tapa el contingut en carregar. */
+    body{
+        padding-top: var(--env-badge-space, 0px);
+    }
+
     .page-shell{
         margin: 16px auto 46px auto;
-        padding: 0 14px 26px;
+        padding: 0 0 26px;
     }
 
     #back{
-        margin: 12px 0 0 12px;
+        margin: 12px 0 0 var(--back-left, 12px);
     }
 
     .top-row{
@@ -1103,34 +1254,199 @@ body.modal-open{
     }
 }
 
-.stage-notice{
-    margin: 24px 0;
-    padding: 20px;
-    border: 2px solid #fbbf24;
-    border-radius: 16px;
-    background: #49330d;
+/* Raíz de la app de Vue de la biblioteca: no altera el maquetado. */
+#library-app{ display: contents; }
+#tools-app{ display: contents; }
+#account-app{ display: contents; }
+
+/* Controles de texto de la página con el mismo aspecto (el tamaño de letra no se toca). */
+.filter-bar input[type="search"]::placeholder,
+#ia-box input::placeholder,
+#ia-box textarea::placeholder,
+#csv-form input::placeholder,
+#kahoot-url::placeholder{
+    color: rgba(255,255,255,0.55);
 }
-.stage-notice h2{
-    margin: 0 0 10px;
-    font-size: 1.2rem;
+.filter-bar input[type="search"],
+.lang-switch select, .share-controls select, .export-select,
+#ia-box input, #ia-box select, #ia-box textarea,
+#csv-form input, #kahoot-url, #kahoot-visibility, .auth-grid input{
+    font-family: inherit;
 }
-.stage-notice p{
-    margin: 0 0 16px;
-    line-height: 1.6;
-    color: #e2e8f0;
+#kahoot-visibility{
+    padding: 10px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+}
+/* Confirmación breve tras guardar los permisos (reserva el hueco para que nada salte). */
+.share-saved{
+    display: inline-block;
+    min-width: 1.2em;
+    color: #7ee787;
+    font-weight: 800;
 }
 
-.stage-notice h2{
-    color: #fde68a;
+/* «Jugar en el aula»: misma tipografía que el resto de textos (el tamaño no se toca). */
+.game-actions .btn-primary{
+    font-family: inherit;
 }
-.stage-notice .btn{
-    color: #1c1917;
-    background: #fbbf24;
-    border-color: #fbbf24;
+
+/* Botones «Jugar» y «Editar» bajo una importación correcta (IA, archivo o Kahoot): misma tipografía que el resto. */
+.status-actions{ display: inline-flex; flex-wrap: wrap; gap: 8px; margin-left: 10px; vertical-align: middle; }
+.status-actions .btn{ font-family: inherit; font-size: 14px; font-weight: 700; line-height: 1.2; min-height: 36px; padding: 6px 14px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; }
+
+/* Valoració amb estrelles a la targeta de la biblioteca (com al mode solo). */
+.card-rating{ display: flex; align-items: center; gap: 10px; }
+.rating-stars{ display: inline-flex; gap: 4px; }
+.rating-star{
+    border: none;
+    background: transparent;
+    color: rgba(255,255,255,0.35);
+    font-size: 18px;
+    cursor: pointer;
+    padding: 2px;
+    transition: transform 0.2s ease, color 0.2s ease;
 }
-.stage-notice .btn:hover,
-.stage-notice .btn:focus-visible{
-    color: #1c1917;
-    background: #fde68a;
-    border-color: #fde68a;
+.rating-star:hover{ transform: translateY(-1px); color: #ffe9a3; }
+.rating-star.is-filled{ color: #ffe166; }
+.rating-summary{ font-size: 12px; }
+
+/* Paginador flotant (com la barra d'accions del creador): apareix quan ni el de dalt ni el de baix es veuen. */
+.pagination-fixed{
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 50;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
+    background: #0f162a;
+    border-top: 1px solid rgba(255,255,255,0.18);
+    box-shadow: 0 -8px 24px rgba(0,0,0,0.35);
+    transform: translateY(100%);
+    visibility: hidden;
+    transition: transform 0.2s ease, visibility 0.2s ease;
 }
+.pagination-fixed.is-visible{ transform: none; visibility: visible; }
+.pagination-fixed span{ font-weight: 600; color: #fff; }
+.pagination-fixed .btn{ font-family: inherit; font-weight: 700; }
+@media (prefers-reduced-motion: reduce){ .pagination-fixed{ transition: none; } }
+.pagination-fixed{ flex-wrap: wrap; }
+.pagination-fixed .page-size{ display: inline-flex; align-items: center; gap: 8px; font-weight: 600; }
+.pagination-fixed .page-size select{
+    padding: 6px 12px; border-radius: 999px; font: inherit; font-weight: 600;
+    border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.08); color: #fff;
+}
+.pagination-fixed .page-size select option{ color: #14101f; background: #fff; }
+select.page-select{
+    padding: 6px 12px; border-radius: 999px; font: inherit; font-weight: 600;
+    border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.08); color: #fff;
+}
+select.page-select option{ color: #14101f; background: #fff; }
+
+/* «Imagen de fondo»: alineada a la izquierda, sota el text de visibilitat, amb text més petit. */
+.library-main > .pagination.cover-pagination.cover-pagination:first-of-type{ margin-top: 6px; margin-bottom: 8px; }
+.cover-pagination{ justify-content: flex-start; }
+.cover-pagination .page-size{ margin-left: 0; font-size: 13px; }
+.cover-pagination .page-size select{ font-size: 13px; padding: 4px 10px; }
+/* Paginador superior: separació pròpia de les targetes (ja no és el primer fill de la columna, pel selector d'imatge de fons). */
+
+/* Biblioteca: selector de vista (targetes o detall) i la taula de detall. */
+.lp-view{ display: inline-flex; gap: 6px; }
+.lp-view .btn.is-active{ background: rgba(255,255,255,0.22); border-color: rgba(255,255,255,0.45); color: #fff; }
+.lib-detail-card{ padding: 8px 12px; }
+.lib-detail th, .lib-detail td{ padding: 8px 8px; vertical-align: middle; }
+.lib-detail th{ color: #ffdb70; white-space: nowrap; }
+.lib-detail td.lib-d-actions{ white-space: nowrap; width: 1%; }
+.lib-detail td.lib-d-actions .btn{ margin: 0 2px 2px 0; }
+.lib-d-title{ display: block; font-weight: 700; color: #fdbc4b; overflow-wrap: anywhere; }
+.lib-d-meta{ display: block; font-size: 12px; opacity: 0.8; overflow-wrap: anywhere; }
+.lib-d-date{ font-size: 12px; white-space: nowrap; }
+@container lpdetail (max-width: 959px){
+    .lib-detail thead{ display: none; }
+    .lib-detail, .lib-detail tbody{ display: block; width: 100%; }
+    .lib-detail tr{ display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.12); }
+    .lib-detail td{ display: flex; align-items: center; gap: 4px; padding: 0; border: 0; white-space: normal; width: auto; }
+    .lib-detail td[data-label]::before{ content: attr(data-label) ":"; opacity: 0.7; font-size: 0.8em; }
+    .lib-detail td.lib-d-name{ flex: 0 0 100%; }
+    .lib-detail td.lib-d-actions{ flex-wrap: wrap; width: 100%; }
+}
+/* Detall de la biblioteca en escriptori: taula amb amplada fixa; les accions, totes en una línia. */
+@container lpdetail (min-width: 960px){
+    .lib-detail{ table-layout: fixed; width: 100%; }
+    .lib-detail th:last-child, .lib-detail td.lib-d-actions{ width: 440px; }
+    .lib-detail td.lib-d-actions .btn{ padding: 5px 7px; min-width: 0; }
+    .lib-detail td.lib-d-actions .moodle-icon-img{ width: 16px; height: 16px; }
+    .lib-d-title, .lib-d-meta{ overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
+.lib-detail td.lib-d-actions .btn{ display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; }
+
+/* Escriptori: el nom del quiz ocupa tot l'ample que sobra; les altres columnes tenen amplada fixa. */
+@media (min-width: 1101px){
+    .lib-detail th:nth-child(2), .lib-detail td:nth-child(2){ width: 70px; }
+    .lib-detail th:nth-child(3), .lib-detail td:nth-child(3){ width: 70px; }
+    .lib-detail th:nth-child(4), .lib-detail td:nth-child(4){ width: 70px; }
+    .lib-detail th:nth-child(5), .lib-detail td:nth-child(5){ width: 110px; }
+}
+
+/* Les tres pàgines de llista: el contingut comença sempre a dalt (sense centrat vertical), amb el mateix espai al títol. */
+body.lp-page{ justify-content: flex-start; }
+body.lp-page .page-shell{ margin-top: 81px; }
+@media (max-width: 760px){
+    body.lp-page .page-shell{ margin-top: 63px; }
+}
+
+/* La biblioteca té el enllaç «Inicio» (#back) just a dalt: el contenidor comença 30 px més avall, com abans. */
+@media (min-width: 761px){
+    body.lp-has-back .page-shell{ margin-top: 30px; }
+}
+@media (max-width: 760px){
+    body.lp-has-back .page-shell{ margin-top: 16px; }
+}
+
+/* Els recuadres de les taules de llista mesuren la taula: la vista de detall es mostra només si hi cap (no segons la finestra). */
+.hw-table-wrap{ container: lpdetail / inline-size; }
+
+/* Enllaços de navegació de la capçalera (Biblioteca, Mis partidas, Mis deberes): mateix aspecte a les tres pàgines. */
+.top-actions .btn{ text-decoration: none; border-radius: 999px; font-weight: 700; }
+
+/* Escriptori: els enllaços de la capçalera en una sola línia, alineats a la dreta (sota el títol si no hi caben al costat). */
+@media (min-width: 761px){
+    .top-actions{ flex-wrap: nowrap; margin-left: auto; justify-content: flex-end; }
+    .top-actions .btn{ white-space: nowrap; }
+}
+
+/* Preferències: fons una mica més clar (mateix to blau que la biblioteca) i la mateixa tipografia. */
+.modal .panel{ background: #1e2d4f; }
+.modal button, .modal input, .modal select{ font-family: inherit; }
+.modal .btn{ font-size: 14px; font-weight: 700; }
+.modal .auth-grid label{ font-size: 15px; font-weight: 600; }
+.modal input[type="text"], .modal input:not([type]){
+    font-size: 15px;
+    color: #fff;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.28);
+    border-radius: 12px;
+    padding: 9px 12px;
+}
+
+
+/* Biblioteca: fila de vista i imatge de fons com a Mis partidas i Mis deberes (vista a l'esquerra, selector a la dreta). */
+.cover-pagination.lp-toolbar{ justify-content: space-between; margin: 6px 0 14px; }
+.lp-cover{ display: inline-flex; align-items: center; gap: 8px; font-weight: 600; }
+.lp-cover select{
+    padding: 6px 12px; border-radius: 999px; font: inherit; font-weight: 600;
+    border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.08); color: #fff;
+}
+.lp-cover select option{ color: #14101f; background: #fff; }
+.cover-pagination .lp-cover{ font-size: 13px; }
+.cover-pagination .lp-cover select{ font-size: 13px; padding: 4px 10px; }
+
+/* Preferències: el botó «Tancar» va a sota del panell, centrat (no al cantó superior dret). */
+.modal__content{ display: flex; flex-direction: column; }
+.modal__content > .panel{ order: 1; }
+.modal__content > .modal__close{ position: static; top: auto; right: auto; z-index: auto; order: 2; align-self: center; margin: 14px 0 0; }
+.modal .panel-header{ padding-right: 0; }

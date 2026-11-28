@@ -4,68 +4,361 @@ var socket = io({
     reconnectionDelay: 500,
     reconnectionDelayMax: 3000
 });
-var playerAnswered = false;
 var correct = false;
 var name;
 var score = 0;
 var token = null;
 var lastAnswers = [];
-var currentBlindCount = null;
 var rankingTimeout = null;
-var timerTotal = 20;
-var timerLeft = 20;
 var timerInterval = null;
-var currentQuestionType = 'quiz';
-var multiSelections = [];
-var freeControlsReady = false;
 var questionCountdownTimer = null;
-var currentPointsMultiplier = 1;
 var wakeLock = null;
 var questionActive = false;
 var reconnectGraceTimer = null;
 var reconnectGraceMs = 40000;
 var RECONNECT_GRACE_STORAGE_KEY = 'playerReconnectGrace';
+var ANSWER_SHAPE_KEYS = ['shape_triangle', 'shape_diamond', 'shape_circle', 'shape_square'];
+var ANSWER_LETTERS = ['A', 'B', 'C', 'D'];
+// Correspondencia: lo que envió el alumno y la proporción de acierto, para la corrección.
+var lastMatchAnswers = null;
+var lastScoreRatio = 0;
+// Color de «parcialmente correcta» (naranja) en todos los tipos de pregunta.
+var PARTIAL_COLOR = '#f57c00';
 
 function tPlayer(key, fallback){
     return window.i18nPlayer ? window.i18nPlayer.t(key) : (fallback || key);
 }
 
-function decodeBasicEntities(value){
-    var txt = document.createElement('textarea');
-    txt.innerHTML = String(value || '');
-    return txt.value;
-}
 
-function escapeHtml(value){
-    return String(value || '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-}
 
-function formatRichText(value){
-    var decoded = decodeBasicEntities(value);
-    var safe = escapeHtml(decoded);
-    safe = safe.replace(/&lt;br\s*\/?&gt;/gi, '<br>');
-    safe = safe.replace(/&lt;(\/?)(b|strong|i|em|u)&gt;/gi, '<$1$2>');
-    return safe;
-}
 
-function setRichText(el, value){
-    if(!el) return;
-    el.innerHTML = formatRichText(value);
-}
-
-function applyStaticLabels(){
-    var nameLabelEl = document.getElementById('nameText');
-    var scoreLabelEl = document.getElementById('scoreText');
-    if(nameLabelEl){
-        nameLabelEl.textContent = tPlayer('name', 'Name:');
+// Pregunta/respostes (bloc 1) i nom/puntuació/rànquing/missatge (bloc 2):
+// tot el que depenia de 156 operacions manuals sobre el DOM ara és estat
+// reactiu, en una sola app de Vue (Subfase B).
+var app = Vue.createApp({
+    template: '#player-game-tpl',
+    mounted: function(){
+        var self = this;
+        EduhootTTS.watchAvailability(document.documentElement.lang, function(ok){ self.ttsReady = ok; });
+    },
+    watch: {
+        // En desaparéixer el botó (cuenta atrás o resposta) es para la lectura.
+        ttsAvailable: function(ok){
+            if(!ok){
+                EduhootTTS.cancel();
+                this.ttsSpeaking = false;
+            }
+        }
+    },
+    data: function(){
+        return {
+            // Avance automático: cuenta atrás hasta la siguiente pregunta (la marca el servidor).
+            autoActive: false,
+            autoPaused: false,
+            autoLeft: 0,
+            autoEndAt: 0,
+            leaveConfirming: false,
+            // Título del quiz (lo envía el servidor al entrar en la partida).
+            quizName: '',
+            questionText: '',
+            ttsSpeaking: false,
+            ttsReady: false,
+            answers: [],
+            questionType: 'quiz',
+            blind: false,
+            blindActiveCount: 0,
+            // Correspondencia: textos de las columnas (o, a ciegas, cuántos hay) y forma de responder.
+            matchLeft: null,
+            matchRight: null,
+            matchLeftCount: 0,
+            matchRightCount: 0,
+            matchBlindStyle: 'codes',
+            matchKey: 0,
+            // Ordenar: llista barrejada (o, a ciegues, nombre d'elements) i disposició.
+            orderItems: null,
+            orderCount: 0,
+            orderLayout: 'vertical',
+            orderKey: 0,
+            multiSelections: [],
+            playerAnswered: false,
+            answersVisible: true,
+            freeAnswerValue: '',
+            pointsMultiplier: 1,
+            badgeKey: 0,
+            countdownVisible: false,
+            countdownSeconds: 0,
+            countdownPreview: '',
+            timerLeft: 20,
+            timerTotal: 20,
+            answerStatusState: '',
+            playerName: '',
+            playerIcon: '',
+            playerScore: null,
+            handRaised: false,
+            // Código de la partida tal como viene en la URL (params aún no existe al montar la app).
+            gamePin: new URLSearchParams(window.location.search).get('pin') || '',
+            rankText: '',
+            // Racha de aciertos (feature 11): racha actual y bonificación de la última respuesta.
+            streak: 0,
+            streakBonus: 0,
+            message: '',
+            messageDetailHtml: '',
+            messageVisible: true,
+            // Resultado de la pregunta: «correct» o «incorrect» (para su estilo). La barra de tiempo se oculta mientras se ve.
+            messageKind: '',
+            resultShown: false,
+            // Pantallas intermedias: puntos ganados en la última pregunta, y si la partida ha terminado.
+            scoreBefore: null,
+            gained: 0,
+            gameOver: false,
+            ghostText: '',
+            rankingVisible: false,
+            rankingList: []
+        };
+    },
+    computed: {
+        nameLabel: function(){
+            return this.t('name', 'Name:');
+        },
+        scoreLabel: function(){
+            return this.t('score', 'Score:');
+        },
+        nameDisplay: function(){
+            if(!this.playerName) return this.nameLabel;
+            var icon = this.playerIcon ? this.playerIcon + ' ' : '';
+            return this.nameLabel + ' ' + icon + this.playerName;
+        },
+        // Código de la partida, con los dígitos agrupados (p. ej. 273 658).
+        pinDisplay: function(){
+            var pin = String(this.gamePin || '');
+            return /^\d{6}$/.test(pin) ? pin.slice(0, 3) + ' ' + pin.slice(3) : pin;
+        },
+        autoNextText: function(){
+            if(this.autoPaused) return this.t('auto_paused', 'Avance pausado');
+            return this.t('auto_next_in', 'Siguiente pregunta en {s} s').replace('{s}', this.autoLeft);
+        },
+        // Icono grande de las pantallas intermedias (respuesta enviada, resultado, fin de partida).
+        resultIcon: function(){
+            if(this.gameOver) return '🏁';
+            if(!this.messageVisible || !this.message) return '';
+            var icons = { correct: '✅', partial: '👍', incorrect: '❌' };
+            if(this.messageKind && icons[this.messageKind]) return icons[this.messageKind];
+            if(this.resultShown) return '🙏';
+            if(this.answerStatusState === 'submitted') return '⏳';
+            return '';
+        },
+        // Línea de detalle bajo el mensaje: puntuación final, puntos ganados o aviso de que se comentará la respuesta.
+        // Mode fantasma: la diferència després de cada pregunta i la marca al final.
+        ghostLine: function(){
+            return (this.resultShown || this.gameOver) ? this.ghostText : '';
+        },
+        resultSub: function(){
+            if(this.gameOver){
+                var line = this.playerScore !== null ? (this.scoreLabel + ' ' + this.playerScore) : '';
+                return this.rankText ? (line ? line + ' · ' : '') + this.rankText : line;
+            }
+            if(!this.resultShown) return '';
+            if((this.messageKind === 'correct' || this.messageKind === 'partial') && this.gained > 0){
+                return this.t('sp_points_gained', '+{n} puntos').replace('{n}', this.gained);
+            }
+            if(this.messageKind === 'incorrect' && !this.messageDetailHtml){
+                return this.t('result_no_answer', 'El profesorado comentará la respuesta correcta.');
+            }
+            return '';
+        },
+        streakText: function(){
+            var txt = '🔥 ' + this.streak;
+            if(this.streakBonus > 0) txt += ' · +' + this.streakBonus;
+            return txt;
+        },
+        scoreDisplay: function(){
+            return this.playerScore !== null ? (this.scoreLabel + ' ' + this.playerScore) : this.scoreLabel;
+        },
+        questionHtml: function(){
+            return formatRichText(this.questionText);
+        },
+        // Lectura en veu alta (proposta 13). Mai amb el mode «a cegues»:
+        // llavors el text no arriba a l'alumnat.
+        ttsAvailable: function(){
+            // Només mentre la pregunta està en pantalla i encara no s'ha contestat.
+            return !this.blind && !!this.questionText && this.ttsReady && !this.countdownVisible && !this.playerAnswered;
+        },
+        freeAnswerType: function(){
+            return this.questionType === 'short-answer' || this.questionType === 'numeric';
+        },
+        freeRowVisible: function(){
+            return this.freeAnswerType && !this.playerAnswered && this.answersVisible;
+        },
+        matchingVisible: function(){
+            return this.questionType === 'matching' && !this.playerAnswered && this.answersVisible;
+        },
+        orderVisible: function(){
+            return this.questionType === 'order' && !this.playerAnswered && this.answersVisible;
+        },
+        multiRowVisible: function(){
+            return this.questionType === 'multiple' && !this.playerAnswered && this.answersVisible;
+        },
+        freePlaceholder: function(){
+            return this.questionType === 'numeric'
+                ? this.t('numeric_placeholder', 'Introduce un número')
+                : this.t('text_placeholder', 'Escribe tu respuesta');
+        },
+        badgeVisible: function(){
+            var m = Number(this.pointsMultiplier);
+            return Number.isFinite(m) && m > 1;
+        },
+        badgeText: function(){
+            return 'x' + this.pointsMultiplier + ' · ' + this.t('points_double', 'Double points');
+        },
+        answerStatusVisible: function(){
+            return this.answerStatusState === 'pending' || this.answerStatusState === 'submitted';
+        },
+        answerStatusText: function(){
+            return this.answerStatusState === 'submitted'
+                ? this.t('status_submitted', 'Respuesta enviada')
+                : this.t('status_pending', 'Responde ahora');
+        },
+        timerPct: function(){
+            return Math.max(0, Math.min(100, (this.timerLeft / this.timerTotal) * 100));
+        },
+        timerColor: function(){
+            var pct = this.timerPct;
+            if(pct < 35) return 'linear-gradient(135deg, #f97316, #ef4444)';
+            if(pct < 60) return 'linear-gradient(135deg, #facc15, #f97316)';
+            return 'linear-gradient(135deg, #22c55e, #16a34a)';
+        },
+        timerText: function(){
+            return Math.max(0, Math.ceil(this.timerLeft)) + 's';
+        }
+    },
+    methods: {
+        askLeave: function(){
+            var self = this;
+            if(!this.leaveConfirming){
+                this.leaveConfirming = true;
+                clearTimeout(leaveResetTimer);
+                leaveResetTimer = setTimeout(function(){ self.leaveConfirming = false; }, 4000);
+                return;
+            }
+            clearTimeout(leaveResetTimer);
+            this.leaveConfirming = false;
+            socket.emit('playerLeave');
+        },
+        t: function(key, fallback){
+            return tPlayer(key, fallback);
+        },
+        buttonHasContent: function(i){
+            if(this.blind) return i < this.blindActiveCount;
+            var text = this.answers[i];
+            return !!(text && String(text).trim());
+        },
+        buttonVisible: function(i){
+            if(this.questionType === 'matching' || this.questionType === 'order') return false;
+            return this.answersVisible && this.buttonHasContent(i);
+        },
+        buttonHtml: function(i){
+            return this.blind ? '' : formatRichText(this.answers[i] || '');
+        },
+        buttonAriaLabel: function(i){
+            if(!this.blind) return null;
+            var active = i < this.blindActiveCount;
+            return active
+                ? (this.t('answer_option') + ' ' + ANSWER_LETTERS[i] + ': ' + this.t(ANSWER_SHAPE_KEYS[i]))
+                : '';
+        },
+        isMultiSelected: function(num){
+            return this.multiSelections.indexOf(num) !== -1;
+        },
+        onAnswerClick: function(num){
+            if(this.questionType === 'multiple'){
+                this.toggleMultiAnswer(num);
+                return;
+            }
+            if(this.freeAnswerType) return;
+            this.submitAnswer(num);
+        },
+        toggleMultiAnswer: function(num){
+            if(this.playerAnswered) return;
+            var idx = this.multiSelections.indexOf(num);
+            if(idx === -1){
+                this.multiSelections.push(num);
+            }else{
+                this.multiSelections.splice(idx, 1);
+            }
+        },
+        submitMultiAnswers: function(){
+            if(this.playerAnswered || !this.multiSelections.length) return;
+            this.submitAnswer(this.multiSelections.slice());
+        },
+        submitFree: function(){
+            if(this.playerAnswered) return;
+            if(!this.freeAnswerType) return;
+            var raw = (this.freeAnswerValue || '').toString();
+            if(this.questionType === 'numeric'){
+                this.submitAnswer({ number: raw });
+            }else{
+                this.submitAnswer({ text: raw });
+            }
+        },
+        submitOrder: function(order){
+            if(this.playerAnswered) return;
+            this.submitAnswer(order);
+        },
+        submitMatching: function(answers){
+            if(this.playerAnswered) return;
+            lastMatchAnswers = answers.slice();
+            this.submitAnswer(answers);
+        },
+        submitAnswer: function(payload){
+            if(this.playerAnswered) return;
+            this.playerAnswered = true;
+            socket.emit('playerAnswer', payload);
+            this.answersVisible = false;
+            this.multiSelections = [];
+            this.answerStatusState = 'submitted';
+            showMessage(tPlayer('submitted', 'Answer Submitted! Waiting on other players...'));
+        },
+        hidePlayerRanking: function(){
+            this.rankingVisible = false;
+        },
+        // Mano levantada: el anfitrión la ve junto al nombre del alumno durante la pregunta.
+        toggleHand: function(){
+            var next = !this.handRaised;
+            this.handRaised = next;
+            socket.emit('raiseHand', { raised: next });
+        },
+        toggleSpeech: function(){
+            var self = this;
+            if(this.ttsSpeaking){
+                EduhootTTS.cancel();
+                this.ttsSpeaking = false;
+                return;
+            }
+            var parts = [this.questionText].concat(this.answers || []);
+            this.ttsSpeaking = true;
+            var started = EduhootTTS.speakParts(parts, document.documentElement.lang, function(){
+                self.ttsSpeaking = false;
+            });
+            if(!started) this.ttsSpeaking = false;
+        }
     }
-    if(scoreLabelEl){
-        scoreLabelEl.textContent = tPlayer('score', 'Score:');
+}).component('matching-board', window.EduhootMatchingBoard).component('order-board', window.EduhootOrderBoard).mount('#player-game');
+
+// Mostra/oculta el missatge gran (#message), substituint tot el seu
+// contingut (igual que feia abans `textContent = ...`, que esborrava
+// qualsevol detall afegit amb appendChild).
+function showMessage(text){
+    app.message = text;
+    app.messageKind = '';
+    app.messageVisible = true;
+    app.messageDetailHtml = '';
+}
+
+function hideMessage(clearText){
+    app.messageVisible = false;
+    if(clearText){
+        app.message = '';
+        app.messageDetailHtml = '';
     }
 }
 
@@ -166,10 +459,7 @@ function clearReconnectGrace(){
 }
 
 function setReconnectMessage(text){
-    var msg = document.getElementById('message');
-    if(!msg) return;
-    msg.style.display = 'block';
-    msg.textContent = text;
+    showMessage(text);
 }
 
 function tPlayerFormat(key, fallback, vars){
@@ -257,7 +547,6 @@ function releaseWakeLock(){
 }
 
 function emitJoin(){
-    applyStaticLabels();
     var payload = Object.assign({}, params);
     if(token) payload.token = token;
     socket.emit('player-join-game', payload);
@@ -267,11 +556,8 @@ socket.on('connect', function() {
     persistJoinState();
     //Tell server that it is host connection from game view
     emitJoin();
-    
-    document.getElementById('answer1').style.visibility = "visible";
-    document.getElementById('answer2').style.visibility = "visible";
-    document.getElementById('answer3').style.visibility = "visible";
-    document.getElementById('answer4').style.visibility = "visible";
+
+    app.answersVisible = true;
 
     // Hide language switcher once in game view
     var langSw = document.getElementById('lang-switcher');
@@ -281,11 +567,6 @@ socket.on('connect', function() {
     clearReconnectGrace();
     if(questionActive){
         requestWakeLock();
-    }
-
-    if(!freeControlsReady){
-        setupFreeAnswerControls();
-        freeControlsReady = true;
     }
 });
 
@@ -303,40 +584,24 @@ socket.on('playerGracePeriod', function(data){
 });
 
 socket.on('hostReconnecting', function(){
-    var msg = document.getElementById('message');
-    if(msg){
-        msg.style.display = "block";
-        msg.textContent = 'Esperando reconexion del profesor...';
-    }
+    showMessage('Esperando reconexion del profesor...');
 });
 
 socket.on('hostReconnected', function(){
-    var msg = document.getElementById('message');
-    if(msg && !playerAnswered){
-        msg.style.display = "none";
-        msg.textContent = '';
+    if(!app.playerAnswered){
+        hideMessage(true);
     }
 });
 
 socket.on('noGameFound', function(){
-    window.location.href = '../../';//Redirect user to 'join game' page 
+    window.location.href = '../../';//Redirect user to 'join game' page
 });
 
 function restoreAnswerControlsAfterReject(messageText){
-    playerAnswered = false;
-    for(var i = 1; i <= 4; i++){
-        var el = document.getElementById('answer' + i);
-        if(el){
-            el.style.visibility = 'visible';
-        }
-    }
-    updatePlayerAnswerButtons(lastAnswers || [], currentQuestionType, currentBlindCount === null ? undefined : currentBlindCount);
-    setAnswerStatus('pending');
-    var msg = document.getElementById('message');
-    if(msg){
-        msg.style.display = 'block';
-        msg.textContent = messageText || 'No se pudo enviar la respuesta. Intenta de nuevo.';
-    }
+    app.playerAnswered = false;
+    app.answersVisible = true;
+    app.answerStatusState = 'pending';
+    showMessage(messageText || 'No se pudo enviar la respuesta. Intenta de nuevo.');
 }
 
 socket.on('tooManyAnswers', function(){
@@ -347,183 +612,6 @@ socket.on('answerRejected', function(){
     restoreAnswerControlsAfterReject('La pregunta ya no estaba activa. Vuelve a intentar en cuanto aparezca la siguiente.');
 });
 
-function updateMultiSubmitVisibility(){
-    var row = document.getElementById('multiSubmitRow');
-    if(!row) return;
-    row.style.display = (currentQuestionType === 'multiple' && !playerAnswered) ? 'flex' : 'none';
-}
-
-function isFreeAnswerType(){
-    return currentQuestionType === 'short-answer' || currentQuestionType === 'numeric';
-}
-
-function updateFreeSubmitVisibility(){
-    var row = document.getElementById('freeSubmitRow');
-    if(!row) return;
-    row.style.display = (isFreeAnswerType() && !playerAnswered) ? 'flex' : 'none';
-}
-
-function updatePlayerPointsBadge(multiplier){
-    var badge = document.getElementById('playerPointsBadge');
-    if(!badge) return;
-    var m = Number(multiplier);
-    if(!Number.isFinite(m) || m <= 1){
-        badge.style.display = 'none';
-        badge.textContent = '';
-        badge.classList.remove('points-badge-pop');
-        return;
-    }
-    badge.textContent = 'x' + m + ' · ' + tPlayer('points_double', 'Double points');
-    badge.style.display = 'inline-flex';
-    badge.classList.remove('points-badge-pop');
-    void badge.offsetWidth; // reinicia la animación aunque el badge ya estuviera visible
-    badge.classList.add('points-badge-pop');
-}
-
-function setupFreeAnswerControls(){
-    var input = document.getElementById('freeAnswerInput');
-    var btn = document.getElementById('freeSubmitBtn');
-    if(!input || !btn) return;
-
-    btn.textContent = tPlayer('submit_free', 'Enviar');
-
-    btn.addEventListener('click', function(){
-        if(playerAnswered) return;
-        if(!isFreeAnswerType()) return;
-        var raw = (input.value || '').toString();
-        if(currentQuestionType === 'numeric'){
-            submitAnswerPayload({ number: raw });
-        }else{
-            submitAnswerPayload({ text: raw });
-        }
-    });
-
-    input.addEventListener('keydown', function(ev){
-        if(ev.key === 'Enter'){
-            ev.preventDefault();
-            btn.click();
-        }
-    });
-}
-
-function updateMultiSelectionStyles(){
-    for(var i = 1; i <= 4; i++){
-        var btn = document.getElementById('answer' + i);
-        if(!btn) continue;
-        if(multiSelections.indexOf(i) !== -1){
-            btn.classList.add('multi-selected');
-        }else{
-            btn.classList.remove('multi-selected');
-        }
-    }
-}
-
-function toggleMultiAnswer(num){
-    if(playerAnswered) return;
-    if(currentQuestionType !== 'multiple') return;
-    var idx = multiSelections.indexOf(num);
-    if(idx === -1){
-        multiSelections.push(num);
-    }else{
-        multiSelections.splice(idx, 1);
-    }
-    updateMultiSelectionStyles();
-    updateMultiSubmitVisibility();
-}
-
-function hidePlayerOptionsAfterSubmit(){
-    for(var i = 1; i <= 4; i++){
-        var el = document.getElementById('answer' + i);
-        if(el) el.style.visibility = "hidden";
-    }
-    var msgEl = document.getElementById('message');
-    if(msgEl){
-        msgEl.style.display = "block";
-        var submitted = window.i18nPlayer ? window.i18nPlayer.t('submitted') : "Answer Submitted! Waiting on other players...";
-        msgEl.textContent = submitted;
-    }
-    setAnswerStatus('submitted');
-    var multiRow = document.getElementById('multiSubmitRow');
-    if(multiRow) multiRow.style.display = 'none';
-    var freeRow = document.getElementById('freeSubmitRow');
-    if(freeRow) freeRow.style.display = 'none';
-    multiSelections = [];
-    updateMultiSelectionStyles();
-}
-
-function submitAnswerPayload(payload){
-    if(playerAnswered) return;
-    playerAnswered = true;
-    socket.emit('playerAnswer', payload);
-    hidePlayerOptionsAfterSubmit();
-}
-
-function submitMultiAnswers(){
-    if(playerAnswered || !multiSelections.length) return;
-    submitAnswerPayload(multiSelections.slice());
-}
-
-var ANSWER_SHAPE_KEYS = ['shape_triangle', 'shape_diamond', 'shape_circle', 'shape_square'];
-var ANSWER_LETTERS = ['A', 'B', 'C', 'D'];
-
-function updatePlayerAnswerButtons(answers, type, blindCount){
-    currentQuestionType = type || 'quiz';
-    multiSelections = [];
-    updateMultiSelectionStyles();
-
-    var freeInput = document.getElementById('freeAnswerInput');
-    if(freeInput){
-        freeInput.value = '';
-        if(currentQuestionType === 'numeric'){
-            freeInput.type = 'text';
-            freeInput.inputMode = 'decimal';
-            freeInput.placeholder = tPlayer('numeric_placeholder', 'Introduce un número');
-        }else{
-            freeInput.type = 'text';
-            freeInput.inputMode = 'text';
-            freeInput.placeholder = tPlayer('text_placeholder', 'Escribe tu respuesta');
-        }
-    }
-
-    var isBlind = typeof blindCount === 'number';
-    for(var i = 1; i <= 4; i++){
-        var btn = document.getElementById('answer' + i);
-        if(!btn) continue;
-        if(isBlind){
-            setRichText(btn, '');
-            var active = i <= blindCount;
-            btn.style.display = (!isFreeAnswerType() && active) ? 'inline-block' : 'none';
-            btn.style.visibility = 'visible';
-            btn.setAttribute('aria-label', active
-                ? (tPlayer('answer_option') + ' ' + ANSWER_LETTERS[i - 1] + ': ' + tPlayer(ANSWER_SHAPE_KEYS[i - 1]))
-                : '');
-        }else{
-            var text = answers[i - 1] || '';
-            setRichText(btn, text);
-            btn.style.display = (!isFreeAnswerType() && text && text.trim()) ? 'inline-block' : 'none';
-            btn.style.visibility = 'visible';
-            btn.removeAttribute('aria-label');
-        }
-    }
-    var submitBtn = document.getElementById('multiSubmitBtn');
-    if(submitBtn){
-        submitBtn.textContent = tPlayer('submit_multiple') || 'Submit answers';
-    }
-    updateMultiSubmitVisibility();
-    updateFreeSubmitVisibility();
-}
-
-function answerSubmitted(num){
-    if(currentQuestionType === 'multiple'){
-        toggleMultiAnswer(num);
-        return;
-    }
-    if(isFreeAnswerType()){
-        return;
-    }
-    submitAnswerPayload(num);
-}
-
 //Get results on last question
 socket.on('answerResult', function(data){
     if(data === true || (data && data.outcome === 'correct')){
@@ -531,16 +619,36 @@ socket.on('answerResult', function(data){
     }else if(data && data.outcome){
         correct = data.outcome;
     }
+    lastScoreRatio = (data && data.outcome === 'correct') ? 1 : (Number(data && data.ratio) || 0);
+    if(data && typeof data.streak === 'number'){
+        app.streak = data.streak;
+        app.streakBonus = Number(data.bonus) || 0;
+    }
 });
 
+// Resultado de una correspondencia: cuántas parejas están bien y, si el anfitrión
+// muestra las respuestas (llega matchSolution), la corrección de cada una.
+function matchingResultHtml(payload, outcome){
+    var total = (payload.matchLeft || []).length;
+    var hits = outcome === 'correct' ? total : (outcome === 'partial' ? Math.round(lastScoreRatio * total) : 0);
+    var html = '<span class="matching-pairs">' + escapeHtml(tPlayer('matching_pairs_result', '{h} de {t} parejas')
+        .replace('{h}', hits).replace('{t}', total)) + '</span>';
+    if(outcome === 'correct' || !Array.isArray(payload.matchSolution) || !window.EduhootMatchingReview) return html;
+    var rows = window.EduhootMatchingReview(payload, lastMatchAnswers);
+    html += '<span class="matching-review">';
+    rows.forEach(function(row){
+        html += '<span class="matching-review-row" data-ok="' + row.ok + '"><span aria-hidden="true">' + (row.ok ? '✓' : '✗') + '</span><span>' +
+            '<b>' + escapeHtml(row.code + ' ' + row.left) + '</b> → ' +
+            escapeHtml(row.chosen === null ? tPlayer('matching_unpaired', 'sin emparejar') : row.chosen) +
+            (row.ok ? '' : '<span class="matching-review-fix">' + escapeHtml(tPlayer('correct_answer', 'Correct answer:') + ' ' + row.correct) + '</span>') +
+            '</span></span>';
+    });
+    return html + '</span>';
+}
+
 function updatePlayerRank(playerData){
-    var rankEl = document.getElementById('rankText');
-    if(!rankEl){
-        return;
-    }
     if(!Array.isArray(playerData) || playerData.length === 0){
-        rankEl.textContent = '';
-        rankEl.style.display = 'none';
+        app.rankText = '';
         return;
     }
     var sorted = playerData.slice().sort(function(a, b){
@@ -549,40 +657,153 @@ function updatePlayerRank(playerData){
     var position = sorted.findIndex(function(p){ return p.playerId === socket.id; });
     if(position !== -1 && position < 10){
         var label = window.i18nPlayer ? window.i18nPlayer.t('rank_top') : 'Top 10 - Puesto';
-        rankEl.textContent = label + ' ' + (position + 1);
-        rankEl.style.display = 'block';
+        app.rankText = label + ' ' + (position + 1);
     }else{
-        var outside = window.i18nPlayer ? window.i18nPlayer.t('rank_out') : 'Fuera del Top 10';
-        rankEl.textContent = outside;
-        rankEl.style.display = outside ? 'block' : 'none';
+        app.rankText = window.i18nPlayer ? window.i18nPlayer.t('rank_out') : 'Fuera del Top 10';
+    }
+}
+
+// Mode fantasma en aula: la millor marca de cada alumne és al seu navegador. El servidor només diu
+// si el mode està actiu i l'empremta del quiz; la comparació és per pregunta (posició original).
+var liveGhost = { started: false, on: false, fp: null, mark: null, origs: [], points: {}, current: null, before: 0, score: 0 };
+
+function liveGhostStorage(){
+    try{ return window.localStorage; }catch(e){ return null; }
+}
+
+function liveGhostText(key, vars){
+    var txt = window.i18nPlayer ? window.i18nPlayer.t(key) : key;
+    Object.keys(vars || {}).forEach(function(k){ txt = txt.replace('{' + k + '}', vars[k]); });
+    return txt;
+}
+
+// Partida nova en esta pàgina: s'inicia una vegada, amb la informació que porta la pregunta (o l'inici).
+function liveGhostStart(data){
+    if(liveGhost.started || !data || !('ghostMode' in data)) return;
+    liveGhost.started = true;
+    liveGhost.origs = [];
+    liveGhost.points = {};
+    liveGhost.current = null;
+    liveGhost.score = 0;
+    liveGhost.on = !!(data.ghostMode && data.ghostFingerprint && window.EduhootGhost);
+    if(!liveGhost.on) return;
+    liveGhost.fp = data.ghostFingerprint;
+    // La marca és la del quiz (la mateixa que a solo): s'identifica per l'empremta, no per l'id.
+    liveGhost.mark = EduhootGhost.loadGhost(liveGhostStorage(), liveGhost.fp);
+    // Recàrrega a mitad de partida: es retoma el progrés guardat d'esta mateixa partida (només si la pàgina
+    // s'ha recarregat; des de la sala d'espera és una navegació nova i no es retoma res).
+    if(liveGhostReloaded()){
+        var saved = liveGhostReadRun();
+        if(saved && saved.pin === String(params.pin || '') && saved.fp === liveGhost.fp){
+            liveGhost.origs = Array.isArray(saved.origs) ? saved.origs : [];
+            liveGhost.points = saved.points || {};
+            liveGhost.score = Number(saved.score) || 0;
+        }
+    }
+}
+
+// Progrés de la partida en curs, per a la recàrrega: només a sessionStorage (es perd en tancar la pestanya).
+function liveGhostSession(){
+    try{ return window.sessionStorage; }catch(e){ return null; }
+}
+
+function liveGhostReloaded(){
+    try{
+        var nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
+        return !!nav && nav.type === 'reload';
+    }catch(e){
+        return false;
+    }
+}
+
+function liveGhostReadRun(){
+    try{
+        var st = liveGhostSession();
+        return st ? JSON.parse(st.getItem('eduh_ghost_run') || 'null') : null;
+    }catch(e){
+        return null;
+    }
+}
+
+function liveGhostSaveRun(){
+    var st = liveGhostSession();
+    if(!st || !liveGhost.on) return;
+    try{
+        st.setItem('eduh_ghost_run', JSON.stringify({ pin: String(params.pin || ''), fp: liveGhost.fp, origs: liveGhost.origs, points: liveGhost.points, score: liveGhost.score }));
+    }catch(e){}
+}
+
+function liveGhostClearRun(){
+    var st = liveGhostSession();
+    if(st){
+        try{ st.removeItem('eduh_ghost_run'); }catch(e){}
+    }
+}
+
+socket.on('gameStartedPlayer', liveGhostStart);
+
+function liveGhostQuestion(data){
+    liveGhostStart(data);
+    app.ghostText = '';
+    liveGhost.current = (liveGhost.on && data && typeof data.originalIndex === 'number' && data.type !== 'poll') ? data.originalIndex : null;
+    liveGhost.before = liveGhost.score;
+}
+
+function liveGhostAnswer(playerData){
+    var me = Array.isArray(playerData) ? playerData.find(function(p){ return p.playerId === socket.id; }) : null;
+    if(!me) return;
+    var score = Number(me.gameData.score) || 0;
+    if(liveGhost.on && liveGhost.current !== null){
+        liveGhost.origs.push(liveGhost.current);
+        liveGhost.points[liveGhost.current] = score - liveGhost.before;
+        var diff = EduhootGhost.diffFor(liveGhost.mark, liveGhost.origs, score);
+        app.ghostText = liveGhost.mark ? liveGhostText('ghostDiff', { diff: EduhootGhost.signed(diff) }) : '';
+    }
+    liveGhost.score = score;
+    liveGhost.current = null;
+    liveGhostSaveRun();
+}
+
+function liveGhostFinish(){
+    if(!liveGhost.on) return;
+    var saved = EduhootGhost.saveGhost(liveGhostStorage(), liveGhost.fp, liveGhost.score, liveGhost.points);
+    liveGhostClearRun();
+    if(saved){
+        app.ghostText = liveGhostText('ghostNewBest', {});
+    }else if(liveGhost.mark){
+        app.ghostText = liveGhostText('ghostBest', { score: liveGhost.mark.total, diff: EduhootGhost.signed(liveGhost.score - liveGhost.mark.total) });
     }
 }
 
 socket.on('questionOver', function(playerData, payload){
+    liveGhostAnswer(playerData);
+    // Se muestra el resultado: la barra de tiempo se oculta hasta la siguiente cuenta atrás.
+    app.resultShown = true;
+    EduhootTTS.cancel();
     questionActive = false;
     releaseWakeLock();
     setMedia(null, null);
-    var multiRow = document.getElementById('multiSubmitRow');
-    if(multiRow) multiRow.style.display = 'none';
-    var freeRow = document.getElementById('freeSubmitRow');
-    if(freeRow) freeRow.style.display = 'none';
+    app.answersVisible = false;
     if(correct === 'poll' || (payload && payload.type === 'poll')){
         document.body.style.backgroundColor = '#607d8b';
-        var pollMessage = document.getElementById('message');
-        pollMessage.style.display = 'block';
-        pollMessage.textContent = tPlayer('poll_thanks', '¡Gracias por responder!');
+        showMessage(tPlayer('poll_thanks', '¡Gracias por responder!'));
     }else if(correct === 'partial'){
-        document.body.style.backgroundColor = '#ffb300';
-        var partialMessage = document.getElementById('message');
-        partialMessage.style.display = 'block';
-        partialMessage.textContent = tPlayer('partial', 'Respuesta parcialmente correcta: has sumado puntos.');
+        document.body.style.backgroundColor = PARTIAL_COLOR;
+        showMessage(tPlayer('partial', 'Respuesta parcialmente correcta: has sumado puntos.'));
+        app.messageKind = 'partial';
+        if(payload && payload.type === 'matching') app.messageDetailHtml = matchingResultHtml(payload, 'partial');
     }else if(correct == true){
         document.body.style.backgroundColor = "#4CAF50";
-        document.getElementById('message').style.display = "block";
-        document.getElementById('message').textContent = window.i18nPlayer ? window.i18nPlayer.t('correct') : "Correct!";
+        showMessage(window.i18nPlayer ? window.i18nPlayer.t('correct') : "Correct!");
+        app.messageKind = 'correct';
+        if(payload && payload.type === 'matching') app.messageDetailHtml = matchingResultHtml(payload, 'correct');
+    }else if(payload && payload.type === 'matching'){
+        document.body.style.backgroundColor = "#f94a1e";
+        showMessage(window.i18nPlayer ? window.i18nPlayer.t('incorrect') : "Incorrect!");
+        app.messageKind = 'incorrect';
+        app.messageDetailHtml = matchingResultHtml(payload, 'incorrect');
     }else{
         document.body.style.backgroundColor = "#f94a1e";
-        document.getElementById('message').style.display = "block";
         var incorrectMsg = window.i18nPlayer ? window.i18nPlayer.t('incorrect') : "Incorrect!";
         var correctLabel = window.i18nPlayer ? window.i18nPlayer.t('correct_answer') : "Correct answer:";
         var answerTxt = '';
@@ -611,78 +832,111 @@ socket.on('questionOver', function(playerData, payload){
             });
             answerTxt = answerList.join(', ');
         }
-        var messageEl = document.getElementById('message');
-        messageEl.textContent = incorrectMsg;
+        showMessage(incorrectMsg);
+        app.messageKind = 'incorrect';
         if(answerTxt){
-            var detailEl = document.createElement('span');
-            detailEl.className = 'player-correct-answer';
-            detailEl.innerHTML = escapeHtml(correctLabel + ' ') + formatRichText(answerTxt);
-            messageEl.appendChild(detailEl);
+            app.messageDetailHtml = escapeHtml(correctLabel + ' ') + formatRichText(answerTxt);
         }
     }
-    setAnswerStatus('over');
-    document.getElementById('answer1').style.visibility = "hidden";
-    document.getElementById('answer2').style.visibility = "hidden";
-    document.getElementById('answer3').style.visibility = "hidden";
-    document.getElementById('answer4').style.visibility = "hidden";
-    updatePlayerRank(playerData);
+    app.answerStatusState = '';
+    // Con la casilla de puntuaciones y ranking desmarcada, el alumno no ve posición ni Top 10.
+    var showScores = !payload || payload.showScores !== false;
+    if(showScores){
+        updatePlayerRank(playerData);
+    }else{
+        app.rankText = '';
+    }
     stopTimer();
     if(rankingTimeout){
         clearTimeout(rankingTimeout);
     }
-    rankingTimeout = setTimeout(function(){
-        showPlayerRanking(playerData);
-    }, 3000);
+    if(showScores){
+        rankingTimeout = setTimeout(function(){
+            showPlayerRanking(playerData);
+        }, 3000);
+    }
     socket.emit('getScore');
 });
 
 socket.on('newScore', function(data){
-    var label = window.i18nPlayer ? window.i18nPlayer.t('score') : 'Score:';
-    document.getElementById('scoreText').textContent = label + " " + data;
+    if(app.resultShown && app.scoreBefore !== null) app.gained = Math.max(0, Number(data) - Number(app.scoreBefore));
+    app.playerScore = data;
 });
 
+// Salir de la partida (confirmado por el alumnado): el servidor confirma y volvemos a la portada.
+var leaveResetTimer = null;
+socket.on('playerLeft', function(){
+    // Se conserva el token del PIN: así, al volver, recupera su nombre. Solo se olvida el último ingreso.
+    try{ localStorage.removeItem('playerLastJoin'); }catch(e){}
+    socket.disconnect();
+    window.location.href = '../../';
+});
+
+// Avance automático: el servidor manda el estado; la cuenta atrás se calcula aquí.
+socket.on('autoAdvanceState', function(s){
+    s = s || {};
+    app.autoActive = !!s.active;
+    app.autoPaused = !!s.paused;
+    var ms = Math.max(0, Number(s.remainingMs) || 0);
+    app.autoLeft = Math.ceil(ms / 1000);
+    app.autoEndAt = Date.now() + ms;
+});
+setInterval(function(){
+    if(app.autoActive && !app.autoPaused){
+        app.autoLeft = Math.max(0, Math.ceil((app.autoEndAt - Date.now()) / 1000));
+    }
+}, 250);
+
 socket.on('nextQuestionPlayer', function(){
+    app.autoActive = false;
+    app.resultShown = false;
     correct = false;
-    playerAnswered = false;
+    app.playerAnswered = false;
     if(rankingTimeout){
         clearTimeout(rankingTimeout);
         rankingTimeout = null;
     }
-    currentQuestionType = 'quiz';
-    multiSelections = [];
-    updateMultiSelectionStyles();
-    updateMultiSubmitVisibility();
-    updateFreeSubmitVisibility();
-    
-    document.getElementById('answer1').style.visibility = "visible";
-    document.getElementById('answer2').style.visibility = "visible";
-    document.getElementById('answer3').style.visibility = "visible";
-    document.getElementById('answer4').style.visibility = "visible";
-    document.getElementById('message').style.display = "none";
+    app.questionType = 'quiz';
+    app.multiSelections = [];
+    app.answersVisible = true;
+
+    hideMessage(false);
     document.body.style.backgroundColor = "white";
-    document.getElementById('rankText').textContent = '';
-    document.getElementById('rankText').style.display = 'none';
-    hidePlayerRanking();
+    app.rankText = '';
+    app.hidePlayerRanking();
+    app.handRaised = false;
     stopTimer();
     resetTimer();
-    setAnswerStatus('pending');
-    
+    app.answerStatusState = 'pending';
 });
 
 socket.on('hostDisconnect', function(){
     window.location.href = "../../";
 });
 
+// Expulsado por el anfitrión (issue #29): deja de reconectar y vuelve a la portada.
+socket.on('kicked', function(){
+    clearReconnectGrace();
+    clearPersistedJoinState();
+    socket.disconnect();
+    setReconnectMessage(tPlayer('reconnecting_kicked', 'Has salido de la partida'));
+    setTimeout(function(){
+        window.location.href = "../../";
+    }, 2500);
+});
+
 socket.on('playerGameData', function(data){
    for(var i = 0; i < data.length; i++){
        if(data[i].playerId == socket.id){
-           var nameLabel = window.i18nPlayer ? window.i18nPlayer.t('name') : 'Name:';
-           var scoreLabel = window.i18nPlayer ? window.i18nPlayer.t('score') : 'Score:';
-           var icon = data[i].icon ? data[i].icon + " " : "";
-           document.getElementById('nameText').textContent = nameLabel + " " + icon + data[i].name;
-           document.getElementById('scoreText').textContent = scoreLabel + " " + data[i].gameData.score;
+           app.playerName = data[i].name;
+           app.playerIcon = data[i].icon || '';
+           app.playerScore = data[i].gameData.score;
        }
    }
+});
+
+socket.on('quizInfo', function(data){
+    app.quizName = (data && data.quizName) ? String(data.quizName) : '';
 });
 
 socket.on('questionMedia', function(data){
@@ -694,27 +948,7 @@ function clearQuestionCountdown(){
         clearInterval(questionCountdownTimer);
         questionCountdownTimer = null;
     }
-    var countdownEl = document.getElementById('questionCountdown');
-    if(countdownEl){
-        countdownEl.classList.remove('is-visible', 'is-ticking');
-        countdownEl.setAttribute('aria-hidden', 'true');
-    }
-}
-
-function renderQuestionCountdown(seconds){
-    var countdownEl = document.getElementById('questionCountdown');
-    var labelEl = document.getElementById('questionCountdownLabel');
-    var hintEl = document.getElementById('questionCountdownHint');
-    var numberEl = document.getElementById('questionCountdownNumber');
-    if(labelEl) labelEl.textContent = tPlayer('question_countdown', 'Prepara la siguiente pregunta...');
-    if(hintEl) hintEl.textContent = tPlayer('question_countdown_hint', 'La siguiente empieza en');
-    if(numberEl) numberEl.textContent = seconds > 0 ? String(seconds) : '';
-    if(countdownEl){
-        countdownEl.classList.remove('is-ticking');
-        void countdownEl.offsetWidth;
-        countdownEl.classList.add('is-visible', 'is-ticking');
-        countdownEl.setAttribute('aria-hidden', seconds > 0 ? 'false' : 'true');
-    }
+    app.countdownVisible = false;
 }
 
 function showQuestionCountdown(data){
@@ -723,40 +957,26 @@ function showQuestionCountdown(data){
     releaseWakeLock();
     stopTimer();
     setMedia(null, null);
-    playerAnswered = true;
+    app.playerAnswered = true;
     correct = false;
-    currentQuestionType = 'quiz';
-    currentPointsMultiplier = 1;
-    updatePlayerPointsBadge(1);
-    multiSelections = [];
-    updateMultiSelectionStyles();
-    for(var i = 1; i <= 4; i++){
-        var btn = document.getElementById('answer' + i);
-        if(btn){
-            btn.style.visibility = 'hidden';
-            btn.style.display = 'none';
-        }
-    }
-    var multiRow = document.getElementById('multiSubmitRow');
-    if(multiRow) multiRow.style.display = 'none';
-    var freeRow = document.getElementById('freeSubmitRow');
-    if(freeRow) freeRow.style.display = 'none';
+    app.questionType = 'quiz';
+    app.pointsMultiplier = 1;
+    app.multiSelections = [];
+    app.answersVisible = false;
 
     var seconds = Math.max(0, Math.ceil(Number(data && data.seconds) || 0));
-    var questionEl = document.getElementById('questionText');
-    var msg = document.getElementById('message');
-    if(questionEl) questionEl.textContent = '';
-    if(msg){
-        msg.style.display = 'block';
-        msg.textContent = '';
-    }
-    setAnswerStatus('pending');
+    // Opció de l'anfitrió: la pregunta es veu durant la compte arrere.
+    app.countdownPreview = (data && data.preview && data.preview.question) || '';
+    app.questionText = '';
+    showMessage('');
+    app.answerStatusState = 'pending';
     function render(){
         if(seconds <= 0){
             clearQuestionCountdown();
             return;
         }
-        renderQuestionCountdown(seconds);
+        app.countdownVisible = true;
+        app.countdownSeconds = seconds;
         seconds -= 1;
     }
     render();
@@ -765,38 +985,71 @@ function showQuestionCountdown(data){
 
 socket.on('questionCountdown', showQuestionCountdown);
 
+// Fase del vídeo (feature 24): l'alumnat mira la pantalla de l'anfitrió i espera; sense respostes.
+socket.on('videoLearnWait', function(){
+    questionActive = false;
+    app.answersVisible = false;
+    app.resultShown = false;
+    document.body.style.backgroundColor = "#FFFFFF";
+    showMessage(tPlayer('video_wait', 'Mira la pantalla: el profesorado està mostrant un vídeo.'));
+});
+
 socket.on('playerQuestion', function(data){
+    liveGhostQuestion(data);
+    app.resultShown = false;
+    app.gained = 0;
+    app.scoreBefore = app.playerScore;
+    EduhootTTS.cancel();
     clearQuestionCountdown();
     questionActive = true;
     requestWakeLock();
-    playerAnswered = false;
+    app.playerAnswered = false;
     correct = false;
     document.body.style.backgroundColor = "#FFFFFF";
-    var msg = document.getElementById('message');
-    if(msg){
-        msg.style.display = "none";
-        msg.textContent = '';
+    hideMessage(true);
+    app.questionText = data.blind ? tPlayer('blind_hint', 'Mira la pantalla para ver la pregunta') : (data.question || '');
+    app.pointsMultiplier = Number(data && data.pointsMultiplier) > 1 ? Number(data.pointsMultiplier) : 1;
+    if(app.pointsMultiplier > 1) app.badgeKey += 1;
+    app.questionType = data.type || 'quiz';
+    app.multiSelections = [];
+    app.freeAnswerValue = '';
+    // updatePlayerAnswerButtons() original sempre tornava visibility='visible'
+    // als 4 botons en pintar qualsevol pregunta (a cegues o no) — sense això,
+    // la primera pregunta de cada partida es queda invisible (l'únic cas on
+    // no hi ha un nextQuestionPlayer/connect previ que ja ho faça).
+    app.answersVisible = true;
+    lastMatchAnswers = null;
+    lastScoreRatio = 0;
+    if(data.type === 'matching'){
+        app.matchLeft = data.blind ? null : (data.matchLeft || []).slice();
+        app.matchRight = data.blind ? null : (data.matchRight || []).slice();
+        app.matchLeftCount = Number(data.leftCount) || 0;
+        app.matchRightCount = Number(data.rightCount) || 0;
+        app.matchBlindStyle = data.blindStyle || 'codes';
+        app.matchKey += 1;
+    }
+    if(data.type === 'order'){
+        app.orderItems = data.blind ? null : (data.orderItems || []).slice();
+        app.orderCount = Number(data.orderCount) || 0;
+        app.orderLayout = data.layout || 'vertical';
+        app.orderKey += 1;
     }
     if(data.blind){
-        setRichText(document.getElementById('questionText'), tPlayer('blind_hint', 'Mira la pantalla para ver la pregunta'));
-    }else if(data.question){
-        setRichText(document.getElementById('questionText'), data.question);
-    }
-    currentPointsMultiplier = Number(data && data.pointsMultiplier) > 1 ? Number(data.pointsMultiplier) : 1;
-    updatePlayerPointsBadge(currentPointsMultiplier);
-    if(data.blind){
-        currentBlindCount = Math.max(0, Number(data.answerCount) || 0);
-        updatePlayerAnswerButtons([], data.type, currentBlindCount);
+        app.blind = true;
+        app.blindActiveCount = Math.max(0, Number(data.answerCount) || 0);
+        app.answers = [];
         lastAnswers = [];
     }else{
-        currentBlindCount = null;
-        updatePlayerAnswerButtons(data.answers || [], data.type);
-        lastAnswers = (data.answers || []).slice(0, 4);
+        app.blind = false;
+        app.blindActiveCount = 0;
+        var shown = window.EduhootTf ? window.EduhootTf.localize(data.type, (data.answers || []).slice(0, 4)) : (data.answers || []).slice(0, 4);
+        app.answers = shown;
+        lastAnswers = shown.slice();
     }
     if(typeof data.time === 'number'){
-        timerTotal = Math.max(5, Math.min(120, data.time));
+        app.timerTotal = Math.max(5, Math.min(120, data.time));
     }else{
-        timerTotal = 20;
+        app.timerTotal = 20;
     }
     resetTimer();
     if(!data.blind){
@@ -804,132 +1057,31 @@ socket.on('playerQuestion', function(data){
     }
 
     if(data && (data.type === 'short-answer' || data.type === 'numeric')){
-        var freeInput = document.getElementById('freeAnswerInput');
-        if(freeInput && !playerAnswered){
-            try{ freeInput.focus(); }catch(e){}
-        }
+        Vue.nextTick(function(){
+            try{ app.$refs.freeAnswerInput.focus(); }catch(e){}
+        });
     }
 });
 
 socket.on('GameOver', function(){
+    liveGhostFinish();
     questionActive = false;
     releaseWakeLock();
     document.body.style.backgroundColor = "#FFFFFF";
-    document.getElementById('answer1').style.visibility = "hidden";
-    document.getElementById('answer2').style.visibility = "hidden";
-    document.getElementById('answer3').style.visibility = "hidden";
-    document.getElementById('answer4').style.visibility = "hidden";
-    var multiRow = document.getElementById('multiSubmitRow');
-    if(multiRow) multiRow.style.display = 'none';
-    var freeRow = document.getElementById('freeSubmitRow');
-    if(freeRow) freeRow.style.display = 'none';
-    document.getElementById('message').style.display = "block";
-    document.getElementById('message').textContent = window.i18nPlayer ? window.i18nPlayer.t('game_over') : "GAME OVER";
-    updatePlayerPointsBadge(1);
+    app.answersVisible = false;
+    app.gameOver = true;
+    showMessage(window.i18nPlayer ? window.i18nPlayer.t('game_over') : "GAME OVER");
+    app.pointsMultiplier = 1;
 });
 
-function normalizeSvgDataUrlForImg(url){
-    if(!url) return url;
-    var raw = String(url).trim();
-    if(!raw) return raw;
-    var lower = raw.toLowerCase();
-    if(!lower.startsWith('data:image/svg+xml')) return raw;
-    var comma = raw.indexOf(',');
-    if(comma === -1) return raw;
-    var header = raw.slice(0, comma + 1);
-    var payload = raw.slice(comma + 1);
-    if(!payload) return raw;
-    if(/;base64/i.test(header)) return raw;
 
-    // Ya URL-encoded: recortar cualquier sufijo tras </svg>
-    if(/%[0-9a-fA-F]{2}/.test(payload)){
-        var lp = payload.toLowerCase();
-        var endEnc = '%3c%2fsvg%3e';
-        var posEnc = lp.lastIndexOf(endEnc);
-        if(posEnc !== -1) return header + payload.slice(0, posEnc + endEnc.length);
-        return raw;
-    }
 
-    // Raw: recortar tras </svg> y URL-encode
-    var lpr = payload.toLowerCase();
-    var endRaw = '</svg>';
-    var posRaw = lpr.lastIndexOf(endRaw);
-    if(posRaw !== -1){
-        payload = payload.slice(0, posRaw + endRaw.length);
-    }
-    if(payload.indexOf('<') !== -1 || payload.indexOf('#') !== -1 || payload.indexOf('"') !== -1 || payload.indexOf("'") !== -1){
-        return header + encodeURIComponent(payload);
-    }
-    return raw;
-}
-
-function setMedia(imageUrl, videoUrl){
-    var img = document.getElementById('playerQuestionImage');
-    var vid = document.getElementById('playerQuestionVideo');
-    var iframe = document.getElementById('playerQuestionIframe');
-    if(img){
-        if(imageUrl){
-            img.src = normalizeSvgDataUrlForImg(imageUrl);
-            img.style.display = 'block';
-        }else{
-            img.removeAttribute('src');
-            img.style.display = 'none';
-        }
-    }
-    if(vid && iframe){
-        var ytId = parseYouTubeId(videoUrl);
-        if(ytId){
-            vid.removeAttribute('src');
-            vid.pause();
-            vid.style.display = 'none';
-            iframe.src = 'https://www.youtube-nocookie.com/embed/' + ytId;
-            iframe.style.display = 'block';
-        }else if(videoUrl){
-            iframe.removeAttribute('src');
-            iframe.style.display = 'none';
-            vid.src = videoUrl;
-            vid.style.display = 'block';
-        }else{
-            iframe.removeAttribute('src');
-            iframe.style.display = 'none';
-            vid.removeAttribute('src');
-            vid.pause();
-            vid.style.display = 'none';
-        }
-    }
-}
-
-function parseYouTubeId(url){
-    if(!url) return null;
-    try{
-        var u = new URL(url);
-        if(u.hostname.includes('youtube.com') || u.hostname.includes('youtu.be')){
-            if(u.hostname.includes('youtu.be')){
-                return u.pathname.replace('/','');
-            }
-            if(u.searchParams.get('v')) return u.searchParams.get('v');
-            var parts = u.pathname.split('/');
-            var last = parts[parts.length-1];
-            if(last) return last;
-        }
-    }catch(e){}
-    return null;
-}
 
 socket.on('hostSkipped', function(){
-    var skipMsg = window.i18nPlayer ? window.i18nPlayer.t('host_skipped') : 'El anfitrión saltó la pregunta';
-    document.getElementById('message').style.display = "block";
-    document.getElementById('message').textContent = skipMsg;
+    showMessage(window.i18nPlayer ? window.i18nPlayer.t('host_skipped') : 'El anfitrión saltó la pregunta');
 });
 
 function showPlayerRanking(playerData){
-    var modal = document.getElementById('playerRankingModal');
-    var list = document.getElementById('playerRankingList');
-    var title = document.getElementById('playerRankingTitle');
-    if(!modal || !list){
-        return;
-    }
-    list.innerHTML = '';
     var sorted = Array.isArray(playerData) ? playerData.slice().sort(function(a, b){
         return (b.gameData.score || 0) - (a.gameData.score || 0);
     }) : [];
@@ -937,90 +1089,53 @@ function showPlayerRanking(playerData){
     var myId = socket.id;
     var youLabel = (window.i18nPlayer && window.i18nPlayer.t('player_ranking_you')) || 'You';
     if(youLabel === 'player_ranking_you') youLabel = 'You';
-    top.forEach(function(p, idx){
+    app.rankingList = top.map(function(p){
         var icon = p.icon ? p.icon + ' ' : '';
         var meMark = p.playerId === myId ? ' (' + youLabel + ')' : '';
-        var li = document.createElement('li');
-        li.textContent = icon + p.name + ' - ' + (p.gameData.score || 0) + meMark;
-        list.appendChild(li);
+        return icon + p.name + ' - ' + (p.gameData.score || 0) + meMark;
     });
-    if(window.i18nPlayer && title){
-        var titleText = window.i18nPlayer.t('player_ranking_title');
-        title.textContent = titleText === 'player_ranking_title' ? 'Top 10' : titleText;
-    }
-    modal.classList.add('show');
-}
-
-function hidePlayerRanking(){
-    var modal = document.getElementById('playerRankingModal');
-    if(modal){
-        modal.classList.remove('show');
-    }
-}
-
-var playerRankingClose = document.getElementById('playerRankingClose');
-if(playerRankingClose){
-    playerRankingClose.addEventListener('click', function(){
-        hidePlayerRanking();
-    });
+    app.rankingVisible = true;
 }
 
 socket.on('time', function(data){
     if(typeof data.time === 'number'){
-        timerLeft = Math.max(0, Math.min(timerTotal, data.time));
-        updateTimerUi();
+        app.timerLeft = Math.max(0, Math.min(app.timerTotal, data.time));
     }
 });
 
 function resetTimer(){
-    timerLeft = timerTotal;
-    updateTimerUi();
+    app.timerLeft = app.timerTotal;
+    startTimerCountdown();
+}
+
+function startTimerCountdown(){
     if(timerInterval) clearInterval(timerInterval);
     timerInterval = setInterval(function(){
-        if(timerLeft > 0){
-            timerLeft -= 1;
-            updateTimerUi();
+        if(app.timerLeft > 0){
+            app.timerLeft -= 1;
         }
     }, 1000);
 }
+
+// El anfitrión pausa, reanuda o amplía el temporizador: se sigue su tiempo y, si está
+// pausado, la cuenta atrás del alumno también se para.
+socket.on('timerSync', function(data){
+    if(!questionActive || !data || typeof data.time !== 'number') return;
+    stopTimer();
+    app.timerTotal = Math.max(app.timerTotal, data.time);
+    app.timerLeft = Math.max(0, Math.min(app.timerTotal, data.time));
+    if(!data.paused) startTimerCountdown();
+});
+
+// Si el alumno sale de la pestaña, el anfitrión lo ve en su lista de respuestas.
+document.addEventListener('visibilitychange', function(){
+    socket.emit('tabState', { away: document.hidden });
+});
 
 function stopTimer(){
     if(timerInterval){
         clearInterval(timerInterval);
         timerInterval = null;
-    }
-}
-
-function updateTimerUi(){
-    var bar = document.getElementById('playerTimerFill');
-    var txt = document.getElementById('playerTimerText');
-    var pct = Math.max(0, Math.min(100, (timerLeft / timerTotal) * 100));
-    if(bar){
-        bar.style.width = pct + '%';
-        if(pct < 35){
-            bar.style.background = 'linear-gradient(135deg, #f97316, #ef4444)';
-        }else if(pct < 60){
-            bar.style.background = 'linear-gradient(135deg, #facc15, #f97316)';
-        }else{
-            bar.style.background = 'linear-gradient(135deg, #22c55e, #16a34a)';
-        }
-    }
-    if(txt){
-        txt.textContent = Math.max(0, Math.ceil(timerLeft)) + 's';
-    }
-}
-
-function setAnswerStatus(state){
-    var statusEl = document.getElementById('playerAnswerStatus');
-    if(!statusEl) return;
-    if(state === 'submitted'){
-        statusEl.textContent = (window.i18nPlayer && window.i18nPlayer.t('status_submitted')) || 'Respuesta enviada';
-        statusEl.classList.remove('hidden');
-    }else if(state === 'pending'){
-        statusEl.textContent = (window.i18nPlayer && window.i18nPlayer.t('status_pending')) || 'Responde ahora';
-        statusEl.classList.remove('hidden');
-    }else{
-        statusEl.classList.add('hidden');
     }
 }
 

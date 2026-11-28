@@ -4,7 +4,7 @@ if (process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH) {
     test.use({ launchOptions: { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } });
 }
 
-const PAGES = ['/', '/join.html', '/solo/', '/create/', '/multiplayer/', '/host/', '/player/'];
+const PAGES = ['/', '/inicio/', '/join.html', '/solo/', '/create/', '/multiplayer/', '/host/', '/player/'];
 
 const SOCKET_STUB = 'window.testSocketEvents = {}; window.io = function(){ return {on: function(name, fn){window.testSocketEvents[name] = fn;}, emit: function(){}, disconnect: function(){}, connect: function(){}}; };';
 
@@ -48,7 +48,7 @@ test.describe('peu comú', () => {
 });
 
 test.describe('xip de compte', () => {
-    test('amb Commons, el xip substitueix el selector propi i canvia l’idioma', async ({ page }) => {
+    test('amb Commons, el selector propi es manté i el xip canvia l’idioma', async ({ page }) => {
         await page.route(/^https:\/\//, route => route.abort());
         await stubBase(page);
         await stubCommons(page);
@@ -57,10 +57,10 @@ test.describe('xip de compte', () => {
         await expect(page.locator('html')).toHaveClass(/has-account-chip/);
         await expect(page.locator('html')).toHaveAttribute('lang', 'es');
         await expect(page.locator('edutictac-account')).toBeVisible();
-        await expect(page.locator('.top-actions .lang-switch')).toBeHidden();
+        await expect(page.locator('.top-actions .lang-switch')).toBeVisible();
         await expect(page.locator('#lang-select')).toHaveValue('es');
 
-        expect(await page.evaluate(() => window.edutictacLanguage.languages)).toEqual(['ca', 'va', 'es', 'en']);
+        expect(await page.evaluate(() => window.edutictacLanguage.languages)).toEqual(['ca', 'va', 'es', 'en', 'fr', 'de', 'it', 'pt', 'bg', 'ar']);
         expect(await page.evaluate(() => window.edutictacLanguage.get())).toBe('es');
 
         await page.evaluate(() => window.edutictacLanguage.set('va'));
@@ -78,7 +78,7 @@ test.describe('xip de compte', () => {
         await expect(page.locator('edutictac-account')).toBeHidden();
     });
 
-    for (const path of ['/join.html', '/player/', '/solo/', '/multiplayer/']) {
+    for (const path of ['/join.html', '/player/', '/multiplayer/']) {
         test(`${path}: alumnat i joc públic només tenen «Inici» i conserven el selector propi`, async ({ page }) => {
             await page.route(/^https:\/\//, route => route.abort());
             await stubBase(page);
@@ -90,4 +90,24 @@ test.describe('xip de compte', () => {
             await expect(page.locator('#lang-switcher, .lang-switch').first()).toBeVisible();
         });
     }
+
+    test('/solo/: chip completo de la cuenta; el selector de idioma propio se mantiene', async ({ page }) => {
+        await page.route(/^https:\/\//, route => route.abort());
+        await stubBase(page);
+        await stubCommons(page);
+        await page.goto('/solo/');
+
+        await expect(page.locator('edutictac-account')).not.toHaveAttribute('data-home-only', /.*/);
+        await expect(page.locator('html')).not.toHaveClass(/account-home-only/);
+        await expect(page.locator('.hero__lang .lang-switch')).toBeVisible();
+    });
+});
+
+test('portada: la tarjeta deja un pequeño hueco sobre el pie común', async ({ page }) => {
+    await page.route(/^https:\/\//, route => route.abort());
+    await stubBase(page);
+    await page.goto('/inicio/?lang=es');
+    const gap = await page.evaluate(() => document.querySelector('footer.ett-footer').getBoundingClientRect().top - document.querySelector('.landing-shell').getBoundingClientRect().bottom);
+    expect(gap).toBeGreaterThanOrEqual(10);
+    expect(gap).toBeLessThanOrEqual(24);
 });

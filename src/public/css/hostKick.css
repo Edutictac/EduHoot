@@ -1,0 +1,93 @@
+/* Botón de expulsar alumnado (lobby y partida del anfitrión). Dos pasos: el segundo toque confirma. */
+
+.kick-btn{
+    min-height: 32px;
+    margin-left: 8px;
+    padding: 4px 10px;
+    border: 0;
+    border-radius: 8px;
+    background: rgba(239,68,68,0.18);
+    color: inherit;
+    font: 600 13px/1 'Inter', 'Poppins', sans-serif;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.kick-btn:hover{ background: rgba(239,68,68,0.32); }
+.kick-btn--confirm{
+    background: #ef4444;
+    color: #fff;
+}
+
+/* Expulsados de esta partida, con botón para permitir la entrada de nuevo. */
+.kicked-list{
+    margin: 12px auto 0;
+    max-width: 420px;
+}
+.kicked-title{
+    margin: 0 0 6px;
+    font-size: 14px;
+    font-weight: 700;
+    opacity: 0.85;
+}
+.kicked-item{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 4px 8px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.08);
+}
+.kicked-name{ overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.unkick-btn{
+    min-height: 32px;
+    padding: 4px 10px;
+    border: 0;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.2);
+    color: inherit;
+    font: 600 13px/1 'Inter', 'Poppins', sans-serif;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+/* Opciones avanzadas del lobby: empiezan en línea nueva y cada tiempo va en su propia línea. */
+#host-options > #opt-advanced{
+    /* #host-options es una cuadrícula: ocupar todas las columnas = línea nueva. */
+    grid-column: 1 / -1;
+    display: block;
+    width: 100%;
+    margin-top: 8px;
+}
+#opt-advanced > summary{
+    cursor: pointer;
+    font-weight: 600;
+    padding: 4px 0;
+}
+#opt-advanced .opt-inline{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin: 8px 0;
+}
+#opt-advanced .opt-inline input{
+    width: 90px;
+}
+
+/* Al iniciar la partida: el botón se bloquea y aparece un aviso mientras llega la confirmación. */
+#start:disabled{ opacity: 0.6; cursor: wait; }
+.starting-msg{ margin: 8px 0 0; font-weight: 700; color: #fde68a; }
+
+/* Avance automático: desplegable en el lobby (Manual, o de 5 a 20 s). */
+.opt-auto{ display: flex; align-items: center; justify-content: flex-start; gap: 8px; }
+.opt-auto select{ min-width: 110px; }
+
+/* Tiempo por pregunta: el aviso va justo debajo del campo, en el mismo bloque de la cuadrícula. */
+.opt-time{ display: block; }
+.opt-time .opt-hint{ display: block; margin: 8px 0 0; opacity: 0.75; }
+
+/* Abandono: la fila sigue en la lista de estado, atenuada, con el botón deshabilitado. */
+.answer-status-list li.is-left{ opacity: 0.6; }
+.answer-status-label--left{ font-weight: 700; }
+.kick-btn:disabled{ opacity: 0.7; cursor: not-allowed; }

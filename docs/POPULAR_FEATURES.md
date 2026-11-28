@@ -14,7 +14,7 @@
 - [Full de ruta d'implementació](#full-de-ruta-dimplementació)
   - [Troballes que condicionen l'orde](#troballes-que-condicionen-lorde)
   - [✅ Fase 0 — Habilitadors (requisits, no una recomanació)](#-fase-0--habilitadors-requisits-no-una-recomanació)
-  - [Fase 1a — Millores cosmètiques/aïllades, sense tocar la lògica de joc](#fase-1a--millores-cosmètiquesaïllades-sense-tocar-la-lògica-de-joc)
+  - [✅ Fase 1a — Millores cosmètiques/aïllades, sense tocar la lògica de joc](#-fase-1a--millores-cosmètiquesaïllades-sense-tocar-la-lògica-de-joc)
   - [Fase 1b — Mecàniques de Solo/amfitrió, sense tocar l'arquitectura del cicle de partida](#fase-1b--mecàniques-de-soloamfitrió-sense-tocar-larquitectura-del-cicle-de-partida)
   - [Fase 2 — Mecàniques de joc de major abast, però autocontingudes](#fase-2--mecàniques-de-joc-de-major-abast-però-autocontingudes)
   - [Fase 3 — Canvi d'arquitectura del cicle de partida](#fase-3--canvi-darquitectura-del-cicle-de-partida)
@@ -94,32 +94,32 @@ decisió de producte.
 
 | # | Proposta | Origen | Dificultat | 📚 Aprenentatge | 🙂 Clima | 🤝 Inclusió | ✅ Context | Itinerari |
 |---|---|---|---|---|---|---|---|---|
-| 1 | Deures asíncrons amb data límit | 🟩 | 🔴 | 📚 Alt | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 3 |
+| 1 | ✅ Deures asíncrons amb data límit (◐ sense Commons) | 🟩 | 🔴 | 📚 Alt | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 3 |
 | 2 | Podi final amb confeti | 🟨 | 🟡 | ✖️ Cap | 🙂 Segur | ➖ Neutra | ✅ Encaixa | 📦 Aparcada |
-| 3 | Mode autoritme (self-paced) | 🟦 | 🔴 | 📚 Alt | 🙂 Segur | 🤝 Alta | ✅ Encaixa | Fase 3 |
+| 3 | ✅ Mode autoritme (self-paced) | 🟦 | 🔴 | 📚 Alt | 🙂 Segur | 🤝 Alta | ✅ Encaixa | Fase 3 |
 | 4 | Power-ups (doble puntuació, 50/50, congelar ratxa) | 🟩 | 🔴 | ➖ Neutre | 🙂 Segur¹ | ➖ Neutra | ✅ Encaixa | Fase 2 |
 | 5 | Avatars de personatge personalitzables | 🟩 | 🟡 | ✖️ Cap | 🙂 Segur | ➖ Neutra | ✅ Encaixa | 📦 Aparcada |
 | 6 | Mode equips, amb variant "relay" | 🟩 | 🔴 | 📚 Alt | ⚠️ Risc lleu² | 🤝 Alta | ✅ Encaixa | Fase 2 |
-| 7 | Tipus de pregunta: ordenar i emparellar | 🟩 | 🔴 | 📚 Alt | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 2 |
+| 7 | ✅ Tipus de pregunta: ordenar i emparellar (importació de *puzzle* de Kahoot només per issue) | 🟩 | 🔴 | 📚 Alt | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 2 |
 | 8 | Memes i GIF com a feedback | 🟦 | 🟡 | ✖️ Cap | 🙂 Segur | ➖ Neutra | ✅ Encaixa | 📦 Aparcada |
 | 9 | Música/so de tensió per fases | 🟨 | 🟡 | ✖️ Cap | 🙂 Segur | ➖ Neutra | ✅ Encaixa | 📦 Aparcada |
 | 10 | Modes de joc immersius tipus arcade | 🟦 | 🔴 | ➖ Neutre | ⚠️ Risc³ | 🚧 Baixa | ✅ Encaixa | Fase 4 |
-| 11 | Ratxa d'encerts consecutius | 🟨 | 🟢/🟡 | ➖ Neutre | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1b |
-| 12 | Generador de sobrenoms aleatoris | 🟨 | 🟢 | ✖️ Cap⁴ | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1a |
-| 13 | Lectura en veu alta (TTS) | 🟩 | 🟢 | ➖ Neutre | 🙂 Segur | 🤝 Alta | ✅ Encaixa | Fase 1a |
+| 11 | ✅ Ratxa d'encerts consecutius | 🟨 | 🟢/🟡 | ➖ Neutre | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1b |
+| 12 | ✅ Generador de sobrenoms aleatoris | 🟨 | 🟢 | ✖️ Cap⁴ | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1a |
+| 13 | ✅ Lectura en veu alta (TTS) | 🟩 | 🟢 | ➖ Neutre | 🙂 Segur | 🤝 Alta | ✅ Encaixa | Fase 1a |
 | 14 | So de feedback individual | 🟨 | 🟢 | ✖️ Cap | 🙂 Segur | ➖ Neutra | ✅ Encaixa | 📦 Aparcada |
-| 15 | Ampliar la importació: GIFT, JSON, XML de Moodle i la resta de formats de Moodle/AULES⁵ | 🟦 | 🟡 | ➖ Neutre | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1a |
+| 15 | ✅ Ampliar la importació: GIFT, XML de Moodle i la resta de formats de Moodle/AULES (GIFT i XML de Moodle fets; la resta de formats, per issue si es demana) | 🟦 | 🟡 | ➖ Neutre | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1a |
 | 16 | Reaccions en directe (emoji) | 🟨 | 🟡 | ✖️ Cap | ⚠️ Risc | ➖ Neutra | ✅ Encaixa | 📦 Aparcada |
 | 17 | Tipus de pregunta addicionals | 🟦 | 🔴 | 📚 Alt | 🙂 Segur | 🤝 Alta | ✅ Encaixa | Fase 2 |
 | 18 | Informe de progrés històric | 🟩 | 🔴 | 📚 Alt⁶ | 🙂 Segur | ➖ Neutra | ✅ Encaixa | ❌ Descartada |
 | 19 | Lliçons interactives | 🟦 | 🔴 | 📚 Alt | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 4 |
-| 20 | Mode d'estudi "Flashcards" | 🟩 | 🟡 | 📚 Alt | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1a |
+| 20 | ✅ Mode d'estudi "Flashcards" | 🟩 | 🟡 | 📚 Alt | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1a |
 | 21 | Integració amb Google Classroom | 🟦 | 🔴 | ➖ Neutre | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 4 |
 | 22 | Insígnies i nivells persistents | 🟩 | 🔴 | 📚 Alt⁶ | 🙂 Segur | ➖ Neutra | ✅ Encaixa | ❌ Descartada |
-| 23 | Compte arrere "¡Prepara't!" 3-2-1 | 🟨 | 🟢 | ✖️ Cap | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1a⁷ |
-| 24 | Vídeos "aprén i després respon" | 🟦 | 🟡 | 📚 Alt | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1b |
-| 25 | Pràctica adaptativa (repetir fallades) | 🟦 | 🟡 | 📚 Alt | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1b |
-| 26 | Mode "fantasma"/millor marca personal | 🟨 | 🟡 | ➖ Neutre⁸ | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1b |
+| 23 | ✅ Compte arrere "¡Prepara't!" 3-2-1 | 🟨 | 🟢 | ✖️ Cap | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1a⁷ |
+| 24 | ✅ Vídeos "aprén i després respon" | 🟦 | 🟡 | 📚 Alt | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1b |
+| 25 | ✅ Pràctica adaptativa (repetir fallades) | 🟦 | 🟡 | 📚 Alt | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1b |
+| 26 | ◐ Mode "fantasma"/millor marca personal (prova de concepte) | 🟨 | 🟡 | ➖ Neutre⁸ | 🙂 Segur | ➖ Neutra | ✅ Encaixa | Fase 1b |
 | 27 | Mode "presentació" híbrid | 🟦 | 🟡 | 📚 Alt | 🙂 Segur | 🤝 Alta | ✅ Encaixa | Fase 3 |
 | 28 | "Energizers"/pauses amb vídeo | 🟨 | 🟡 | ✖️ Cap | 🙂 Segur | ➖ Neutra | ✅ Encaixa | ❌ Descartada |
 | 29 | Matchmaking contra desconeguts | 🟦 | 🔴 | ➖ Neutre | 🙂 Segur | ➖ Neutra | 🚫 No encaixa | ❌ Descartada |
@@ -148,16 +148,15 @@ decisió de producte.
    pedagògica d'este llistat: el generador de preguntes amb IA que crida
    a un proveïdor extern se separa com a proposta 32; esta proposta 15
    passa a ser ampliar l'importador de preguntes existent (hui només
-   accepta CSV) a GIFT, JSON, XML de Moodle i la resta de formats que
+   accepta CSV) a GIFT, XML de Moodle i la resta de formats que
    accepta Moodle/AULES. No crida a cap proveïdor extern, així que no té
    el risc de dades de la proposta 32.
 6. **18 i 22** — tindrien Aprenentatge 📚 Alt, però la protecció de dades
    prevaldria: cap de les dos es retomarà sense guardar un històric de
    resultats de l'alumnat identificable entre partides, cosa que no es
    farà.
-7. **23 (Compte arrere 3-2-1)** — ja implementada en el mode "Jugar a
-   l'aula" des del commit `9b8c345`; l'únic pendent és portar-la al mode
-   Solo, que és justament el que cobrix la seua Fase 1a.
+7. **23 (Compte arrere 3-2-1)** — ✅ implementada en el mode "Jugar a
+   l'aula" i, des del 2026-11-13, també en el mode Solo.
 8. **26 (Mode fantasma)** — compara el jugador contra la seua pròpia
    millor marca, no contra companys: pedagògicament més sa que un
    rànquing competitiu, encara que no aporte aprenentatge directe per si
@@ -178,25 +177,33 @@ itinerari i context inclosos; ací va l'explicació completa de cada
 proposta i el seu criteri pedagògic raonat (sense repetir l'itinerari ni
 el context, que ja estan en la taula).
 
-1. 🟩 **Ambdues** — Mode "tasca"/deures asíncrons amb data límit — 🔴 Alta
+1. ✅ 🟩 **Ambdues** — Mode "tasca"/deures asíncrons amb data límit — 🔴 Alta
    El cas d'ús més valorat pel professorat en les dos plataformes; en
    Wayground és a més el seu mode fundacional.
    → **Criteri pedagògic:** 📚 Aprenentatge: Alt · 🙂 Clima: Segur ·
    🤝 Inclusió: Neutra → **Prioritat alta** (encara que es manté en Fase 3
    per dependre tècnicament de la proposta 3).
+   **Implementat** (sense Commons): enllaç `/homework/?code=…`, nom + codi de
+   recuperació, intents configurables, data límit, resultats i CSV (vore
+   `ARCHITECTURE.md`, «Mode autoritme i deures asíncrons»). **Pendent:** entrada
+   i puntuació amb identitat de Commons.
 
 2. 🟨 **Kahoot** — Podi final animat amb confeti — 🟡 Mitjana
    La imatge més icònica i reconeixible del gènere.
    → **Criteri pedagògic:** ✖️ Aprenentatge: Cap · 🙂 Clima: Segur ·
    ➖ Inclusió: Neutra → **Aparcada.**
 
-3. 🟦 **Wayground** — Mode autoritme (self-paced) — 🔴 Alta
+3. ✅ 🟦 **Wayground** — Mode autoritme (self-paced) — 🔴 Alta
    El tret que més caracteritza Wayground entre les plataformes
    educatives de referència.
    → **Criteri pedagògic:** 📚 Aprenentatge: Alt (permet un ritme
    diferenciat, reduïx la pressió d'un temps compartit) · 🙂 Clima:
    Segur · 🤝 Inclusió: Alta → **Prioritat alta**, reforça el seu paper
    de peça base de la Fase 3.
+   **Implementat** en «Jugar a l'aula» (lobby → «Al seu ritme»): estat i
+   puntuació per alumne en el servidor, pantalles pròpies d'alumnat i
+   amfitrió, lectura en veu alta, mà alçada i Top 10 segons la casella de
+   puntuacions. **Pendent:** multijugador (decisió: de moment no).
 
 4. 🟩 **Ambdues** — Power-ups: doble puntuació manual, 50/50 i congelar
    ratxa — 🔴 Alta
@@ -206,9 +213,9 @@ el context, que ja estan en la taula).
    conflicte a l'aula; la resta de power-ups continua avant.
 
 5. 🟩 **Ambdues** — Avatars de personatge personalitzables — 🟡 Mitjana
-   Ja existix un selector de 29 icones/emojis fixos (`join.html:44-73`,
-   `join.js:2,33-52,191-193`, persistit com `avatar_icon` en
-   `sockets/playerEvents.js:83` i `services/commons.js:165`); la proposta seria ampliar-lo (color,
+   Ja existix un selector de 29 icones/emojis fixos (`join.html`,
+   `join.js`, persistit com `avatar_icon` en
+   `playerEvents.js` i `services/commons.js`); la proposta seria ampliar-lo (color,
    accessoris, galeria més àmplia), no crear-lo des de zero.
    → **Criteri pedagògic:** ✖️ Aprenentatge: Cap · 🙂 Clima: Segur ·
    ➖ Inclusió: Neutra → **Aparcada** (no es descarta el que ja existix,
@@ -227,6 +234,13 @@ el context, que ja estan en la taula).
    → **Criteri pedagògic:** 📚 Aprenentatge: Alt (seqüenciació i relació
    de conceptes són formats d'avaluació amb valor pedagògic clar) ·
    🙂 Clima: Segur · ➖ Inclusió: Neutra → **Prioritat alta.**
+   **Emparellar, implementat** (tipus `matching`, «correspondència»):
+   fins a 8 elements amb impostores, puntuació proporcional, en tots els
+   modes, CSV, Moodle XML, GIFT i PDF/DOCX/ODT (vore `ARCHITECTURE.md`).
+   **Ordenar, implementat** (tipus `order`): en partida, solo, flashcards,
+   multijugador local, autoritme, deures, documents (PDF, DOCX i ODT), Moodle XML
+   i CSV. El tiempo extra de la correspondència també s'aplica a ordenar.
+   **Fora d'abast:** importar el *puzzle* de Kahoot (format sense verificar); només per issue si es demana.
 
 8. 🟦 **Wayground** — Memes i GIF com a feedback d'encert/fallada — 🟡 Mitjana
    → **Criteri pedagògic:** ✖️ Aprenentatge: Cap · 🙂 Clima: Segur ·
@@ -236,7 +250,7 @@ el context, que ja estan en la taula).
    `music-player.js` (377 línies) ja és un reproductor de pista de fons
    amb selector/volum/rotació, usat al vestíbul, a la partida, en
    multijugador i en Solo, més un efecte de gong al tancar cada pregunta
-   (`effects/gong.mp3`, `hostGame.js:599-648`) — base reutilitzable, però
+   (`effects/gong.mp3`, `initGong()`/`playGong()` en `hostGame.js`) — base reutilitzable, però
    encara no distingix música per fases.
    → **Criteri pedagògic:** ✖️ Aprenentatge: Cap · 🙂 Clima: Segur ·
    ➖ Inclusió: Neutra → **Aparcada.**
@@ -251,31 +265,38 @@ el context, que ja estan en la taula).
     amb nota de risc de clima a resoldre en el disseny si es retoma
     algun dia.
 
-11. 🟨 **Kahoot** — Bonificació per ratxa d'encerts consecutius —
+11. ✅ 🟨 **Kahoot** — Bonificació per ratxa d'encerts consecutius —
     🟢/🟡 Baixa-Mitjana
     → **Criteri pedagògic:** ➖ Aprenentatge: Neutre · 🙂 Clima: Segur
     (és individual, no compara contra altres alumnes) · ➖ Inclusió:
     Neutra → sense canvis.
+    **Implementada**: +50 per resposta a partir de la tercera seguida (tope
+    +250), reinici amb fallada, acert parcial o sense resposta; opció del
+    lobby activada per defecte; també al mode individual.
 
-12. 🟨 **Kahoot** — Generador de sobrenoms aleatoris en unir-se — 🟢 Baixa
+12. ✅ 🟨 **Kahoot** — Generador de sobrenoms aleatoris en unir-se — 🟢 Baixa
     → **Criteri pedagògic:** ✖️ Aprenentatge: Cap · 🙂 Clima: Segur ·
     ➖ Inclusió: Neutra → es manté en Fase 1a **pese al "Cap" en
     aprenentatge**, perquè el seu valor real no és pedagògic sinó de
     seguretat/gestió d'aula (evita noms inapropiats); l'eix d'aprenentatge
     no ho captura bé.
+    **Implementada**: lista valenciana fixa de 250 paraules, opció de
+    l'anfitrió (escriure o aleatori) i bloqueig amb alumnat unit.
 
-13. 🟩 **Ambdues** — Lectura en veu alta de la pregunta (TTS / Read Aloud) —
+13. ✅ 🟩 **Ambdues** — Lectura en veu alta de la pregunta (TTS / Read Aloud) —
     🟢 Baixa
     → **Criteri pedagògic:** ➖ Aprenentatge: Neutre · 🙂 Clima: Segur ·
     🤝 Inclusió: Alta (accessibilitat per a alumnat amb dificultats
     lectores) → **Prioritat alta.**
+    **Implementada** a «Jugar a l'aula» i a `/solo/`, a demanda i sense
+    lectura automàtica (vore [`ARCHITECTURE.md`](../ARCHITECTURE.md#lectura-en-veu-alta-tts)).
 
 14. 🟨 **Kahoot** — So de feedback individual al respondre (ding/buzz) —
     🟢 Baixa
     → **Criteri pedagògic:** ✖️ Aprenentatge: Cap · 🙂 Clima: Segur ·
     ➖ Inclusió: Neutra → **Aparcada.**
 
-15. 🟦 **Wayground** — Ampliar la importació de preguntes: GIFT, JSON,
+15. ✅ 🟦 **Wayground** — Ampliar la importació de preguntes: GIFT,
     XML de Moodle i la resta de formats que accepta Moodle/AULES — 🟡 Mitjana
     Redefinida després de la revisió pedagògica d'este llistat. Abans
     era "Generador de preguntes amb IA natiu"; eixa part amb risc de
@@ -284,15 +305,20 @@ el context, que ja estan en la taula).
     seua pròpia IA externa, i puja el **CSV** resultant — EduHoot mai
     crida a cap proveïdor en eixe flux. Esta proposta estén eixe mateix
     importador (`importCsv.js`) per a acceptar més formats d'entrada —
-    GIFT, JSON, XML de Moodle i la resta de formats que admet Moodle/AULES
+    GIFT, XML de Moodle i la resta de formats que admet Moodle/AULES
     — sense tocar cap proveïdor d'IA ni afegir risc de dades nou: és
     només un importador de fitxers més ampli, vinga el contingut d'una
     IA, de Moodle, o d'on siga.
     → **Criteri pedagògic:** ➖ Aprenentatge: Neutre · 🙂 Clima: Segur ·
     ➖ Inclusió: Neutra → sense risc, es manté en Fase 1a (començar per
-    GIFT, JSON i XML de Moodle, que són els formats de pregunta més
+    GIFT i XML de Moodle, que són els formats de pregunta més
     estàndards, i afegir la resta de formats de Moodle/AULES de forma
     incremental sobre la mateixa base).
+    **Implementat** per a l'XML de Moodle i el GIFT (fitxers `.xml` i
+    `.gift`, també `.txt` detectat pel contingut): opció múltiple,
+    verdader/fals, resposta curta, numèrica i correspondència; les preguntes
+    d'altres tipus s'ometen amb el motiu. **Pendent:** la resta de formats
+    de Moodle/AULES.
 
 16. 🟨 **Kahoot** — Reaccions en directe (emoji) enviades pel jugador —
     🟡 Mitjana
@@ -343,10 +369,10 @@ el context, que ja estan en la taula).
     no es portarà eixe històric, per respecte a la normativa de
     protecció de dades.
 
-23. 🟨 **Kahoot** — Pantalla "¡Prepara't!" amb compte arrere 3-2-1 — 🟢 Baixa
-    Ja implementada en el mode "Jugar a l'aula" des del commit `9b8c345`
-    (`sockets/gameHelpers.js:295`, esdeveniment `questionCountdown`). No
-    existix en Solo; l'únic pendent és portar `showQuestionCountdown`.
+23. ✅ 🟨 **Kahoot** — Pantalla "¡Prepara't!" amb compte arrere 3-2-1 — 🟢 Baixa
+     Implementada en el mode "Jugar a l'aula" (`sockets/gameHelpers.js`,
+    esdeveniment `questionCountdown`) i en Solo (`runCountdown` en
+    `solo-game.js`), amb el mateix aspecte (`css/countdown.css`).
     → **Criteri pedagògic:** ✖️ Aprenentatge: Cap · 🙂 Clima: Segur ·
     ➖ Inclusió: Neutra → sense valor pedagògic directe, però s'implementa
     igualment: el cost real és mínim (ja existix en multijugador, només
@@ -359,12 +385,13 @@ el context, que ja estan en la taula).
     instructiu) · 🙂 Clima: Segur · ➖ Inclusió: Neutra → **Prioritat
     alta.**
 
-25. 🟦 **Wayground** — Pràctica adaptativa (repetir automàticament les
+25. ✅ 🟦 **Wayground** — Pràctica adaptativa (repetir automàticament les
     preguntes fallades) — 🟡 Mitjana
     → **Criteri pedagògic:** 📚 Aprenentatge: Alt · 🙂 Clima: Segur ·
     ➖ Inclusió: Neutra → **Prioritat alta** (confirmat).
 
-26. 🟨 **Kahoot** — Mode "fantasma"/millor marca personal en Solo — 🟡 Mitjana
+26. ✅ 🟨 **Kahoot** — Mode "fantasma"/millor marca personal en Solo — 🟡 Mitjana
+    **Implementat** en Solo i en aula (opció de l'anfitrió, desactivada per defecte): diferència pregunta a pregunta amb la millor marca del quiz, guardada al navegador de cada alumne.
     → **Criteri pedagògic:** ➖ Aprenentatge: Neutre (autoavaluació
     progressiva) · 🙂 Clima: Segur (compara contra un mateix, no contra
     companys) · ➖ Inclusió: Neutra → sense canvis; nota positiva: al
@@ -491,8 +518,9 @@ realista, no només una llista d'idees.
   i la resta està en `data/`, `services/`, `routes/` i `sockets/`; en el
   frontend, `create.js` (3.860 → 560) i `solo.js` (2.341 → 346) s'han
   repartit en `create-*.js` i `solo-*.js` (vore `ARCHITECTURE.md`). Les
-  propostes noves es poden afegir en el fitxer del seu tema. Queden sense
-  repartir `multiplayer.js`, `quizCreator.js` i `hostGame.js`.
+  propostes noves es poden afegir en el fitxer del seu tema. `multiplayer.js`,
+  `quizCreator.js` i `hostGame.js` no es van repartir: es van passar
+  directament a Vue (Subfase B, acabada).
 - **Base ja sòlida per a mecàniques de joc en directe.** El pla
   d'estabilitat de sessió (`PLAN_ESTABILIDAD_SESION.md`) està complet en
   el codi (reconnexió, periode de gràcia, Wake Lock), encara que el propi
@@ -510,28 +538,28 @@ realista, no només una llista d'idees.
 - **Diverses propostes ja estan parcial o totalment implementades.**
   Comprovat contra el codi actual:
   - **5 (avatars)** — ja existix un selector de 29 icones/emojis fixos
-    (`src/public/join.html:44-73`, `join.js:2,33-52,191-193`, persistit
-    com `avatar_icon` en `sockets/playerEvents.js:83` i
-    `services/commons.js:165`).
+    (`src/public/join.html`, `join.js`, persistit
+    com `avatar_icon` en `playerEvents.js` i
+    `services/commons.js`).
   - **9 (música per fases)** — `music-player.js` (377 línies) ja és un
     reproductor de pista de fons amb selector/volum/rotació, més un
     efecte de gong al tancar cada pregunta (`effects/gong.mp3`,
-    `hostGame.js:599-648`). Encara no distingix música per fases.
-  - **23 (compte arrere 3-2-1)** — ja implementada abans de cada
+    `initGong()`/`playGong()` en `hostGame.js`). Encara no distingix música per fases.
+  - ✅ **23 (compte arrere 3-2-1)** — ja implementada abans de cada
     pregunta en el mode "Jugar a l'aula" (commit `9b8c345`,
-    `sockets/gameHelpers.js:295`, `scheduleQuestionCountdown()`,
-    esdeveniment `questionCountdown`). **No
-    existix en Solo**: ahí només faltaria portar `showQuestionCountdown`.
+    `sockets/gameHelpers.js`, `scheduleQuestionCountdown()`,
+    esdeveniment `questionCountdown`) i, des del 2026-11-13, també en
+    Solo.
   - **4 (power-ups)** — el submecanisme de "doble puntuació" ja existix
-    (commit `ef9cb40`, `services/scoring.js:16` i
-    `services/kahootImport.js:83-86`), però només
+    (commit `ef9cb40`, `services/scoring.js` i
+    `services/kahootImport.js`), però només
     s'activa automàticament en importar un qüestionari de Kahoot que ja
     ho portava marcat; no hi ha control manual en el creador propi.
   - **15 (importació ampliada)** — `create-ia.js` ja té
     un "Generador IA" que construïx un prompt, el docent el pega en la
     seua pròpia IA externa, i puja el **CSV** resultant — és dir, EduHoot
     mai crida a un proveïdor d'IA en eixe flux. La proposta 15 estén eixe
-    mateix importador a GIFT, JSON i XML de Moodle; la crida nativa a un
+    mateix importador a GIFT i XML de Moodle; la crida nativa a un
     proveïdor d'IA es tracta a banda en la proposta 32 (aparcada).
   - Existix a més un mode **"multijugador local"** (`src/public/multiplayer/`,
     pantalla compartida 2-4 jugadors, sense PIN) no reflectit en cap lloc
@@ -539,7 +567,12 @@ realista, no només una llista d'idees.
     gestiona diversos jugadors en un dispositiu i repartix preguntes per
     ronda — base de disseny a revisar abans d'especificar 6 i 31 des de
     zero.
-  - La resta de les 31 propostes (incloses les descartades/aparcades) no
+  - **1 (deures asíncrons) i 3 (mode autoritme)** — implementades el
+    2026-11-21 (vore les descripcions 1 i 3). Els deures reutilitzen el motor
+    d'autoritme i van per HTTP; falta l'entrada amb identitat de Commons.
+  - **15 (importació ampliada)** — l'XML de Moodle i el GIFT ja s'importen
+    (vore la descripció 15); falta la resta de formats de Moodle/AULES.
+  - La resta de les 32 propostes (incloses les descartades/aparcades) no
     té cap indici d'implementació en el codi actual.
 - **El token de restabliment en els logs ja no està vigent en
   producció/staging.** A diferència del que indicava `REVISION_MEJORAS.md`,
@@ -562,10 +595,13 @@ un suggeriment ajornable:
   en mòduls per responsabilitat, en JS vanilla i sense build step. Vore
   `docs/MIGRATING.md` (Subfase A) — fet (vore `ARCHITECTURE.md`).
 
-### Fase 1a — Millores cosmètiques/aïllades, sense tocar la lògica de joc
+✅ Fora d'esta fase (no era requisit): la Subfase B de `docs/MIGRATING.md`
+(Vue 3, també sense build step) està FET. 
 
-12 (sobrenoms aleatoris), 13 (TTS), 15 (ampliar importació:
-GIFT/JSON/XML Moodle/AULES), 20 (flashcards), 23 (compte arrere 3-2-1).
+### ✅ Fase 1a — Millores cosmètiques/aïllades, sense tocar la lògica de joc
+
+✅ 12 (sobrenoms aleatoris), ✅ 13 (TTS), ✅ 15 (ampliar importació:
+GIFT i XML fets; la resta de formats Moodle/AULES, per issue si es demana), ✅ 20 (flashcards), ✅ 23 (compte arrere 3-2-1).
 
 No canvien ni la puntuació ni la seqüència de preguntes: són canvis
 d'interfície, d'àudio, o d'importació de contingut, autocontinguts en un
@@ -574,7 +610,7 @@ confirmada.
 
 ### Fase 1b — Mecàniques de Solo/amfitrió, sense tocar l'arquitectura del cicle de partida
 
-11 (ratxa), 24 (vídeos "aprén i respon"), 25 (pràctica adaptativa), 26
+✅ 11 (ratxa), 24 (vídeos "aprén i respon"), ✅ 25 (pràctica adaptativa), ✅ 26
 (mode fantasma), 30 (Time Attack), 31 (mode paper).
 
 A diferència de la Fase 1a, estes sí que canvien la puntuació (11) o la
@@ -585,8 +621,8 @@ pedagògica alta confirmada.
 
 ### Fase 2 — Mecàniques de joc de major abast, però autocontingudes
 
-4 (power-ups, sense "robar punts"), 6 (mode equips), 7 (tipus de
-pregunta: ordenar/emparellar), 17 (tipus de pregunta addicionals).
+4 (power-ups, sense "robar punts"), 6 (mode equips), ✅ 7 (tipus de
+pregunta: ordenar/emparellar; importació de *puzzle* de Kahoot només per issue), 17 (tipus de pregunta addicionals).
 
 Amplien el model de dades de la partida (equips, power-ups, tipus de
 pregunta nous), però no canvien el ritme compartit de la partida: continua
@@ -595,14 +631,14 @@ alta confirmada (6 amb una nota de disseny sobre el clima d'aula).
 
 ### Fase 3 — Canvi d'arquitectura del cicle de partida
 
-3 (mode autoritme, la peça base), 1 (deures asíncrons), 27 (mode
-presentació híbrid).
+✅ 3 (mode autoritme, la peça base), ✅ 1 (deures asíncrons; falta
+l'entrada amb Commons), 27 (mode presentació híbrid).
 
 Totes depenen de rompre l'assumpció actual de que tots els jugadors
 avancen al mateix ritme dirigits per l'amfitrió (confirmat en
-`ARCHITECTURE.md → Avanç de pregunta`). Convé construir primer el mode
-autoritme (3) com a primitiva reutilitzable, i recolzar-se en ell per a
-les altres dos. Les 3 tenen prioritat pedagògica alta confirmada.
+`ARCHITECTURE.md → Avanç de pregunta`). Es va construir primer el mode
+autoritme (3) com a primitiva reutilitzable, i els deures (1) es recolzen
+en ell; queda la 27. Les 3 tenen prioritat pedagògica alta confirmada.
 
 ### Fase 4 — Integracions externes o de baixa prioritat per escala
 
@@ -663,10 +699,15 @@ la numeració 1-32 de dalt.
   interfície (amfitrió, jugador, creació de quiz) després d'un estudi
   dedicat, no lligada a cap funcionalitat concreta de la llista
   anterior.
-- **W3 — Internacionalització a més idiomes.** Ja hi ha una base de
-  **4 idiomes implementats** (català, valencià, castellà i anglès —
-  català i valencià són variants separades); esta proposta és ampliar-los més enllà d'estos 4 (francés, alemany, holandés, i
-  altres a decidir).
+- ✅ **W3 — Internacionalització a més idiomes.** Implementada (2026-11-27):
+  la interfície està en **10 idiomes** (català, valencià, castellà, anglés,
+  francés, alemany, italià, portugués, búlgar i àrab del Marroc, este últim
+  de dreta a esquerra), amb un selector de botons CA VA ES EN i un
+  desplegable amb la resta. Vore «Idiomes i internacionalització» a
+  `ARCHITECTURE.md`. Estan traduïdes totes les pantalles (promo, alumnat,
+  Solo, anfitrió, multijugador, biblioteca, editor, deures i Mis partidas).
+  Queda pendent que les revise gent nativa i, si cal,
+  afegir-ne més.
 - **W4 — Paquet SCORM per al mode Solo, amb pas automàtic de la nota a
   Moodle/AULES.** El professorat puja un paquet SCORM al seu curs
   (sense dependre d'LTI, que AULES no té habilitat), i la nota final
@@ -686,6 +727,67 @@ la numeració 1-32 de dalt.
   portada/destacada per al qüestionari, que aparega en diversos llocs
   (p. ex. la llista pública de qüestionaris o la pantalla d'entrada a
   un d'ells).
+- **✅ W7 — Tipus de pregunta de correspondència (inclosa en la
+  feature 7, «emparellar»).** L'alumnat relaciona els elements d'una
+  columna amb els d'una altra (p. ex. paraula–definició, país–capital).
+  Implementada: vore la feature 7.
+- **❌ W8 — Identificador de navegador per a les entrades del registre
+  (descartada: poca utilitat i falta de base legal per a registrar dades
+  de l'alumnat).**
+  El navegador de cada alumne genera un identificador aleatori, guardat en
+  `localStorage`, que s'envia amb `player-join` i es registra en el log
+  (`meta.deviceId`). Permet relacionar un nom de jugador amb un mateix
+  navegador encara que canvie el nom. No identifica el maquinari: si
+  s'esborren les dades del lloc, s'usa mode incògnit o un compte d'invitat,
+  l'identificador canvia. És un valor aleatori, no una empremta del
+  navegador (canvas, fonts, resolució), i no es confon amb el testimoni de
+  reconnexió (`playerTokens`), que és una credencial i no s'ha de registrar.
+- **✅ W9 — Partida sense rànquing (només puntuació personal).** La
+  casella «Puntuacions entre preguntes i ranking» de l'amfitrió controla
+  també el Top 10 de l'alumnat després de cada pregunta i el podi
+  final: desmarcada, cada alumne només veu la seua puntuació.
+- **W10 — Fins a 6 opcions de resposta en les preguntes d'opció múltiple.**
+  Ara les preguntes de resposta única, múltiple i enquesta tenen com a
+  màxim 4 opcions. La proposta és admetre-n'hi fins a 6, sense canviar el
+  punt de partida: al creador de quizzes (`/create/quiz-creator/`) les
+  preguntes continuen amb 4 opcions per defecte i un botó **«+2»** afig
+  les dos opcions addicionals (5 i 6) a eixa pregunta, i es poden tornar a
+  llevar. Coses que cal tindre en compte en implementar-ho:
+  - **Formes i colors**: hui hi ha 4 parelles forma+color (triangle, romb,
+    cercle, quadrat). Calen dos parelles noves, també distingibles amb
+    daltonisme i amb el text blanc a 4,5:1 o més (WCAG), i el mateix a les
+    barres de resultat de l'amfitrió.
+  - **Pantalles**: la quadrícula de respostes passa de 2×2 a 2×3 (una
+    columna en mòbil), a alumnat, amfitrió, Solo, «Al seu ritme», deures i
+    Flashcards.
+  - **Dades i validació**: les respostes correctes són índexs de l'1 al 4
+    (`correctAnswers`, `correct`); els comptadors de l'amfitrió tenen 4
+    cubs; la puntuació parcial de la resposta múltiple ha de tindre en
+    compte les 6.
+  - **Importació i exportació**: el CSV d'EduHoot, Moodle XML, GIFT i
+    Kahoot tenen 4 columnes de resposta; cal decidir com es llig i s'escriu
+    quan n'hi ha 5 o 6 (i els PDF/DOCX/ODT).
+  - **Compatibilitat**: els quizzes existents no canvien; una pregunta amb
+    només 4 opcions es comporta exactament com ara.
+
+- **✅ W11 — Valoració de cada quiz amb estrelles des de la biblioteca.** El professorat puntua els quizzes públics a `/create/` amb cinc estrelles, igual que al mode solo (un vot per dispositiu, mateix endpoint `POST /api/quizzes/:id/rating`). Els quizzes privats i locals no es valoren.
+
+- **W12 — Pujar imatges a les preguntes.** Ara la imatge d'una pregunta només es posa com a URL. La proposta és poder pujar-la directament, una per pregunta, o una bateria d'imatges de cop: bé en un zip (cada fitxer associat a una pregunta pel nom) bé amb una llista d'URL (una per línia). Cal decidir els límits de mida i de nombre, els formats admesos, si es reutilitzen les imatges ja pujades (com fa la importació de Kahoot) i com es tracten els drets de les imatges de tercers.
+
+- **W13 — Més cançons de fons per a les partides.** Ara el reproductor
+  (`src/public/js/music-player.js`) només té 11 pistes de so de videojoc, totes
+  a `src/public/music/`, i el professorat tria entre elles. La proposta és ampliar
+  el catàleg de música de fons: més estils i ritmes, i també sons de tensió per
+  fases (relació amb la **9**). Coses a tindre en compte en implementar-ho:
+  - **Llicències**: només música que permeta l'ús educatiu i la redistribució dins
+    de l'aplicació (domini públic, Creative Commons compatible o de stock amb
+    llicència adequada). Cada pista ha de guardar la font i la llicència.
+  - **Pes**: els arxius ocupen espai al servidor i al navegador; cal decidir el
+    format (MP3 o OGG), la qualitat i la càrrega diferida.
+  - **Selecció**: categories o estils al selector de l'amfitrió, sense convertir-lo
+    en una llista llarga i difícil d'usar.
+  - **Accessibilitat**: el volum i el silenci han de seguir funcionant igual amb el
+    catàleg nou.
 
 ## Nota sobre drets d'autor
 

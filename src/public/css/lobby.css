@@ -17,6 +17,10 @@
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+@keyframes pulse{
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+}
 
 body{
     margin: 0;
@@ -36,6 +40,71 @@ body{
 
 *, *::before, *::after{ box-sizing: border-box; }
 
+#lobby-app{ display: contents; }
+
+/* Tarjeta central: se adapta al móvil, la tableta y el portátil.
+   Va centrada en la parte de arriba y el pie queda abajo. */
+.lobby-card{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 440px;
+    margin: auto 0 0;
+}
+
+/* Identidad: el icono y el nombre tal como los ve el profesor en la pantalla compartida. */
+.lobby-hero{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    max-width: 100%;
+    margin-bottom: 18px;
+}
+.lobby-avatar-box{
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 168px;
+    height: 168px;
+    border-radius: 32px;
+    background: #fff;
+    box-shadow: 0 18px 40px rgba(0,0,0,0.25);
+}
+.lobby-avatar{
+    font-size: 104px;
+    line-height: 1;
+}
+.lobby-name{
+    margin: 0;
+    max-width: 100%;
+    /* Un 40 % más que el título de estado (#title1: 34 px; 26 px en móvil) y en amarillo del logo. */
+    color: #fdbc4b;
+    font-size: 47.6px;
+    font-weight: 800;
+    line-height: 1.15;
+    overflow-wrap: anywhere;
+}
+
+/* Estado de la conexión (punto sobre el avatar): ámbar al entrar, verde dentro,
+   naranja si tarda o se reconecta, rojo sin conexión. */
+.lobby-state{
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 4px solid #fff;
+    background: #fbbf24;
+    animation: pulse 1.4s ease-in-out infinite;
+}
+.lobby-hero[data-state="joined"] .lobby-state{ background: #22c55e; animation: none; }
+.lobby-hero[data-state="slow"] .lobby-state,
+.lobby-hero[data-state="reconnecting"] .lobby-state{ background: #f97316; }
+.lobby-hero[data-state="offline"] .lobby-state{ background: #ef4444; }
+
 #title1{
     font-size: 34px;
     margin: 0 0 6px;
@@ -45,6 +114,28 @@ body{
     font-size: 16px;
     margin: 0 0 18px;
     opacity: 0.9;
+}
+
+/* Aviso de que la partida empezará en breve. */
+.lobby-start-note{
+    margin: 0 0 16px;
+    padding: 10px 16px;
+    border-radius: 14px;
+    background: rgba(255, 238, 112, 0.14);
+    border: 1px solid rgba(255, 238, 112, 0.4);
+    color: #ffee70;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+/* Contador de alumnos en la sala (solo el número, sin nombres). */
+.lobby-count{
+    margin: 14px 0 0;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: rgba(0,0,0,0.2);
+    font-size: 15px;
 }
 
 .loader{
@@ -57,14 +148,87 @@ body{
     box-shadow: 0 14px 35px rgba(0,0,0,0.28);
 }
 
+/* Selector de idioma: siempre visible, arriba a la derecha, fuera del contenido. */
+#lang-switcher{
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 1100;
+    display: flex;
+    gap: 4px;
+    margin: 0;
+}
+#lang-switcher button[data-lang]{
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0 8px;
+    border: 0;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.9);
+    color: #1f2937;
+    font: 600 14px/1 'Inter', 'Poppins', sans-serif;
+    cursor: pointer;
+}
+#lang-switcher button[data-lang].active{
+    background: #22c55e;
+    color: #fff;
+}
+
 @media (max-width: 420px){
     body{ padding: 14px; }
     #title1{ font-size: 26px; }
     #title2{ font-size: 15px; }
     .loader{ width: 54px; height: 54px; border-width: 7px; border-top-width: 7px; }
+    .lobby-avatar-box{ width: 136px; height: 136px; border-radius: 26px; }
+    .lobby-avatar{ font-size: 84px; }
+    .lobby-name{ font-size: 36.4px; }
+    #lang-switcher{ top: 12px; right: 12px; }
 }
 
-/* El títol centrat no ha de quedar davall de l'enllaç «Inici» del xip. */
+/* El contenido no debe quedar debajo del enlace «Inici» del xip (arriba a la izquierda). */
 @media (max-width: 640px){
-    html.has-account-chip #title1{ margin-top: 48px; }
+    html.has-account-chip .lobby-card{ padding-top: 56px; }
 }
+
+/* Título del quiz, lo primero de la tarjeta. */
+.lobby-quiz-name{
+    margin: 0 0 10px;
+    font-size: 20px;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+/* Código de la partida: discreto, encima de la tarjeta de identidad. */
+.lobby-pin{
+    margin: 0 0 14px;
+    padding: 4px 12px;
+    border-radius: 999px;
+    background: rgba(0,0,0,0.2);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+/* Salir de la partida: flotante abajo a la izquierda, rojo del logo (#da4453); pide confirmación. */
+.leave-game-btn{
+    position: fixed;
+    left: 12px;
+    bottom: 12px;
+    z-index: 50;
+    margin: 0;
+    min-height: 44px;
+    padding: 8px 16px;
+    border: 0;
+    border-radius: 12px;
+    background: #da4453;
+    color: #fff;
+    font: 700 16px/1 'Inter', 'Poppins', sans-serif;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+}
+.leave-game-btn.is-confirming{ box-shadow: 0 0 0 3px #fff, 0 4px 14px rgba(0,0,0,0.35); }
+
+/* Sala d'espera de l'alumnat: tipografia i formes de botons de la biblioteca (els fons no canvien). */
+body, #title1, #title2, .lobby-name, .lobby-card button{ font-family: 'Raleway', sans-serif; }
+#lang-switcher button[data-lang]{ font-family: 'Raleway', sans-serif; border-radius: 10px; }
+.leave-game-btn{ font-family: 'Raleway', sans-serif; border-radius: 10px; }

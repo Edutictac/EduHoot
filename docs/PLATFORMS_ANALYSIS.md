@@ -1,5 +1,7 @@
 # Altres plataformes populars de quiz/gamificació a l'aula
 
+> **Arxivat (26-11-2026).** Document històric, no es manté al dia. Anàlisi d'octubre de 2026. Per a l'estat actual de les funcions, vore `docs/POPULAR_FEATURES.md`.
+
 Anàlisi de quines altres plataformes, a més de Kahoot i Wayground (abans
 Quizizz), tenen una popularitat comparable a l'aula, per a decidir en el
 futur si val la pena comparar-les també contra

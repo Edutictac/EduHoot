@@ -3,23 +3,35 @@
     <head>
         <meta charset="utf-8">
         <title>Modo individual | EduHoot</title>
+        <script src="/js/solo-early.js"></script>
         <link rel="stylesheet" href="../css/solo.css">
+        <link rel="stylesheet" href="/css/countdown.css">
+        <link rel="stylesheet" href="/css/answers.css">
+        <link rel="stylesheet" href="/css/matching.css">
+        <link rel="stylesheet" href="/css/order.css">
+        <link rel="stylesheet" href="/css/dropdowns.css">
         <link rel="stylesheet" href="../css/music-player.css">
         <link href="/css/fonts.css" rel="stylesheet">
         <link rel="stylesheet" href="/css/edutictac-footer.css">
         <link rel="stylesheet" href="/css/edutictac-shared.css">
         <script src="/js/edutictac-chip.js"></script>
-        <script src="https://commons.edutictac.es/assets/account-widget.js" defer onerror="document.documentElement.classList.add('account-fallback')"></script>
+        <script src="https://commons.edutictac.es/assets/account-widget.js" defer></script>
         <link rel="icon" href="/icons/logo.svg" type="image/svg+xml">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    </head>
+        <link href="/css/brand-unify.css" rel="stylesheet">
+        <link href="/css/pager.css" rel="stylesheet">
+</head>
     <body>
-        <a class="back-link" href="/" data-i18n="back">← Volver</a>
-        <edutictac-account class="site-account site-account--top" data-home-only data-base="https://commons.edutictac.es"></edutictac-account>
+        <!-- «Biblioteca» solo aparece si se llegó desde la biblioteca (?from=library). -->
+        <nav class="back-links">
+            <a class="back-link" href="/" data-i18n="back">← Inicio</a>
+            <a id="back-library" class="back-link hidden" href="/create/" data-i18n="backLibrary">Biblioteca</a>
+        </nav>
+        <edutictac-account class="site-account site-account--fixed" data-base="https://commons.edutictac.es"></edutictac-account>
         <header class="hero">
             <img class="hero__logo" src="/icons/logo.svg" alt="EduHoot logo">
             <div class="hero__text">
-                <p class="eyebrow" data-i18n="eyebrow">Modo individual</p>
+                <p class="eyebrow"><span class="mode-icon" aria-hidden="true">👤</span><span data-i18n="eyebrow">Modo individual</span></p>
                 <h1 data-i18n="title">Juega a los públicos en solitario</h1>
                 <p class="subtext" data-i18n="subtitle">Elige un quiz público, responde las preguntas y entra en el ranking global.</p>
             </div>
@@ -30,6 +42,8 @@
                 </label>
             </div>
         </header>
+        <div id="solo-app"></div>
+        <template id="solo-tpl">
         <main class="grid">
             <section id="catalog-panel" class="panel">
                 <div class="panel__header">
@@ -38,138 +52,432 @@
                         <h2></h2>
                     </div>
                     <div class="panel__actions">
-                        <input id="search" type="search" placeholder="Buscar por nombre o etiqueta" data-i18n-placeholder="searchPlaceholder">
-                        <label for="sort" class="muted" data-i18n="sortLabel">Ordenar por</label>
-                        <select id="sort">
-                            <option value="plays" data-i18n="sortPlays">Más jugados</option>
-                            <option value="recent" data-i18n="sortNewest">Más recientes</option>
-                            <option value="rating" data-i18n="sortRating">Mejor valorados</option>
-                            <option value="alpha" data-i18n="sortAlphaAsc">A-Z</option>
-                            <option value="alpha-desc" data-i18n="sortAlphaDesc">Z-A</option>
+                        <input id="search" type="search" v-model="s.search" @input="resetPage" :placeholder="t('searchPlaceholder')">
+                        <label for="sort" class="muted">{{ t('sortLabel') }}</label>
+                        <select id="sort" v-model="s.sortOrder" @change="resetPage">
+                            <option value="plays">{{ t('sortPlays') }}</option>
+                            <option value="recent">{{ t('sortNewest') }}</option>
+                            <option value="rating">{{ t('sortRating') }}</option>
+                            <option value="alpha">{{ t('sortAlphaAsc') }}</option>
+                            <option value="alpha-desc">{{ t('sortAlphaDesc') }}</option>
                         </select>
                     </div>
                 </div>
                 <div class="panel__filters">
-                    <label for="tag-filter" class="muted" data-i18n="filterTagLabel">Etiquetas</label>
-                    <div id="tag-filter" class="tag-filter" role="group" aria-label="Etiquetas"></div>
+                    <label for="tag-filter" class="muted">{{ t('filterTagLabel') }}</label>
+                    <div id="tag-filter" class="tag-filter" role="group" aria-label="Etiquetas">
+                        <template v-if="s.tagFilterExpanded">
+                            <label v-for="item in allTags" :key="item.tag" class="tag-filter__item">
+                                <input type="checkbox" :value="item.tag" v-model="s.filters.tags" @change="resetPage">
+                                <span>{{ item.tag }}</span>
+                            </label>
+                        </template>
+                    </div>
                     <div class="tag-filter__actions">
-                        <button id="tags-select-all" class="tag-filter__btn is-icon" type="button" data-i18n="filterTagSelectAll" aria-label="Seleccionar todas">
+                        <button id="tags-select-all" class="tag-filter__btn is-icon" type="button" :aria-label="t('filterTagSelectAll')" @click="selectAllTags">
                             <span class="tag-filter__icon" aria-hidden="true">✓</span>
-                            <span class="sr-only">Seleccionar todas</span>
+                            <span class="sr-only">{{ t('filterTagSelectAll') }}</span>
                         </button>
-                        <button id="tags-clear" class="tag-filter__btn is-icon" type="button" data-i18n="filterTagClear" aria-label="Limpiar">
+                        <button id="tags-toggle" v-show="allTags.length > 0" class="tag-filter__btn is-icon" type="button" :aria-label="tagToggleLabel" @click="s.tagFilterExpanded = !s.tagFilterExpanded">
+                            <span class="tag-filter__icon" aria-hidden="true">{{ s.tagFilterExpanded ? '▴' : '▾' }}</span>
+                            <span class="sr-only">{{ tagToggleLabel }}</span>
+                        </button>
+                        <button id="tags-clear" class="tag-filter__btn is-icon" type="button" :aria-label="t('filterTagClear')" @click="clearTags">
                             <span class="tag-filter__icon" aria-hidden="true">×</span>
-                            <span class="sr-only">Limpiar</span>
+                            <span class="sr-only">{{ t('filterTagClear') }}</span>
                         </button>
                     </div>
-                    <label for="min-questions" class="muted" data-i18n="filterQuestionsLabel">Preguntas</label>
-                    <input id="min-questions" type="number" min="1" inputmode="numeric" data-i18n-placeholder="filterMinPlaceholder" placeholder="mín">
+                    <label for="min-questions" class="muted">{{ t('filterQuestionsLabel') }}</label>
+                    <input id="min-questions" type="number" min="1" inputmode="numeric" v-model="s.filters.minQuestions" @input="resetPage" :placeholder="t('filterMinPlaceholder')">
                     <span class="muted">-</span>
-                    <input id="max-questions" type="number" min="1" inputmode="numeric" data-i18n-placeholder="filterMaxPlaceholder" placeholder="máx">
+                    <input id="max-questions" type="number" min="1" inputmode="numeric" v-model="s.filters.maxQuestions" @input="resetPage" :placeholder="t('filterMaxPlaceholder')">
                     <label class="checkbox-inline">
-                        <input id="only-image" type="checkbox">
-                        <span data-i18n="filterOnlyImage">Solo con imagen</span>
+                        <input id="only-image" type="checkbox" v-model="s.filters.onlyImage" @change="resetPage">
+                        <span>{{ t('filterOnlyImage') }}</span>
                     </label>
                 </div>
-                <div id="public-list" class="cards"></div>
-                <p id="public-empty" class="muted"></p>
+                <div id="public-list" class="cards">
+                    <div v-for="q in pageItems" :key="q.id" class="card">
+                        <div class="card-thumb" :class="thumb(q).loaded ? 'has-media' : 'placeholder'">
+                            <img alt="" :src="thumb(q).src" @load="thumb(q).loaded = true" @error="onThumbError(q)">
+                        </div>
+                        <div class="card-header">
+                            <h3>{{ q.name || 'Quiz' }}</h3>
+                            <button type="button" class="favorite-btn" :class="{ 'is-active': isFavorite(q.id) }" :aria-pressed="isFavorite(q.id) ? 'true' : 'false'" :aria-label="favoriteLabel(q.id)" :title="favoriteLabel(q.id)" @click.stop="toggleFavorite(q.id)">{{ isFavorite(q.id) ? '❤' : '♡' }}</button>
+                        </div>
+                        <p class="muted">{{ format(t('byline'), { count: q.questionsCount || 0 }) }}</p>
+                        <div><span v-for="(tag, i) in cleanTags(q)" :key="i" class="tag">{{ tag }}</span></div>
+                        <div class="card-rating">
+                            <div class="rating-stars">
+                                <button v-for="stars in 5" :key="stars" type="button" class="rating-star" :class="{ 'is-filled': stars <= displayRating(q) }" :data-value="stars" :aria-label="format(t('ratingStarLabel'), { stars: stars })" :title="format(t('ratingStarLabel'), { stars: stars })" @click.stop="rate(q, stars)">★</button>
+                            </div>
+                            <span class="rating-summary muted">{{ ratingSummary(q) }}</span>
+                        </div>
+                        <div class="card-stats">{{ (q.playsCount || 0) + ' ' + t('playsShort') + ' · ' + (q.playersCount || 0) + ' ' + t('playersShort') }}</div>
+                        <div class="card-links">
+                            <button type="button" class="card-link" @click.stop="showRanking(q.id)">{{ t('viewRanking') }}</button>
+                        </div>
+                        <div class="card-actions">
+                            <button class="btn btn-primary" @click="play(q.id)">{{ t('playCta') }}</button>
+                            <button class="btn btn-brand" @click="study(q.id)">{{ t('studyButton') }}</button>
+                        </div>
+                    </div>
+                </div>
+                <p id="public-empty" class="muted">{{ emptyText }}</p>
             </section>
 
-            <section id="game-panel" class="panel play-panel">
+            <section id="game-panel" class="panel play-panel" :class="{ 'is-cards-entry': s.view === 'cards' && s.cards && s.cards.phase !== 'card' }">
                 <div class="panel__header">
                     <div>
-                        <p class="eyebrow" data-i18n="soloEyebrow">Modo individual</p>
-                        <h2 id="selected-title" data-i18n="soloTitle">Elige un juego para empezar</h2>
+                        <p class="eyebrow"><span class="mode-icon" :class="{ 'mode-icon--small': s.view === 'game' }" aria-hidden="true">{{ s.view === 'cards' ? '🔁' : '👤' }}</span>{{ s.view === 'cards' ? t('flashcardsEyebrow') : t('soloEyebrow') }}</p>
+                        <h2 id="selected-title" v-show="s.view !== 'game'"><img class="selected-title__logo" src="/icons/logo.svg" alt="" aria-hidden="true">{{ titleText }}</h2>
                     </div>
                 </div>
 
-                <div id="start-form" class="start-form hidden">
-                    <p id="selected-meta" class="muted" data-i18n="startSelect">Selecciona un juego público para empezar.</p>
+                <div id="start-form" class="start-form" :class="{ hidden: s.view !== 'start' }">
+                    <!-- Logo de EduHoot e imagen representativa del quiz, bajo el título. -->
+                    <div class="start-form__info">
+                        <div class="quiz-banner" :class="{ 'quiz-banner--logo-only': !quizImage }">
+                            <img v-if="!quizImage" class="quiz-banner__logo" src="/icons/logo.svg" alt="EduHoot">
+                            <img v-if="quizImage" class="quiz-banner__cover" :src="quizImage" alt="" @error="$event.target.style.display = 'none'; $event.target.parentNode.classList.add('quiz-banner--logo-only')">
+                        </div>
+                        <p id="selected-meta" class="muted"><span class="selected-meta__line">{{ selectedMetaCount }}</span> <span v-if="selectedMetaTags" class="selected-meta__line">{{ selectedMetaTags }}</span></p>
+                                        </div>
 
-                    <label for="question-count" class="muted" data-i18n="questionCountLabel">Preguntas a responder</label>
-                    <div class="question-count-controls">
-                        <input id="question-count" type="number" min="1" step="1" inputmode="numeric" autocomplete="off">
-                        <span id="question-count-total" class="muted"></span>
+                    <div class="start-form__options">
+                    <div class="start-field">
+                        <label for="question-count" class="muted">{{ t('questionCountLabel') }}<span class="help"><button type="button" class="help-btn" :aria-expanded="helpOpen==='count' ? 'true' : 'false'" :aria-label="t('helpAria')" @click.prevent.stop="toggleHelp('count')">?</button><span v-if="helpOpen==='count'" class="help-pop" role="note">{{ t('questionCountTip') }}</span></span></label>
+                        <div class="question-count-controls">
+                            <input id="question-count" type="number" min="1" step="1" inputmode="numeric" autocomplete="off" :max="quizTotal ? String(quizTotal) : ''" :disabled="!quizTotal" :value="s.countInput" @input="onCountInput">
+                            <span id="question-count-total" class="muted">{{ quizTotal ? format(t('questionCountTotal'), { total: quizTotal }) : '' }}</span>
+                        </div>
                     </div>
-                    <label for="question-time" class="muted" data-i18n="questionTimeLabel">Tiempo por pregunta (segundos)</label>
-                    <div class="question-count-controls">
-                        <input id="question-time" type="number" min="5" max="120" step="1" inputmode="numeric" autocomplete="off" data-i18n-placeholder="questionTimePlaceholder" placeholder="Auto">
+                    <div class="start-field">
+                        <label for="question-time" class="muted">{{ t('questionTimeLabel') }}<span class="help"><button type="button" class="help-btn" :aria-expanded="helpOpen==='time' ? 'true' : 'false'" :aria-label="t('helpAria')" @click.prevent.stop="toggleHelp('time')">?</button><span v-if="helpOpen==='time'" class="help-pop" role="note">{{ t('startTimeTip') }}</span></span></label>
+                        <div class="question-count-controls">
+                            <input id="question-time" type="number" min="5" max="120" step="1" inputmode="numeric" autocomplete="off" :placeholder="t('questionTimePlaceholder')" :value="s.timeInput" @input="onTimeInput">
+                        </div>
                     </div>
+                    <div class="start-field">
+                        <label for="feedback-seconds" class="muted">{{ t('feedbackSecondsLabel') }}<span class="help"><button type="button" class="help-btn" :aria-expanded="helpOpen==='feedback' ? 'true' : 'false'" :aria-label="t('helpAria')" @click.prevent.stop="toggleHelp('feedback')">?</button><span v-if="helpOpen==='feedback'" class="help-pop" role="note">{{ t('feedbackSecondsTip') }}</span></span></label>
+                        <div class="question-count-controls">
+                            <input id="feedback-seconds" type="number" min="1" max="30" step="1" inputmode="numeric" autocomplete="off" :value="s.feedbackSecondsInput" @input="onFeedbackSecondsInput">
+                        </div>
+                    </div>
+                    <template v-if="hasComposite">
+                        <label for="matching-extra" class="muted">{{ t('matchingExtraLabel') }}<span class="help"><button type="button" class="help-btn" :aria-expanded="helpOpen==='matching_extra' ? 'true' : 'false'" :aria-label="t('helpAria')" @click.prevent.stop="toggleHelp('matching_extra')">?</button><span v-if="helpOpen==='matching_extra'" class="help-pop" role="note">{{ t('matchingExtraTip') }}</span></span></label>
+                        <div class="question-count-controls">
+                            <select id="matching-extra" :value="s.matchingExtraTime" @change="onMatchingExtra">
+                                <option v-for="p in [25, 50, 75, 100]" :key="p" :value="p">+{{ p }} %</option>
+                            </select>
+                        </div>
+                    </template>
 
-                    <button id="start-btn" class="btn btn-primary" data-i18n="startButton">Jugar en solitario</button>
-                    <p class="muted" data-i18n="startHint">El tiempo por pregunta se respeta si el quiz lo define.</p>
+                    <label class="solo-check"><input type="checkbox" id="opt-shuffle-questions" v-model="s.shuffleQuestions"> <span>{{ t('optShuffleQuestions') }}</span><span class="help"><button type="button" class="help-btn" :aria-expanded="helpOpen==='shuffle' ? 'true' : 'false'" :aria-label="t('helpAria')" @click.prevent.stop="toggleHelp('shuffle')">?</button><span v-if="helpOpen==='shuffle'" class="help-pop" role="note">{{ t('optShuffleTip') }}</span></span></label>
+                    <label class="solo-check"><input type="checkbox" id="opt-show-answers" v-model="s.showAnswers"> <span>{{ t('optShowAnswers') }}</span><span class="help"><button type="button" class="help-btn" :aria-expanded="helpOpen==='show_answers' ? 'true' : 'false'" :aria-label="t('helpAria')" @click.prevent.stop="toggleHelp('show_answers')">?</button><span v-if="helpOpen==='show_answers'" class="help-pop" role="note">{{ t('optShowAnswersTip') }}</span></span></label>
+                    <label class="solo-check"><input type="checkbox" id="opt-show-question-countdown" :checked="s.showQuestionCountdown" @change="onShowQuestionCountdownChange"> <span>{{ t('optShowQuestionCountdown') }}</span><span class="help"><button type="button" class="help-btn" :aria-expanded="helpOpen==='showQuestionCountdown' ? 'true' : 'false'" :aria-label="t('helpAria')" @click.prevent.stop="toggleHelp('showQuestionCountdown')">?</button><span v-if="helpOpen==='showQuestionCountdown'" class="help-pop" role="note">{{ t('optShowQuestionCountdownTip') }}</span></span></label>
+                    <label class="solo-check"><input type="checkbox" id="opt-ghost" v-model="s.ghostEnabled"> <span>{{ t('optGhost') }}</span><span class="help"><button type="button" class="help-btn" :aria-expanded="helpOpen==='ghost' ? 'true' : 'false'" :aria-label="t('helpAria')" @click.prevent.stop="toggleHelp('ghost')">?</button><span v-if="helpOpen==='ghost'" class="help-pop" role="note">{{ t('optGhostTip') }}</span></span></label>
+
+                    <div class="start-actions">
+                    <button id="start-btn" class="btn btn-primary" @click="start">{{ t('startButton') }}</button>
+                    </div>
+                    </div>
+                <div class="start-music">
+                <p class="start-music__title muted">{{ t('bgMusicTitle') }}<span class="help"><button type="button" class="help-btn" :aria-expanded="helpOpen==='music' ? 'true' : 'false'" :aria-label="t('helpAria')" @click.prevent.stop="toggleHelp('music')">?</button><span v-if="helpOpen==='music'" class="help-pop" role="note">{{ t('startMusicTip') }}</span></span></p>
+                <div id="solo-music-player" class="music-player-shell"></div>
+                </div>
                 </div>
 
-                <div id="game-area" class="game-area hidden">
+                <div id="game-area" class="game-area" :class="{ hidden: s.view !== 'game' }">
+                    <!-- Mateixa estructura que «Jugar a l'aula»: franja amb el títol,
+                         el progrés i els punts, i barra de temps davall. -->
                     <div class="game-progress">
-                        <span id="question-progress" class="pill"></span>
-                        <span id="score-pill" class="pill pill-muted"></span>
-                        <span id="timer-pill" class="pill pill-timer"></span>
+                        <span class="game-progress__brand">
+                            <img class="game-progress__logo" src="/icons/logo.svg" alt="EduHoot">
+                            <img v-if="quizImage" class="game-progress__cover" :src="quizImage" alt="" @error="$event.target.style.display = 'none'">
+                            <span class="game-progress__title">{{ titleText }}</span>
+                        </span>
+                        <span class="game-progress__stats">
+                            <span id="question-progress" class="pill" :aria-label="(s.idx + 1) + ' / ' + s.questions.length">{{ progressText }}</span>
+                            <span id="score-pill" class="pill pill-muted">{{ t('score') + ': ' + s.score }}</span>
+                            <span id="streak-pill" class="pill pill-muted">🔥 {{ s.streak }}{{ s.streakBonus > 0 ? ' · +' + s.streakBonus : '' }}</span>
+                        </span>
                     </div>
-                    <div class="question-card">
-                        <p id="question-text" class="question-text"></p>
-                        <div id="question-media" class="question-media hidden">
-                            <img id="question-image" alt="">
-                            <video id="question-video" controls playsinline></video>
-                            <iframe id="question-iframe" title="video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    <!-- Barra de tiempo con los botones de pausa y cancelación a su derecha (sin quitar alto). -->
+                    <div class="solo-timer-row">
+                        <div class="tts-timer-wrap" :class="{ 'has-tts': ttsAvailable }">
+                            <div class="game-timer solo-timer" role="timer">
+                                <div class="game-timer__fill" :style="{ width: timerPct + '%', background: timerColor }"></div>
+                                <span id="timer-pill" class="game-timer__text">{{ t('timer') + ': ' + Math.ceil(s.timerLeft) + 's' }}</span>
+                            </div>
+                            <button v-if="ttsAvailable" id="tts-button" type="button" class="tts-btn" :aria-pressed="s.ttsSpeaking ? 'true' : 'false'" :aria-label="s.ttsSpeaking ? t('ttsStop') : t('ttsListen')" :title="s.ttsSpeaking ? t('ttsStop') : t('ttsListen')" @click="toggleSpeech"><span aria-hidden="true">{{ s.ttsSpeaking ? '⏹' : '🔊' }}</span></button>
                         </div>
-                        <div id="answers" class="answers"></div>
+                        <span class="solo-controls">
+                            <button id="solo-pause" type="button" class="pill solo-control" :disabled="!canPause" :aria-pressed="s.paused ? 'true' : 'false'" :aria-label="s.paused ? t('resumeGame') : t('pauseGame')" :title="s.paused ? t('resumeGame') : t('pauseGame')" @click="togglePause"><span aria-hidden="true">{{ s.paused ? '▶\uFE0E' : '❚❚' }}</span><span class="solo-control__text">{{ s.paused ? t('resumeGame') : t('pauseGame') }}</span></button>
+                            <button id="solo-skip" type="button" class="pill solo-control" :disabled="!canSkip" :aria-label="t('skipQuestion')" :title="t('skipQuestion')" @click="skip"><span aria-hidden="true">{{ '⏭\uFE0E' }}</span><span class="solo-control__text">{{ t('skipQuestion') }}</span></button>
+                            <button id="solo-cancel" type="button" class="pill solo-control solo-cancel" :class="{ 'is-confirming': s.cancelConfirming }" :aria-label="s.cancelConfirming ? t('cancelGameConfirm') : t('cancelGame')" :title="s.cancelConfirming ? t('cancelGameConfirm') : t('cancelGame')" @click="askCancel"><span aria-hidden="true">✕</span><span class="solo-control__text">{{ s.cancelConfirming ? t('cancelGameConfirm') : t('cancelGame') }}</span></button>
+                        </span>
+                    </div>
+                    <div v-if="s.paused" id="solo-paused" class="question-card solo-paused" role="status">
+                        <p class="solo-paused__title">{{ t('pausedTitle') }}</p>
+                        <p class="muted">{{ t('pausedHint') }}</p>
+                    </div>
+                    <div class="question-card" v-show="!s.paused">
+                        <!-- Compte arrere 3-2-1 abans de cada pregunta (proposta 23). -->
+                        <!-- Fase de vídeo (feature 24): mira el vídeo; la pregunta comença en acabar-lo. -->
+                        <div id="solo-learning" class="solo-learning" role="status" v-if="s.learning">
+                            <p class="solo-learning__hint">{{ t('learnWatch') }}</p>
+                            <div class="question-media show">
+                                <video id="solo-learn-video" controls playsinline :src="media.video || null" :style="{ display: media.video ? 'block' : 'none' }" @ended="finishLearning"></video>
+                                <iframe referrerpolicy="strict-origin-when-cross-origin" v-if="media.youtube" id="solo-learn-iframe" title="video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen :src="media.youtube"></iframe>
+                            </div>
+                            <button id="solo-learn-finish" type="button" class="btn btn-primary solo-learning__btn" @click="finishLearning">{{ t('learnFinish') }}</button>
+                        </div>
+                        <div class="solo-countdown-wrap" v-else-if="s.countdown > 0">
+                            <!-- La pregunta, si l'opció està marcada, a dalt; la compte arrere, a sota. -->
+                            <div v-if="s.showQuestionCountdown && question" id="solo-countdown-question" class="solo-countdown-question">
+                                <p class="question-text">{{ question.question || '' }}</p>
+                            </div>
+                            <div id="solo-countdown" class="question-countdown" :class="{ 'is-visible': s.countdown > 0, 'is-ticking': s.countdown > 0 }" aria-live="polite">
+                                <div class="question-countdown__label">{{ t('countdownLabel') }}</div>
+                                <div class="question-countdown__dial" :key="'dial-' + s.countdown"><span>{{ s.countdown }}</span></div>
+                                <div class="question-countdown__hint">{{ t('countdownHint') }}</div>
+                            </div>
+                        </div>
+                        <template v-else>
+                        <p id="question-text" class="question-text">{{ question ? (question.question || '') : '' }}</p>
+                        <div id="question-media" class="question-media" :class="{ hidden: !hasMedia, show: hasMedia }">
+                            <img id="question-image" alt="" :src="media.image || null" :style="{ display: media.image ? 'block' : 'none' }">
+                            <video id="question-video" controls playsinline style="display: none"></video>
+                            <iframe referrerpolicy="strict-origin-when-cross-origin" id="question-iframe" title="video" frameborder="0" allowfullscreen style="display: none"></iframe>
+                        </div>
+                        <matching-board v-if="showMatching" :key="'match-' + s.idx" :left="question.matchLeft" :right="question.matchRight" :t="boardT" @submit="submitMatching"></matching-board>
+                        <order-board v-if="showOrder" :key="'order-' + s.idx" :items="question.orderItems" :t="boardT" @submit="submitOrder"></order-board>
+                        <div id="answers" class="answers answer-grid">
+                            <div v-if="isFree" class="free-answer-row">
+                                <input id="solo-free-input" class="free-answer-input" type="text" autocomplete="off" :placeholder="meta.type === 'numeric' ? t('freeNumberPlaceholder') : t('freeTextPlaceholder')" v-model="s.freeText" :disabled="s.locked" @keydown.enter.prevent="submitFree">
+                                <button id="solo-free-submit" class="free-answer-submit" type="button" :disabled="s.locked" @click="submitFree">{{ t('submitFreeAnswer') }}</button>
+                            </div>
+                            <template v-else>
+                                <button v-for="(ans, i) in answers" :key="s.idx + '-' + i" class="answer answer-shape" type="button" :class="['answer-shape--' + (i + 1), answerClass(i + 1)]" :data-answer="i + 1" :disabled="s.locked" @click="answer(i + 1)">{{ ans || ('Respuesta ' + (i + 1)) }}</button>
+                            </template>
+                        </div>
                         <div id="multi-submit-row" class="multi-submit-row">
-                            <button id="multi-submit" type="button" class="btn multi-submit hidden" data-i18n="submitAnswers">Enviar respuestas</button>
+                            <button id="multi-submit" type="button" class="btn multi-submit" :class="{ hidden: !showMultiSubmit, 'has-selection': showMultiSubmit && s.multiSelections.length > 0 }" :disabled="!s.multiSelections.length" @click="submitMulti">{{ t('submitAnswers') }}</button>
                         </div>
-                        <p id="feedback" class="feedback"></p>
+                        <p id="feedback" class="feedback" :class="s.feedback.kind ? 'feedback--' + s.feedback.kind : ''">{{ s.feedback.text }}</p>
+                        </template>
                     </div>
                 </div>
 
-                <div id="result-area" class="result-area hidden">
-                    <h3 data-i18n="finishTitle">Partida terminada</h3>
-                    <p id="result-summary" class="subtext"></p>
-                    <div id="ranking" class="ranking hidden">
-                        <div class="ranking__header">
-                            <h4 data-i18n="rankingTitle">Top 10 global</h4>
+                <div id="result-area" class="result-area" :class="{ hidden: s.view !== 'result' }">
+                    <!-- El mateix recuadre que a l'inici: logo de EduHoot o imatge del quiz, i el resum del quiz. -->
+                    <div class="result-area__info">
+                        <div class="quiz-banner" :class="{ 'quiz-banner--logo-only': !quizImage }">
+                            <img v-if="!quizImage" class="quiz-banner__logo" src="/icons/logo.svg" alt="EduHoot">
+                            <img v-if="quizImage" class="quiz-banner__cover" :src="quizImage" alt="" @error="$event.target.style.display = 'none'; $event.target.parentNode.classList.add('quiz-banner--logo-only')">
                         </div>
-                        <ol id="ranking-list"></ol>
+                        <p id="result-meta" class="muted"><span class="selected-meta__line">{{ selectedMetaCount }}</span> <span v-if="selectedMetaTags" class="selected-meta__line">{{ selectedMetaTags }}</span></p>
+                    </div>
+                    <h3>{{ t('finishTitle') }}</h3>
+                    <p id="result-summary" class="subtext">{{ resultSummary }}</p>
+                    <p v-if="resultGhostText" id="result-ghost" class="subtext">{{ resultGhostText }}</p>
+                    <div id="ranking" class="ranking" :class="{ hidden: !s.rankingBox.visible }">
+                        <div class="ranking__header">
+                            <h4>{{ t('rankingTitle') }}</h4>
+                        </div>
+                        <ol id="ranking-list"><li v-for="(item, i) in s.rankingBox.items" :key="i">{{ itemText(item) }}</li></ol>
                     </div>
                     <div class="result-actions">
-                        <button id="play-again" class="btn btn-primary" data-i18n="playAgain">Volver a jugar</button>
-                        <button id="pick-another" class="btn btn-ghost" data-i18n="pickAnother">Elegir otro quiz</button>
+                        <button id="play-again" class="btn btn-primary" @click="playAgain">{{ t('playAgain') }}</button>
+                        <button id="pick-another" class="btn btn-ghost" @click="pickAnother">{{ t('pickAnother') }}</button>
+                    </div>
+                </div>
+
+                <!-- Mode flashcards (proposta 20) amb la pràctica de les no sabudes (proposta 25). -->
+                <div id="cards-area" class="cards-area" v-if="s.cards" :class="{ hidden: s.view !== 'cards' }">
+                    <div v-if="s.cards.phase !== 'card'" class="cards-start">
+                      <div class="cards-start__info">
+                        <h3 v-if="s.cards.phase === 'done'">{{ t('flashcardsDoneTitle') }}</h3>
+                        <div class="quiz-banner" :class="{ 'quiz-banner--logo-only': !quizImage }">
+                            <img v-if="!quizImage" class="quiz-banner__logo" src="/icons/logo.svg" alt="EduHoot">
+                            <img v-if="quizImage" class="quiz-banner__cover" :src="quizImage" alt="" @error="$event.target.style.display = 'none'; $event.target.parentNode.classList.add('quiz-banner--logo-only')">
+                        </div>
+                        <p class="muted">{{ cardsTotal ? cardsCountsText : t('flashcardsEmpty') }}</p>
+                      </div>
+                      <div class="cards-start__options">
+                        <label v-if="cardsTotal" class="cards-shuffle">
+                            <input id="cards-shuffle" type="checkbox" :checked="s.cards.shuffle" @change="cardsToggleShuffle">
+                            {{ t('flashcardsShuffle') }}
+                        </label>
+                        <label class="cards-shuffle">
+                            <input id="cards-options" type="checkbox" :checked="s.cards.showOptions" @change="cardsToggleOptions">
+                            {{ t('flashcardsShowOptions') }}
+                        </label>
+                        <label class="cards-shuffle">
+                            <input id="cards-validate" type="checkbox" :checked="s.cards.validate" @change="cardsToggleValidate">
+                            {{ t('flashcardsValidate') }}
+                        </label>
+                        <label class="cards-shuffle">
+                            <input id="cards-flip-click" type="checkbox" :checked="s.cards.flipOnClick" @change="cardsToggleFlipOnClick">
+                            {{ t('flashcardsFlipOnClick') }}
+                        </label>
+                        <label class="cards-shuffle">
+                            <input id="cards-animate" type="checkbox" :checked="s.cards.animate" @change="cardsToggleAnimate">
+                            {{ t('flashcardsAnimate') }}
+                        </label>
+                        <label class="cards-shuffle">
+                            <input id="cards-contrast" type="checkbox" :checked="s.cards.highContrast" @change="cardsToggleContrast">
+                            {{ t('flashcardsContrast') }}
+                        </label>
+                        <div class="cards-start__actions">
+                            <button id="cards-start-all" class="btn btn-primary" :disabled="!cardsTotal" @click="cardsStartAll">{{ format(t('flashcardsStartAll'), { count: cardsTotal }) }}</button>
+                            <button id="cards-start-unknown" class="btn btn-ghost" :disabled="!cardsCounts.unknown" @click="cardsStartUnknown">{{ format(t('flashcardsStartUnknown'), { count: cardsCounts.unknown }) }}</button>
+                        </div>
+                        <div class="cards-start__actions">
+                            <button id="cards-reset" class="card-link" :disabled="!cardsCounts.known && !cardsCounts.unknown" @click="cardsReset">{{ t('flashcardsReset') }}</button>
+                            <button class="card-link" @click="pickAnother">{{ t('pickAnother') }}</button>
+                        </div>
+                      </div>
+                      <div v-if="cardsSummary" id="cards-summary" class="cards-summary cards-summary--row" role="status">
+                          <p class="cards-summary__counts">{{ cardsSummaryText }}</p>
+                          <p v-if="cardsSummary.review.length" class="cards-summary__title">{{ t('flashcardsToReview') }}</p>
+                          <ul v-if="cardsSummary.review.length" class="cards-summary__list"><li v-for="(text, i) in cardsSummary.review" :key="i">{{ text }}</li></ul>
+                      </div>
+                    </div>
+
+                    <div v-else class="flashcard-wrap">
+                        <p id="cards-progress" class="cards-progress">{{ cardsProgressText }}</p>
+                        <div class="flashcard-scene">
+                            <div id="flashcard" class="flashcard" :class="{ 'is-learning': cardsLearning, 'is-back': s.cards.flipped, 'is-contrast': s.cards.highContrast, 'is-tall': s.cards.oneColumn, 'no-flip-click': !s.cards.flipOnClick }" @click="cardsFlipFromCard">
+                                <!-- Les dues cares són sempre al DOM; la que no toca queda oculta i inerta (ni teclat ni lector de pantalla). -->
+                                <div class="flashcard__face flashcard__face--front" :class="{ 'has-options': cardsHasOptionsBlock, 'has-media': cardsHasMedia }" :aria-hidden="s.cards.flipped ? 'true' : 'false'" :inert="s.cards.flipped || null">
+                                    <p class="flashcard__label sr-only">{{ t('flashcardsFront') }}</p>
+                                    <p id="flashcard-question" class="question-text">{{ cardsFrontText }}</p>
+                                    <!-- El media es desmunta en girar perquè el vídeo o l'àudio no segueixin sonant de dors. Va sota l'enunciat i damunt de les opcions. -->
+                                    <!-- Fase de vídeo (feature 24), dins de la targeta: primer es mira; després es respon. -->
+                                    <div v-if="cardsLearning && !s.cards.flipped" id="cards-learning" class="flashcard__learning" role="status">
+                                        <p class="solo-learning__hint">{{ t('learnWatch') }}</p>
+                                        <div class="question-media show">
+                                            <video v-if="cardsVideoMedia.video" id="cards-learn-video" controls playsinline :src="cardsVideoMedia.video" @ended="cardsFinishLearning" @click.stop></video>
+                                            <iframe v-if="cardsVideoMedia.youtube" id="cards-learn-iframe" referrerpolicy="strict-origin-when-cross-origin" title="video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen :src="cardsVideoMedia.youtube"></iframe>
+                                        </div>
+                                        <button id="cards-learn-finish" type="button" class="btn btn-primary solo-learning__btn" @click.stop="cardsFinishLearning">{{ t('learnFinish') }}</button>
+                                    </div>
+                                    <div class="flashcard__media" v-else-if="!s.cards.flipped && (cardsMedia.image || cardsMedia.video || cardsMedia.youtube)">
+                                        <img v-if="cardsMedia.image" alt="" :src="cardsMedia.image">
+                                        <video v-if="cardsMedia.video" controls playsinline :src="cardsMedia.video"></video>
+                                        <iframe referrerpolicy="strict-origin-when-cross-origin" v-if="cardsMedia.youtube" title="video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen :src="cardsMedia.youtube"></iframe>
+                                    </div>
+                                    <ul v-if="cardsOptions.length" class="flashcard__options" :class="{ 'is-long-answers': cardsLongAnswers, 'flashcard__options--tf': cardsOptionsColumns === 'tf', 'flashcard__options--two': cardsOptionsColumns === 'two', 'flashcard__options--one': cardsOptionsColumns === 'one', 'flashcard__options--stacked': cardsOptionsStacked }" role="group" :aria-label="t('flashcardsOptions')">
+                                        <li v-for="o in cardsOptions" :key="o.n">
+                                            <button type="button" class="flashcard__option answer-shape" :class="['answer-shape--' + o.shape, { 'is-picked': isCardPicked(o.n) }]" :aria-pressed="isCardPicked(o.n) ? 'true' : 'false'" @click.stop="cardsPick(o.n)">{{ o.text }}</button>
+                                        </li>
+                                    </ul>
+                                    <div v-if="cardsTypedKind" class="flashcard__typed" @click.stop>
+                                        <input id="cards-typed" class="flashcard__input" type="text" autocomplete="off" :inputmode="cardsTypedKind === 'number' ? 'decimal' : 'text'" :aria-label="t('flashcardsTypeAnswer')" :placeholder="t('flashcardsTypeAnswer')" :value="cardsTypedValue" :disabled="s.cards.flipped" @input="cardsSetTyped($event.target.value)" @keydown.enter.prevent="cardsCheck">
+                                    </div>
+                                    <div v-if="cardsMatchTable.length" class="flashcard__match">
+                                        <p class="flashcard__label">{{ t('flashcardsMatchLeft') }}</p>
+                                        <table class="flashcard__pairs">
+                                            <thead class="sr-only"><tr><th>{{ t('flashcardsMatchColumnLeft') }}</th><th>{{ t('flashcardsMatchColumnRight') }}</th></tr></thead>
+                                            <tbody><tr v-for="(row, i) in cardsMatchTable" :key="i"><td>{{ row.left }}</td><td v-if="cardsAutoCheck"><select class="flashcard__select" :aria-label="row.left" :value="cardsMatchValue(i)" :disabled="s.cards.flipped" @click.stop @change="cardsSetMatch(i, $event.target.value)"><option value="">—</option><option v-for="(text, j) in cardsMatchRight" :key="j" :value="String(j)">{{ text }}</option></select></td><td v-else>{{ row.right }}</td></tr></tbody>
+                                        </table>
+                                    </div>
+                                    <div v-if="cardsOrderItems.length" class="flashcard__order" @click.stop>
+                                        <p class="flashcard__label">{{ t('flashcardsOrderLabel') }}</p>
+                                        <order-board v-if="cardsOrderBoard" :key="'card-order-' + cardsCurrent.idx" :items="cardsOrderItems" :t="boardT" @submit="cardsSubmitOrder"></order-board>
+                                        <ol v-else class="flashcard__answers flashcard__order-list">
+                                            <li v-for="(text, i) in cardsOrderItems" :key="i">{{ text }}</li>
+                                        </ol>
+                                    </div>
+                                    <div v-if="cardsMatchLeft.length && !cardsMatchTable.length" class="flashcard__match">
+                                        <p class="flashcard__label">{{ t('flashcardsMatchLeft') }}</p>
+                                        <ul class="flashcard__answers flashcard__match-left">
+                                            <li v-for="(text, i) in cardsMatchLeft" :key="i">{{ text }}</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="flashcard__face flashcard__face--back" :aria-hidden="s.cards.flipped ? 'false' : 'true'" :inert="!s.cards.flipped || null">
+                                    <p class="flashcard__label">{{ t('flashcardsBack') }}</p>
+                                    <ul id="flashcard-answer" class="flashcard__answers">
+                                        <li v-for="(a, i) in cardsBackParts" :key="i">{{ a }}</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="cards-actions">
+                            <button id="cards-prev" class="btn btn-cards-nav" :disabled="s.cards.pos === 0" @click="cardsPrev">{{ t('flashcardsPrev') }}</button>
+                            <button v-if="cardsAutoCheck && !cardsOrderBoard && !s.cards.flipped && !cardsResult" id="cards-check" class="btn btn-primary" @click="cardsCheck">{{ t('flashcardsCheck') }}</button>
+                            <button id="cards-flip" class="btn" :class="s.cards.flipped ? 'btn-cards-hide' : 'btn-cards-show'" @click="cardsFlip">{{ s.cards.flipped ? t('flashcardsHideAnswer') : t('flashcardsShowAnswer') }}</button>
+                            <button id="cards-next" class="btn btn-cards-nav" @click="cardsNext">{{ t('flashcardsNext') }}</button>
+                        </div>
+                        <!-- Región en viu: existe sempre i només canvia el text, perquè el lector de pantalla anuncie el resultat. -->
+                        <p id="cards-result" class="cards-result" role="status" :class="'cards-result--' + cardsResult">{{ s.cards.flipped ? cardsResultText : '' }}</p>
+                        <div v-if="s.cards.flipped && !cardsAutoCheck" class="cards-mark">
+                            <button id="cards-dont-know" class="btn btn-cards-unknown" @click="cardsMarkUnknown">{{ t('flashcardsDontKnow') }}</button>
+                            <button id="cards-know" class="btn btn-primary" @click="cardsMarkKnown">{{ t('flashcardsKnow') }}</button>
+                        </div>
+                        <div class="cards-tools">
+                            <button v-if="cardsTtsAvailable" id="cards-tts" type="button" class="tts-btn" :aria-pressed="s.ttsSpeaking ? 'true' : 'false'" :aria-label="s.ttsSpeaking ? t('ttsStop') : t('ttsListen')" :title="s.ttsSpeaking ? t('ttsStop') : t('ttsListen')" @click="cardsSpeak"><span aria-hidden="true">{{ s.ttsSpeaking ? '⏹' : '🔊' }}</span></button>
+                            <button id="cards-shuffle-now" class="card-link" @click="cardsShuffleNow">{{ t('flashcardsShuffleNow') }}</button>
+                            <button id="cards-exit" class="card-link" @click="exitCards">{{ t('flashcardsExit') }}</button>
+                            <span class="muted cards-counts">{{ cardsCountsText }}</span>
+                        </div>
                     </div>
                 </div>
             </section>
         </main>
-        <div id="public-pagination" class="pagination hidden"></div>
-
-        <div class="music-section bottom-music">
-            <div id="solo-music-player" class="music-player-shell"></div>
+        <div id="public-pagination" ref="pagerBottom" class="pagination" :class="{ hidden: totalPages <= 1 }">
+        <template v-if="totalPages > 1">
+            <button class="btn btn-ghost" :title="pagerT('prev')" :disabled="currentPage <= 0" @click="setSoloPage(currentPage - 1)">{{ pagerT('prev') }}</button>
+            <select class="page-select" :value="currentPage" :aria-label="pagerT('info', { page: currentPage + 1, total: totalPages })" @change="setSoloPage(Number($event.target.value))"><option v-for="p in totalPages" :key="p" :value="p - 1">{{ pagerT('info', { page: p, total: totalPages }) }}</option></select>
+            <button class="btn btn-ghost" :title="pagerT('next')" :disabled="currentPage >= totalPages - 1" @click="setSoloPage(currentPage + 1)">{{ pagerT('next') }}</button>
+        </template>
+        <label class="page-size"><span>{{ pagerT('size') }}</span><select :value="s.pageSize" @change="setPageSize"><option v-for="n in [6, 12, 24, 48]" :key="n" :value="n">{{ n }}</option></select></label>
         </div>
-
-        <div id="feedback-modal" class="solo-modal">
-            <div class="solo-modal__content">
-                <h3 id="feedback-title"></h3>
-                <p id="feedback-body"></p>
-                <button id="feedback-close" class="btn btn-primary">OK</button>
+        <div id="public-pagination-fixed" class="pagination-fixed" :class="{ 'is-visible': showFixedPager }" :inert="!showFixedPager || null">
+        <template v-if="totalPages > 1">
+            <button class="btn btn-ghost" :title="pagerT('prev')" :disabled="currentPage <= 0" @click="setSoloPage(currentPage - 1)">{{ pagerT('prev') }}</button>
+            <select class="page-select" :value="currentPage" :aria-label="pagerT('info', { page: currentPage + 1, total: totalPages })" @change="setSoloPage(Number($event.target.value))"><option v-for="p in totalPages" :key="p" :value="p - 1">{{ pagerT('info', { page: p, total: totalPages }) }}</option></select>
+            <button class="btn btn-ghost" :title="pagerT('next')" :disabled="currentPage >= totalPages - 1" @click="setSoloPage(currentPage + 1)">{{ pagerT('next') }}</button>
+        </template>
+        <label class="page-size"><span>{{ pagerT('size') }}</span><select :value="s.pageSize" @change="setPageSize"><option v-for="n in [6, 12, 24, 48]" :key="n" :value="n">{{ n }}</option></select></label>
+        </div>
+        <div id="feedback-modal" class="solo-modal" :class="{ show: s.feedbackModalOpen }" @click.self="closeFeedback">
+            <div class="solo-modal__content" :class="'is-' + feedbackKind">
+                <div class="solo-modal__icon" aria-hidden="true">{{ feedbackIcon }}</div>
+                <h3 id="feedback-title">{{ feedbackTitle }}</h3>
+                <p id="feedback-body">{{ feedbackBody }}</p>
+                <p v-if="ghostDiffText" id="feedback-ghost" class="solo-modal__ghost">{{ ghostDiffText }}</p>
+                <button id="feedback-close" class="btn btn-feedback" @click="closeFeedback">OK</button>
+                <div class="solo-modal__bar" aria-hidden="true"><span :style="{ width: feedbackBarWidth }"></span></div>
+                <p id="feedback-time" class="solo-modal__time">{{ format(t('feedbackClosesIn'), { seconds: feedbackLeftSec }) }}</p>
             </div>
         </div>
 
-        <div id="ranking-modal" class="solo-modal">
+        <div id="ranking-modal" class="solo-modal" :class="{ show: s.rankingModal.open }" @click.self="closeRanking">
             <div class="solo-modal__content ranking-modal__content">
-                <h3 id="ranking-modal-title" data-i18n="rankingTitle">Top 10 global</h3>
-                <ol id="ranking-modal-list" class="ranking-list"></ol>
-                <button id="ranking-modal-close" class="btn btn-ghost" data-i18n="rankingClose">Cerrar</button>
+                <h3 id="ranking-modal-title">{{ t('rankingTitle') }}</h3>
+                <ol id="ranking-modal-list" class="ranking-list"><li v-for="(item, i) in s.rankingModal.items" :key="i">{{ itemText(item) }}</li></ol>
+                <button id="ranking-modal-close" class="btn btn-ghost" @click="closeRanking">{{ t('rankingClose') }}</button>
             </div>
         </div>
 
-        <div id="name-modal" class="solo-modal">
+        <div id="name-modal" class="solo-modal" :class="{ show: s.nameModalOpen }" @click.self="skipName">
             <div class="solo-modal__content">
-                <h3 data-i18n="nameTitle">Identifícate para el ranking</h3>
-                <p class="muted" data-i18n="nameDesc">Usa 3 letras o números.</p>
-                <input id="player-name" type="text" maxlength="3" pattern="[A-Za-z0-9]{1,3}" placeholder="AAA" data-i18n-placeholder="namePlaceholder" autocomplete="off">
+                <h3>{{ t('nameTitle') }}</h3>
+                <p class="muted">{{ t('nameDesc') }}</p>
+                <input id="player-name" type="text" maxlength="3" pattern="[A-Za-z0-9]{1,3}" :placeholder="t('namePlaceholder')" autocomplete="off" :value="s.nameInput" @input="onNameInput">
                 <div class="modal-actions">
-                    <button id="name-cancel" class="btn btn-ghost" data-i18n="nameSkip">Omitir</button>
-                    <button id="name-save" class="btn btn-primary" data-i18n="nameSave">Guardar</button>
+                    <button id="name-cancel" class="btn btn-ghost" @click="skipName">{{ t('nameSkip') }}</button>
+                    <button id="name-save" class="btn btn-primary" @click="saveName">{{ t('nameSave') }}</button>
                 </div>
             </div>
         </div>
+        </template>
+
+
         <footer class="ett-footer">
             <p class="ett-footer__id">
                 <span class="ett-footer__brand">EduTicTac</span>
@@ -178,7 +486,6 @@
                 <span class="ett-footer__version" id="app-version" aria-live="polite"></span>
             </p>
             <div class="ett-footer__links">
-                <a href="https://edutictac.es/" target="_blank" rel="noopener">edutictac.es</a>
                 <a href="https://edutictac.es/privacitat.html" target="_blank" rel="noopener" data-i18n="footerPrivacy">Privacidad</a>
                 <a href="https://edutictac.es/galetes.html" target="_blank" rel="noopener" data-i18n="footerCookies">Galetes</a>
                 <a href="https://git.edutictac.es/Edutictac/eduhoot" target="_blank" rel="noopener" data-i18n="footerSource">Código fuente</a>
@@ -187,14 +494,24 @@
         </footer>
 
         <script src="../js/music-player.js"></script>
+        <script src="/js/libs/vue.global.prod.js"></script>
         <script src="/js/languages.js"></script>
         <script src="/js/env-badge.js"></script>
         <script src="../js/i18n-solo.js"></script>
         <script src="../js/solo-storage.js"></script>
+        <script src="../js/matchingBoard.js"></script>
+        <script src="../js/orderBoard.js"></script>
+        <script src="../js/solo-ghost.js"></script>
+        <script src="/js/tfLabels.js"></script>
         <script src="../js/solo-questions.js"></script>
+        <script src="../js/catalogPager.js"></script>
         <script src="../js/solo-library.js"></script>
         <script src="../js/solo-music.js"></script>
+        <script src="../js/viewport-fit.js"></script>
+        <script src="../js/tts.js"></script>
         <script src="../js/solo-game.js"></script>
+        <script src="../js/solo-flashcards.js"></script>
+        <script src="../js/solo-flashcards-view.js"></script>
         <script src="../js/solo-ranking.js"></script>
         <script src="../js/solo.js"></script>
         <script src="/js/app-version.js"></script>

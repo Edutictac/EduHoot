@@ -8,15 +8,36 @@
         <link rel="stylesheet" href="/css/edutictac-footer.css">
         <link rel="stylesheet" href="/css/edutictac-shared.css">
         <script src="/js/edutictac-chip.js"></script>
-        <script src="https://commons.edutictac.es/assets/account-widget.js" defer onerror="document.documentElement.classList.add('account-fallback')"></script>
+        <script src="https://commons.edutictac.es/assets/account-widget.js" defer></script>
         <link rel="icon" href="/icons/logo.svg" type="image/svg+xml">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    </head>
+            <link rel="stylesheet" href="/css/page-fit.css">
+        <link href="/css/brand-unify.css" rel="stylesheet">
+        <link rel="stylesheet" href="/css/lang-more.css">
+</head>
     <body>
         <edutictac-account class="site-account site-account--fixed site-account--start" data-home-only data-base="https://commons.edutictac.es"></edutictac-account>
-        <h1 id = "title1" data-i18n="lobby_wait">Waiting on host to start game</h1>
-        <h3 id = "title2" data-i18n="lobby_check">Do you see your name on the screen?</h3>
-        <div class="loader"></div>
+        <!-- Subfase B, Vue (lobby.js): missatges d'espera de la sala. -->
+        <div id="lobby-app"></div>
+        <template id="lobby-tpl">
+        <div class="lobby-card">
+            <p v-if="quizName" id="lobby-quiz-name" class="lobby-quiz-name">{{ quizName }}</p>
+            <p v-if="pin" id="lobby-pin" class="lobby-pin">{{ pinText }}</p>
+            <div v-if="playerName" class="lobby-hero" :data-state="connState">
+                <div class="lobby-avatar-box">
+                    <span class="lobby-avatar" aria-hidden="true">{{ playerIcon }}</span>
+                    <span class="lobby-state" aria-hidden="true"></span>
+                </div>
+                <p class="lobby-name">{{ playerName }}</p>
+            </div>
+            <h1 id = "title1">{{ title }}</h1>
+            <h3 id = "title2">{{ detail }}</h3>
+            <p v-if="connState === 'connecting' || connState === 'joined'" id="lobby-start-note" class="lobby-start-note">{{ startNote }}</p>
+            <button type="button" id="leaveGameBtn" class="leave-game-btn" :class="{ 'is-confirming': leaveConfirming }" @click="askLeave">{{ leaveLabel }}</button>
+            <p v-if="countText" id="lobby-count" class="lobby-count" aria-live="polite">{{ countText }}</p>
+            <div class="loader"></div>
+        </div>
+        </template>
         <br/>
         <div id="lang-switcher" data-lang-buttons>
         </div>
@@ -28,7 +49,6 @@
                 <span class="ett-footer__version" id="app-version" aria-live="polite"></span>
             </p>
             <div class="ett-footer__links">
-                <a href="https://edutictac.es/" target="_blank" rel="noopener">edutictac.es</a>
                 <a href="https://edutictac.es/privacitat.html" target="_blank" rel="noopener" data-i18n="footerPrivacy">Privacidad</a>
                 <a href="https://edutictac.es/galetes.html" target="_blank" rel="noopener" data-i18n="footerCookies">Galetes</a>
                 <a href="https://git.edutictac.es/Edutictac/eduhoot" target="_blank" rel="noopener" data-i18n="footerSource">Código fuente</a>
@@ -43,6 +63,7 @@
     <script src = "../socket.io/socket.io.js"></script>
     <script src = "../js/libs/jqueryLibrary.js"></script>
     <script src = "../js/libs/deparam.js"></script>
+    <script src = "../js/libs/vue.global.prod.js"></script>
     <script src = "../js/lobby.js"></script>
     
 </html>

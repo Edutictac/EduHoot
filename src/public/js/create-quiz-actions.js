@@ -4,7 +4,11 @@ function startGame(data){
 }
 
 function startSolo(data){
-    window.location.href = "/solo/" + "?id=" + encodeURIComponent(data);
+    window.location.href = "/solo/" + "?id=" + encodeURIComponent(data) + "&from=library";
+}
+
+function startSoloCards(data){
+    window.location.href = "/solo/" + "?id=" + encodeURIComponent(data) + "&mode=cards&from=library";
 }
 
 function startMultiplayer(data){
@@ -67,7 +71,7 @@ async function updateSharing(id, visibility, allowClone){
         var result = await res.json();
         if(!res.ok){
             alert(result.error || t('sharingError') || t('saveError'));
-            return;
+            return false;
         }
         if(result.migrated && result.id){
             try{
@@ -84,8 +88,10 @@ async function updateSharing(id, visibility, allowClone){
             }catch(e){}
         }
         socket.emit('requestDbNames');
+        return true;
     }catch(err){
         alert(t('sharingError') || t('saveError'));
+        return false;
     }
 }
 

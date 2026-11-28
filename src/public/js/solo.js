@@ -1,11 +1,41 @@
 // Modo individual: listado de quizzes públicos + juego auto-dirigido con ranking global
-var state = {
+// El estado es reactivo: la plantilla de Vue (#solo-tpl) lo lee directamente
+// (Subfase B); el resto de funciones solo lo modifican.
+// Mostrar la pregunta durant la compte arrere: marcada per defecte; es recorda en este navegador.
+function readShowQuestionCountdown(){
+        try{
+            if(localStorage.getItem('eduhoot-solo-show-question-countdown') === '0') return false;
+        }catch(e){}
+        return true;
+    }
+function readFeedbackSeconds(){
+        try{
+            var v = parseInt(localStorage.getItem('eduhoot-solo-feedback-seconds'), 10);
+            if(v >= 1 && v <= 30) return v;
+        }catch(e){}
+        return 5;
+    }
+    var state = Vue.reactive({
         quizzes: [],
         currentQuiz: null,
+        ttsSpeaking: false,
+        streak: 0,
+        streakBonus: 0,
+        ttsReady: false,
         quizData: null,
         questions: [],
     desiredQuestionCount: null,
         desiredQuestionTime: null,
+        // Porcentaje extra de tiempo en preguntas de correspondencia (25/50/75/100).
+        matchingExtraTime: 50,
+        // Opciones de la partida: orden de preguntas barajado (no por defecto) y mostrar la respuesta correcta.
+        shuffleQuestions: false,
+        showAnswers: true,
+        // Segundos que se ve la ventana de resultado (acierto o fallo) antes de pasar a la siguiente pregunta.
+        feedbackSeconds: readFeedbackSeconds(),
+        feedbackSecondsInput: String(readFeedbackSeconds()),
+        // Milisegundos que le quedan a la ventana de resultado abierta.
+        feedbackLeftMs: 0,
         page: 0,
         pageSize: 12,
         sortOrder: 'plays',
@@ -20,6 +50,14 @@ var state = {
         score: 0,
         correct: 0,
         timer: null,
+        // Segons que queden del compte arrere 3-2-1 (0 = no se'n mostra cap).
+        countdown: 0,
+        learning: false,
+        capturedImage: '',
+        // Pausa de la partida (la pregunta y el tiempo quedan congelados) y
+        // confirmación en dos pasos de «Cancelar partida».
+        paused: false,
+        cancelConfirming: false,
         timerTotal: 20,
         timerLeft: 20,
         locked: false,
@@ -27,13 +65,45 @@ var state = {
         studentJoinToken: '',
         commonsPublicCode: '',
         awaitingConfirm: false,
-        lastWrong: null,
+        lastResult: null,
         multiSelections: [],
-        favoriteIds: new Set()
-};
+        favoriteIds: new Set(),
+        // Catálogo (bloque 1)
+        search: '',
+        loading: false,
+        loadError: false,
+        tagFilterExpanded: false,
+        thumbs: {},
+        // Panel de juego (bloque 2). view: 'none' | 'start' | 'game' | 'result'.
+        view: 'none',
+        // Mode flashcards (proposta 20): progrés de la sessió de repàs.
+        cards: null,
+        title: { key: 'soloTitle' },
+        countInput: '',
+        timeInput: '',
+        nameInput: '',
+        freeText: '',
+        marks: { correct: [], wrong: [] },
+        feedback: { text: '', kind: '' },
+        result: { correct: 0, total: 0, score: 0, polls: 0 },
+        rankingBox: { visible: false, items: [] },
+        rankingModal: { open: false, items: [] },
+        feedbackModalOpen: false,
+        // Mode fantasma: desactivat per defecte; només amb el check activat es compara i es guarda la marca.
+        ghostEnabled: false,
+        showQuestionCountdown: readShowQuestionCountdown(),
+        // Mode fantasma: marca anterior, diferència després de la pregunta i punts de la partida.
+        ghost: null,
+        ghostDiff: null,
+        runOrigs: [],
+        runPoints: {},
+        nameModalOpen: false,
+        // Se incrementa al cambiar de idioma para que la plantilla se repinte.
+        lang: 0
+});
 
 state.favoriteIds = loadFavorites();
-userRatings = loadUserRatings();
+userRatings = Vue.reactive(loadUserRatings());
 deviceId = getDeviceId();
 
 function t(key){
@@ -50,8 +120,7 @@ function applyStaticText(){
 
 function setLang(newLang){
     window.applySoloTranslations(newLang);
-    updateTagFilterOptions();
-    renderList();
+    state.lang += 1;
     renderSelectedMeta();
     updateSoloMusicLabels();
 }
@@ -95,21 +164,32 @@ function setLang(newLang){
             });
     }
 
+    var feedbackTimer = null;
+
+    function clearFeedbackTimer(){
+        if(feedbackTimer){ clearInterval(feedbackTimer); feedbackTimer = null; }
+    }
+
     function showFeedbackModal(){
-        var modal = document.getElementById('feedback-modal');
-        var title = document.getElementById('feedback-title');
-        var body = document.getElementById('feedback-body');
-        if(!modal || !title || !body || !state.lastWrong) return;
-        var label = t('correctLabel');
-        var correctText = state.lastWrong.correctText || '';
-        title.textContent = t('wrongText');
-        body.textContent = (label === 'correctLabel' ? '' : label + ' ') + correctText;
-        modal.classList.add('show');
+        if(!state.lastResult) return;
+        state.feedbackModalOpen = true;
+        // Cuenta atrás visible (barra y segundos): se cierra sola a los N segundos (configurable);
+        // también se puede cerrar antes con OK o pulsando fuera.
+        clearFeedbackTimer();
+        var totalMs = (state.feedbackSeconds || 5) * 1000;
+        var endAt = Date.now() + totalMs;
+        state.feedbackLeftMs = totalMs;
+        feedbackTimer = setInterval(function(){
+            var left = Math.max(0, endAt - Date.now());
+            state.feedbackLeftMs = left;
+            if(left <= 0 && state.feedbackModalOpen) hideFeedbackModal();
+            else if(left <= 0) clearFeedbackTimer();
+        }, 100);
     }
 
     function hideFeedbackModal(){
-        var modal = document.getElementById('feedback-modal');
-        if(modal) modal.classList.remove('show');
+        clearFeedbackTimer();
+        state.feedbackModalOpen = false;
         if(state.awaitingConfirm){
             state.awaitingConfirm = false;
             state.idx += 1;
@@ -118,211 +198,96 @@ function setLang(newLang){
     }
 
     function resetSelection(){
+        stopFlashcardsSpeech();
+        state.cards = null;
         state.quizData = null;
         state.currentQuiz = null;
         state.desiredQuestionCount = null;
-        var startForm = document.getElementById('start-form');
-        var gameArea = document.getElementById('game-area');
-        var resultArea = document.getElementById('result-area');
-        var title = document.getElementById('selected-title');
-        var meta = document.getElementById('selected-meta');
-        if(startForm) startForm.classList.add('hidden');
-        if(gameArea) gameArea.classList.add('hidden');
-        if(resultArea) resultArea.classList.add('hidden');
-        if(title) title.textContent = t('soloTitle');
-        if(meta) meta.textContent = t('startSelect');
+        clearFeedbackTimer();
+        state.feedbackModalOpen = false;
+        state.view = 'none';
+        state.title = { key: 'soloTitle' };
         syncQuestionCountControls();
-        setMedia(null, null);
         document.body.classList.remove('playing');
+        stopCountdown();
         pauseSoloMusic();
         state.awaitingConfirm = false;
-        state.lastWrong = null;
+        state.lastResult = null;
         state.multiSelections = [];
         state.questions = [];
     }
 
     function bindEvents(){
-        var backLink = document.querySelector('a.back-link');
-        if(backLink){
+        // Al salir (a Inicio o a la biblioteca) la música se para.
+        document.querySelectorAll('a.back-link').forEach(function(backLink){
             backLink.addEventListener('click', function(){
                 pauseSoloMusic();
             });
-        }
+        });
+        // Se llegó desde la biblioteca (?from=library): se ofrece también volver a ella.
+        try{
+            if(new URLSearchParams(window.location.search || '').get('from') === 'library'){
+                var libraryLink = document.getElementById('back-library');
+                if(libraryLink) libraryLink.classList.remove('hidden');
+            }
+        }catch(e){}
         var langSelect = document.getElementById('lang-select');
         if(langSelect){
             langSelect.addEventListener('change', function(){
                 setLang(langSelect.value);
             });
         }
-        var search = document.getElementById('search');
-        if(search){
-            search.addEventListener('input', function(){
-                state.page = 0;
-                renderList();
-            });
-        }
-        var sortSelect = document.getElementById('sort');
-        if(sortSelect){
-            sortSelect.value = state.sortOrder;
-            sortSelect.addEventListener('change', function(){
-                state.sortOrder = sortSelect.value;
-                state.page = 0;
-                renderList();
-            });
-        }
-        var tagsSelectAll = document.getElementById('tags-select-all');
-        if(tagsSelectAll){
-            tagsSelectAll.addEventListener('click', function(){
-                // Selecciona todas las etiquetas (y las muestra)
-                var all = getAllTagsFromQuizzes().map(function(it){ return it.tag; });
-                state.filters.tags = all;
-                tagFilterExpanded = true;
-                updateTagFilterOptions();
-                state.page = 0;
-                renderList();
-            });
-        }
-        var tagsClear = document.getElementById('tags-clear');
-        if(tagsClear){
-            tagsClear.addEventListener('click', function(){
-                state.filters.tags = [];
-                updateTagFilterOptions();
-                state.page = 0;
-                renderList();
-            });
-        }
-        var tagFilter = document.getElementById('tag-filter');
-        if(tagFilter){
-            updateTagFilterOptions();
-        }
-        var minQuestions = document.getElementById('min-questions');
-        if(minQuestions){
-            minQuestions.value = state.filters.minQuestions;
-            minQuestions.addEventListener('input', function(){
-                state.filters.minQuestions = minQuestions.value;
-                state.page = 0;
-                renderList();
-            });
-        }
-        var maxQuestions = document.getElementById('max-questions');
-        if(maxQuestions){
-            maxQuestions.value = state.filters.maxQuestions;
-            maxQuestions.addEventListener('input', function(){
-                state.filters.maxQuestions = maxQuestions.value;
-                state.page = 0;
-                renderList();
-            });
-        }
-        var onlyImage = document.getElementById('only-image');
-        if(onlyImage){
-            onlyImage.checked = !!state.filters.onlyImage;
-            onlyImage.addEventListener('change', function(){
-                state.filters.onlyImage = !!onlyImage.checked;
-                state.page = 0;
-                renderList();
-            });
-        }
-        var startBtn = document.getElementById('start-btn');
-        if(startBtn){
-            startBtn.addEventListener('click', startQuiz);
-        }
-        var multiSubmitBtn = document.getElementById('multi-submit');
-        if(multiSubmitBtn){
-            multiSubmitBtn.addEventListener('click', submitSoloMultiAnswers);
-        }
-        var questionCount = document.getElementById('question-count');
-        if(questionCount){
-            questionCount.addEventListener('input', function(){
-                var total = getQuizTotalQuestions();
-                if(total <= 0) return;
-                var v = clampInt(questionCount.value, 1, total);
-                if(v == null) return;
-                questionCount.value = String(v);
-                state.desiredQuestionCount = v;
-            });
-        }
-        var questionTime = document.getElementById('question-time');
-        if(questionTime){
-            questionTime.addEventListener('input', function(){
-                if(!questionTime.value){
-                    state.desiredQuestionTime = null;
-                    return;
-                }
-                var v = clampInt(questionTime.value, 5, 120);
-                if(v == null) return;
-                questionTime.value = String(v);
-                state.desiredQuestionTime = v;
-            });
-        }
-        var playAgain = document.getElementById('play-again');
-        if(playAgain){
-            playAgain.addEventListener('click', function(){
-                if(state.quizData){
-                    startQuiz();
-                }
-            });
-        }
-        var pickAnother = document.getElementById('pick-another');
-        if(pickAnother){
-            pickAnother.addEventListener('click', resetSelection);
-        }
-        var nameInput = document.getElementById('player-name');
-        if(nameInput){
-            nameInput.addEventListener('input', function(){
-                nameInput.value = normalizeName(nameInput.value);
-            });
-        }
-        var feedbackClose = document.getElementById('feedback-close');
-        if(feedbackClose){
-            feedbackClose.addEventListener('click', hideFeedbackModal);
-        }
-        var feedbackModal = document.getElementById('feedback-modal');
-        if(feedbackModal){
-            feedbackModal.addEventListener('click', function(e){
-                if(e.target === feedbackModal){
-                    hideFeedbackModal();
-                }
-            });
-        }
-        var rankingModalClose = document.getElementById('ranking-modal-close');
-        if(rankingModalClose){
-            rankingModalClose.addEventListener('click', hideRankingModal);
-        }
-        var rankingModal = document.getElementById('ranking-modal');
-        if(rankingModal){
-            rankingModal.addEventListener('click', function(e){
-                if(e.target === rankingModal){
-                    hideRankingModal();
-                }
-            });
-        }
-        var nameSave = document.getElementById('name-save');
-        if(nameSave){
-            nameSave.addEventListener('click', function(){
-                var input = document.getElementById('player-name');
-                var clean = normalizeName(input ? input.value : '');
-                state.playerName = clean || t('namePlaceholder');
-                closeNameModal();
-                submitScore(state.playerName);
-            });
-        }
-        var nameCancel = document.getElementById('name-cancel');
-        if(nameCancel){
-            nameCancel.addEventListener('click', function(){
-                closeNameModal();
-                submitScore(state.playerName || t('namePlaceholder'));
-            });
-        }
-        var nameModal = document.getElementById('name-modal');
-        if(nameModal){
-            nameModal.addEventListener('click', function(e){
-                if(e.target === nameModal){
-                    closeNameModal();
-                    submitScore(state.playerName || t('namePlaceholder'));
-                }
-            });
-        }
     }
+
+    // Enllaç directe al repàs (/solo/?id=…&mode=cards): amaga el catàleg des del primer
+    // render, perquè no es veja la llista mentre es carrega el quiz.
+    var deepLink = null;
+    try{
+        var deepParams = new URLSearchParams(window.location.search || '');
+        if(deepParams.get('id') && deepParams.get('mode') === 'cards'){
+            deepLink = deepParams.get('id');
+        }
+        // Con un quiz elegido en la URL (/solo/?id=…) tampoco se enseña el catálogo mientras carga.
+        if(deepParams.get('id')){
+            document.body.classList.add('playing');
+        }
+    }catch(e){}
+
+    var soloVm = Vue.createApp({
+        template: '#solo-tpl',
+        mixins: [soloCatalog, soloPlay, soloFlashcards],
+        mounted: function(){
+            EduhootTTS.watchAvailability(document.documentElement.lang, function(ok){ state.ttsReady = ok; });
+            watchCatalogPager(this.$refs.pagerBottom);
+            var vm = this;
+            document.addEventListener('click', function(e){
+                if(vm.helpOpen && !e.target.closest('.help')) vm.helpOpen = null;
+            });
+            document.addEventListener('keydown', function(e){
+                if(e.key === 'Escape' && vm.helpOpen) vm.helpOpen = null;
+            });
+        },
+        watch: {
+            // En desaparéixer el botó (cuenta atrás o resposta) es para la lectura.
+            ttsAvailable: function(ok){
+                if(!ok){
+                    EduhootTTS.cancel();
+                    state.ttsSpeaking = false;
+                }
+            }
+        },
+        data: function(){
+            return { s: state, helpOpen: null };
+        },
+        methods: {
+            t: function(key){
+                this.s.lang;
+                return t(key);
+            },
+            format: format,
+            toggleHelp: function(key){ this.helpOpen = (this.helpOpen === key) ? null : key; }
+        }
+    }).component('matching-board', window.EduhootMatchingBoard).component('order-board', window.EduhootOrderBoard).mount('#solo-app');
 
     applyStaticText();
     initSoloMusicPlayer();
@@ -340,7 +305,9 @@ function setLang(newLang){
             var params = new URLSearchParams(window.location.search || '');
             id = params.get('id');
         }catch(e){}
-        if(id){
+        if(deepLink){
+            soloVm.study(deepLink);
+        }else if(id){
             selectQuiz(id);
         }
     })();

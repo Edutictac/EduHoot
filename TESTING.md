@@ -36,15 +36,16 @@ més carrega 5 qüestionaris de mostra.
 ## Tests automàtics
 
 > **Què és Playwright?** És una ferramenta de Microsoft per a provar
-> aplicacions web automatitzant un navegador real (en este projecte,
-> Chrome) sense que ningú haja de fer clic a mà: obri la pàgina, navega,
-> emplena camps, prem botons i comprova que allò que apareix en pantalla
-> és l'esperat. A diferència de `npm test` (que prova funcions i l'API
-> del servidor directament), Playwright prova l'aplicació "des de fora",
-> igual que la veuria una persona real usant el navegador. En EduHoot
-> s'usa només per a `npm run test:i18n` (canvi d'idioma i estat de
-> sessió), executant cada test dos vegades: una emulant escriptori i
-> l'altra emulant un mòbil (`src/playwright.config.js`).
+> aplicacions web automatitzant un navegador real (en aquest projecte,
+> Chrome) sense que ningú haja de fer clic a mà. En EduHoot s'utilitza
+> principalment per a tests de navegador (`npm run test:i18n`), però el seu
+> ús es pot estendre a qualsevol recorregut d'interfície.
+
+> A diferència de `npm test` (que prova funcions i l'API del servidor
+> directament), Playwright provar l'aplicació "des de fora", igual que la
+> veuria una persona real usant el navegador. Actualment cobrim tests de:
+> canvis d'idioma, estat de sessió, pantalla d'inici, modes de joc,
+> autenticació i components del lobby.
 
 | Orde | Què executa | Necessita Mongo real | Necessita alguna cosa més |
 |---|---|---|---|
@@ -73,22 +74,79 @@ problemes d'estil, variables sense usar, etc.
 - **`test/unit/`** — lògica aïllada sense servidor HTTP: idiomes
   (`language.test.js`), importació de CSV (`importCsv.test.js`), gestió
   de jugadors (`players.test.js`), utilitats de preguntes
-  (`questionUtils.test.js`), partides en directe (`liveGames.test.js`).
+  (`questionUtils.test.js`), partides en directe (`liveGames.test.js`),
+  repartiment de preguntes per mode (`gameHelpers.test.js`), puntuació
+  (`scoring.test.js`), exportació a Moodle (`moodleExport.test.js`), la
+  llista d'ús sense connexió de `sw.js` (`swAssets.test.js`), la CSP
+  (`csp.test.js`), el contrast del text dels botons de resposta
+  (`a11yContrast.test.js`), els noms únics en `player-join` (`playerJoinNames.test.js`)
+  i la pregunta de correspondència (`matching.test.js`: model, puntuació,
+  partida, CSV, Moodle XML, GIFT i informe).
+  Les d'ordenar: `orderQuestion.test.js`, `orderWiring.test.js`, `orderBrowser.test.js`
+  (paritat amb el navegador) i `orderIo.test.js` (Moodle XML i CSV).
 - **`test/integration/`** — alça el servidor Express real (amb Mongo en
   memòria) i prova l'API HTTP d'extrem a extrem: `api.test.js`,
   `sessionReport.test.js`, `auth-migration.test.js` i `authentik.test.js`
   (migració de comptes a Authentik), `commonsUrl.test.js` (el xip apunta al
   Commons de `EDUTICTAC_COMMONS_URL`), i `devLogin.test.js` /
   `devLoginOff.test.js` (`/dev/login` funciona en desenvolupament i dona 404
-  fora d'ell), i `devOidc.test.js` (flux d'Authentik complet contra l'OIDC
-  simulat de dev: rol del seed, rebuig sense rol docent i PKCE).
-- **`test/browser/`** — tests de navegador amb Playwright: `language.spec.js`
-  (canvi d'idioma), `auth-state.spec.js` (estat de sessió i pont amb el xip),
-  `solo-poll.spec.js` (les preguntes d'enquesta en mode Solo no compten com a
-  error ni puntuen), `chip-footer.spec.js` (xip de compte i peu comú),
-  `solo-library.spec.js` (llistat, favorit, valoració i partida en `/solo/`) i
+  fora d'ell), `devPages.test.js` / `devPagesOff.test.js` (el mateix per a
+  tot `/dev/`), i `devOidc.test.js` (flux d'Authentik complet contra l'OIDC
+  simulat de dev: rol del seed, rebuig sense rol docent i PKCE), i
+  `adminLogs.test.js` (visor de logs, «Cargar más» amb `before`/`beforeId`,
+  configuració de nivell/mida de la col·lecció capped i nom del quiz als
+  logs, tot protegit per rol admin), `selfPacedSockets.test.js` (autoritme amb sockets reals de xarxa
+  amb `socket.io-client`: partida completa, entrada tard, reconnexió, rellotge
+  del servidor, respostes ocultes i mode en directe intacte) i
+  `homework.test.js` (deures per HTTP: creació i permisos, codi de
+  recuperació, partida completa, intents, dos dispositius alhora, data límit,
+  resultats i CSV, força bruta; el temps es controla movent la data límit en
+  la BD).
+  Informe de partides i esborrat de partides en el servidor (`reportResults.test.js`,
+  `gameHistoryDelete.test.js`).
+- **`test/browser/`** — tests de navegador amb Playwright:
+  `language.spec.js` (canvi d'idioma), `auth-state.spec.js` (estat de sessió
+  i pont amb el xip), `player-game.spec.js` (joc de l'alumnat des del PIN a
+  /player/game/ amb Socket.IO fals), `solo-poll.spec.js` (les preguntes
+  d'enquesta en mode Solo no compten com a error ni puntuen),
+  `chip-footer.spec.js` (xip de compte i peu comú), `solo-library.spec.js`
+  (llistat, favorit, valoració i partida en `/solo/`),
   `create-library.spec.js` (llistat, cerca, etiqueta, CSV i esborrat en
-  `/create/`).
+  `/create/`), `host-lobby.spec.js` (lobby de `/host/`: PIN, QR, jugadors,
+  opcions en iniciar, iframe de la partida i idioma, amb un Socket.IO fals),
+  `host-game.spec.js` (partida de l'amfitrió amb Socket.IO fals),
+  `host-game-timer.spec.js` (el temporitzador de l'amfitrió mostra el temps
+  de cada pregunta des del primer moment), `host-game-end.spec.js`
+  (enllaç «Tornar» a la biblioteca en acabar, també dins de l'iframe del
+  lobby), `multiplayer.spec.js` (catàleg, configuració, partida i
+  resultats de `/multiplayer/`, amb la REST simulada) i
+  `quiz-creator.spec.js` (crear, editar i guardar qüestionaris en
+  `/create/quiz-creator/`, amb la REST i Socket.IO simulats) i
+  `solo.spec.js` (catàleg, partida, rànquing i entrada des de Commons
+  de `/solo/`, amb el rellotge de Playwright controlat),
+  `create.spec.js` (biblioteca, generador IA, importació, compte i permisos
+  amb autodesat i reversió si el servidor els rebutja, de
+  `/create/`, amb la REST i Socket.IO simulats) i `join.spec.js` (PIN,
+  icona, nom i identitat d'alumne en `/join.html`),
+  `player-lobby.spec.js` (sala d'espera `/player/` amb Socket.IO fals),
+  `admin-stats.spec.js` i `admin-logs.spec.js` (panells d'administració).
+  Correspondència: `player-matching.spec.js` (mòbil, amb els tres modes a
+  cegues), `host-matching.spec.js` (projector i resultats),
+  `solo-matching.spec.js` (Solo, flashcards i multijugador local),
+  `create-export-matching.spec.js` (PDF, DOCX i ODT, amb les llibreries
+  substituïdes) i `matching-poc.spec.js` (prova de concepte de `/dev/`).
+  Autoritme i deures: `player-self-paced.spec.js` i `host-self-paced.spec.js`
+  (pantalles de classe, amb Socket.IO fals), `homework.spec.js` (entrada,
+  codi de recuperació, reintents i talls de xarxa, amb la API simulada) i
+  `homework-manage.spec.js` (panell del docent: crear, llista i resultats).
+  Nota: el servidor de proves és estàtic (`python3 -m http.server`), per això
+  l'API sempre es simula amb `page.route`; les rutes més recents tenen
+  prioritat.
+  A més, `solo-pause.spec.js` (pausar i cancel·lar en Solo) i
+  `long-text.spec.js` (el text llarg sense espais no se n'ix del requadre),
+  `music-blocks.spec.js` (la música de fons de solo, l'anfitrió i multijugador:
+  reproduir, parar i canviar de pista amb botons i selector) i
+  `library-view.spec.js` (la biblioteca en targetes o en detall).
 
 ### Scripts puntuals que NO són part del flux de test estàndard
 
@@ -117,7 +175,7 @@ el recorregut complet de baix:
 
 - **Crear/editar un qüestionari**: `http://localhost:3000/create/`
 - **Jugar a l'aula** (amfitrió + diversos dispositius/pestanyes com a
-  jugador, el mode real de classe): botó "Jugar a l'aula" des de la
+  jugador, el mode real de classe): botó "Jugar" des de la
   biblioteca → `/host/`, i unir-se des de `/join` amb el PIN. Vore el
   detall d'este i la resta de modes en
   [ARCHITECTURE.md → Modes de joc](ARCHITECTURE.md#modes-de-joc).
@@ -135,7 +193,7 @@ regressions que cap test automàtic ni comprovació puntual cobrix:
 1. **Biblioteca i creació** (`/create/`):
    - Crear un qüestionari nou amb almenys una pregunta de cada tipus
      (`quiz`, `multiple`, `true-false`, `short-answer`, `numeric`,
-     `poll`) — vore `ARCHITECTURE.md` si cal recordar què és cada u.
+     `poll`, `matching`) — vore `ARCHITECTURE.md` si cal recordar què és cada u.
    - Editar-lo, afegir etiquetes, canviar la visibilitat
      (privat/no llistat/públic), clonar-lo i esborrar el clon.
    - Pujar un qüestionari per CSV (vore `README.md`).
@@ -143,22 +201,27 @@ regressions que cap test automàtic ni comprovació puntual cobrix:
    la biblioteca, unir-se amb almenys dos dispositius/pestanyes com a
    alumnat des de `/join`, respondre totes les preguntes (cada tipus
    inclòs), comprovar el compte arrere, l'avanç manual entre preguntes,
-   el rànquing final i la celebració d'encert/fallada col·lectiva.
+   el rànquing final, la celebració d'encert/fallada col·lectiva i que,
+   en acabar, el botó «Tornar» porta a la biblioteca.
 3. **Multijugador** (pantalla compartida, 2-4 jugadors): jugar una
    partida sencera des d'un sol dispositiu.
 4. **Solo**: jugar amb un enllaç directe (`/solo/?id=<quizId>` o
    `/solo/?tag=...`), comprovar que les preguntes d'enquesta no obrin
-   el diàleg d'error ni puntuen, i que l'estadística final i el
+   el diàleg d'error ni puntuen, pausar i reprendre una pregunta, i que l'estadística final i el
    rànquing global es mostren bé.
 5. **Informe i exportació**: des de "Jugar a l'aula", descarregar
    l'informe CSV de la partida i comprovar que les columnes tenen
    sentit; exportar el qüestionari a Moodle XML i comprovar que
    s'importa sense error en un Moodle/AULES de prova (si n'hi ha a
    l'abast).
-6. **Idiomes**: canviar entre els 4 idiomes disponibles (català,
-   valencià, castellà, anglés) amb el selector de la interfície, i
-   comprovar que el canvi persistix en recarregar i en navegar entre
-   `/create/`, `/host/`, `/join`, `/solo/` i `/multiplayer/`.
+6. **Idiomes**: canviar entre els 10 idiomes disponibles (català,
+   valencià, castellà i anglés als botons; francés, alemany, italià,
+   portugués, búlgar i àrab al desplegable de les dos inicials) amb el
+   selector de la interfície, comprovar que l'àrab es veu de dreta a
+   esquerra (`dir="rtl"`) i que el canvi persistix en recarregar i en navegar entre
+   `/create/`, `/host/`, `/join`, `/solo/` i `/multiplayer/`. A la portada
+   (`/`), triar «Inici ràpid» i comprovar que `/` ja entra a `/inicio/`, i
+   que el caixet d'EduHoot d'allí torna la promo com a pàgina inicial.
 7. **Sessió i accés**: tancar sessió i tornar a entrar; si hi ha Google
    o Authentik configurats en l'entorn de prova, provar també eixos
    fluxos d'inici de sessió.

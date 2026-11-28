@@ -30,7 +30,8 @@ pagament.
 Ja implementat, no cal tornar a proposar-ho:
 
 - **Formes + color a les respostes** (triangle/romb/cercle/quadrat via
-  `clip-path`), a `playerGameView.css` i `hostGameView.css`. Mitigació
+  `clip-path`), a `css/answers.css` (alumnat en "Jugar a l'aula" i mode
+  individual) i `hostGameView.css` (amfitrió). Mitigació
   de daltonisme explícitament documentada en `README.md` i
   `CHANGELOG.md`.
 - **`aria-live`** al cronòmetre entre preguntes i als missatges d'error
@@ -46,11 +47,39 @@ Ja implementat, no cal tornar a proposar-ho:
 - **Cronòmetre amb doble canal** (barra visual + text numèric) al
   jugador i a l'amfitrió.
 - El viewport no bloqueja el zoom (no hi ha `user-scalable=no`).
+- **Contrast del text dels botons de resposta** de com a mínim 4,5:1
+  (WCAG 1.4.3) a l'alumnat, l'amfitrió, Solo i les barres de resultats;
+  `test/unit/a11yContrast.test.js` ho comprova als CSS.
+- **L'encert i la errada no depenen només del color** (WCAG 1.4.1): a Solo,
+  la resposta correcta i la fallada porten «✓» i «✕» al botó, i la finestra
+  de resultat mostra una icona («✓», «◐», «✕») amb el text; a l'alumnat i a
+  l'amfitrió, el resultat ja du text i icona.
+- **Finestra de resultat de Solo** amb comptador visible (barra i segons) que
+  no depén de cap animació CSS, per a funcionar també amb
+  `prefers-reduced-motion`.
+- **Preferències (biblioteca)**: el modal té nom accessible
+  (`aria-labelledby`), fons opac i torna el focus al botó que l'obri.
+- **Barra fixa del creador de quizzes**: amagada amb `inert` quan no es veu,
+  perquè els botons no es duplicaren per al lector de pantalla; els botons
+  compactes de mòbil conserven el nom complet en `aria-label`.
+- **Correspondència** (`matchingBoard.js`): cada parella no depén només
+  del color; cada element porta el seu codi (número o lletra) i el de la
+  seua parella, i els botons tenen `aria-pressed`. Els colors de parella
+  eviten el verd, el taronja i el roig del resultat.
+- **Ordenar** (`orderBoard.js`): cada element es mou també amb els botons ▲ i ▼
+  (amb nom accessible, «Puja» i «Baixa»), no només arrossegant. El primer i
+  l'últim tenen el botó desactivat, i el tauler es presenta com un grup amb nom.
+  A cegues mostra codis (A, B, C) en lloc de text.
+- **Text llarg**: enunciats, respostes i finestres parteixen una paraula
+  o un enllaç sense espais en lloc d'eixir-se'n del requadre.
 
 ## Buits detectats
 
-- **`lang` de pàgina**: només `index.html` el declara (`es`). Les
-  altres 10 pàgines no tenen `lang`, tot i que l'app és multiidioma.
+- **`lang` de pàgina**: només `/` i `/inicio/` el declaren al HTML (`es`);
+  la resta de pantalles el posen amb JS en carregar (`i18n-*.js`,
+  `hostGame.js`, `multiplayer.js`...). L'àrab del Marroc també posa
+  `dir="rtl"` a `<html>` (`languages.js`, `applyDir`). Convé que tots els
+  HTML el declaren de forma estàtica.
 - **Botons de resposta del jugador sense `aria-label`**: depenen només
   de color + forma visual; un lector de pantalla no té cap pista de
   quina resposta és quina. **Parcialment resolt**: quan l'amfitrió
@@ -75,8 +104,10 @@ Ja implementat, no cal tornar a proposar-ho:
   reduïx el respecte a la mida de text preferida del navegador.
 - **`.sr-only` i patrons ARIA inconsistents** entre vistes: `host`,
   `create` i `join` no tenen el que `solo`/`multiplayer` sí tenen.
-- **Sense lectura en veu alta (TTS)**: ja identificat com a idea
-  pendent en `POPULAR_FEATURES.md` (vore més avall), no és un buit nou.
+- **Lectura en veu alta (TTS)**: implementada per a la pregunta i les
+  respostes, a «Jugar a l'aula» i a `/solo/` (vore
+  [`ARCHITECTURE.md`](../ARCHITECTURE.md#lectura-en-veu-alta-tts)). Queda
+  pendent la prova de la veu real en iPad i iPhone.
 
 ## Referència: Kahoot i Wayground
 
@@ -127,7 +158,12 @@ quan es decidisca incorporar-les al document principal:
   forma (triangle/romb/cercle/quadrat), no només el color.~~ **Fet**
   per al mode "a cegues" (vore "Buits detectats" més amunt).
 - `prefers-reduced-motion` per a desactivar/suavitzar les animacions
-  del compte enrere.
+  del compte enrere. El giro de les flashcards (`/solo/`) és animat per
+  defecte, també amb el sistema demanant reduir el moviment (és un gir
+  curt en 2D). L'alumnat pot desactivar-lo amb «Tarjetas con animación»;
+  la preferència es guarda en `localStorage` del navegador. Les dos
+  opcions tenen un retard de 500 ms abans de girar.
+- **Fet**: flashcards amb «Comprobar respuestas». El camp de resposta escrita té nom accessible («Escriu la teua resposta»); el resultat («Correcta» / «Incorrecta») s'anuncia en una regió `role="status"` que existeix des del principi; les desplegables de la correspondència tenen `aria-label` amb l'element de l'esquerra; el resum final també és `role="status"`.
 - Estendre `.sr-only` i els patrons ARIA ja usats a `solo`/`multiplayer`
   cap a `host`, `create` i `join`.
 - Gestió de focus/`Escape` als tres modals existents.
@@ -139,8 +175,8 @@ quan es decidisca incorporar-les al document principal:
 - Subtítols o transcripció per a vídeos de pregunta.
 
 **Relacionades amb idees ja existents:**
-- Lectura en veu alta (TTS): ja a la wishlist de `POPULAR_FEATURES.md`,
-  no duplicar.
+- Lectura en veu alta (TTS): implementada (proposta 13 de
+  `POPULAR_FEATURES.md`). Pendent: ampliar-la als ajustos per alumne (W5).
 - Tipografia per a dislèxia: nova idea, inspirada directament en
   l'enfocament de Wayground.
 - Ajustos per alumne/grup concret (temps, TTS, alt contrast...): amplia
@@ -148,9 +184,8 @@ quan es decidisca incorporar-les al document principal:
 
 ## Relació amb altres documents
 
-- `POPULAR_FEATURES.md` ja té la lectura en veu alta (TTS) com a idea
-  de backlog amb alta inclusió/prioritat. Este document no la duplica,
-  només l'ha confirmat com a no implementada.
+- `POPULAR_FEATURES.md` marca la lectura en veu alta (TTS, proposta 13)
+  com a implementada. Este document només en recull l'abast actual.
 - **W5** (personalització per jugador/grup, afegida hui a la wishlist)
   encaixa de ple amb el model d'"Accommodations" de Wayground; es
   podria ampliar el seu text per a cobrir explícitament ajustos

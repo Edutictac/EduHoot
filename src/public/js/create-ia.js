@@ -1,5 +1,19 @@
 // Generador de quizzes con IA de /create/: prompt, limpieza y vista previa del CSV, extraído de create.js
 // --- Generador IA ---
+// Estado del generador IA y de las importaciones (Subfase B, bloque 2); la
+// plantilla #tools-tpl lo lee directamente.
+var iaState = Vue.reactive({
+    name: '', nivel: '', tema: '', idioma: 'Español', idiomaCustom: '', num: 10, extra: '',
+    types: { quiz: true, multiple: false, tf: false, short: false, numeric: false },
+    useDocs: false,
+    genSvg: false,
+    prompt: '',
+    csv: '',
+    preview: { visible: false, questions: [] },
+    status: { text: '', playId: null },
+    lastUploadedId: null
+});
+
 function buildPrompt(params){
     var idioma = params.idioma === 'otro' && params.idiomaCustom ? params.idiomaCustom : params.idioma;
     var tipos = Array.isArray(params.tipos) && params.tipos.length ? params.tipos : ['quiz'];
@@ -38,16 +52,11 @@ function buildPrompt(params){
 
 function getSelectedIaTypes(){
     var selected = [];
-    var quiz = document.getElementById('ia-type-quiz');
-    var multiple = document.getElementById('ia-type-multiple');
-    var tf = document.getElementById('ia-type-tf');
-    var shortAns = document.getElementById('ia-type-short');
-    var numeric = document.getElementById('ia-type-numeric');
-    if(quiz && quiz.checked) selected.push('quiz');
-    if(multiple && multiple.checked) selected.push('multiple');
-    if(tf && tf.checked) selected.push('true-false');
-    if(shortAns && shortAns.checked) selected.push('short-answer');
-    if(numeric && numeric.checked) selected.push('numeric');
+    if(iaState.types.quiz) selected.push('quiz');
+    if(iaState.types.multiple) selected.push('multiple');
+    if(iaState.types.tf) selected.push('true-false');
+    if(iaState.types.short) selected.push('short-answer');
+    if(iaState.types.numeric) selected.push('numeric');
     if(!selected.length) selected.push('quiz');
     return selected;
 }
@@ -89,20 +98,16 @@ function buildIaTags(){
         }
     }
 
-    var temaVal = document.getElementById('ia-tema') ? document.getElementById('ia-tema').value : '';
-    var nivelVal = document.getElementById('ia-nivel') ? document.getElementById('ia-nivel').value : '';
+    var temaVal = iaState.tema;
+    var nivelVal = iaState.nivel;
     // Nivel: solo una etiqueta (la primera si hay varias)
     addSingleFromList(nivelVal);
     // Tema: puede aportar 1-2 tags útiles
     addFromList(temaVal);
 
-    var idiomaVal = '';
-    if(iaIdioma){
-        idiomaVal = iaIdioma.value === 'otro' && iaIdiomaCustom ? iaIdiomaCustom.value : iaIdioma.value;
-    }
-    addTag(idiomaVal);
+    addTag(iaState.idioma === 'otro' ? iaState.idiomaCustom : iaState.idioma);
 
-    if(iaUseDocs && iaUseDocs.checked){
+    if(iaState.useDocs){
         addTag('con-documentos');
     }
 
@@ -110,14 +115,9 @@ function buildIaTags(){
     return tags.slice(0, 4);
 }
 
+// Con «Usar documentos» el tema sale de los documentos: se vacía el campo.
 function applyIaDocsMode(){
-    if(!iaUseDocs) return;
-    var active = !!iaUseDocs.checked;
-    if(iaDocsHint) iaDocsHint.classList.toggle('hidden', !active);
-    if(iaTema){
-        iaTema.disabled = active;
-        if(active) iaTema.value = '';
-    }
+    if(iaState.useDocs) iaState.tema = '';
 }
 
 function normalizeCsvForDownload(csvText){
@@ -237,33 +237,17 @@ function parseCsvLines(csvText){
     return out;
 }
 
+// Vista previa: cada pregunta con sus respuestas y cuáles son correctas.
 function renderIaPreview(csvText){
-    if(!iaPreviewBox || !iaPreviewContent) return;
-    var questions = parseCsvLines(csvText);
-    iaPreviewContent.innerHTML = '';
-    if(!questions.length){
-        iaPreviewContent.textContent = t('alertPasteCsv');
-        iaPreviewBox.classList.remove('hidden');
-        return;
-    }
-    questions.forEach(function(q, idx){
-        var card = document.createElement('div');
-        card.className = 'ia-preview__q';
-        var title = document.createElement('div');
-        title.className = 'ia-preview__qtitle';
-        title.textContent = (idx + 1) + '. ' + (q.pregunta || '');
-        card.appendChild(title);
-        var list = document.createElement('div');
-        list.className = 'ia-preview__answers';
-
+    var questions = parseCsvLines(csvText).map(function(q, idx){
         var qType = (q.tipo || '').toString().toLowerCase().trim();
+        var answers = [];
 
         function splitAccepted(raw){
             var s = (raw || '').toString().trim();
             if(!s) return [];
-            var parts = s.split(/[|\n]+/g);
             var out = [];
-            parts.forEach(function(p){
+            s.split(/[|\n]+/g).forEach(function(p){
                 p.split(',').forEach(function(pp){
                     var clean = (pp || '').toString().trim();
                     if(clean) out.push(clean);
@@ -275,35 +259,11 @@ function renderIaPreview(csvText){
         if(qType === 'short-answer' || qType === 'shortanswer'){
             var accepted = splitAccepted(q.texto || q.correcta);
             if(!accepted.length) accepted = [''];
-            accepted.forEach(function(a){
-                var row = document.createElement('div');
-                row.className = 'ia-preview__answer is-correct';
-                var bullet = document.createElement('span');
-                bullet.className = 'ia-preview__bullet';
-                bullet.textContent = '✓';
-                var txt = document.createElement('span');
-                txt.className = 'ia-preview__text';
-                txt.textContent = a;
-                row.appendChild(bullet);
-                row.appendChild(txt);
-                list.appendChild(row);
-            });
+            answers = accepted.map(function(a){ return { text: a, correct: true }; });
         }else if(qType === 'numeric' || qType === 'numerical'){
             var n = (q.numero || q.correcta || '').toString().trim();
             var tol = (q.tolerancia || '').toString().trim();
-            var label = n;
-            if(tol && tol !== '0') label = n + ' ± ' + tol;
-            var row = document.createElement('div');
-            row.className = 'ia-preview__answer is-correct';
-            var bullet = document.createElement('span');
-            bullet.className = 'ia-preview__bullet';
-            bullet.textContent = '✓';
-            var txt = document.createElement('span');
-            txt.className = 'ia-preview__text';
-            txt.textContent = label;
-            row.appendChild(bullet);
-            row.appendChild(txt);
-            list.appendChild(row);
+            answers = [{ text: (tol && tol !== '0') ? n + ' ± ' + tol : n, correct: true }];
         }else{
             var correctIdx = [];
             (q.correcta || '').split(',').forEach(function(n){
@@ -311,22 +271,10 @@ function renderIaPreview(csvText){
                 if(!isNaN(i)) correctIdx.push(i - 1);
             });
             q.respuestas.forEach(function(a, i){
-                if(!a) return;
-                var row = document.createElement('div');
-                row.className = 'ia-preview__answer' + (correctIdx.indexOf(i) !== -1 ? ' is-correct' : '');
-                var bullet = document.createElement('span');
-                bullet.className = 'ia-preview__bullet';
-                bullet.textContent = (correctIdx.indexOf(i) !== -1 ? '✓' : '•');
-                var txt = document.createElement('span');
-                txt.className = 'ia-preview__text';
-                txt.textContent = a;
-                row.appendChild(bullet);
-                row.appendChild(txt);
-                list.appendChild(row);
+                if(a) answers.push({ text: a, correct: correctIdx.indexOf(i) !== -1 });
             });
         }
-        card.appendChild(list);
-        iaPreviewContent.appendChild(card);
+        return { title: (idx + 1) + '. ' + (q.pregunta || ''), answers: answers };
     });
-    iaPreviewBox.classList.remove('hidden');
+    iaState.preview = { visible: true, questions: questions };
 }

@@ -3,10 +3,18 @@
 // la seua funció t(); ací només hi ha el que és igual en totes.
 (function(){
     var LANGUAGES = [
-        { code: 'ca', name: 'Català', short: 'CA' },
-        { code: 'va', name: 'Valencià', short: 'VA' },
-        { code: 'es', name: 'Español', short: 'ES' },
-        { code: 'en', name: 'English', short: 'EN' }
+        // «primary»: van como botones en los selectores de botones; el resto, en un desplegable a su derecha.
+        { code: 'ca', name: 'Català', short: 'CA', primary: true },
+        { code: 'va', name: 'Valencià', short: 'VA', primary: true },
+        { code: 'es', name: 'Español', short: 'ES', primary: true },
+        { code: 'en', name: 'English', short: 'EN', primary: true },
+        { code: 'fr', name: 'Français', short: 'FR' },
+        { code: 'de', name: 'Deutsch', short: 'DE' },
+        { code: 'it', name: 'Italiano', short: 'IT' },
+        { code: 'pt', name: 'Português', short: 'PT' },
+        { code: 'bg', name: 'Български', short: 'BG' },
+        // Árabe de Marruecos: escritura de derecha a izquierda (ver applyDir).
+        { code: 'ar', name: 'العربية (المغرب)', short: 'AR', rtl: true }
     ];
     var CODES = LANGUAGES.map(function(l){ return l.code; });
     // Totes les claus s'escriuen sempre juntes; l'ordre només decidix
@@ -53,6 +61,14 @@
         }
     }
 
+    // Idiomas de derecha a izquierda: el documento entero cambia de sentido.
+    function applyDir(lang){
+        var rtl = LANGUAGES.some(function(l){ return l.rtl && l.code === lang; });
+        try{
+            document.documentElement.setAttribute('dir', rtl ? 'rtl' : 'ltr');
+        }catch(e){}
+    }
+
     function init(opts){
         opts = opts || {};
         var lang = fromQuery()
@@ -61,6 +77,7 @@
             || opts.fallback
             || 'es';
         persist(lang);
+        applyDir(lang);
         return lang;
     }
 
@@ -75,9 +92,25 @@
         });
     }
 
+    function current(){
+        return fromQuery() || fromStorage() || normalize(navigator.language || navigator.userLanguage || 'es') || 'es';
+    }
+
+    // El desplegable de «más idiomas» marca el activo si el idioma actual no es uno de los botones.
+    function syncMore(lang){
+        var active = lang || current();
+        document.querySelectorAll('select.lang-more').forEach(function(select){
+            var isExtra = LANGUAGES.some(function(l){ return !l.primary && l.code === active; });
+            select.value = isExtra ? active : '';
+            select.classList.toggle('active', isExtra);
+        });
+    }
+
     function fillButtons(container){
-        if(container.querySelector('button[data-lang]')) return;
+        if(container.querySelector('button[data-lang], select.lang-more')) return;
+        var extras = [];
         LANGUAGES.forEach(function(l){
+            if(!l.primary){ extras.push(l); return; }
             var button = document.createElement('button');
             button.type = 'button';
             button.setAttribute('data-lang', l.code);
@@ -85,6 +118,36 @@
             button.textContent = l.short;
             container.appendChild(button);
         });
+        if(!extras.length) return;
+        var select = document.createElement('select');
+        select.className = 'lang-more';
+        select.setAttribute('aria-label', 'Language');
+        select.setAttribute('title', extras.map(function(l){ return l.name; }).join(', '));
+        var blank = document.createElement('option');
+        blank.value = '';
+        blank.textContent = '🌐';
+        select.appendChild(blank);
+        extras.forEach(function(l){
+            var option = document.createElement('option');
+            option.value = l.code;
+            // Las dos iniciales en mayúsculas, como los botones; el nombre completo queda en la ayuda.
+            option.textContent = l.short;
+            option.title = l.name;
+            select.appendChild(option);
+        });
+        // Cada pantalla ya escucha el clic en `button[data-lang]` del contenedor: se reutiliza con un botón temporal.
+        select.addEventListener('change', function(){
+            if(!select.value) return;
+            var button = document.createElement('button');
+            button.type = 'button';
+            button.setAttribute('data-lang', select.value);
+            button.hidden = true;
+            container.appendChild(button);
+            button.click();
+            button.remove();
+        });
+        container.appendChild(select);
+        syncMore();
     }
 
     function render(){
@@ -99,7 +162,10 @@
         fromStorage: fromStorage,
         persist: persist,
         init: init,
-        render: render
+        render: render,
+        syncMore: syncMore,
+        applyDir: applyDir,
+        current: current
     };
 
     // Els scripts de pàgina van al final del <body>, així que normalment

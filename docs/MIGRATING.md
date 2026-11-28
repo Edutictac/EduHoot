@@ -1,5 +1,7 @@
 # Proposta: separar responsabilitats i avaluar un framework de frontend
 
+> **Arxivat (26-11-2026).** Document històric, no es manté al dia. Proposta de migració a Vue ja executada: Subfase A (v1.1.0) i Subfase B (acabada el 12-11-2026). Per a l'arquitectura actual, vore `ARCHITECTURE.md`.
+
 Document de treball per a migrar a un sistema més mantenible. Resumix el
 deute tècnic actual d'EduHoot (monòlit sense separació de
 responsabilitats) i si tindria sentit, una vegada resolt eixe deute,
@@ -210,14 +212,14 @@ risc sense passar per Alpine.
 
 **Amb l'opció proposada (Vue via CDN, sense build step): impacte nul.**
 Es continua servint tot igual que ara; no cal tocar
-`docs/DEV_DOCKER_SETUP.md`, `docs/STAGE_SETUP.md` ni `docs/DOCKER.md`.
+`docs/DEV_DOCKER_SETUP.md` ni `docs/DOCKER.md`.
 
 *Però, **si s'elegix una opció amb build step -Svelte, React-,** l'impacte és real en els tres entorns*:
 
 | | Desenvolupament (dev) | Preproducció (stage) | Producció |
 |---|---|---|---|
 | **Què canvia** | Cal fer córrer el bundler en mode watch (p. ex. servidor de desenvolupament de Vite amb HMR) junt al backend (`node --watch`) — dos processos en lloc d'un. | `scripts/deploy-stage.sh` hauria d'executar `npm run build` abans de reiniciar el servici, i Express passaria a servir `dist/` en lloc de `public/js/` directament. | El `Dockerfile` de producció (que hui fa `npm ci --omit=dev`, sense devDependencies) necessitaria convertir-se en un **build multi-stage**: una fase amb devDependencies que execute `npm run build`, i una fase final que només copie el `dist/` resultant — patró estàndard de Docker, però nou ací. |
-| **Documents a actualitzar** | `docs/DEV_DOCKER_SETUP.md` (ja implementat) necessitaria un segon servici o procés per al bundler. | `docs/STAGE_SETUP.md`, punt 5 (desplegar a stage). | `docs/DOCKER.md` (publicació d'imatge) i, si aplica, `scripts/deploy.example.sh`. |
+| **Documents a actualitzar** | `docs/DEV_DOCKER_SETUP.md` (ja implementat) necessitaria un segon servici o procés per al bundler. | `docs/DEV_DOCKER_SETUP.md` (ja implementat) necessiria un segon servici o procés per al bundler. | `docs/DOCKER.md` (publicació d'imatge) i, si aplica, `scripts/deploy.example.sh`. |
 | **Risc** | Baix (entorn d'un sol desenvolupador). | Mitjà (és justament l'entorn pensat per a detectar este tipus de problema abans de producció). | Mitjà-alt si no es prova abans a fons en stage — és l'entorn real dels centres. |
 
 Esta taula és, en si mateixa, part de l'argument a favor de Vue via CDN
@@ -309,6 +311,12 @@ que fixar l'estructura final exacta.
 
 ## Subfase B — Proposta concreta d'implementació amb Vue
 
+**Estat (2026-11-12)**: feta. Vue en les pantalles principals: `/host/`,
+`/player/game/`, `/host/game/`, `/multiplayer/`, `/create/quiz-creator/`,
+`/solo/`, `/create/`, `/join.html`, `/player/` i els panells `/admin-*`.
+Només la portada queda sense Vue, perquè no té JS propi. El detall de cada
+pantalla està en `ARCHITECTURE.md`.
+
 Esta secció només afecta al **frontend**; el backend ja queda resolt amb
 la separació de la Subfase A (`routes/`, `sockets/`,
 `services/`, `data/`) — Vue es monta sobre eixos mateixos endpoints i
@@ -327,6 +335,8 @@ Com s'integraria, sense build step:
 - La lògica que hui ja existix (crides `fetch` als endpoints, listeners
   de Socket.IO) es mou als mateixos mòduls que ja proposa la Subfase A
   — no se'n creen de nous només pel canvi de framework.
+- Compilar les plantilles en el navegador necessita `'unsafe-eval'` en la
+  CSP, que ja està activa (vore `ARCHITECTURE.md` → "Deute tècnic conegut").
 
 Per a que es puga comparar directament amb la Subfase A, l'arbre
 d'ací baix manté **exactament els mateixos fitxers i la mateixa forma**
@@ -359,6 +369,11 @@ convertits en components Vue).
 Cap d'estos noms és definitiu, igual que en l'arbre de la Subfase A —
 l'objectiu és que els dos arbres es puguen llegir fitxer a fitxer, un
 davall de l'altre, per a veure exactament què canvia i què no.
+
+Nota: la Subfase A va deixar fitxers plans (`create-*.js`, `solo-*.js`),
+no les subcarpetes `create/` i `solo/` d'estos arbres. La prova pilot de
+Vue (lobby de `/host/`) seguix eixe arbre real: es manté `host.js`, i
+el detall està en `ARCHITECTURE.md` → "Lobby de l'amfitrió amb Vue".
 
 ## Taula comparativa entre subfases
 

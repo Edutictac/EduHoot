@@ -7,7 +7,7 @@
 (function () {
   'use strict';
 
-  var LANGS = ['ca', 'va', 'es', 'en'];
+  var LANGS = ['ca', 'va', 'es', 'en', 'fr', 'de', 'it', 'pt', 'bg', 'ar'];
   var LANG_KEYS = ['lang', 'lang-player', 'lang-host', 'edutictac-portal-lang', 'edutictac-lang'];
   var ACCOUNT_TIMEOUT_MS = 5000;
 
@@ -76,6 +76,14 @@
     document.documentElement.classList.toggle('account-home-only', !!(chip && chip.hasAttribute('data-home-only')));
     document.documentElement.classList.add('has-account-chip');
   }
+
+  // Si account-widget.js no carrega, respost de seguida (abans era un
+  // onerror="…" en cada HTML, que la CSP no permet). Els errors de càrrega
+  // d'un <script> no pugen, però es veuen en la fase de captura.
+  document.addEventListener('error', function (event) {
+    var el = event.target;
+    if (el && el.tagName === 'SCRIPT' && /\/assets\/account-widget\.js(\?|$)/.test(el.src || '')) fallback();
+  }, true);
 
   var timer = window.setTimeout(function () {
     if (!document.querySelector('edutictac-account nav.eta')) fallback();

@@ -7,6 +7,7 @@ scripts/.codex
 
 # Dependencias (se instalan con npm ci / npm install)
 node_modules/
+test-results/
 src/test-results/
 src/playwright-report/
 src/logs/
@@ -17,3 +18,4 @@ src/logs/
 # Directorios y ficheros para trabajar en local
 .local
 AGENTS.md
+

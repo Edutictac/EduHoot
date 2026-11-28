@@ -1,67 +1,115 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <link rel="icon" href="/icons/logo.svg" type="image/svg+xml">
         <meta charset="utf-8">
         <title>Game | EduHoot</title>
+        <link rel="stylesheet" href="/css/countdown.css">
+        <link rel="stylesheet" href="/css/answers.css">
+        <link rel="stylesheet" href="/css/matching.css">
+        <link rel="stylesheet" href="/css/order.css">
         <link rel = "stylesheet" href = "../../css/playerGameView.css">
+        <link rel = "stylesheet" href = "../../css/playerLiveStatus.css">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link href="/css/fonts.css" rel="stylesheet">
-    </head>
+            <link rel="stylesheet" href="/css/page-fit.css">
+        <link href="/css/brand-unify.css" rel="stylesheet">
+        <link rel="stylesheet" href="/css/lang-more.css">
+</head>
     <body>
-        <div id = "stats">
-            <h4 id = "nameText">Name:</h4>
-            <h4 id = "scoreText">Score:</h4>
-            <h4 id = "rankText"></h4>
-        </div>
-        <h3 id="questionText"></h3>
-        <div id="questionCountdown" class="question-countdown" aria-live="polite" aria-hidden="true">
-            <div class="question-countdown__label" id="questionCountdownLabel">Prepara la siguiente pregunta...</div>
-            <div class="question-countdown__dial">
-                <span id="questionCountdownNumber">3</span>
+        <!-- Subfase B, Vue (playerGame.js): tota la pantalla és una sola
+             app de Vue, feta en dos blocs (vore ARCHITECTURE.md). -->
+        <div id="player-game"></div>
+        <template id="player-game-tpl">
+            <p id = "quizNameText" class="quiz-name-text" v-if="quizName">{{ quizName }}</p>
+            <div id = "stats">
+                <h4 id = "nameText">{{ nameDisplay }}</h4>
+                <h4 id = "scoreText">{{ scoreDisplay }}</h4>
+                <h4 id = "streakText" class="streak-text" v-show="streak > 0">{{ streakText }}</h4>
+                <h4 id = "autoAdvanceNotice" class="auto-advance-notice" v-if="autoActive">{{ autoNextText }}</h4>
+                <div id="gamePin" class="game-pin" v-if="pinDisplay">
+                    <span class="game-pin__label">{{ t('lobby_pin', 'Código de partida:') }}</span>
+                    <span class="game-pin__code">{{ pinDisplay }}</span>
+                </div>
+                <h4 id = "rankText" v-show="rankText">{{ rankText }}</h4>
             </div>
-            <div class="question-countdown__hint" id="questionCountdownHint">La siguiente empieza en</div>
-        </div>
-        <div id="playerPointsBadge" class="player-points-badge" style="display:none;"></div>
-        <div id="playerStatusRow">
-            <div id="playerTimer">
-                <div id="playerTimerFill"></div>
-                <span id="playerTimerText">20s</span>
+            <h3 id="questionText" v-html="questionHtml"></h3>
+            <div id="questionCountdown" class="question-countdown" :class="{ 'is-visible': countdownVisible, 'is-ticking': countdownVisible }" aria-live="polite" :aria-hidden="!countdownVisible">
+                <div class="question-countdown__label" id="questionCountdownLabel">{{ t('question_countdown', 'Prepara la siguiente pregunta...') }}</div>
+                <!-- Clau per segon: recrea el dial per a repetir l'animació de "tic" cada
+                     segon (com feia l'original amb classList.remove/add + reflow), sense
+                     tocar l'exterior i així no es talla la lluentor contínua del fons. -->
+                <div class="question-countdown__dial" :key="'dial-' + countdownSeconds">
+                    <span id="questionCountdownNumber">{{ countdownSeconds > 0 ? countdownSeconds : '' }}</span>
+                </div>
+                <div class="question-countdown__hint" id="questionCountdownHint">{{ t('question_countdown_hint', 'La siguiente empieza en') }}</div>
+                <p v-if="countdownPreview" id="questionCountdownPreview" class="question-countdown__preview">{{ countdownPreview }}</p>
             </div>
-            <div id="playerAnswerStatus" class="hidden"></div>
-        </div>
-        <div id="playerImageWrap">
-            <img id="playerQuestionImage" alt="">
-            <video id="playerQuestionVideo" controls></video>
-            <iframe id="playerQuestionIframe" allowfullscreen loading="lazy"></iframe>
-        </div>
-        <h2 id = "message"></h2>
-        <div id="freeSubmitRow">
-            <input id="freeAnswerInput" type="text" autocomplete="off" />
-            <button type="button" id="freeSubmitBtn" class="button free-submit">Enviar</button>
-        </div>
-        <button onclick = "answerSubmitted(1)" id = "answer1" class = "button"></button>
-        <button onclick = "answerSubmitted(2)" id = "answer2" class = "button"></button>
-        <br>
-        <button onclick = "answerSubmitted(3)" id = "answer3" class = "button"></button>
-        <button onclick = "answerSubmitted(4)" id = "answer4" class = "button"></button>
-        <div id="multiSubmitRow">
-            <button type="button" id="multiSubmitBtn" class="button multi-submit" onclick="submitMultiAnswers()">Enviar respuestas</button>
-        </div>
-        <div id="playerRankingModal" class="player-modal">
-            <div class="player-modal__content">
-                <h3 id="playerRankingTitle" data-i18n="player_ranking_title">Top 10</h3>
-                <ol id="playerRankingList"></ol>
-                <button type="button" id="playerRankingClose" class="player-modal__close" data-i18n="player_ranking_close">Continuar</button>
+            <div id="playerPointsBadge" class="player-points-badge points-badge-pop" :key="'badge-' + badgeKey" :style="{ display: badgeVisible ? 'inline-flex' : 'none' }">{{ badgeText }}</div>
+            <div id="playerStatusRow">
+                <div class="tts-timer-wrap" :class="{ 'has-tts': ttsAvailable }">
+                    <div id="playerTimer" class="game-timer" v-show="!resultShown">
+                        <div id="playerTimerFill" class="game-timer__fill" :style="{ width: timerPct + '%', background: timerColor }"></div>
+                        <span id="playerTimerText" class="game-timer__text">{{ timerText }}</span>
+                    </div>
+                    <button v-if="ttsAvailable" id="ttsButton" type="button" class="tts-btn" :aria-pressed="ttsSpeaking ? 'true' : 'false'" :aria-label="ttsSpeaking ? t('tts_stop', 'Parar') : t('tts_listen', 'Escoltar la pregunta')" :title="ttsSpeaking ? t('tts_stop', 'Parar') : t('tts_listen', 'Escoltar la pregunta')" @click="toggleSpeech"><span aria-hidden="true">{{ ttsSpeaking ? '⏹' : '🔊' }}</span></button>
+                </div>
+                <div id="playerAnswerStatus" :class="{ hidden: !answerStatusVisible }">{{ answerStatusText }}</div>
             </div>
-        </div>
+            <div id="playerImageWrap">
+                <img id="playerQuestionImage" alt="">
+                <video id="playerQuestionVideo" controls></video>
+                <iframe referrerpolicy="strict-origin-when-cross-origin" id="playerQuestionIframe" allowfullscreen loading="lazy"></iframe>
+            </div>
+            <div id="resultIcon" class="result-icon" v-if="resultIcon" aria-hidden="true">{{ resultIcon }}</div>
+            <h2 id = "message" :class="messageKind ? 'message--' + messageKind : ''" v-show="messageVisible">{{ message }}<span v-if="messageDetailHtml" class="player-correct-answer" v-html="messageDetailHtml"></span></h2>
+            <p id="resultSub" class="result-sub" v-if="resultSub">{{ resultSub }}</p>
+            <p id="ghostLine" class="result-sub ghost-line" v-if="ghostLine">{{ ghostLine }}</p>
+            <div id="freeSubmitRow" :style="{ display: freeRowVisible ? 'flex' : 'none' }">
+                <input id="freeAnswerInput" ref="freeAnswerInput" type="text" autocomplete="off" :inputmode="questionType === 'numeric' ? 'decimal' : 'text'" :placeholder="freePlaceholder" v-model="freeAnswerValue" @keydown.enter.prevent="submitFree" />
+                <button type="button" id="freeSubmitBtn" class="button free-submit" @click="submitFree">{{ t('submit_free', 'Enviar') }}</button>
+            </div>
+            <order-board v-if="orderVisible" :key="'order-' + orderKey" :items="orderItems" :count="orderCount" :layout="orderLayout" :t="t" @submit="submitOrder"></order-board>
+            <matching-board v-if="matchingVisible" :key="'match-' + matchKey" :left="matchLeft" :right="matchRight" :left-count="matchLeftCount" :right-count="matchRightCount" :blind-style="matchBlindStyle" :t="t" @submit="submitMatching"></matching-board>
+            <div id="answerGrid" class="answer-grid">
+                <button id = "answer1" class = "button answer-shape answer-shape--1" :class="{ 'multi-selected': isMultiSelected(1) }" v-show="buttonVisible(0)" :aria-label="buttonAriaLabel(0)" v-html="buttonHtml(0)" @click="onAnswerClick(1)"></button>
+                <button id = "answer2" class = "button answer-shape answer-shape--2" :class="{ 'multi-selected': isMultiSelected(2) }" v-show="buttonVisible(1)" :aria-label="buttonAriaLabel(1)" v-html="buttonHtml(1)" @click="onAnswerClick(2)"></button>
+                <button id = "answer3" class = "button answer-shape answer-shape--3" :class="{ 'multi-selected': isMultiSelected(3) }" v-show="buttonVisible(2)" :aria-label="buttonAriaLabel(2)" v-html="buttonHtml(2)" @click="onAnswerClick(3)"></button>
+                <button id = "answer4" class = "button answer-shape answer-shape--4" :class="{ 'multi-selected': isMultiSelected(4) }" v-show="buttonVisible(3)" :aria-label="buttonAriaLabel(3)" v-html="buttonHtml(3)" @click="onAnswerClick(4)"></button>
+            </div>
+            <div id="multiSubmitRow" :style="{ display: multiRowVisible ? 'flex' : 'none' }">
+                <button type="button" id="multiSubmitBtn" class="button multi-submit" @click="submitMultiAnswers">{{ t('submit_multiple', 'Submit answers') }}</button>
+            </div>
+            <button type="button" id="leaveGameBtn" class="leave-game-btn" :class="{ 'is-confirming': leaveConfirming }" @click="askLeave">{{ leaveConfirming ? t('lobby_leave_confirm', 'Confirmar salida') : t('lobby_leave', 'Salir') }}</button>
+            <div id="raiseHandRow" v-show="answersVisible">
+                <button type="button" id="raiseHandBtn" class="raise-hand-btn" :aria-pressed="handRaised ? 'true' : 'false'" @click="toggleHand">✋ {{ handRaised ? t('handLower', 'Bajar la mano') : t('handRaise', 'Levantar la mano') }}</button>
+            </div>
+            <div id="playerRankingModal" class="player-modal" :class="{ show: rankingVisible }">
+                <div class="player-modal__content">
+                    <h3 id="playerRankingTitle">{{ t('player_ranking_title', 'Top 10') }}</h3>
+                    <ol id="playerRankingList">
+                        <li v-for="(entry, idx) in rankingList" :key="idx">{{ entry }}</li>
+                    </ol>
+                    <button type="button" id="playerRankingClose" class="player-modal__close" @click="hidePlayerRanking">{{ t('player_ranking_close', 'Continuar') }}</button>
+                </div>
+            </div>
+        </template>
         <div id="lang-switcher" data-lang-buttons>
         </div>
         <script src="/js/languages.js"></script>
         <script src="/js/env-badge.js"></script>
         <script src = "../../js/i18n-player.js"></script>
+        <script src = "../../js/viewport-fit.js"></script>
+        <script src = "../../js/tts.js"></script>
         <script src = "../../socket.io/socket.io.js"></script>
         <script src = "../../js/libs/jqueryLibrary.js"></script>
         <script src = "../../js/libs/deparam.js"></script>
+        <script src = "../../js/libs/vue.global.prod.js"></script>
+        <script src = "../../js/matchingBoard.js"></script>
+        <script src = "../../js/orderBoard.js"></script>
+        <script src="/js/tfLabels.js"></script>
+        <script src = "../../js/playerCommon.js"></script>
+        <script src="../../js/solo-ghost.js"></script>
         <script src = "../../js/playerGame.js"></script>
     </body>
 </html>

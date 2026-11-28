@@ -1,0 +1,46 @@
+/* Ancho del contenido en las pantallas de entrada, anfitrión y alumnado.
+   Con espacio: 10 % de margen a cada lado. En móvil: margen mínimo (12 px) para que quepa bien. */
+:root{ --page-gutter: 12px; }
+/* Con espacio de verdad (pantalla ancha y alta). En móvil apaisado, el margen mínimo. */
+@media (min-width: 600px) and (min-height: 500px){ :root{ --page-gutter: 10vw; } }
+
+body{
+    box-sizing: border-box;
+    padding-left: var(--page-gutter) !important;
+    padding-right: var(--page-gutter) !important;
+}
+
+/* El contenido ocupa el ancho disponible: se quitan los límites fijos de columna del contenedor principal. */
+#join-app > *, #join-app form, .landing-shell,
+#host-lobby > *, #host-game > *, .host-shell,
+#lobby-app > *, .lobby-card,
+#join-app form,
+#player-game > *, #player-game #stats, #player-game #playerStatusRow,
+#player-sp > *, #player-sp #stats, #player-sp #playerStatusRow {
+    box-sizing: border-box;
+    max-width: none !important;
+    width: 100%;
+}
+
+/* El body puede ser flex: sin esto, el contenido se encoge al texto en vez de ocupar el ancho disponible. */
+body > :not(script):not(link):not(style):not(edutictac-account):not(edutictac-footer):not(.site-account):not(.site-footer):not(.env-badge):not(.env-badge-tint):not(#lang-switcher):not(.back-link):not(.back-links){
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
+}
+
+/* Elementos flotantes (fijos) conservan su ancho natural: si ocuparan todo el ancho tapan los botones de debajo. */
+#raiseHandRow, #leaveGameBtn, .leave-game-btn, .env-badge, .env-badge-tint, .back-link, #lang-switcher{
+    width: auto !important;
+}
+
+@media not all and (max-height: 500px) and (orientation: landscape){
+    #player-game, #player-sp{ max-width: none !important; }
+}
+
+/* La partida del alumnado en el móvil apaisado (poca altura) conserva su ancho máximo:
+   más ancho haría las respuestas más altas y no cabrían en la pantalla. */
+@media (max-height: 500px) and (orientation: landscape){
+    #player-game, #player-game #stats, #player-game #playerStatusRow,
+    #player-sp, #player-sp #stats, #player-sp #playerStatusRow{ max-width: 720px !important; }
+}

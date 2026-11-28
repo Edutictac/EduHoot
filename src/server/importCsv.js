@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { MongoClient } = require('mongodb');
 const { normalizeQuestionMeta } = require('./questionUtils');
+const { splitOrderItemsFromCsv } = require('./services/orderQuestion');
 
 // CSV parser (separador ;) con soporte de:
 // - Campos entrecomillados
@@ -169,10 +170,18 @@ function normalizeSvgDataUrl(value) {
 
 function toQuestion(row) {
   const answers = [row.r1, row.r2, row.r3, row.r4];
+  // Ordenar: els elements en ordre correcte (de Moodle en row.items; del CSV, separats per « | » a texto).
+  const orderItems = Array.isArray(row.items) ? row.items : splitOrderItemsFromCsv(row.texto);
   const meta = normalizeQuestionMeta({
+    items: orderItems,
+    // De Moodle, en row.orderGrading i row.layout; del CSV, a numero i tolerancia (buides en els fitxers antics).
+    orderGrading: row.orderGrading !== undefined ? row.orderGrading : row.numero,
+    layout: row.layout !== undefined ? row.layout : row.tolerancia,
     type: row.tipo,
     correct: row.correcta,
     texto: row.texto,
+    // Correspondencia importada de Moodle o GIFT: parejas ya separadas.
+    pairs: Array.isArray(row.pairs) ? row.pairs : undefined,
     numero: row.numero,
     tolerancia: row.tolerancia
   });
@@ -192,6 +201,26 @@ function toQuestion(row) {
     return {
       ...base,
       acceptedAnswers: Array.isArray(meta.acceptedAnswers) ? meta.acceptedAnswers : []
+    };
+  }
+
+  if (meta.type === 'matching') {
+    return {
+      ...base,
+      answers: ['', '', '', ''],
+      pairs: meta.pairs || []
+    };
+  }
+
+  if (meta.type === 'order') {
+    // Una ordenar amb menys de 2 elements no es pot jugar: la fila no es desa.
+    if (!Array.isArray(meta.items) || meta.items.length < 2) return null;
+    return {
+      ...base,
+      answers: ['', '', '', ''],
+      items: meta.items,
+      orderGrading: meta.orderGrading,
+      layout: meta.layout
     };
   }
 
@@ -230,7 +259,7 @@ async function insertQuiz(filePath, quizName) {
   const quiz = {
     id: nextId,
     name: quizName,
-    questions: rows.map(toQuestion)
+    questions: rows.map(toQuestion).filter(Boolean)
   };
 
   await collection.insertOne(quiz);

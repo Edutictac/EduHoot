@@ -5,20 +5,24 @@
         <title>Create | EduHoot</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="stylesheet" href = "../css/create.css">
+        <link rel="stylesheet" href="/css/dropdowns.css">
         <link href="/css/fonts.css" rel="stylesheet">
         <link rel="stylesheet" href="/css/edutictac-footer.css">
         <link rel="stylesheet" href="/css/edutictac-shared.css">
         <script src="/js/edutictac-chip.js"></script>
-        <script src="https://commons.edutictac.es/assets/account-widget.js" defer onerror="document.documentElement.classList.add('account-fallback')"></script>
+        <script src="https://commons.edutictac.es/assets/account-widget.js" defer></script>
         <link rel="icon" href="/icons/logo.svg" type="image/svg+xml">
+        <link href="/css/brand-unify.css" rel="stylesheet">
     </head>
-    <body>
-        <a id = "back"href = "../" data-i18n="back">Volver</a>
+    <body class="lp-page lp-has-back">
+        <a id = "back"href = "../" data-i18n="back">Inicio</a>
         <edutictac-account class="site-account site-account--top" data-base="https://commons.edutictac.es"></edutictac-account>
         <div class="page-shell">
             <div class="top-row">
-                <h1 id = "title" data-i18n="title">Crea y lanza tu EduHoot</h1>
+                <h1 id = "title"><img class="title-logo" src="/icons/logo.svg" alt="" width="56" height="56"><span data-i18n="title">Crea y lanza tu EduHoot</span></h1>
                 <div class="top-actions">
+                    <a id="my-games" :title="t('myGames')" class="btn btn-ghost btn-small hidden" href="partidas/" data-i18n="myGames">Mis partidas</a>
+                    <a id="my-homework" :title="t('myHomework')" class="btn btn-ghost btn-small" href="homework/" data-i18n="myHomework">Mis deberes</a>
                     <label class="lang-switch">
                         <span data-i18n="langLabel">Idioma</span>
                         <select id="lang-select" data-lang-options="name"></select>
@@ -26,88 +30,93 @@
                     <button id="open-account" type="button" class="btn btn-ghost btn-small hidden" data-i18n="btnAccount">Preferencias</button>
                 </div>
             </div>
-            <h4 id = "subtitle" data-i18n="subtitle">Genera con IA, importa (CSV o Kahoot) o <a id = "link" href = "quiz-creator/">crea un cuestionario desde cero</a>.</h4>
+            <h4 id = "subtitle" data-i18n="subtitle">Genera con IA, importa (archivo o Kahoot) o <a id = "link" href = "quiz-creator/">crea un cuestionario desde cero</a>.</h4>
 
-            <aside id="stage-notice" class="stage-notice" aria-labelledby="stage-notice-title">
-                <h2 id="stage-notice-title" data-i18n="stageNoticeTitle">Prueba las novedades de EduHoot</h2>
-                <p data-i18n="stageNoticeDesc">Si quieres probar las novedades de EduHoot, visita nuestro entorno de pruebas EduHoot Stage.</p>
-                <a class="btn btn-ghost" href="https://eduhoot-stage.edutictac.es/" target="_blank" rel="noopener noreferrer" data-i18n="stageNoticeLink">Probar EduHoot Stage ↗</a>
+            <aside id="stage-notice" class="stage-notice hidden" aria-labelledby="stage-notice-title">
+                <h2 id="stage-notice-title" data-i18n="stageNoticeTitle">Prova les novetats d'EduHoot</h2>
+                <p data-i18n="stageNoticeDesc">Si vols provar les novetats d'EduHoot, visita el nostre entorn de proves EduHoot Stage.</p>
+                <div class="stage-notice__actions">
+                    <a id="stage-notice-try-stage" class="btn btn-ghost" href="https://eduhoot-stage.edutictac.es/" target="_blank" rel="noopener noreferrer" data-i18n="stageNoticeLink">Provar EduHoot Stage ↗</a>
+                    <a class="btn btn-ghost" href="https://github.com/Edutictac/EduHoot/blob/edu_development/WHATSNEW.md" target="_blank" rel="noopener noreferrer" data-i18n="stageNoticeWhatsNew">Veure les novetats ↗</a>
+                </div>
             </aside>
 
-            <section id="new-user-signin" class="signin-callout hidden" aria-labelledby="new-user-signin-title">
+            <div id="account-app"></div>
+            <template id="account-tpl">
+            <section id="new-user-signin" class="signin-callout" :class="{ hidden: !acc.authentikEnabled || !!auth.user }" aria-labelledby="new-user-signin-title">
                 <div>
-                    <p class="eyebrow" data-i18n="signinEyebrow">Nuevo en EduHoot</p>
-                    <h2 id="new-user-signin-title" data-i18n="signinTitle">Guarda tus cuestionarios desde el primer minuto</h2>
-                    <p class="subtext" data-i18n="signinDesc">Entra con tu cuenta EduTicTac para tener biblioteca propia, editar después y lanzar tus juegos desde cualquier equipo.</p>
+                    <p class="eyebrow">{{ t('signinEyebrow') }}</p>
+                    <h2 id="new-user-signin-title">{{ t('signinTitle') }}</h2>
+                    <p class="subtext">{{ t('signinDesc') }}</p>
                 </div>
                 <div class="signin-callout__actions">
-                    <button id="open-account-menu" type="button" class="btn btn-primary btn-google-prominent" data-i18n="btnLogin">Entrar</button>
+                    <button id="open-account-menu" type="button" class="btn btn-primary btn-google-prominent" @click="openAccountMenu">{{ t('btnLogin') }}</button>
                 </div>
             </section>
-            <p class="subtext auth-message" id="auth-message" role="status"></p>
+            <p class="subtext auth-message" id="auth-message" role="status">{{ acc.authMessage }}</p>
 
-            <div id="auth-modal" class="modal hidden" role="dialog" aria-modal="true">
-                <div class="modal__backdrop" data-modal-close></div>
+            <div id="auth-modal" class="modal" :class="{ hidden: !acc.modalOpen }" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
+                <div class="modal__backdrop" @click="close"></div>
                 <div class="modal__content" role="document">
-                    <button id="auth-modal-close" type="button" class="btn btn-ghost btn-small modal__close" data-i18n="modalClose" data-modal-close>Cerrar</button>
+                    <button id="auth-modal-close" type="button" class="btn btn-ghost btn-small modal__close" @click="close">{{ t('modalClose') }}</button>
                     <div id="auth-panel" class="panel">
                 <div class="panel-header">
                     <div>
-                        <p class="eyebrow" data-i18n="accessEyebrow">Acceso</p>
-                        <h3 data-i18n="accessTitle">Usuarios</h3>
-                        <p class="subtext" data-i18n="accessDesc">Inicia sesión para crear, editar o borrar quizzes.</p>
+                        <p class="eyebrow">{{ t('accessEyebrow') }}</p>
+                        <h3 id="auth-modal-title">{{ t('accessTitle') }}</h3>
+                        <p class="subtext">{{ t('accessDesc') }}</p>
                     </div>
                 </div>
-                <p id="auth-status" class="pill pill-muted" data-i18n="authStatus">No has iniciado sesión</p>
+                <p id="auth-status" class="pill" :class="{ 'pill-muted': !auth.user }">{{ statusText }}</p>
                 <div class="auth-grid">
-                    <label data-i18n="labelNick">Nombre visible (opcional)
-                        <input id="auth-nick" name="nickname" type="text" autocomplete="nickname" placeholder="Tu nick público">
+                    <label>{{ t('labelNick') }}
+                        <input id="auth-nick" name="nickname" type="text" autocomplete="nickname" :placeholder="t('authNickPlaceholder')" v-model="acc.nick">
                     </label>
                 </div>
                 <div class="actions-row">
-                    <button id="auth-save-nick" type="button" class="btn btn-ghost" data-i18n="btnSaveNick">Guardar nombre visible</button>
+                    <button id="auth-save-nick" type="button" class="btn btn-ghost" @click="saveNickname">{{ t('btnSaveNick') }}</button>
                 </div>
-                <p class="subtext" id="account-message" role="status"></p>
-                <div id="user-admin" class="subpanel hidden">
-                    <p class="eyebrow" data-i18n="adminOnly">Solo admins</p>
-                    <h4 data-i18n="adminBackupTitle">Importar / Exportar todos los quizzes</h4>
-                    <p class="subtext" data-i18n="adminBackupDesc">Crea un backup completo (JSON) o restaura todos los quizzes desde un archivo.</p>
+                <p class="subtext" id="account-message" role="status">{{ acc.accountMessage }}</p>
+                <div id="user-admin" class="subpanel" :class="{ hidden: !isAdmin }">
+                    <p class="eyebrow">{{ t('adminOnly') }}</p>
+                    <h4>{{ t('adminBackupTitle') }}</h4>
+                    <p class="subtext">{{ t('adminBackupDesc') }}</p>
                     <div class="actions-row">
-                        <button id="admin-export-quizzes" class="btn btn-ghost btn-with-icon">
-                            <span data-i18n="btnExportAllQuizzes">Exportar todos</span>
+                        <button id="admin-export-quizzes" class="btn btn-ghost btn-with-icon" @click="exportAll">
+                            <span>{{ t('btnExportAllQuizzes') }}</span>
                         </button>
                     </div>
                     <div class="auth-grid">
-                        <label data-i18n="labelImportAllQuizzes">Archivo JSON
-                            <input id="admin-import-quizzes-file" type="file" accept="application/json">
+                        <label>{{ t('labelImportAllQuizzes') }}
+                            <input id="admin-import-quizzes-file" ref="adminImportFile" type="file" accept="application/json">
                         </label>
                         <label class="checkbox-inline">
-                            <input id="admin-import-quizzes-replace" type="checkbox">
-                            <span data-i18n="adminReplaceAll">Reemplazar todo</span>
+                            <input id="admin-import-quizzes-replace" type="checkbox" v-model="acc.adminReplace">
+                            <span>{{ t('adminReplaceAll') }}</span>
                         </label>
                     </div>
                     <div class="actions-row">
-                        <button id="admin-import-quizzes" class="btn btn-ghost" data-i18n="btnImportAllQuizzes">Importar</button>
-                        <span id="admin-import-quizzes-status" class="subtext"></span>
+                        <button id="admin-import-quizzes" class="btn btn-ghost" @click="importAll">{{ t('btnImportAllQuizzes') }}</button>
+                        <span id="admin-import-quizzes-status" class="subtext">{{ acc.adminImportStatus }}</span>
                     </div>
-                    <h4 data-i18n="adminMirrorKahootTitle">Migrar imágenes de Kahoot</h4>
-                    <p class="subtext" data-i18n="adminMirrorKahootDesc">Descarga al servidor las imágenes de quizzes importados desde Kahoot para evitar dependencia de su CDN.</p>
+                    <h4>{{ t('adminMirrorKahootTitle') }}</h4>
+                    <p class="subtext">{{ t('adminMirrorKahootDesc') }}</p>
                     <div class="actions-row">
-                        <button id="admin-mirror-kahoot-images" class="btn btn-ghost" data-i18n="btnMirrorKahootImages">Migrar imágenes</button>
-                        <span id="admin-mirror-kahoot-status" class="subtext"></span>
+                        <button id="admin-mirror-kahoot-images" class="btn btn-ghost" :disabled="acc.jobs.kahoot.busy" @click="mirrorKahoot">{{ t('btnMirrorKahootImages') }}</button>
+                        <span id="admin-mirror-kahoot-status" class="subtext">{{ acc.jobs.kahoot.text }}</span>
                     </div>
-                    <h4 data-i18n="adminMirrorExternalTitle">Migrar imágenes externas (S3, etc.)</h4>
-                    <p class="subtext" data-i18n="adminMirrorExternalDesc">Descarga al servidor las imágenes alojadas en servidores externos (Amazon S3 y similares) para evitar que desaparezcan si la fuente cierra.</p>
+                    <h4>{{ t('adminMirrorExternalTitle') }}</h4>
+                    <p class="subtext">{{ t('adminMirrorExternalDesc') }}</p>
                     <div class="actions-row">
-                        <button id="admin-mirror-external-images" class="btn btn-ghost" data-i18n="btnMirrorExternalImages">Migrar imágenes externas</button>
-                        <span id="admin-mirror-external-status" class="subtext"></span>
+                        <button id="admin-mirror-external-images" class="btn btn-ghost" :disabled="acc.jobs.external.busy" @click="mirrorExternal">{{ t('btnMirrorExternalImages') }}</button>
+                        <span id="admin-mirror-external-status" class="subtext">{{ acc.jobs.external.text }}</span>
                     </div>
-                    <div id="admin-import-public-wrap" class="hidden">
-                        <h4 data-i18n="adminImportPublicTitle">Importar actividades públicas (demo)</h4>
-                        <p class="subtext" data-i18n="adminImportPublicDesc">Descarga todas las actividades públicas de eduhoot.edutictac.es para tener contenido de prueba en esta instancia.</p>
+                    <div id="admin-import-public-wrap" :class="{ hidden: !acc.importPublicEnabled }">
+                        <h4>{{ t('adminImportPublicTitle') }}</h4>
+                        <p class="subtext">{{ t('adminImportPublicDesc') }}</p>
                         <div class="actions-row">
-                            <button id="admin-import-public-btn" class="btn btn-ghost" data-i18n="btnImportPublic">Importar actividades públicas</button>
-                            <span id="admin-import-public-status" class="subtext"></span>
+                            <button id="admin-import-public-btn" class="btn btn-ghost" :disabled="acc.jobs.importPublic.busy" @click="importPublic">{{ t('btnImportPublic') }}</button>
+                            <span id="admin-import-public-status" class="subtext">{{ acc.jobs.importPublic.text }}</span>
                         </div>
                     </div>
                 </div>
@@ -115,220 +124,356 @@
 
                 </div>
             </div>
+            </template>
 
+            <div id="tools-app"></div>
+            <template id="tools-tpl">
             <details id="ia-box" class="panel">
                 <summary class="panel-summary">
                     <div class="panel-header">
                         <div>
-                            <p class="eyebrow" data-i18n="aiEyebrow">Ayuda IA</p>
-                            <h3 data-i18n="aiTitle">Generador IA (CSV)</h3>
-                            <p class="subtext" data-i18n="aiDesc">Rellena los campos y copia el prompt para generar tu cuestionario por IA.</p>
+                            <p class="eyebrow">{{ t('aiEyebrow') }}</p>
+                            <h3>{{ t('aiTitle') }}</h3>
+                            <p class="subtext">{{ t('aiDesc') }}</p>
                         </div>
                         <span class="panel-toggle">
-                            <span class="panel-toggle__label panel-toggle__label--closed" data-i18n="panelExpand">Desplegar</span>
-                            <span class="panel-toggle__label panel-toggle__label--open" data-i18n="panelCollapse">Ocultar</span>
+                            <span class="panel-toggle__label panel-toggle__label--closed">{{ t('panelExpand') }}</span>
+                            <span class="panel-toggle__label panel-toggle__label--open">{{ t('panelCollapse') }}</span>
                             <span class="panel-toggle__chevron" aria-hidden="true"></span>
                         </span>
                     </div>
                 </summary>
 
                 <div class="ia-grid">
-                    <label data-i18n="iaNameLabel">Nombre del quiz (opcional)
-                        <input id="ia-name" type="text" placeholder="Nombre para guardar">
+                    <label>{{ t('iaNameLabel') }}
+                        <input id="ia-name" type="text" :placeholder="t('namePlaceholder')" v-model="ia.name">
                     </label>
-                    <label data-i18n="iaLevel">Nivel del alumnado
-                        <input id="ia-nivel" type="text" placeholder="Ej: 2º ESO">
+                    <label>{{ t('iaLevel') }}
+                        <input id="ia-nivel" type="text" :placeholder="t('iaLevelPlaceholder')" v-model="ia.nivel">
                     </label>
-                    <label data-i18n="iaTopic">Tema del cuestionario
-                        <input id="ia-tema" type="text" placeholder="Ej: Energía y calor">
+                    <label>{{ t('iaTopic') }}
+                        <input id="ia-tema" type="text" :placeholder="t('iaTopicPlaceholder')" v-model="ia.tema" :disabled="ia.useDocs">
                     </label>
 
-                    <label data-i18n="iaLang">Idioma del cuestionario
-                        <select id="ia-idioma">
-                            <option value="Español" data-i18n="optSpanish">Español</option>
-                            <option value="Catalán" data-i18n="optCatalan">Catalán</option>
-                            <option value="Inglés" data-i18n="optEnglish">Inglés</option>
-                            <option value="otro" data-i18n="optOther">Otro</option>
+                    <label>{{ t('iaLang') }}
+                        <select id="ia-idioma" v-model="ia.idioma" @change="onIdioma">
+                            <option value="Español">{{ t('optSpanish') }}</option>
+                            <option value="Catalán">{{ t('optCatalan') }}</option>
+                            <option value="Francés">{{ t('optFrench') }}</option>
+                            <option value="Inglés">{{ t('optEnglish') }}</option>
+                            <option value="otro">{{ t('optOther') }}</option>
                         </select>
-                        <input id="ia-idioma-custom" class="hidden" type="text" placeholder="Otro idioma">
+                        <input id="ia-idioma-custom" :class="{ hidden: ia.idioma !== 'otro' }" type="text" :placeholder="t('iaLangCustomPlaceholder')" v-model="ia.idiomaCustom">
                     </label>
-                    <label data-i18n="iaNum">Número de preguntas
-                        <input id="ia-num" type="number" min="1" max="50" value="10">
+                    <label>{{ t('iaNum') }}
+                        <input id="ia-num" type="number" min="1" max="50" v-model="ia.num">
                     </label>
-                    <label data-i18n="iaExtra">Instrucciones adicionales
-                        <textarea id="ia-extra" rows="2" placeholder="Tono, nivel cognitivo, formato..."></textarea>
+                    <label>{{ t('iaExtra') }}
+                        <textarea id="ia-extra" rows="2" :placeholder="t('iaExtraPlaceholder')" v-model="ia.extra"></textarea>
                     </label>
                 </div>
 
                 <div class="subpanel">
                     <label class="checkbox-inline">
-                        <input type="checkbox" id="ia-use-docs">
-                        <span data-i18n="iaUseDocs">Usar documentos como conocimiento exclusivo</span>
+                        <input type="checkbox" id="ia-use-docs" v-model="ia.useDocs" @change="onUseDocs">
+                        <span>{{ t('iaUseDocs') }}</span>
                     </label>
-                    <label class="checkbox-inline hidden" id="ia-gen-svg-wrap">
-                        <input type="checkbox" id="ia-gen-svg">
-                        <span data-i18n="iaGenSvg">Pedir a la IA imágenes SVG</span>
+                    <label class="checkbox-inline" id="ia-gen-svg-wrap" :class="{ hidden: !auth.user }">
+                        <input type="checkbox" id="ia-gen-svg" v-model="ia.genSvg" @change="onGenSvg">
+                        <span>{{ t('iaGenSvg') }}</span>
                     </label>
-                    <p id="ia-docs-hint" class="subtext hidden" data-i18n="iaDocsHint">Cuando ejecutes este prompt en la IA, te pedirá que adjuntes los documentos. No subas nada aquí: adjunta los archivos allí y las preguntas se generarán exclusivamente a partir de esos documentos.</p>
+                    <p id="ia-docs-hint" class="subtext" :class="{ hidden: !ia.useDocs }">{{ t('iaDocsHint') }}</p>
                 </div>
 
                 <div class="subpanel">
-                    <p class="eyebrow" data-i18n="iaTypesLabel">Tipos de pregunta</p>
-                    <label class="checkbox-inline">
-                        <input type="checkbox" id="ia-type-quiz" checked>
-                        <span data-i18n="iaTypeQuiz">Quiz (1 correcta)</span>
-                    </label>
-                    <label class="checkbox-inline">
-                        <input type="checkbox" id="ia-type-multiple">
-                        <span data-i18n="iaTypeMultiple">Respuesta Múltiple</span>
-                    </label>
-                    <label class="checkbox-inline">
-                        <input type="checkbox" id="ia-type-tf">
-                        <span data-i18n="iaTypeTf">Verdadero / Falso</span>
-                    </label>
-                    <label class="checkbox-inline">
-                        <input type="checkbox" id="ia-type-short">
-                        <span data-i18n="iaTypeShort">Respuesta corta</span>
-                    </label>
-                    <label class="checkbox-inline">
-                        <input type="checkbox" id="ia-type-numeric">
-                        <span data-i18n="iaTypeNumeric">Numérica</span>
-                    </label>
+                    <p class="eyebrow">{{ t('iaTypesLabel') }}</p>
+                    <label class="checkbox-inline"><input type="checkbox" id="ia-type-quiz" v-model="ia.types.quiz"> <span>{{ t('iaTypeQuiz') }}</span></label>
+                    <label class="checkbox-inline"><input type="checkbox" id="ia-type-multiple" v-model="ia.types.multiple"> <span>{{ t('iaTypeMultiple') }}</span></label>
+                    <label class="checkbox-inline"><input type="checkbox" id="ia-type-tf" v-model="ia.types.tf"> <span>{{ t('iaTypeTf') }}</span></label>
+                    <label class="checkbox-inline"><input type="checkbox" id="ia-type-short" v-model="ia.types.short"> <span>{{ t('iaTypeShort') }}</span></label>
+                    <label class="checkbox-inline"><input type="checkbox" id="ia-type-numeric" v-model="ia.types.numeric"> <span>{{ t('iaTypeNumeric') }}</span></label>
                 </div>
 
                 <div class="actions-row">
-                    <button id="ia-generate" type="button" data-i18n="btnGenPrompt">Generar prompt</button>
-                    <button id="ia-copy" type="button" class="secondary" data-i18n="btnCopyPrompt">Copiar prompt</button>
+                    <button id="ia-generate" type="button" @click="generatePrompt">{{ t('btnGenPrompt') }}</button>
+                    <button id="ia-copy" type="button" class="secondary" @click="copyPrompt">{{ t('btnCopyPrompt') }}</button>
                 </div>
 
                 <ol class="ia-steps" aria-label="Pasos">
-                    <li data-i18n="iaStep1">Pulsa <strong>Generar prompt</strong> y luego <strong>Copiar prompt</strong>.</li>
-                    <li data-i18n="iaStep2">Abre una IA (ChatGPT, Gemini, Copilot…) y pega el prompt en el chat. Si activaste "Usar documentos", adjunta tus archivos allí.</li>
-                    <li data-i18n="iaStep3">La IA te devolverá un bloque de texto CSV. Cópialo entero.</li>
-                    <li data-i18n="iaStep4">Pégalo en el cuadro de abajo y pulsa <strong>Importar CSV en el cuestionario</strong>.</li>
+                    <li>{{ t('iaStep1') }}</li>
+                    <li>{{ t('iaStep2') }}</li>
+                    <li>{{ t('iaStep3') }}</li>
+                    <li>{{ t('iaStep4') }}</li>
                 </ol>
 
-                <pre id="ia-prompt" data-i18n="promptPlaceholder">El prompt aparecerá aquí...</pre>
+                <pre id="ia-prompt">{{ ia.prompt || t('promptPlaceholder') }}</pre>
 
-                <label data-i18n="iaCsvLabel">Contenido CSV generado por la IA
-                    <textarea id="ia-csv" rows="6" placeholder="Pega aquí el CSV devuelto por la IA"></textarea>
+                <label>{{ t('iaCsvLabel') }}
+                    <textarea id="ia-csv" rows="6" :placeholder="t('iaCsvPlaceholder')" v-model="ia.csv"></textarea>
                 </label>
-                <input id="ia-csv-file" type="file" accept=".csv,text/csv" class="hidden">
+                <input id="ia-csv-file" ref="iaCsvFile" type="file" accept=".csv,text/csv" class="hidden" @change="onCsvFile">
 
                 <div class="actions-row">
-                    <button id="ia-open" class="btn btn-ghost" type="button" data-i18n="btnOpenCsv">Abrir CSV</button>
-                    <button id="ia-download" class="btn btn-ghost btn-with-icon" type="button">
-                        <span data-i18n="btnDownloadCsv">Descargar CSV</span>
-                        
+                    <button id="ia-open" class="btn btn-ghost" type="button" @click="openCsv">{{ t('btnOpenCsv') }}</button>
+                    <button id="ia-download" class="btn btn-ghost btn-with-icon" type="button" @click="downloadCsv">
+                        <span>{{ t('btnDownloadCsv') }}</span>
                     </button>
-                    <button id="ia-preview" class="btn btn-ghost" type="button" data-i18n="btnPreviewCsv">Vista previa</button>
+                    <button id="ia-preview" class="btn btn-ghost" type="button" @click="preview">{{ t('btnPreviewCsv') }}</button>
                 </div>
 
-                <div id="ia-preview-box" class="subpanel hidden">
-                    <p class="eyebrow" data-i18n="previewTitle">Vista previa</p>
-                    <div id="ia-preview-content" class="ia-preview"></div>
+                <div id="ia-preview-box" class="subpanel" :class="{ hidden: !ia.preview.visible }">
+                    <p class="eyebrow">{{ t('previewTitle') }}</p>
+                    <div id="ia-preview-content" class="ia-preview">
+                        <template v-if="ia.preview.questions.length">
+                            <div v-for="(q, qi) in ia.preview.questions" :key="qi" class="ia-preview__q">
+                                <div class="ia-preview__qtitle">{{ q.title }}</div>
+                                <div class="ia-preview__answers">
+                                    <div v-for="(a, ai) in q.answers" :key="ai" class="ia-preview__answer" :class="{ 'is-correct': a.correct }"><span class="ia-preview__bullet">{{ a.correct ? '✓' : '•' }}</span><span class="ia-preview__text">{{ a.text }}</span></div>
+                                </div>
+                            </div>
+                        </template>
+                        <template v-else>{{ t('alertPasteCsv') }}</template>
+                    </div>
                 </div>
 
                 <div class="actions-row">
-                    <button id="ia-upload" type="button" data-i18n="btnImportIa">Importar CSV en el cuestionario</button>
-                    <button id="ia-edit" class="btn btn-ghost" type="button" data-i18n="btnEditCreator" disabled>Editar en creador</button>
+                    <button id="ia-upload" type="button" @click="uploadIa">{{ t('btnImportIa') }}</button>
+                    <button id="ia-edit" class="btn btn-ghost" type="button" :disabled="!ia.lastUploadedId" @click="editIaQuiz">{{ t('btnEditCreator') }}</button>
                 </div>
-                <p id="ia-status"></p>
+                <p id="ia-status">{{ ia.status.text }}<span v-if="ia.status.playId" class="status-actions"><button type="button" class="btn btn-primary btn-small" @click="startGame(ia.status.playId)">{{ t('play') }}</button></span></p>
             </details>
 
             <details id="csv-import" class="panel">
                 <summary class="panel-summary">
                     <div class="panel-header">
                         <div>
-                            <p class="eyebrow" data-i18n="importEyebrow">Importación</p>
-                            <h3 data-i18n="importTitle">Importar cuestionario (CSV o Kahoot público)</h3>
-                            <p class="subtext" data-i18n="importDesc">Sube un archivo CSV con tus preguntas para guardarlo en tu biblioteca.</p>
+                            <p class="eyebrow">{{ t('importEyebrow') }}</p>
+                            <h3>{{ t('importTitle') }}</h3>
+                            <p class="subtext">{{ t('importDesc') }}</p>
                         </div>
                         <span class="panel-toggle">
-                            <span class="panel-toggle__label panel-toggle__label--closed" data-i18n="panelExpand">Desplegar</span>
-                            <span class="panel-toggle__label panel-toggle__label--open" data-i18n="panelCollapse">Ocultar</span>
+                            <span class="panel-toggle__label panel-toggle__label--closed">{{ t('panelExpand') }}</span>
+                            <span class="panel-toggle__label panel-toggle__label--open">{{ t('panelCollapse') }}</span>
                             <span class="panel-toggle__chevron" aria-hidden="true"></span>
                         </span>
                     </div>
                 </summary>
-            <form id="csv-form">
-                <input id="csv-file" type="file" accept=".csv,text/csv" required>
-                <input id="csv-name" type="text" placeholder="Nombre del quiz (opcional)">
-                <button type="submit" data-i18n="btnUploadCsv">Subir CSV</button>
+            <form id="csv-form" ref="csvForm" @submit.prevent="uploadCsv">
+                <input id="csv-file" ref="csvFile" type="file" accept=".csv,text/csv,.xml,application/xml,text/xml,.gift,.txt,text/plain" required>
+                <input id="csv-name" type="text" :placeholder="t('namePlaceholder')" v-model="imp.csvName">
+                <button type="submit">{{ t('btnUploadCsv') }}</button>
             </form>
-            <p id="csv-status"></p>
+            <p id="csv-status">{{ imp.csvStatus.text }}<span v-if="imp.csvStatus.playId" class="status-actions"><button type="button" class="btn btn-primary btn-small" @click="startGame(imp.csvStatus.playId)">{{ t('play') }}</button><button type="button" class="btn btn-ghost btn-small" @click="editQuiz(imp.csvStatus.playId)">{{ t('editQuiz') }}</button></span></p>
             <div class="split-import">
                 <div>
-                    <h3 data-i18n="kahootTitle">Importar Kahoot público</h3>
-                    
-                    <p class="subtext" data-i18n="kahootHelp">Pega la URL o el ID de un Kahoot público.</p>
-                    <p class="subtext warning-legal" data-i18n="kahootWarning">⚠️ Esta función está diseñada para importar tus propios Kahoots. EduHoot no se hace responsable del mal uso de esta funcionalidad ni de posibles infracciones de derechos de autor.</p>
+                    <h3 id="kahoot-form-title">{{ t('kahootTitle') }}</h3>
+
+                    <p class="subtext">{{ t('kahootHelp') }}</p>
+                    <p class="subtext warning-legal">{{ t('kahootWarning') }}</p>
                     <br>
-                    <form id="kahoot-form">
-                        <input id="kahoot-url" type="text" inputmode="url" autocomplete="off" placeholder="https://create.kahoot.it/details/..." required>
-                        <select id="kahoot-visibility">
-                            <option value="public" data-i18n="visibilityPublic">Público</option>
-                            <option value="unlisted" data-i18n="visibilityUnlisted">Por enlace/ID</option>
-                            <option value="private" data-i18n="visibilityPrivate">Solo yo (privado)</option>
+                    <form id="kahoot-form" @submit.prevent="importKahoot">
+                        <input id="kahoot-url" type="text" inputmode="url" autocomplete="off" :placeholder="t('kahootUrlPlaceholder')" required v-model="imp.kahootUrl">
+                        <select id="kahoot-visibility" v-model="imp.kahootVisibility">
+                            <option value="public">{{ t('visibilityPublic') }}</option>
+                            <option value="unlisted">{{ t('visibilityUnlisted') }}</option>
+                            <option value="private">{{ t('visibilityPrivate') }}</option>
                         </select>
-                        <button type="submit" data-i18n="btnImportKahoot">Importar desde Kahoot</button>
+                        <button type="submit" :disabled="imp.kahootBusy">{{ t('btnImportKahoot') }}</button>
                     </form>
-                    <p id="kahoot-status" class="subtext"></p>
+                    <p id="kahoot-status" class="subtext">{{ imp.kahootStatus.text }}<span v-if="imp.kahootStatus.playId || imp.kahootStatus.editId" class="status-actions"><button v-if="imp.kahootStatus.playId" type="button" class="btn btn-primary btn-small" @click="startGame(imp.kahootStatus.playId)">{{ t('play') }}</button><button v-if="imp.kahootStatus.editId" type="button" class="btn btn-ghost btn-small" @click="editQuiz(imp.kahootStatus.editId)">{{ t('editQuiz') }}</button></span></p>
                 </div>
             </div>
             </details>
+            </template>
 
+            <div id="library-app"></div>
+            <template id="library-tpl">
             <div id="library" class="panel">
                 <div class="panel-header">
                     <div>
-                        <p class="eyebrow" data-i18n="libraryEyebrow">Biblioteca</p>
-                        <h3 data-i18n="libraryTitle">Cuestionarios importados</h3>
-                        <p class="subtext" data-i18n="libraryDesc">Selecciona un cuestionario para hostearlo o gestiona su nombre y estado.</p>
+                        <p class="eyebrow">{{ t('libraryEyebrow') }}</p>
+                        <h3>{{ t('libraryTitle') }}</h3>
+                        <p class="subtext">{{ t('libraryDesc') }}</p>
                     </div>
-                    <div id="game-count" class="pill pill-muted">0 cuestionarios</div>
+                    <div id="game-count" class="pill pill-muted">{{ countText }}</div>
                 </div>
                 <div class="filter-bar extra-gap">
-                    <input id="library-search" type="search" placeholder="Buscar por nombre o etiqueta">
+                    <input id="library-search" type="search" :placeholder="t('searchPlaceholder')" v-model="filters.search" @input="onSearch">
                     <div class="sort-control">
-                        <label for="library-sort" data-i18n="sortLabel">Ordenar por</label>
-                        <select id="library-sort">
-                            <option value="newest" data-i18n="sortNewest">Más recientes primero</option>
-                            <option value="oldest" data-i18n="sortOldest">Más antiguos primero</option>
-                            <option value="rating" data-i18n="sortRating">Mejor valorados</option>
-                            <option value="alpha-asc" data-i18n="sortAlphaAsc">Orden alfabético A-Z</option>
-                            <option value="alpha-desc" data-i18n="sortAlphaDesc">Orden alfabético Z-A</option>
+                        <label for="library-sort">{{ t('sortLabel') }}</label>
+                        <select id="library-sort" v-model="lib.sort" @change="onSort">
+                            <option value="newest">{{ t('sortNewest') }}</option>
+                            <option value="oldest">{{ t('sortOldest') }}</option>
+                            <option value="rating">{{ t('sortRating') }}</option>
+                            <option value="played">{{ t('sortPlayed') }}</option>
+                            <option value="alpha-asc">{{ t('sortAlphaAsc') }}</option>
+                            <option value="alpha-desc">{{ t('sortAlphaDesc') }}</option>
                         </select>
                     </div>
                 </div>
                 <div id="filter-bar" class="filter-bar">
-                    <div class="pill pill-muted" id="filter-info" data-i18n="noFilters">Sin filtros</div>
-                    <button id="clear-filters" type="button" class="btn btn-ghost btn-small" data-i18n="clearFilters">Limpiar filtros</button>
-                    <button id="tag-mode-toggle" type="button" class="btn btn-ghost btn-small" data-i18n="matchAnyTags">Cualquiera</button>
+                    <div class="pill pill-muted" id="filter-info">{{ filterInfo }}</div>
+                    <button id="clear-filters" type="button" class="btn btn-ghost btn-small" @click="clearFilters">{{ t('clearFilters') }}</button>
+                    <button id="tag-mode-toggle" type="button" class="btn btn-ghost btn-small" :class="{ 'is-active': filters.tagMode === 'all' }" :aria-pressed="filters.tagMode === 'all' ? 'true' : 'false'" @click="toggleTagMode">{{ filters.tagMode === 'all' ? t('matchAllTags') : t('matchAnyTags') }}</button>
                     <label class="checkbox-inline">
-                        <input type="checkbox" id="filter-mine">
-                        <span data-i18n="filterMine">Sólo mis cuestionarios</span>
+                        <input type="checkbox" id="filter-mine" v-model="filters.mineOnly" @change="onMine">
+                        <span>{{ t('filterMine') }}</span>
                     </label>
                 </div>
                 <div class="library-body">
                     <div class="folder-sidebar">
-                        <div id="tag-suggestions" class="tag-suggestions"></div>
+                        <div id="tag-suggestions" class="tag-suggestions"><template v-if="folders">
+                            <span class="label">{{ t('foldersTitle') }}</span>
+                            <button type="button" class="tag" :class="{ active: !filters.tags.length }" style="--tag-weight: 0.3" @click="showAllFolders">{{ t('foldersAll') }}</button>
+                            <button v-for="f in folders.tags" :key="f.tag" type="button" class="tag" :class="{ active: filters.tags.indexOf(f.tag) !== -1 }" :style="{ '--tag-weight': f.weight }" :data-weight="f.weight.toFixed(2)" @click="toggleTag(f.tag)">{{ f.tag }}</button>
+                            <button v-if="folders.showToggle" type="button" class="tag tag-more" style="--tag-weight: 0" @click="lib.tagsExpanded = !lib.tagsExpanded">{{ foldersMoreText() }}</button>
+                        </template></div>
                     </div>
                     <div class="library-main">
-                        <p class="subtext" data-i18n="visibilityHelp">
-                            <strong>Solo yo:</strong> si no inicias sesión, el quiz se guarda solo en tu sesión y caduca en 24h.<br>
-                            <strong>Por enlace / Público:</strong> aunque no tengas cuenta, se guardan de forma global en el servidor y sobreviven a reinicios. Si inicias sesión, quedan ligados a tu usuario.
-                            Puedes permitir o no las copias.
-                        </p>
-                        <div id="game-list" class="game-grid">
+                        <!-- visibilityHelp es texto propio del diccionario i18n (con <strong> y <br>). -->
+                        <p class="subtext" v-html="t('visibilityHelp')"></p>
+                        <!-- Imatge de fons de les targetes: sota el text de visibilitat, amb l'estil del selector de pàgina. -->
+                        <div class="pagination cover-pagination lp-toolbar">
+                            <div class="lp-view" role="group" :aria-label="t('libViewLabel')">
+                                <button id="libViewCards" :title="t('libViewCards')" type="button" class="btn btn-ghost btn-small" :class="{ 'is-active': listView === 'cards' }" :aria-pressed="listView === 'cards' ? 'true' : 'false'" @click="setListView('cards')">{{ t('libViewCards') }}</button>
+                                <button id="libViewDetail" :title="t('libViewDetail')" type="button" class="btn btn-ghost btn-small" :class="{ 'is-active': listView === 'detail' }" :aria-pressed="listView === 'detail' ? 'true' : 'false'" @click="setListView('detail')">{{ t('libViewDetail') }}</button>
+                            </div>
+                            <label v-if="listView === 'cards'" class="lp-cover"><span>{{ t('filterCovers') }}</span>
+                                <select id="library-cover-level" v-model.number="lib.coverLevel" @change="onCoverLevel">
+                                    <option :value="0">{{ t('coverNone') }}</option>
+                                    <option :value="10">{{ t('cover10') }}</option>
+                                    <option :value="20">{{ t('cover20') }}</option>
+                                    <option :value="30">{{ t('cover30') }}</option>
+                                </select>
+                            </label>
                         </div>
-                        <div id="library-pagination" class="pagination hidden">
-                            <button id="library-pagination-prev" class="btn btn-ghost" data-i18n="paginationPrev">Anterior</button>
-                            <span id="library-pagination-info"></span>
-                            <button id="library-pagination-next" class="btn btn-ghost" data-i18n="paginationNext">Siguiente</button>
+                        <div id="game-list" class="game-grid" v-if="listView === 'cards'">
+                            <div v-if="!sortedQuizzes.length" class="empty-state"><p>{{ t('noGames') }}</p><p>{{ t('noGamesHint') }}</p></div>
+                            <div v-for="quiz in pageQuizzes" :key="quiz.id" class="game-card">
+                                <img v-if="lib.coverLevel > 0" class="game-card__cover" :style="{ '--cover-opacity': lib.coverLevel / 100 }" :src="coverSrc(quiz)" alt="" aria-hidden="true" loading="lazy" decoding="async" @error="onCoverError($event)">
+                                <div class="game-card-head">
+                                    <div class="game-title">{{ quiz.name || 'Quiz sin nombre' }}</div>
+                                    <span class="badge">{{ (t('idLabel') || 'ID') + ' ' + quiz.id }}</span>
+                                </div>
+                                <p class="game-subtitle"></p>
+                                <div class="game-meta">{{ metaText(quiz) }}</div>
+                                <div class="game-stats">
+                                    <span class="game-stats__item game-stats__item--questions"><span class="game-stats__num">{{ quiz.questionCount || 0 }}</span> {{ t('questionsShort') }}</span>
+                                    <span class="game-stats__item">{{ (quiz.playsCount || 0) + ' ' + t('playsShort') }}</span>
+                                    <span class="game-stats__item">{{ (quiz.playersCount || 0) + ' ' + t('playersShort') }}</span>
+                                </div>
+                                <div v-if="datesText(quiz)" class="game-dates">{{ datesText(quiz) }}</div>
+                                <div v-if="quiz.visibility === 'public'" class="card-rating">
+                                    <div class="rating-stars">
+                                        <button v-for="stars in 5" :key="stars" type="button" class="rating-star" :class="{ 'is-filled': stars <= ratingShown(quiz) }" :aria-label="t('ratingStarLabel').replace('{stars}', stars)" :title="t('ratingStarLabel').replace('{stars}', stars)" @click.stop="rateLibraryQuiz(quiz, stars)">★</button>
+                                    </div>
+                                    <span class="rating-summary muted">{{ ratingSummaryText(quiz) }}</span>
+                                </div>
+                                <div class="tag-wrap">
+                                    <template v-for="tagValue in quizTags(quiz)" :key="tagValue">
+                                        <span v-if="!perms(quiz).canEdit" class="tag" @click="toggleTag(tagValue)">{{ tagValue }}</span>
+                                        <span v-else class="tag tag-editable"><span class="tag-text" @click="toggleTag(tagValue)">{{ tagValue }}</span><button type="button" class="tag-remove" aria-label="Remove" @click.prevent.stop="removeTag(quiz, tagValue)">×</button></span>
+                                    </template>
+                                </div>
+                                <div v-if="perms(quiz).canEdit" class="tag-editor">
+                                    <input type="text" :placeholder="t('editTagsPlaceholder')" v-model="tagDrafts[quiz.id]" @keydown="onTagKey($event, quiz)">
+                                    <button type="button" class="btn btn-ghost btn-small" @click="submitTags(quiz)">{{ t('editTagsAdd') }}</button>
+                                </div>
+                                <div class="share-controls">
+                                    <div class="share-row"><strong>{{ t('saveSharing') }}</strong></div>
+                                    <div class="share-row">
+                                        <select v-model="share(quiz).visibility" :disabled="!perms(quiz).canEdit || share(quiz).saving" @change="saveSharing(quiz)">
+                                            <option value="private">{{ t('visibilityPrivate') }}</option>
+                                            <option value="unlisted">{{ t('visibilityUnlisted') }}</option>
+                                            <option value="public">{{ t('visibilityPublic') }}</option>
+                                        </select>
+                                        <label class="checkbox-label"><input type="checkbox" v-model="share(quiz).allowClone" :disabled="!perms(quiz).canEdit || share(quiz).saving" @change="saveSharing(quiz)">{{ t('allowClone') }}</label>
+                                        <span class="share-saved" role="status" :title="share(quiz).done ? t('sharingSaved') : null" :aria-label="share(quiz).done ? t('sharingSaved') : null">{{ share(quiz).done ? '✓' : '' }}</span>
+                                    </div>
+                                </div>
+                                <div class="game-actions">
+                                    <button v-if="perms(quiz).canSaveToAccount" class="btn btn-primary icon-only" :title="t('saveToAccount')" :aria-label="t('saveToAccount')" @click="saveToAccount(quiz)">💾</button>
+                                    <button class="btn btn-primary icon-only" :title="perms(quiz).canStart ? t('play') : t('cannotStartPrivate')" :aria-label="t('play')" :disabled="!perms(quiz).canStart" @click="launch(quiz, 'host')">▶️</button>
+                                    <button class="btn btn-ghost icon-only" :title="perms(quiz).canStart ? t('playSolo') : t('cannotStartPrivate')" :aria-label="t('playSolo')" :disabled="!perms(quiz).canStart" @click="launch(quiz, 'solo')">👤</button>
+                                    <button class="btn btn-ghost icon-only" :title="perms(quiz).canStart ? t('reviewCards') : t('cannotStartPrivate')" :aria-label="t('reviewCards')" :disabled="!perms(quiz).canStart" @click="launch(quiz, 'cards')">🔁</button>
+                                    <button class="btn btn-ghost icon-only" :title="perms(quiz).canStart ? t('playMultiplayer') : t('cannotStartPrivate')" :aria-label="t('playMultiplayer')" :disabled="!perms(quiz).canStart" @click="launch(quiz, 'multiplayer')">👥</button>
+                                    <button class="btn btn-ghost icon-only" :title="perms(quiz).canStart ? t('assignHomework') : t('cannotStartPrivate')" :aria-label="t('assignHomework')" :disabled="!perms(quiz).canStart" @click="launch(quiz, 'homework')">📚</button>
+                                    <button class="btn btn-ghost icon-only" :title="t('download')" @click="downloadCsv(quiz)">⬇️</button>
+                                    <button class="btn btn-ghost icon-only" :title="t('exportMoodleXml')" @click="downloadMoodle(quiz)"><img src="/icons/moodle.png" alt="Moodle" class="moodle-icon-img"></button>
+                                    <button class="btn btn-ghost icon-only" :title="perms(quiz).canEdit ? t('edit') : t('cannotEditNotOwner')" :disabled="!perms(quiz).canEdit" @click="edit(quiz)">✏️</button>
+                                    <button class="btn btn-ghost icon-only" :title="perms(quiz).canClone ? t('clone') : t('cannotCloneNotOwner')" :disabled="!perms(quiz).canClone" @click="clone(quiz)">📄</button>
+                                    <button class="btn btn-danger icon-only" :title="perms(quiz).canEdit ? t('delete') : t('cannotDeleteNotOwner')" :disabled="!perms(quiz).canEdit" @click="remove(quiz)">🗑️</button>
+                                    <select class="export-select" :aria-label="t('exportSelectLabel')" :title="t('exportSelectLabel')" @change="exportAs($event, quiz)">
+                                        <option value="" selected disabled>{{ t('exportSelectPlaceholder') }}</option>
+                                        <optgroup v-for="group in exportGroups" :key="group.label" :label="group.label">
+                                            <option v-for="opt in group.options" :key="opt[0]" :value="opt[0]">{{ t(opt[1]) }}</option>
+                                        </optgroup>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div v-else id="library-detail" class="hw-card lib-detail-card">
+                            <div v-if="!sortedQuizzes.length" class="empty-state"><p>{{ t('noGames') }}</p><p>{{ t('noGamesHint') }}</p></div>
+                            <div v-else class="hw-table-wrap">
+                                <table class="hw-table lib-detail" id="libDetail">
+                                    <thead><tr>
+                                        <th>{{ t('libColName') }}</th>
+                                        <th>{{ t('libColQuestions') }}</th>
+                                        <th>{{ t('libColPlays') }}</th>
+                                        <th>{{ t('libColPlayers') }}</th>
+                                        <th>{{ t('libColVisibility') }}</th>
+                                        <th>{{ t('libColActions') }}</th>
+                                    </tr></thead>
+                                    <tbody>
+                                        <tr v-for="quiz in pageQuizzes" :key="quiz.id" :data-id="quiz.id">
+                                            <td class="lib-d-name" :data-label="t('libColName')"><span class="lib-d-title">{{ quiz.name || 'Quiz sin nombre' }}</span><span class="lib-d-meta">{{ metaText(quiz) }}</span></td>
+                                            <td :data-label="t('libColQuestions')">{{ quiz.questionCount || 0 }}</td>
+                                            <td :data-label="t('libColPlays')">{{ quiz.playsCount || 0 }}</td>
+                                            <td :data-label="t('libColPlayers')">{{ quiz.playersCount || 0 }}</td>
+                                            <td :data-label="t('libColVisibility')">{{ quiz.visibility === 'private' ? t('visibilityPrivate') : (quiz.visibility === 'unlisted' ? t('visibilityUnlisted') : t('visibilityPublic')) }}</td>
+                                            <td class="lib-d-actions" :data-label="t('libColActions')">
+                                        <button v-if="perms(quiz).canSaveToAccount" class="btn btn-primary icon-only" :title="t('saveToAccount')" :aria-label="t('saveToAccount')" @click="saveToAccount(quiz)">💾</button>
+                                        <button class="btn btn-primary icon-only" :title="perms(quiz).canStart ? t('play') : t('cannotStartPrivate')" :aria-label="t('play')" :disabled="!perms(quiz).canStart" @click="launch(quiz, 'host')">▶️</button>
+                                        <button class="btn btn-ghost icon-only" :title="perms(quiz).canStart ? t('playSolo') : t('cannotStartPrivate')" :aria-label="t('playSolo')" :disabled="!perms(quiz).canStart" @click="launch(quiz, 'solo')">👤</button>
+                                        <button class="btn btn-ghost icon-only" :title="perms(quiz).canStart ? t('reviewCards') : t('cannotStartPrivate')" :aria-label="t('reviewCards')" :disabled="!perms(quiz).canStart" @click="launch(quiz, 'cards')">🔁</button>
+                                        <button class="btn btn-ghost icon-only" :title="perms(quiz).canStart ? t('playMultiplayer') : t('cannotStartPrivate')" :aria-label="t('playMultiplayer')" :disabled="!perms(quiz).canStart" @click="launch(quiz, 'multiplayer')">👥</button>
+                                        <button class="btn btn-ghost icon-only" :title="perms(quiz).canStart ? t('assignHomework') : t('cannotStartPrivate')" :aria-label="t('assignHomework')" :disabled="!perms(quiz).canStart" @click="launch(quiz, 'homework')">📚</button>
+                                        <button class="btn btn-ghost icon-only" :title="t('download')" @click="downloadCsv(quiz)">⬇️</button>
+                                        <button class="btn btn-ghost icon-only" :title="t('exportMoodleXml')" @click="downloadMoodle(quiz)"><img src="/icons/moodle.png" alt="Moodle" class="moodle-icon-img"></button>
+                                        <button class="btn btn-ghost icon-only" :title="perms(quiz).canEdit ? t('edit') : t('cannotEditNotOwner')" :disabled="!perms(quiz).canEdit" @click="edit(quiz)">✏️</button>
+                                        <button class="btn btn-ghost icon-only" :title="perms(quiz).canClone ? t('clone') : t('cannotCloneNotOwner')" :disabled="!perms(quiz).canClone" @click="clone(quiz)">📄</button>
+                                        <button class="btn btn-danger icon-only" :title="perms(quiz).canEdit ? t('delete') : t('cannotDeleteNotOwner')" :disabled="!perms(quiz).canEdit" @click="remove(quiz)">🗑️</button>
+    
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div id="library-pagination" ref="pagerBottom" class="pagination" :class="{ hidden: !showPager }">
+                            <button id="library-pagination-prev" :title="t('paginationPrev')" v-show="totalPages > 1" class="btn btn-ghost" :disabled="currentPage <= 1" @click="prevPage">{{ t('paginationPrev') }}</button>
+                            <select id="library-pagination-info" class="page-select" v-show="totalPages > 1" :value="currentPage" :aria-label="paginationInfo" @change="onPageChange"><option v-for="p in pageOptions" :key="p.n" :value="p.n">{{ p.label }}</option></select>
+                            <button id="library-pagination-next" :title="t('paginationNext')" v-show="totalPages > 1" class="btn btn-ghost" :disabled="currentPage >= totalPages" @click="nextPage">{{ t('paginationNext') }}</button>
+                            <label class="page-size"><span>{{ t('pageSizeLabel') }}</span>
+                                <select id="library-page-size" :value="lib.pageSize" @change="onPageSize">
+                                    <option v-for="n in pageSizes" :key="n" :value="n">{{ n }}</option>
+                                </select>
+                            </label>
+                        </div>
+                        <div id="library-pagination-fixed" class="pagination-fixed" :class="{ 'is-visible': showFixedPager }" :inert="!showFixedPager || null">
+                            <button id="library-pagination-fixed-prev" :title="t('paginationPrev')" class="btn btn-ghost" :disabled="currentPage <= 1" @click="prevPage">{{ t('paginationPrev') }}</button>
+                            <select id="library-pagination-fixed-info" class="page-select" :value="currentPage" :aria-label="paginationInfo" @change="onPageChange"><option v-for="p in pageOptions" :key="p.n" :value="p.n">{{ p.label }}</option></select>
+                            <button id="library-pagination-fixed-next" :title="t('paginationNext')" class="btn btn-ghost" :disabled="currentPage >= totalPages" @click="nextPage">{{ t('paginationNext') }}</button>
+                            <label class="page-size"><span>{{ t('pageSizeLabel') }}</span>
+                                <select id="library-page-size-fixed" :value="lib.pageSize" @change="onPageSize">
+                                    <option v-for="n in pageSizes" :key="n" :value="n">{{ n }}</option>
+                                </select>
+                            </label>
                         </div>
                     </div>
                 </div>
             </div>
+            </template>
         </div>
         
         <footer class="ett-footer ett-footer--page ett-footer--bottom">
@@ -339,7 +484,6 @@
                 <span class="ett-footer__version" id="app-version" aria-live="polite"></span>
             </p>
             <div class="ett-footer__links">
-                <a href="https://edutictac.es/" target="_blank" rel="noopener">edutictac.es</a>
                 <a href="https://edutictac.es/privacitat.html" target="_blank" rel="noopener" data-i18n="footerPrivacy">Privacidad</a>
                 <a href="https://edutictac.es/galetes.html" target="_blank" rel="noopener" data-i18n="footerCookies">Galetes</a>
                 <a href="https://git.edutictac.es/Edutictac/eduhoot" target="_blank" rel="noopener" data-i18n="footerSource">Código fuente</a>
@@ -350,12 +494,15 @@
         <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+        <script src="/js/libs/vue.global.prod.js"></script>
         <script src="/js/languages.js"></script>
+        <script src="/js/chip-align.js"></script>
         <script src="/js/env-badge.js"></script>
         <script src="../js/i18n-create.js"></script>
         <script src="../js/create-admin.js"></script>
         <script src="../js/create-export.js"></script>
         <script src="../js/create-ia.js"></script>
+        <script src="/js/session-bridge.js"></script>
         <script src="../js/create-auth.js"></script>
         <script src="../js/create-quiz-actions.js"></script>
         <script src="../js/create-library.js"></script>

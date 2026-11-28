@@ -34,9 +34,26 @@ body{
   flex-wrap: wrap;
 }
 .admin-header p{
-  margin: 0 0 16px;
+  margin: 0 0 10px;
   color: var(--muted);
 }
+/* Enllaç entre els dos panells (estadístiques ↔ logs). */
+.admin-nav{ margin: 0 0 16px; }
+.admin-nav a{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--card-stroke);
+  background: var(--card);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.admin-nav a:hover{ border-color: var(--accent-2); color: #fff; }
+.admin-nav a:focus-visible{ outline: 2px solid var(--accent-2); outline-offset: 2px; }
 
 .login-inline{
   display: inline-flex;
@@ -154,10 +171,161 @@ body{
   font-weight: 700;
 }
 
+.admin-content > .panel{ margin-bottom: 16px; }
+.logs-settings-row, .logs-filters-row{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+.logs-settings-row{
+  /* Etiquetes damunt dels controls: tot alineat per baix, amb el botó. */
+  align-items: flex-end;
+}
+.logs-settings-row select, .logs-settings-row input,
+.logs-settings-row button{
+  height: 34px;
+}
+.logs-settings-row label{
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.logs-settings-row select, .logs-settings-row input,
+.logs-filters-row select, .logs-filters-row input{
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--card-stroke);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 6px 10px;
+}
+#logs-filter-q{
+  flex: 1 1 200px;
+}
+.logs-settings-row button, .logs-filters-row button{
+  background: var(--accent-2);
+  border: none;
+  border-radius: 8px;
+  color: #0b1220;
+  font-weight: 700;
+  padding: 7px 14px;
+  cursor: pointer;
+}
+#logs-table{
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+#logs-table th, #logs-table td{
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--card-stroke);
+  vertical-align: top;
+}
+#logs-table td.level-error{ color: #fecdd3; }
+#logs-table td.level-warn{ color: #fed7aa; }
+#logs-table td.level-debug{ color: var(--muted); }
+
+#logs-table td.logs-detail-btn-cell{ text-align: center; }
+.logs-detail-btn{
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--card-stroke);
+  background: rgba(255,255,255,0.06);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 12px;
+}
+.logs-detail-btn:hover{ background: rgba(255,255,255,0.12); }
+
+.logs-detail-modal{
+  width: min(720px, 92vw);
+  max-height: 80vh;
+  padding: 0;
+  border: 1px solid var(--card-stroke);
+  border-radius: 14px;
+  background: #111827;
+  color: var(--text);
+  box-shadow: var(--shadow);
+}
+.logs-detail-modal::backdrop{ background: rgba(0,0,0,0.55); }
+.logs-detail-modal__form{
+  display: flex;
+  flex-direction: column;
+  max-height: 80vh;
+}
+.logs-detail-modal__header{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--card-stroke);
+}
+.logs-detail-modal__header h3{ margin: 0; font-size: 18px; }
+.logs-detail-modal__close{
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 6px;
+}
+.logs-detail-modal__meta{
+  margin: 0;
+  padding: 14px 18px 0;
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 12px;
+  font-size: 13px;
+}
+.logs-detail-modal__meta dt{ color: var(--muted); }
+.logs-detail-modal__meta dd{ margin: 0; word-break: break-word; }
+.logs-detail-modal__stack{
+  margin: 14px 18px 18px;
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--card-stroke);
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 @media (max-width: 600px){
   body{ padding: 14px; }
   .login-inline{ flex-wrap: wrap; width: 100%; }
   .login-inline input{ width: 100%; }
   .login-inline span{ min-width: 0; width: 100%; }
   .card .value{ font-size: 26px; }
+  #logs-table-wrap{ overflow-x: auto; }
 }
+
+#stats-app, #logs-app{ display: contents; }
+
+/* Avís i botó «Cargar más» al peu de la taula de logs. */
+.logs-more{
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.logs-more p{ margin: 0; }
+.logs-more button{
+  background: var(--accent-2);
+  border: none;
+  border-radius: 8px;
+  color: #0b1220;
+  font-weight: 700;
+  padding: 7px 14px;
+  cursor: pointer;
+}
+.logs-more button:disabled{ opacity: 0.6; cursor: default; }

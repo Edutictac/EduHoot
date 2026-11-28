@@ -20,24 +20,6 @@
     100% { background-position: 0% 50%; }
 }
 
-@keyframes countdownGlow {
-    0% { transform: scale(0.96); opacity: 0.4; }
-    65% { transform: scale(1.02); opacity: 0.75; }
-    100% { transform: scale(1.06); opacity: 0.15; }
-}
-
-@keyframes countdownPulse {
-    0% { transform: scale(0.9); }
-    60% { transform: scale(1.04); }
-    100% { transform: scale(1); }
-}
-
-@keyframes countdownNumber {
-    0% { transform: scale(0.72); opacity: 0.35; }
-    55% { transform: scale(1.1); opacity: 1; }
-    100% { transform: scale(1); opacity: 1; }
-}
-
 html, body{
     min-height: 100%;
     margin: 0;
@@ -70,6 +52,14 @@ body{
     box-shadow: var(--shadow);
     backdrop-filter: blur(12px);
 }
+/* Título del quiz, encima de la barra de nombre y puntos. */
+.quiz-name-text{
+    margin: 0 0 6px;
+    text-align: center;
+    font-weight: 700;
+    color: var(--text-main);
+    overflow-wrap: anywhere;
+}
 #nameText, #scoreText, #rankText{
     margin: 0;
     font-weight: 600;
@@ -87,99 +77,6 @@ body{
     font-weight: 700;
     letter-spacing: -0.01em;
     text-shadow: 0 6px 20px rgba(0,0,0,0.35);
-}
-
-.question-countdown{
-    position: relative;
-    display: none;
-    width: min(420px, 100%);
-    margin: 8px auto 18px;
-    padding: 18px 16px 22px;
-    text-align: center;
-    isolation: isolate;
-}
-
-.question-countdown.is-visible{
-    display: grid;
-    place-items: center;
-    gap: 12px;
-}
-
-.question-countdown::before,
-.question-countdown::after{
-    content: "";
-    position: absolute;
-    inset: 14px 28px;
-    border-radius: 999px;
-    z-index: -1;
-}
-
-.question-countdown::before{
-    background: conic-gradient(from 90deg, #22c55e, #f97316, #3b82f6, #f43f5e, #22c55e);
-    filter: blur(16px);
-    opacity: 0.6;
-    animation: countdownGlow 1s ease-out infinite;
-}
-
-.question-countdown::after{
-    background: rgba(7, 12, 32, 0.5);
-    border: 1px solid rgba(255,255,255,0.2);
-    box-shadow: var(--shadow);
-}
-
-.question-countdown__label,
-.question-countdown__hint{
-    color: #f8fafc;
-    font-weight: 800;
-    text-shadow: 0 8px 28px rgba(0,0,0,0.45);
-}
-
-.question-countdown__label{
-    font-size: clamp(20px, 6vw, 32px);
-    line-height: 1.08;
-}
-
-.question-countdown__hint{
-    color: #dbeafe;
-    font-size: clamp(13px, 3.5vw, 18px);
-    text-transform: uppercase;
-}
-
-.question-countdown__dial{
-    width: clamp(130px, 34vw, 190px);
-    aspect-ratio: 1;
-    display: grid;
-    place-items: center;
-    border-radius: 50%;
-    background:
-        radial-gradient(circle at center, rgba(255,255,255,0.18) 0 45%, transparent 47%),
-        conic-gradient(#facc15, #fb7185, #60a5fa, #34d399, #facc15);
-    box-shadow:
-        inset 0 0 0 10px rgba(7,12,32,0.72),
-        0 18px 55px rgba(0,0,0,0.32);
-}
-
-.question-countdown__dial span{
-    width: 68%;
-    aspect-ratio: 1;
-    display: grid;
-    place-items: center;
-    border-radius: 50%;
-    background: rgba(8,13,34,0.88);
-    color: #fff;
-    font-family: 'Poppins', 'Inter', sans-serif;
-    font-size: clamp(64px, 16vw, 110px);
-    font-weight: 800;
-    line-height: 1;
-    text-shadow: 0 10px 34px rgba(0,0,0,0.45);
-}
-
-.question-countdown.is-ticking .question-countdown__dial{
-    animation: countdownPulse 1s ease-out;
-}
-
-.question-countdown.is-ticking .question-countdown__dial span{
-    animation: countdownNumber 1s ease-out;
 }
 
 .player-points-badge{
@@ -208,7 +105,7 @@ body{
 }
 #playerQuestionImage{
     max-width: 90%;
-    max-height: 260px;
+    max-height: min(260px, 32vh);
     display: none;
     margin: 0 auto;
     object-fit: contain;
@@ -218,7 +115,7 @@ body{
 }
 #playerQuestionVideo{
     max-width: 90%;
-    max-height: 260px;
+    max-height: min(260px, 32vh);
     display: none;
     margin: 10px auto 0;
     border-radius: 16px;
@@ -259,30 +156,6 @@ body{
     gap: 10px;
     margin: 8px 0 12px;
 }
-#playerTimer{
-    position: relative;
-    flex: 1;
-    height: 16px;
-    background: rgba(255,255,255,0.1);
-    border: 1px solid var(--card-stroke);
-    border-radius: 999px;
-    overflow: hidden;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
-}
-#playerTimerFill{
-    position: absolute;
-    left: 0; top: 0; bottom: 0;
-    width: 100%;
-    background: linear-gradient(135deg, #22c55e, #16a34a);
-    transition: width 0.2s linear;
-}
-#playerTimerText{
-    position: absolute;
-    right: 10px;
-    top: -4px;
-    font-size: 14px;
-    font-weight: 700;
-}
 #playerAnswerStatus{
     padding: 6px 10px;
     border-radius: 12px;
@@ -302,6 +175,15 @@ body{
     font-weight: 600;
 }
 
+/* Arrel de Vue: centra el contingut com feia abans el body. */
+#player-game, #player-sp{
+    width: 100%;
+    max-width: 720px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
 .button{
     width: calc(50% - 14px);
     min-height: 64px;
@@ -317,35 +199,6 @@ body{
 }
 .button:hover{ transform: translateY(-2px); filter: brightness(1.05); }
 .button:active{ transform: translateY(0); filter: brightness(0.95); }
-
-#answer1{ background: linear-gradient(135deg, #22c55e, #16a34a); }
-#answer2{ background: linear-gradient(135deg, #f97316, #ea580c); }
-#answer3{ background: linear-gradient(135deg, #3b82f6, #2563eb); }
-#answer4{ background: linear-gradient(135deg, #f43f5e, #e11d48); }
-
-/* Icono de forma sobre el color: el mando del alumno solo mostraba un
-   bloque de color liso, difícil de emparejar con la respuesta del host
-   y poco accesible para daltonismo. Misma pareja forma+color que en la
-   pantalla del profesor. Formas dibujadas en CSS puro (clip-path) en vez
-   de caracteres Unicode: trazo nítido y consistente entre dispositivos,
-   en vez de depender de cómo cada sistema renderice ▲ ◆ ● ■. */
-#answer1, #answer2, #answer3, #answer4{
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-#answer1::before, #answer2::before, #answer3::before, #answer4::before{
-    content: "";
-    display: block;
-    width: 34px;
-    height: 34px;
-    background: #fff;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.35);
-}
-#answer1::before{ clip-path: polygon(50% 0%, 0% 100%, 100% 100%); }
-#answer2::before{ clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); }
-#answer3::before{ border-radius: 50%; }
-#answer4::before{ border-radius: 6px; }
 
 #buttons{
     text-align: center;
@@ -478,7 +331,7 @@ body{
     padding: 12px 14px;
     border: none;
     border-radius: 12px;
-    background: linear-gradient(135deg, #22c55e, #16a34a);
+    background: linear-gradient(135deg, #15803d, #166534);
     color: #fff;
     font-weight: 700;
     cursor: pointer;
@@ -492,12 +345,115 @@ body{
     .question-countdown{ margin-bottom: 14px; }
     #message{ font-size: 22px; }
     .player-correct-answer{ font-size: 18px; }
-    #playerQuestionImage, #playerQuestionVideo{ max-width: 100%; }
+    /* Amb imatge, les respostes han de cabre en pantalla sense desplaçar. */
+    #playerQuestionImage, #playerQuestionVideo{ max-width: 100%; max-height: 24vh; }
+    #playerImageWrap{ margin: 6px 0 10px; }
     #playerQuestionIframe{ width: 100%; max-width: 100%; height: 220px; }
-    #playerStatusRow{ flex-direction: column; align-items: stretch; }
-    #playerTimerText{ right: 8px; font-size: 13px; }
+    /* La barra de temps i l'estat es queden en una fila: en columna, la
+       barra (flex: 1) es quedava sense alçada. */
+    #playerStatusRow{ margin: 4px 0 6px; }
+    #playerAnswerStatus{ font-size: 13px; padding: 5px 9px; }
     .button{ width: 100%; margin: 8px 0; min-height: 58px; }
     #buttons{ width: 100%; display: flex; flex-direction: column; align-items: stretch; }
     #lang-switcher{ top: 8px; right: 8px; }
     #lang-switcher button{ padding: 6px 8px; }
+}
+
+/* Pantalla completa: la partida ocupa tota l'alçada visible del navegador
+   (--app-vh, vore js/viewport-fit.js) amb un marge petit al voltant, i les
+   respostes es repartixen l'espai que sobra. */
+body{
+    box-sizing: border-box;
+    min-height: var(--app-vh);
+    padding: var(--fit-margin);
+}
+#player-game, #player-sp{
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+#answerGrid{
+    flex: 1 1 auto;
+    min-height: 0;
+    grid-auto-rows: 1fr;
+}
+#answerGrid > .button{
+    width: auto;
+    height: auto;
+    min-height: 0;
+    margin: 0;
+}
+
+/* Resultado de la pregunta: «Correcto» y «Incorrecto» un 40 % más grandes que antes (28 → 39,2 px; 22 → 30,8 px en móvil). */
+#message.message--correct,
+#message.message--partial,
+#message.message--incorrect{
+    display: inline-block;
+    padding: 8px 20px;
+    border-radius: 14px;
+    font-size: 39.2px;
+    line-height: 1.2;
+}
+/* Correcto: texto amarillo del logo (#fdbc4b) sobre recuadro verde. */
+#message.message--correct{
+    color: #fdbc4b;
+    background: #166534;
+}
+/* Incorrecto: texto blanco sobre recuadro rojo vivo. */
+#message.message--incorrect{
+    color: #fff;
+    background: #ff1744;
+}
+/* Parcialmente correcta: texto blanco sobre recuadro naranja oscuro (fondo naranja #f57c00). */
+#message.message--partial{
+    color: #fff;
+    background: #c2410c;
+}
+@media (max-width: 600px){
+    #message.message--correct,
+    #message.message--partial,
+    #message.message--incorrect{ font-size: 30.8px; }
+}
+
+.matching-pairs{ display: block; }
+
+/* Resultado de la pregunta y ranking: el texto largo (una palabra o un enlace sin
+   espacios) se parte en lugar de salirse del recuadro. */
+#message,
+.player-correct-answer,
+.player-modal__content{
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    box-sizing: border-box;
+}
+.player-modal__content{
+    max-height: calc(100dvh - 32px);
+    overflow-y: auto;
+}
+
+/* Enunciado y respuestas: el texto sin espacios que no cabe se parte. */
+#questionText,
+#answerGrid .button{
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    box-sizing: border-box;
+}
+
+/* Espacio reservado abajo para «Salir» y «Levantar la mano» (flotantes): las respuestas no quedan debajo. */
+body:has(#player-game), body:has(#player-sp){
+    padding-bottom: calc(var(--fit-margin, 16px) + 56px);
+}
+
+/* Pantallas intermedias (respuesta enviada, resultado, fin de partida): icono grande y una línea de detalle. */
+.result-icon{ font-size: 72px; line-height: 1; margin: 20px 0 4px; text-align: center; }
+.result-sub{ margin: 8px 0 0; font-size: 22px; font-weight: 700; text-align: center; overflow-wrap: anywhere; }
+
+/* Cabecera compacta en móvil: nombre y puntos en una línea, código de partida debajo, más pequeño. */
+@media (max-width: 600px){
+    #stats{ flex-wrap: wrap; justify-content: center; padding: 8px 12px; gap: 6px 14px; }
+    .game-pin{ padding: 2px 12px; }
+    .game-pin__code{ font-size: 20px; }
+    .game-pin__label{ display: none; }
+    .result-icon{ font-size: 60px; }
 }

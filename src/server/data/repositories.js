@@ -3,9 +3,14 @@ const {
   GAMES_COLLECTION,
   USERS_COLLECTION,
   SOLO_SCORES_COLLECTION,
+  GAME_HISTORY_COLLECTION,
   EPHEMERAL_COLLECTION,
   RATINGS_COLLECTION,
-  RATING_VOTES_COLLECTION
+  RATING_VOTES_COLLECTION,
+  LOGS_COLLECTION,
+  SETTINGS_COLLECTION,
+  HOMEWORK_COLLECTION,
+  HOMEWORK_ATTEMPTS_COLLECTION
 } = require('./db');
 
 async function getGamesCollection() {
@@ -23,6 +28,11 @@ async function getSoloScoresCollection() {
   return database.collection(SOLO_SCORES_COLLECTION);
 }
 
+async function getGameHistoryCollection() {
+  const database = await getDb();
+  return database.collection(GAME_HISTORY_COLLECTION);
+}
+
 async function getEphemeralCollection() {
   const database = await getDb();
   return database.collection(EPHEMERAL_COLLECTION);
@@ -38,11 +48,36 @@ async function getRatingVotesCollection() {
   return database.collection(RATING_VOTES_COLLECTION);
 }
 
+async function getLogsCollection() {
+  const database = await getDb();
+  return database.collection(LOGS_COLLECTION);
+}
+
+async function getSettingsCollection() {
+  const database = await getDb();
+  return database.collection(SETTINGS_COLLECTION);
+}
+
+async function getHomeworksCollection() {
+  const database = await getDb();
+  return database.collection(HOMEWORK_COLLECTION);
+}
+
+async function getHomeworkAttemptsCollection() {
+  const database = await getDb();
+  return database.collection(HOMEWORK_ATTEMPTS_COLLECTION);
+}
+
 module.exports = {
+  getHomeworksCollection,
+  getHomeworkAttemptsCollection,
   getGamesCollection,
   getUsersCollection,
   getSoloScoresCollection,
+  getGameHistoryCollection,
   getEphemeralCollection,
   getRatingsCollection,
-  getRatingVotesCollection
+  getRatingVotesCollection,
+  getLogsCollection,
+  getSettingsCollection
 };

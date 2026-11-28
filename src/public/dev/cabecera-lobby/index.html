@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <link rel="icon" href="/icons/logo.svg" type="image/svg+xml">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex">
+    <title>Prototipo: cabecera del lobby | EduHoot</title>
+    <link href="/css/fonts.css" rel="stylesheet">
+    <style>
+        /* Maqueta de disposició (sense servidor): icona d'EduHoot, títol del quiz, PIN i QR. */
+        body{ margin: 0; min-height: 100vh; box-sizing: border-box; padding: 24px 16px 48px; font-family: 'Raleway', sans-serif; color: #f8fafc; background: linear-gradient(135deg, #8e2de2, #c2308f 60%, #f0523b); }
+        .bar{ display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center; max-width: 1000px; margin: 0 auto 18px; }
+        .bar button{ padding: 8px 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.35); background: rgba(15,23,42,0.5); color: #fff; font: 700 14px 'Raleway', sans-serif; cursor: pointer; }
+        .bar button[aria-pressed="true"]{ background: #fdbc4b; color: #3b2a00; border-color: #fdbc4b; }
+        h1{ font-size: 15px; text-transform: uppercase; letter-spacing: .08em; margin: 26px 0 8px; color: #fde68a; max-width: 1000px; margin-left: auto; margin-right: auto; }
+        /* Les regles d'amplada miren el recuadre (no la finestra): així els botons de dalt simulen pantalles estretes. */
+        [data-stage]{ container-type: inline-size; }
+        .stage{ margin: 0 auto; background: rgba(15,23,42,0.28); border: 1px solid rgba(255,255,255,0.18); border-radius: 16px; padding: 18px; box-sizing: border-box; max-width: 100%; }
+        .host-logo{ width: 44px; height: auto; flex: 0 0 auto; }
+        .quiz{ display: flex; align-items: center; justify-content: center; gap: 12px; margin: 0 0 6px; }
+        .quiz strong{ font-size: 26px; color: #ffee70; font-weight: 800; overflow-wrap: anywhere; }
+        h2{ margin: 0 0 10px; font-size: 22px; font-weight: 700; text-align: center; }
+        .pin{ display: inline-flex; align-items: center; gap: 12px; padding: 8px 22px; border-radius: 999px; background: rgba(40,20,70,0.55); border: 1px solid rgba(255,255,255,0.2); }
+        .pin span.lbl{ background: #38bdf8; color: #0b1020; font-weight: 800; border-radius: 999px; padding: 4px 10px; font-size: 13px; }
+        .pin span.val{ font-size: 44px; font-weight: 800; letter-spacing: .08em; color: #f8fafc; }
+        .qr{ width: 150px; text-align: center; background: rgba(40,20,70,0.6); border: 1px solid rgba(255,255,255,0.2); border-radius: 14px; padding: 10px; box-sizing: border-box; }
+        .qr .sq{ width: 100px; height: 100px; margin: 0 auto 6px; border-radius: 8px; background: repeating-conic-gradient(#e2e8f0 0 25%, #0f172a 0 50%) 0 0 / 20px 20px; }
+        .qr small{ font-size: 12px; font-weight: 600; color: #e2e8f0; }
+        .qr p{ margin: 0 0 4px; font-size: 12px; font-weight: 700; }
+
+        /* A · Actual: icona + títol a dalt; PIN al mig; QR a la dreta del bloc de text (baixa si no hi cap). */
+        .vA{ display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 18px; }
+        .vA .text{ flex: 1 1 auto; text-align: center; }
+        .vA .qr{ margin: 0 auto; }
+
+        /* B · Icona a l'esquerra del bloc: graella de tres columnes (icona | títol i PIN | QR). */
+        .vB{ display: grid; grid-template-columns: 72px minmax(0, 1fr) 150px; gap: 16px; align-items: center; }
+        .vB .host-logo{ width: 64px; justify-self: center; }
+        .vB .text{ text-align: center; min-width: 0; }
+        .vB .qr{ justify-self: end; }
+        @container (max-width: 720px){
+            .vB{ grid-template-columns: 1fr; justify-items: center; }
+            .vB .host-logo{ justify-self: center; }
+            .vB .qr{ justify-self: center; }
+        }
+
+        /* C · Fila superior (icona + títol) i fila inferior (PIN al centre amb el QR a la dreta). */
+        .vC .top{ display: flex; justify-content: center; }
+        .vC .row{ display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 14px; margin-top: 12px; }
+        .vC .row .pin{ grid-column: 2; justify-self: center; }
+        .vC .row .qr{ grid-column: 3; justify-self: end; }
+        .vC .row .spacer{ grid-column: 1; }
+        @container (max-width: 720px){
+            .vC .row{ grid-template-columns: 1fr; justify-items: center; }
+            .vC .row .pin, .vC .row .qr, .vC .row .spacer{ grid-column: 1; }
+            .vC .row .spacer{ display: none; }
+        }
+
+        /* D · Nom del quiz petit a dalt; a sota, una fila: logo (pegat a l'esquerra del PIN), PIN més gran i QR (pegat a la dreta, ocupant l'alt de la fila). */
+        .vD{ display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .vD .quizname{ font-size: 18px; font-weight: 700; color: #ffee70; text-align: center; overflow-wrap: anywhere; }
+        .vD .zone{ display: flex; align-items: stretch; justify-content: center; gap: 10px; height: clamp(110px, 16vh, 150px); }
+        .vD .zone .logoD{ align-self: center; width: 56px; height: auto; }
+        .vD .zone .pinD{ align-self: center; display: inline-flex; align-items: center; gap: 12px; padding: 10px 26px; border-radius: 999px; background: rgba(40,20,70,0.55); border: 1px solid rgba(255,255,255,0.2); }
+        .vD .zone .pinD .lbl{ background: #38bdf8; color: #0b1020; font-weight: 800; border-radius: 999px; padding: 4px 10px; font-size: 13px; }
+        .vD .zone .pinD .val{ font-size: 60px; font-weight: 800; letter-spacing: .08em; line-height: 1; color: #f8fafc; }
+        .vD .zone .qrD{ height: 100%; width: auto; aspect-ratio: 1 / 1; flex: 0 0 auto; border-radius: 12px; background: #fff; padding: 8px; box-sizing: border-box; }
+        .vD .zone .qrD .sq{ width: 100%; height: 100%; border-radius: 6px; background: repeating-conic-gradient(#0f172a 0 25%, #fff 0 50%) 0 0 / 22px 22px; }
+        /* Pantalla estreta: la fila es parteix; el QR baixa sota el PIN, centrat i dins de la pantalla. */
+        @container (max-width: 720px){
+            .vD .zone{ flex-wrap: wrap; height: auto; row-gap: 12px; }
+            .vD .zone .pinD .val{ font-size: 44px; }
+            .vD .zone .qrD{ height: 130px; width: 130px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bar" role="group" aria-label="Amplada de la finestra">
+        <button type="button" data-w="1280" aria-pressed="true">1280 px</button>
+        <button type="button" data-w="800" aria-pressed="false">800 px</button>
+        <button type="button" data-w="480" aria-pressed="false">480 px</button>
+    </div>
+
+    <h1>A · Actual (QR al costat del text; baixa si no cap)</h1>
+    <section class="stage" data-stage>
+        <div class="vA">
+            <div class="text">
+                <div class="quiz"><img class="host-logo" src="/icons/logo.svg" alt="EduHoot"><strong>Informàtica bàsica</strong></div>
+                <h2>Únete a la partida</h2>
+                <div class="pin"><span class="lbl">PIN</span><span class="val">12345</span></div>
+            </div>
+            <div class="qr"><p>Escanea el código QR para entrar</p><div class="sq"></div><small>eduhoot.edutictac.es</small></div>
+        </div>
+    </section>
+
+    <h1>B · Icona a l'esquerra del bloc (tres columnes)</h1>
+    <section class="stage" data-stage>
+        <div class="vB">
+            <img class="host-logo" src="/icons/logo.svg" alt="EduHoot">
+            <div class="text">
+                <div class="quiz"><strong>Informàtica bàsica</strong></div>
+                <h2>Únete a la partida</h2>
+                <div class="pin"><span class="lbl">PIN</span><span class="val">12345</span></div>
+            </div>
+            <div class="qr"><p>Escanea el código QR para entrar</p><div class="sq"></div><small>eduhoot.edutictac.es</small></div>
+        </div>
+    </section>
+
+    <h1>C · Fila de dalt (icona + títol) i fila del PIN amb el QR a la dreta</h1>
+    <section class="stage vC" data-stage>
+        <div class="top quiz"><img class="host-logo" src="/icons/logo.svg" alt="EduHoot"><strong>Informàtica bàsica</strong></div>
+        <h2>Únete a la partida</h2>
+        <div class="row">
+            <div class="spacer"></div>
+            <div class="pin"><span class="lbl">PIN</span><span class="val">12345</span></div>
+            <div class="qr"><p>Escanea el código QR para entrar</p><div class="sq"></div><small>eduhoot.edutictac.es</small></div>
+        </div>
+    </section>
+
+    <h1>D · Nom petit a dalt; PIN més gran amb el logo a l'esquerra i el QR a la dreta (ocupant l'alt)</h1>
+    <section class="stage" data-stage>
+        <div class="vD">
+            <div class="quizname">Informàtica bàsica</div>
+            <div class="zone">
+                <img class="logoD" src="/icons/logo.svg" alt="EduHoot">
+                <div class="pinD"><span class="lbl">PIN</span><span class="val">12345</span></div>
+                <div class="qrD"><div class="sq"></div></div>
+            </div>
+        </div>
+    </section>
+
+    <script src="./app.js"></script>
+</body>
+</html>

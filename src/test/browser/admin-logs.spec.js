@@ -1,0 +1,214 @@
+const { test, expect } = require('@playwright/test');
+
+if (process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH) {
+    test.use({ launchOptions: { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } });
+}
+
+// Red de seguridad per a passar /admin-logs.html a Vue: fixa la configuració,
+// els filtres, la taula, el detall i les descàrregues.
+
+const LOGS = [
+    { createdAt: '2026-11-01T10:00:00Z', level: 'error', tag: 'express-error', message: 'Falla <b>gorda</b>', pin: '123', hostId: 'h1', playerId: '', meta: { stack: 'Error: x\n  at y' } },
+    { createdAt: '2026-11-01T10:01:00Z', level: 'info', tag: 'player-join', message: 'Entra Ana', pin: '123', hostId: 'h1', playerId: 'p1', meta: { name: 'Ana' } },
+    { createdAt: '2026-11-01T10:02:00Z', level: 'debug', tag: 'timeUp', message: 'Temps', pin: '', hostId: '', playerId: '', meta: {} }
+];
+
+async function openLogs(page, options = {}) {
+    const calls = { logQueries: [], saved: [] };
+    await page.route(/^https:\/\//, route => route.abort());
+    await page.route('**/api/**', route => {
+        const request = route.request();
+        const url = new URL(request.url());
+        const { pathname } = url;
+        if (pathname === '/api/auth/me') return route.fulfill({ json: { id: 'a', role: 'admin' } });
+        if (pathname === '/api/auth/authentik/config') return route.fulfill({ json: { enabled: false } });
+        if (pathname === '/api/admin/settings/logging') {
+            if (request.method() === 'POST') {
+                calls.saved.push(request.postDataJSON());
+                return route.fulfill(options.saveResult || { json: { ok: true } });
+            }
+            return route.fulfill(options.settings || { json: { data: { level: 'warn', cappedSizeBytes: 50 * 1024 * 1024 } } });
+        }
+        if (pathname === '/api/admin/logs') {
+            calls.logQueries.push(url.search);
+            const logs = typeof options.logs === 'function' ? options.logs(url) : options.logs;
+            return route.fulfill(logs || { json: { data: LOGS } });
+        }
+        if (pathname === '/api/admin/logs/export') return route.fulfill({ contentType: 'text/plain', body: 'export' });
+        return route.fulfill({ json: {} });
+    });
+    await page.goto('/admin-logs.html');
+    await page.waitForLoadState('load');
+    return calls;
+}
+
+test('carga la configuración actual', async ({ page }) => {
+    await openLogs(page);
+    await expect(page.locator('#logs-level-select')).toHaveValue('warn');
+    await expect(page.locator('#logs-capped-mb')).toHaveValue('50');
+});
+
+test('guardar envía nivel y tamaño en bytes y avisa', async ({ page }) => {
+    await page.clock.install();
+    const calls = await openLogs(page);
+    await expect(page.locator('#logs-capped-mb')).toHaveValue('50');
+    await page.locator('#logs-level-select').selectOption('debug');
+    await page.locator('#logs-capped-mb').fill('8');
+    await page.locator('#logs-settings-save').click();
+    await expect(page.locator('#logs-settings-status')).toHaveText('Guardado.');
+    expect(calls.saved).toEqual([{ level: 'debug', cappedSizeBytes: 8 * 1024 * 1024 }]);
+    await page.clock.runFor(2100);
+    await expect(page.locator('#logs-settings-status')).toHaveText('');
+});
+
+test('si guardar falla enseña el error del servidor', async ({ page }) => {
+    await openLogs(page, { saveResult: { status: 400, json: { error: 'Nivell no vàlid' } } });
+    await page.locator('#logs-settings-save').click();
+    await expect(page.locator('#logs-settings-status')).toHaveText('Nivell no vàlid');
+});
+
+test('pinta la tabla escapando el texto y con «Ver» solo si hay detalle', async ({ page }) => {
+    const calls = await openLogs(page);
+    const rows = page.locator('#logs-tbody tr');
+    await expect(rows).toHaveCount(3);
+    expect(calls.logQueries).toEqual(['']);
+    const first = rows.nth(0).locator('td');
+    await expect(page.locator('#logs-table thead th').first()).toHaveText('Detalle');
+    await expect(first.nth(0)).toHaveText('Ver');
+    await expect(first.nth(1)).not.toHaveText('');
+    await expect(first.nth(2)).toHaveText('error');
+    await expect(first.nth(2)).toHaveClass('level-error');
+    await expect(first.nth(3)).toHaveText('express-error');
+    await expect(first.nth(4)).toHaveText('Falla <b>gorda</b>');
+    await expect(rows.nth(1).locator('td')).toHaveText(['Ver', /./, 'info', 'player-join', 'Entra Ana', '123', 'h1', 'p1']);
+    await expect(rows.nth(0).locator('.logs-detail-btn')).toHaveText('Ver');
+    await expect(rows.nth(2).locator('.logs-detail-btn')).toHaveCount(0);
+    await expect(page.locator('#logs-error')).toHaveText('');
+});
+
+test('«Ver» abre el detalle con los campos no vacíos y la pila', async ({ page }) => {
+    await openLogs(page);
+    await page.locator('#logs-tbody tr').nth(0).locator('.logs-detail-btn').click();
+    const modal = page.locator('#logs-detail-modal');
+    await expect(modal).toBeVisible();
+    await expect(page.locator('#logs-detail-modal-title')).toHaveText('Detalle: express-error');
+    await expect(modal.locator('dt')).toHaveText(['Fecha', 'Nivel', 'Tag', 'Mensaje', 'PIN', 'hostId']);
+    await expect(modal.locator('dd').nth(3)).toHaveText('Falla <b>gorda</b>');
+    await expect(page.locator('#logs-detail-modal-stack')).toHaveText('Error: x\n  at y');
+    await modal.locator('.logs-detail-modal__close').click();
+    await expect(modal).toBeHidden();
+
+    await page.locator('#logs-tbody tr').nth(1).locator('.logs-detail-btn').click();
+    await expect(page.locator('#logs-detail-modal-stack')).toHaveText(JSON.stringify({ name: 'Ana' }, null, 2));
+    await expect(modal.locator('dt')).toHaveCount(7);
+});
+
+test('Filtrar y Refrescar piden los logs con los filtros', async ({ page }) => {
+    const calls = await openLogs(page);
+    await expect(page.locator('#logs-tbody tr')).toHaveCount(3);
+    await page.locator('#logs-filter-level').selectOption('error');
+    // Cambiar el tag ya filtra (vore el test de més avall).
+    await page.locator('#logs-filter-tag').selectOption('game-end');
+    await expect.poll(() => calls.logQueries.length).toBe(2);
+    await page.locator('#logs-filter-q').fill('Ana');
+    await page.locator('#logs-filter-pin').fill('123');
+    await page.locator('#logs-filter-apply').click();
+    await expect.poll(() => calls.logQueries.length).toBe(3);
+    expect(calls.logQueries[2]).toBe('?level=error&tag=game-end&q=Ana&pin=123');
+    await page.locator('#logs-filter-refresh').click();
+    await expect.poll(() => calls.logQueries.length).toBe(4);
+    expect(calls.logQueries[3]).toBe('?level=error&tag=game-end&q=Ana&pin=123');
+});
+
+test('las descargas llevan los filtros y el formato', async ({ page }) => {
+    await openLogs(page);
+    await page.locator('#logs-filter-level').selectOption('warn');
+    await page.locator('#logs-export-csv').click();
+    await page.waitForURL('**/api/admin/logs/export?*');
+    expect(new URL(page.url()).search).toBe('?level=warn&format=csv');
+
+    await openLogs(page);
+    await page.locator('#logs-export-ndjson').click();
+    await page.waitForURL('**/api/admin/logs/export?*');
+    expect(new URL(page.url()).search).toBe('?format=ndjson');
+});
+
+test('sin sesión lo explica y deja la tabla vacía', async ({ page }) => {
+    await openLogs(page, { logs: { status: 401, json: {} }, settings: { status: 401, json: {} } });
+    await expect(page.locator('#logs-error')).toHaveText('Necesitas iniciar sesión para ver esta página.');
+    await expect(page.locator('#logs-tbody tr')).toHaveCount(0);
+});
+
+test('otro error al cargar los logs da el mensaje genérico', async ({ page }) => {
+    await openLogs(page, { logs: { status: 500, json: {} } });
+    await expect(page.locator('#logs-error')).toHaveText('No se pudieron cargar los logs.');
+});
+
+test('enlaza con el panel de estadísticas y alinea la configuración', async ({ page }) => {
+    await openLogs(page);
+    await expect(page.locator('.admin-header p')).toHaveText('Eventos de partidas, jugadores, importaciones y errores del servidor.');
+    await expect(page.locator('.admin-nav a')).toHaveText('← Panel de estadísticas');
+    await expect(page.locator('.admin-nav a')).toHaveAttribute('href', '/admin/stats');
+    const boxes = [];
+    for (const id of ['#logs-level-select', '#logs-capped-mb', '#logs-settings-save']) boxes.push(await page.locator(id).boundingBox());
+    if (boxes[2].y > boxes[0].y + 20) return; // pantalla estrecha: el botón baja de línea
+    for (const box of boxes) {
+        expect(Math.abs(box.y - boxes[0].y)).toBeLessThan(1);
+        expect(Math.abs(box.height - boxes[0].height)).toBeLessThan(1);
+    }
+});
+
+test('cambiar el tag filtra al momento', async ({ page }) => {
+    const calls = await openLogs(page);
+    await expect.poll(() => calls.logQueries.length).toBe(1);
+    await page.locator('#logs-filter-tag').selectOption('player-join');
+    await expect.poll(() => calls.logQueries.length).toBe(2);
+    expect(calls.logQueries[1]).toBe('?tag=player-join');
+    await page.locator('#logs-filter-tag').selectOption('');
+    await expect.poll(() => calls.logQueries.length).toBe(3);
+    expect(calls.logQueries[2]).toBe('');
+});
+
+test('si hay más logs, avisa y «Cargar más» añade los siguientes con los mismos filtros', async ({ page }) => {
+    const older = { createdAt: '2026-10-01T09:00:00Z', level: 'info', tag: 'game-end', message: 'Antic', pin: '', hostId: '', playerId: '', meta: {} };
+    const first = LOGS.map((row, i) => Object.assign({ _id: 'id' + i }, row));
+    const calls = await openLogs(page, {
+        logs: url => url.searchParams.get('before')
+            ? { json: { data: [older], hasMore: false } }
+            : { json: { data: first, hasMore: true } }
+    });
+    await expect(page.locator('#logs-tbody tr')).toHaveCount(3);
+    await expect(page.locator('#logs-more p')).toHaveText('Se muestran los 3 más recientes. Hay más: cárgalos, filtra o descarga el CSV/NDJSON, que incluye todos.');
+    await page.locator('#logs-filter-level').selectOption('info');
+    await page.locator('#logs-filter-apply').click();
+    await expect.poll(() => calls.logQueries.length).toBe(2);
+    // Escriure sense prémer «Filtrar» no canvia el que continua «Cargar más».
+    await page.locator('#logs-filter-q').fill('sense aplicar');
+    await page.locator('#logs-load-more').click();
+    await expect(page.locator('#logs-tbody tr')).toHaveCount(4);
+    await expect(page.locator('#logs-tbody tr').nth(3).locator('td').nth(4)).toHaveText('Antic');
+    const params = new URLSearchParams(calls.logQueries[2]);
+    expect(Object.fromEntries(params)).toEqual({ level: 'info', before: '2026-11-01T10:02:00Z', beforeId: 'id2' });
+    await expect(page.locator('#logs-more')).toHaveCount(0);
+});
+
+test('sin más logs no hay aviso ni botón', async ({ page }) => {
+    await openLogs(page);
+    await expect(page.locator('#logs-tbody tr')).toHaveCount(3);
+    await expect(page.locator('#logs-more')).toHaveCount(0);
+});
+
+test('«Ver» muestra el nombre del cuestionario si el log lo trae, y solo el id si no se pudo resolver', async ({ page }) => {
+    await openLogs(page, { logs: { json: { data: [
+        { createdAt: '2026-11-01T10:00:00Z', level: 'info', tag: 'game-start', message: 'Partida iniciada', pin: '123', hostId: 'h1', playerId: '', meta: null, quizId: '7', quizName: 'Geografía de España' },
+        { createdAt: '2026-11-01T10:01:00Z', level: 'info', tag: 'upload-csv:success', message: 'upload-csv:success', pin: '', hostId: '', playerId: '', meta: null, quizId: '9' }
+    ] } } });
+    const modal = page.locator('#logs-detail-modal');
+    // Con solo el cuestionario (sin meta) el botón «Ver» también aparece.
+    await page.locator('#logs-tbody tr').nth(0).locator('.logs-detail-btn').click();
+    await expect(modal.locator('dt').last()).toHaveText('Cuestionario');
+    await expect(modal.locator('dd').last()).toHaveText('Geografía de España (7)');
+    await modal.locator('.logs-detail-modal__close').click();
+    await page.locator('#logs-tbody tr').nth(1).locator('.logs-detail-btn').click();
+    await expect(modal.locator('dd').last()).toHaveText('id 9 (nombre no disponible)');
+});

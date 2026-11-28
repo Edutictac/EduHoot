@@ -1,36 +1,193 @@
 <!DOCTYPE html>
 <html lang="es">
-    <head>
-        <meta charset="utf-8">
-        <title>EduHoot</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="theme-color" content="#6c2bd9">
-        <link rel="manifest" href="manifest.webmanifest">
-        <link rel="icon" href="/icons/logo.svg" type="image/svg+xml">
-        <link rel="stylesheet" href="css/landing.css">
-        <link rel="stylesheet" href="/css/edutictac-footer.css">
-        <link rel="stylesheet" href="/css/edutictac-shared.css">
-        <script src="/js/edutictac-chip.js"></script>
-        <script src="https://commons.edutictac.es/assets/account-widget.js" defer onerror="document.documentElement.classList.add('account-fallback')"></script>
-    </head>
-    <body>
-        <edutictac-account class="site-account site-account--fixed" data-base="https://commons.edutictac.es"></edutictac-account>
-        <div class="lang-switcher" id="lang-switcher" data-lang-buttons>
-            <span data-i18n="landing_langLabel">Idioma</span>
+<head>
+    <meta charset="utf-8">
+    <title>EduHoot · Aprender jugando</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="EduHoot: cuestionarios en directo, en solitario o como deberes. Libre, gratuito y sin publicidad.">
+    <meta name="theme-color" content="#0f162a">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="icon" href="/icons/logo.svg" type="image/svg+xml">
+    <script src="/js/home-pref.js"></script>
+    <script src="/js/edutictac-chip.js"></script>
+    <script src="https://commons.edutictac.es/assets/account-widget.js" defer></script>
+    <link rel="stylesheet" href="/css/promo.css">
+    <link rel="stylesheet" href="/css/edutictac-footer.css">
+    <link rel="stylesheet" href="/css/edutictac-shared.css">
+    <meta property="og:title" content="EduHoot">
+    <link rel="stylesheet" href="/css/lang-more.css">
+</head>
+<body>
+    <edutictac-account class="site-account site-account--fixed" data-base="https://commons.edutictac.es"></edutictac-account>
+    <header class="top">
+        <a class="brand" href="/"><img src="/icons/logo.svg" alt="" width="36" height="36"> EduHoot</a>
+        <nav aria-label="Principal">
+            <a href="#modos" data-i18n="nav_modes">Modos de juego</a>
+            <a href="#tipos" data-i18n="nav_types">Preguntas</a>
+            <a href="#profes" data-i18n="nav_teachers">Para docentes</a>
+            <a href="#libre" data-i18n="nav_free">Software libre</a>
+            <a class="nav-ett" href="https://edutictac.es/" target="_blank" rel="noopener">EduTicTac</a>
+        </nav>
+        <div class="top-actions">
+            <div class="lang" id="promo-lang" data-lang-buttons role="group" aria-label="Idioma"></div>
         </div>
-        <main class="landing-shell">
-            <img class="logo" src="/icons/logo.svg" alt="EduHoot logo">
-            <h1 data-i18n="landing_title">EduHoot</h1>
-            <p class="tagline" data-i18n="landing_tagline">Juega desde cualquier aula o en solitario.</p>
-            <div class="landing-actions">
-                <a class="btn primary" href="/join.html" data-i18n="landing_play_multi">Jugar en el aula</a>
-                <a class="btn secondary" href="/multiplayer/" data-i18n="landing_play_local_multi">Multijugador</a>
-                <a class="btn secondary" href="/solo/" data-i18n="landing_play_solo">Jugar solo</a>
-                <a class="btn teacher" href="/create/" data-i18n="landing_prof_access">Acceso profesorado</a>
+    </header>
+
+    <main>
+        <section class="hero">
+            <p class="eyebrow" data-i18n="eyebrow" data-ic="🎮">Aprender jugando</p>
+            <h1 id="motto" data-i18n="motto_1">Cada pregunta es una puerta hacia algo nuevo</h1>
+            <div class="hero-actions">
+                <a class="btn ghost big" href="/inicio/" data-i18n="quick_start" data-ic="⚡">Inicio rápido</a>
+                <a class="btn primary big" href="/join.html" data-i18n="play_now" data-ic="▶️">Jugar ahora</a>
+                <a class="btn ghost big" href="/solo/" data-i18n="hero_solo" data-ic="👤">Solo</a>
+                <a class="btn ghost big" href="/multiplayer/" data-i18n="tile3" data-ic="👥">Multijugador</a>
+                <a class="btn ghost big" href="/create/" data-i18n="f_teachers" data-ic="📚">Profesorado</a>
             </div>
-            <button id="installApp" class="install-button" type="button" data-i18n="landing_install_app" hidden>Instalar app</button>
-        </main>
-        <footer class="ett-footer ett-footer--page ett-footer--bottom">
+            <div class="cards">
+                <div class="card c1"><span class="tag" data-i18n="t_mc" data-ic="✅">Opción múltiple</span><b data-i18n="q_capital">¿Capital de Francia?</b><i data-i18n="a_paris">París</i></div>
+                <div class="card c2"><span class="tag" data-i18n="t_order" data-ic="↕️">Ordenar</span><b data-i18n="q_order">Ordena de menor a mayor</b><i>1 · 2 · 3 · 4</i></div>
+                <div class="card c3"><span class="tag" data-i18n="t_tf" data-ic="❓">Verdadero / Falso</span><b data-i18n="q_flat">La Tierra es plana</b><i data-i18n="a_false">✕ Falso</i></div>
+                <div class="card c4"><span class="tag" data-i18n="t_match" data-ic="🔗">Emparejar</span><b data-i18n="q_match">Une cada país con su capital</b><i>⇄</i></div>
+            </div>
+        </section>
+
+        <section class="manifesto">
+            <h2 data-i18n="m_h2">Tanto si das clase como si estudias solo, hay un modo para ti.</h2>
+            <p data-i18n="m_p">Crea un cuestionario en minutos, juega con toda la clase desde cualquier dispositivo o déjalo como deberes. Sin cuentas para el alumnado y sin publicidad.</p>
+            <a class="btn primary" href="/create/" data-i18n="create_quiz" data-ic="✏️">Crear un cuestionario</a>
+        </section>
+
+        <section class="strip" id="modos" aria-label="Modos de juego">
+            <a class="tile t1" href="/join.html"><span data-i18n="tile1" data-ic="🎮">Jugar en el aula</span><small data-i18n="tile1s">Con PIN, en directo</small></a>
+            <a class="tile t2" href="/solo/"><span data-i18n="tile2" data-ic="👤">Jugar solo</span><small data-i18n="tile2s">A tu ritmo, sin prisa</small></a>
+            <a class="tile t3" href="/multiplayer/"><span data-i18n="tile3" data-ic="👥">Multijugador</span><small data-i18n="tile3s">Compite con amistades</small></a>
+            <a class="tile t4" href="/create/"><span data-i18n="tile4" data-ic="📚">Acceso profesorado</span><small data-i18n="tile4s">Crea y lanza tus cuestionarios</small></a>
+        </section>
+
+        <section class="split">
+            <div>
+                <h3 data-i18n="s_h3">Cada pregunta, a su manera</h3>
+                <p data-i18n="s_p">Opción múltiple, verdadero o falso, respuesta corta, numérica, emparejar u ordenar. Con imágenes y vídeo, y con el tiempo que quieras darle.</p>
+                <a class="link" href="/create/" data-i18n="s_link" data-ic="✏️">Ver el creador →</a>
+            </div>
+            <div class="chips" id="tipos">
+                <span data-i18n="t_mc" data-ic="✅">Opción múltiple</span><span data-i18n="c_tf" data-ic="❓">Verdadero/Falso</span><span data-i18n="c_short" data-ic="✏️">Respuesta corta</span>
+                <span data-i18n="c_num" data-ic="🔢">Numérica</span><span data-i18n="t_match" data-ic="🔗">Emparejar</span><span data-i18n="t_order" data-ic="↕️">Ordenar</span><span data-i18n="c_video" data-ic="🎬">Vídeo</span><span data-i18n="c_img" data-ic="🖼️">Imagen</span>
+            </div>
+        </section>
+
+
+        <section class="extras" id="extras" aria-labelledby="x-h">
+            <h3 id="x-h" data-i18n="x_h3">Y además…</h3>
+            <ul>
+                <li data-ic="🧩" data-i18n="f_types">Seis tipos de pregunta, más encuestas</li>
+                <li data-ic="📥" data-i18n="f_importexport">Importar y exportar: Moodle, CSV, Kahoot, PDF, DOC</li>
+                <li data-ic="🤖" data-i18n="f_ai">Generador de preguntas con IA</li>
+                <li data-ic="⏱️" data-i18n="f_selfpaced">Modo a su ritmo</li>
+                <li data-ic="📚" data-i18n="f_homework">Deberes con intentos y fecha límite</li>
+                <li data-ic="📊" data-i18n="x4">Resultados por pregunta</li>
+                <li class="pc-only" data-ic="🔁" data-i18n="x6">Repaso con tarjetas</li>
+                <li class="pc-only" data-ic="📄" data-i18n="f_csv">Informe CSV de cada partida</li>
+                <li class="pc-only" data-ic="🎓" data-i18n="f_noaccounts">Sin cuentas para el alumnado</li>
+                <li class="pc-only" data-ic="🏆" data-i18n="x1">Ranking y podio</li>
+                <li class="pc-only" data-ic="📲" data-i18n="f_pwa">App instalable en cualquier dispositivo</li>
+                <li class="pc-only" data-ic="♿" data-i18n="f_a11y">Accesible: contraste alto y ✓/✕</li>
+            </ul>
+            <ul id="all-features" class="extras-more" hidden>
+                <li data-ic="🗂️" data-i18n="f_history">Historial de partidas (90 días)</li>
+                <li data-ic="⏸️" data-i18n="f_pause">Pausa y +15 segundos</li>
+                <li data-ic="👀" data-i18n="f_whoanswered">Quién ha respondido y quién sale de la pestaña</li>
+                <li data-ic="⏳" data-i18n="f_countdown">Cuenta atrás 3-2-1</li>
+                <li data-ic="👻" data-i18n="f_ghost">Modo fantasma</li>
+                <li data-ic="🙈" data-i18n="f_blind">Modo a ciegas</li>
+                <li data-ic="🔥" data-i18n="f_streak">Racha de aciertos y puntos dobles</li>
+                <li data-ic="⏭️" data-i18n="f_auto">Avance automático</li>
+                <li data-ic="🎲" data-i18n="f_randnames">Nombres aleatorios</li>
+                <li data-ic="🎬" data-i18n="f_video">Vídeo «aprende y responde»</li>
+                <li data-ic="🚫" data-i18n="f_noranking">Partida sin ranking</li>
+                <li data-ic="✋" data-i18n="x2">Mano alzada</li>
+                <li data-ic="🔌" data-i18n="f_reconnect">Reconexión automática</li>
+                <li data-ic="🏷️" data-i18n="f_library">Biblioteca con etiquetas, carpetas y favoritos</li>
+                <li data-ic="🔒" data-i18n="f_privacy">Privado, por enlace o público</li>
+                <li data-ic="🖼️" data-i18n="f_media">Imágenes y vídeo en las preguntas</li>
+                <li data-ic="👥" data-i18n="f_samescreen">Multijugador en la misma pantalla</li>
+                <li data-ic="🏆" data-i18n="f_solorank">Solo con ranking global</li>
+                <li data-ic="🔊" data-i18n="x3">Lectura en voz alta</li>
+                <li data-ic="🔗" data-i18n="x5">Enlace de entrada con el PIN</li>
+                <li data-ic="📱" data-i18n="f_qr">Entrada por QR</li>
+            </ul>
+            <button type="button" class="btn ghost big" id="all-features-btn" aria-expanded="false" aria-controls="all-features" data-i18n="x_all" data-ic="✨">Todas las características</button>
+        </section>
+
+        <section class="duo" id="profes">
+            <article>
+                <h3 data-i18n="d1_h3" data-ic="📥">Importa lo que ya tienes</h3>
+                <p data-i18n="d1_p">Trae tus cuestionarios de Moodle (XML o GIFT) o de CSV y empieza a jugar el mismo día. Exporta cuando quieras.</p>
+                <a class="link" href="/create/" data-i18n="d1_link" data-ic="📄">Importar un fichero →</a>
+            </article>
+            <article>
+                <h3 data-i18n="d2_h3" data-ic="📚">Deberes y resultados</h3>
+                <p data-i18n="d2_p">Envía un enlace como tarea asíncrona y consulta la clasificación y los aciertos por pregunta de cada partida.</p>
+                <a class="link" href="/create/homework/" data-i18n="d2_link" data-ic="📊">Ver deberes →</a>
+            </article>
+        </section>
+
+        <section class="quote" aria-roledescription="carousel" aria-label="Testimonios">
+            <div class="slides" id="quote-slides" aria-live="off">
+                <blockquote class="slide is-active">
+                    <p data-i18n="q1_p">«Mi clase pidió repetir la partida. Es la primera vez que me piden repasar.»</p>
+                    <footer data-i18n="q1_w" data-ic="🎉">Docente de Secundaria</footer>
+                </blockquote>
+                <blockquote class="slide">
+                    <p data-i18n="q2_p">«Importé mis cuestionarios de Moodle en cinco minutos y esa misma tarde jugamos en clase.»</p>
+                    <footer data-i18n="q2_w" data-ic="📚">Profesora de Matemáticas</footer>
+                </blockquote>
+                <blockquote class="slide">
+                    <p data-i18n="q3_p">«Me gusta jugar solo para practicar antes del examen. Sé qué preguntas fallo.»</p>
+                    <footer data-i18n="q3_w" data-ic="👤">Alumna de 3.º de ESO</footer>
+                </blockquote>
+                <blockquote class="slide">
+                    <p data-i18n="q4_p">«Las tarjetas me dejan repasar justo lo que no sé. Con cinco minutos al día noto la diferencia.»</p>
+                    <footer data-i18n="q4_w" data-ic="🔁">Alumno de 4.º de ESO</footer>
+                </blockquote>
+                <blockquote class="slide">
+                    <p data-i18n="q5_p">«Con las preguntas de ordenar, la línea del tiempo de Historia la ordena el alumnado, no yo.»</p>
+                    <footer data-i18n="q5_w" data-ic="↕️">Docente de Ciencias Sociales</footer>
+                </blockquote>
+                <blockquote class="slide">
+                    <p data-i18n="q6_p">«Las preguntas de correspondencia me permiten unir conceptos y definiciones sin inventar trucos.»</p>
+                    <footer data-i18n="q6_w" data-ic="🔗">Profesor de Lengua</footer>
+                </blockquote>
+            </div>
+            <div class="quote-nav">
+                <button type="button" class="q-prev" data-i18n-aria="carousel_prev" aria-label="Anterior">‹</button>
+                <div class="q-dots" id="quote-dots" role="tablist"></div>
+                <button type="button" class="q-next" data-i18n-aria="carousel_next" aria-label="Siguiente">›</button>
+            </div>
+            <p class="quote-note" data-i18n="quote_note">Testimonios de ejemplo: se sustituirán por reales.</p>
+        </section>
+
+        <section class="cta" id="libre">
+            <h2 data-i18n="cta_h2" data-ic="🚀">Libre, gratuito y tuyo</h2>
+            <p data-i18n="cta_p">Código abierto bajo AGPL-3.0. Puedes instalarlo en tu centro o usarlo en la web, también como app instalable.</p>
+            <div class="cta-actions">
+                <a class="btn primary big" href="/join.html" data-i18n="play_now" data-ic="▶️">Jugar ahora</a>
+                <a class="btn ghost big" href="https://git.edutictac.es/Edutictac/eduhoot" target="_blank" rel="noopener" data-i18n="see_code" data-ic="💾">Ver el código</a>
+                <button id="installApp" class="btn ghost big install-button" type="button" hidden data-i18n="install_app" data-ic="⬇️">Instalar app</button>
+            </div>
+        </section>
+    </main>
+
+    <div class="foot">
+        <div class="foot-nav">
+            <a href="/inicio/" data-i18n="quick_start" data-ic="⚡">Inicio rápido</a>
+            <a href="/join.html" data-i18n="f_play" data-ic="▶️">Jugar</a>
+            <a href="/solo/" data-i18n="f_solo" data-ic="👤">Solo</a>
+            <a href="/multiplayer/" data-i18n="tile3" data-ic="👥">Multijugador</a>
+            <a href="/create/" data-i18n="f_teachers" data-ic="📚">Profesorado</a>
+        </div>
+        <footer class="ett-footer ett-footer--bottom">
             <p class="ett-footer__id">
                 <span class="ett-footer__brand">EduTicTac</span>
                 <span aria-hidden="true">·</span>
@@ -38,17 +195,19 @@
                 <span class="ett-footer__version" id="app-version" aria-live="polite"></span>
             </p>
             <div class="ett-footer__links">
-                <a href="https://edutictac.es/" target="_blank" rel="noopener">edutictac.es</a>
-                <a href="https://edutictac.es/privacitat.html" target="_blank" rel="noopener" data-i18n="footerPrivacy">Privacidad</a>
-                <a href="https://edutictac.es/galetes.html" target="_blank" rel="noopener" data-i18n="footerCookies">Galetes</a>
-                <a href="https://git.edutictac.es/Edutictac/eduhoot" target="_blank" rel="noopener" data-i18n="footerSource">Código fuente</a>
+                <a href="https://edutictac.es/privacitat.html" target="_blank" rel="noopener" data-i18n="f_privacy">Privacidad</a>
+                <a href="https://edutictac.es/galetes.html" target="_blank" rel="noopener" data-i18n="f_cookies">Cookies</a>
+                <a href="https://git.edutictac.es/Edutictac/eduhoot" target="_blank" rel="noopener" data-i18n="f_source">Código fuente</a>
                 <a href="https://git.edutictac.es/Edutictac/eduhoot/src/branch/main/LICENSE" target="_blank" rel="noopener">AGPL-3.0</a>
             </div>
         </footer>
-        <script src="/js/languages.js"></script>
-        <script src="/js/env-badge.js"></script>
-        <script src="js/i18n-player.js"></script>
-        <script src="js/pwa-install.js"></script>
-        <script src="js/app-version.js"></script>
-    </body>
+    </div>
+    <script src="/js/languages.js"></script>
+    <script src="/js/promo.js"></script>
+    <script src="/js/pwa-install.js"></script>
+    <script src="/js/env-badge.js"></script>
+    <script src="/js/app-version.js"></script>
+    <script src="/js/session-bridge.js"></script>
+    <script src="/js/landing-session.js"></script>
+</body>
 </html>

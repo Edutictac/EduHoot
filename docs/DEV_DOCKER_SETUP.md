@@ -21,7 +21,7 @@ Alçar EduHoot en local amb una sola orde (`docker compose up`), sense haver d'i
 
 - `src/server/server.js:2321` usa `HOST = process.env.HOST || '127.0.0.1'` i `server.listen(PORT, HOST, ...)`. Si el contenidor escolta en `127.0.0.1`, el mapatge de ports de Docker (`-p 3000:3000`) **no funciona** — cal forçar `HOST=0.0.0.0` dins del contenidor.
 - `DB_NAME` està fixat a `'kahootDB'` (`server.js:232`), així que `MONGO_URL` no necessita incloure el nom de la base de dades.
-- Els directoris de pujades (`src/public/uploads/quiz-images`) i logs (`src/logs/finished-session-reports`) ja es creen sols amb `fs.mkdirSync(..., { recursive: true })` dins de `server.js` — el `mkdir`/`chown` de l'`entrypoint.sh` de producció és només per a permisos d'un usuari no-root, no es necessita en desenvolupament.
+- Les imatges dels quizzes van a un volum de Docker (`eduhoot_quiz_images`), muntat a `/var/lib/eduhoot/quiz-images` dins del contenidor i indicat amb `QUIZ_IMAGES_DIR` (vore `docker-compose.yml`). No es guarden dins de `src/`. Els logs (`src/logs/finished-session-reports`) es creen sols amb `fs.mkdirSync(..., { recursive: true })` dins de `server.js`; el `mkdir`/`chown` de l'`entrypoint.sh` de producció és només per a permisos d'un usuari no-root, no es necessita en desenvolupament.
 - `src/package.json` no tenia scripts `start` ni `dev` (ja afegits, vore «Fitxers creats»).
 - `.gitignore` no excloïa `.env` (només ho feia `.dockerignore`) — ja afegit.
 
@@ -178,7 +178,9 @@ També insereix **5 usuaris locals de prova** (email + contrasenya), per a prova
 | `docent3@exemple.local` | `editor` |
 | `docent4@exemple.local` | `editor` |
 
-**Entrar com a docent en dev**: `/create/` ja no té formulari de contrasenya (l'únic accés és el xip d'EduTicTac amb Authentik). Per a usar estos usuaris, obri `http://localhost:3000/dev/login` (o fes clic al distintiu «Entorn: desenvolupament») i tria'n un; et porta a `/create/` amb la sessió iniciada. La pàgina només existix amb `NODE_ENV=development` (404 en stage i producció).
+**Entrar com a docent en dev**: `/create/` ja no té formulari de contrasenya (l'únic accés és el xip d'EduTicTac amb Authentik). Per a usar estos usuaris, obri `http://localhost:3000/dev/login` (o fes clic al distintiu «Entorn: desenvolupament») i tria'n un; et porta a `/create/` amb la sessió iniciada. La pàgina només existix amb `NODE_ENV=development` (404 en stage i producció). Les maquetes de `/dev/` (p. ex. `/dev/anfitrion/`) també es veuen en stage, però només amb una sessió de rol admin (401 sense sessió, 403 si no és admin); en producció, 404.
+
+**Maquetes en `/dev/`**: tot `/dev/` (també `/dev/login`) només existix en desenvolupament. La prova de concepte de la pregunta de correspondència està en `http://localhost:3000/dev/correspondencia/` (sense sessió). Si canvies `server.js`, reinicia el contenidor (`docker compose restart app`).
 
 Les sessions viuen en memòria: cada vegada que `node --watch` reinicia el servidor (en guardar un fitxer) es tanquen totes, i cal tornar a passar per `/dev/login`.
 
@@ -202,7 +204,7 @@ Per a desactivar-lo, posa `AUTHENTIK_CLIENT_ID=` buit en `.env`. La primera vega
 - **Dockerfile separat en lloc de reutilitzar el de producció**: el de producció fixa `NODE_ENV=production` i fa `npm ci --omit=dev` (sense devDependencies), i usa `entrypoint.sh` amb un usuari no-root que generaria conflictes de permisos en fer bind-mount del codi de l'amfitrió amb un UID distint. Separar els Dockerfiles evita qualsevol risc sobre el flux de producció.
 - **Root en el contenidor de desenvolupament**: és un entorn local d'un sol desenvolupador, sense exposició a la xarxa externa — el risc de seguretat és pràcticament nul. A canvi, s'evita el problema d'UID-mismatch. Compensació a tindre en compte: els fitxers que l'aplicació cree en calent en `src/public/uploads/quiz-images` i `src/logs/finished-session-reports` quedaran amb propietari `root` en l'amfitrió. Si cal netejar-los sense `sudo`:
   ```
-  docker compose exec -u root app rm -rf public/uploads/quiz-images/* logs/finished-session-reports/*
+  docker compose exec -u root app rm -rf /var/lib/eduhoot/quiz-images/* logs/finished-session-reports/*
   ```
   o recuperar la propietat amb:
   ```
@@ -262,8 +264,8 @@ docker compose down -v        # esborra també el volum de Mongo (torna a un est
 4. `docker compose restart app` i comprovar als logs que ara diu `Sembrats: 0` (ja existien) i que `/create/` continua mostrant exactament els mateixos 5 de mostra més el propi (no duplicats).
 5. `docker compose exec app npm run unseed:dev` i comprovar que els 5 de mostra desapareixen de `/create/` però el qüestionari propi continua ahí; `docker compose exec app npm run seed:dev` els torna a crear.
 6. Editar `src/server/server.js` (p. ex. un `console.log` temporal) amb l'estiba alçada i veure en `docker compose logs -f app` que `node --watch` reinicia sol, sense necessitat de `--build`.
-7. Pujar una imatge en crear un qüestionari i comprovar que apareix en `src/public/uploads/quiz-images/` en l'amfitrió.
-8. `docker compose down -v` al finalitzar, per a netejar els volums de prova.
+7. Pujar una imatge en crear un qüestionari i comprovar que apareix en el volum `/var/lib/eduhoot/quiz-images` (dins del contenidor).
+8. `docker compose down -v` al finalitzar, per a netejar els volums de prova (això també esborra les imatges dels quizzes de dev).
 
 ## Pròxim pas: Pull Request
 
@@ -282,4 +284,4 @@ gh pr create --repo Edutictac/EduHoot --base main \
 
 Una vegada fusionat a `main`, el següent pas del mateix camí (abans de
 producció) és validar-ho en l'entorn de preproducció descrit en
-[`STAGE_SETUP.md`](STAGE_SETUP.md).
+[`STAGE-AUTOMATIC.md`](STAGE-AUTOMATIC.md).
