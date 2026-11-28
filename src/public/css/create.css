@@ -258,11 +258,13 @@ body {
     opacity: 1;
 }
 
+/* Herramientas solo para administradores (🧪 aviso de Stage, ⚙️ panel de administración). */
+.admin-tools{ display: flex; justify-content: flex-end; gap: 8px; margin: 10px 0 0; }
 .stage-notice-toggle{
     display: block;
-    margin: 10px 0 0;
-    margin-inline-start: auto;
+    margin: 0;
     padding: 4px 10px;
+    text-decoration: none;
     border: 2px solid #fbbf24;
     border-radius: 999px;
     background: #49330d;

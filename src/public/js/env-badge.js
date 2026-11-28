@@ -205,6 +205,13 @@
         bg: 'Показване или скриване на известието за Stage (админ, за всички)', ar: 'إظهار أو إخفاء إشعار Stage (للمشرف، للجميع)'
     };
 
+    // Tooltip del botó ⚙️ (només l'admin el veu): porta al panell d'administració.
+    var ADMIN_LINK_TEXT = {
+        ca: "Panell d'administració", va: "Panell d'administració", es: 'Panel de administración', en: 'Administration panel',
+        fr: "Panneau d'administration", de: 'Verwaltungsbereich', it: 'Pannello di amministrazione', pt: 'Painel de administração',
+        bg: 'Административен панел', ar: 'لوحة الإدارة'
+    };
+
     // Només l'admin pot mostrar o amagar l'avís (per a tots els usuaris): té un botó 🧪 al costat de l'avís.
     function setupStageNoticeAdmin(notice){
         var toggle = document.getElementById('stage-notice-toggle');
@@ -224,6 +231,13 @@
                 toggle.classList.toggle('is-off', !visible());
             };
             toggle.classList.remove('hidden');
+            var adminLink = document.getElementById('admin-link');
+            if(adminLink){
+                var adminLabel = ADMIN_LINK_TEXT[code] || ADMIN_LINK_TEXT.es;
+                adminLink.setAttribute('title', adminLabel);
+                adminLink.setAttribute('aria-label', adminLabel);
+                adminLink.classList.remove('hidden');
+            }
             refresh();
             toggle.addEventListener('click', function(){
                 var next = !visible();

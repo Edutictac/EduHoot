@@ -217,7 +217,7 @@ test('con sesión: marca «Sólo mis cuestionarios», pide mine=1 y reclama el q
 test('sin cuestionarios: estado vacío y sin paginación', async ({ page }) => {
     await mockBackend(page, { quizzes: [] });
     await page.goto('/create/?lang=es');
-    await expect(page.locator('#game-list .empty-state p')).toHaveText(['No hay cuestionarios importados aún.', 'Sube un archivo o crea uno nuevo para verlo aquí.']);
+    await expect(page.locator('#game-list .empty-state p')).toHaveText(['No hay cuestionarios aún.', 'Sube un archivo o crea uno nuevo para verlo aquí.']);
     await expect(page.locator('#game-count')).toHaveText('0 cuestionarios');
     await expect(page.locator('#library-pagination')).toBeHidden();
 });

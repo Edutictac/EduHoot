@@ -36,6 +36,7 @@ test('stageNoticeVisible=true: el aviso se ve y el editor no tiene el botón �
     await expect(page.locator('#stage-notice')).toBeVisible();
     await page.waitForTimeout(500);
     await expect(page.locator('#stage-notice-toggle')).toBeHidden();
+    await expect(page.locator('#admin-link')).toBeHidden();
     expect(state.posts).toEqual([]);
 });
 
@@ -45,6 +46,7 @@ test('anónimo: sin botón 🧪', async ({ page }) => {
     await expect(page.locator('#stage-notice')).toBeVisible();
     await page.waitForTimeout(500);
     await expect(page.locator('#stage-notice-toggle')).toBeHidden();
+    await expect(page.locator('#admin-link')).toBeHidden();
 });
 
 test('admin: el botón 🧪 alterna el aviso, lo guarda en el servidor y sigue tras recargar', async ({ page }) => {
@@ -52,6 +54,9 @@ test('admin: el botón 🧪 alterna el aviso, lo guarda en el servidor y sigue t
     await page.goto('/create/?lang=es');
     const toggle = page.locator('#stage-notice-toggle');
     await expect(toggle).toBeVisible();
+    // Junto al 🧪, el ⚙️ lleva al panel de administración.
+    await expect(page.locator('#admin-link')).toBeVisible();
+    await expect(page.locator('#admin-link')).toHaveAttribute('href', '/admin');
     await expect(page.locator('#stage-notice')).toBeVisible();
     await toggle.click();
     await expect(page.locator('#stage-notice')).toBeHidden();

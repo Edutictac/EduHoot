@@ -47,7 +47,7 @@ test('biblioteca: «Mis partidas» aparece junto a «Mis deberes» solo con sesi
     await stubBackend(page, { loggedIn: true });
     await page.goto('/create/?lang=es');
     await expect(page.locator('#my-games')).toBeVisible();
-    await expect(page.locator('#my-games')).toHaveText('Mis partidas');
+    await expect(page.locator('#my-games')).toHaveText('Partidas');
     await expect(page.locator('#my-games')).toHaveAttribute('href', 'partidas/');
 
     await page.unroute('**/api/**');

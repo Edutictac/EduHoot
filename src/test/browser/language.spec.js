@@ -69,8 +69,10 @@ const LANG_NAMES = ['Català', 'Valencià', 'Español', 'English', 'Français', 
 const LANG_SHORT = ['CA', 'VA', 'ES', 'EN', 'FR', 'DE', 'IT', 'PT', 'BG', 'AR'];
 
 for (const [route, selector, labels] of [
-    ['/create/', '#lang-select', LANG_NAMES],
-    ['/create/quiz-creator/', '#lang-select', LANG_NAMES],
+    ['/create/', '#lang-select', LANG_SHORT],
+    ['/create/quiz-creator/', '#lang-select', LANG_SHORT],
+    ['/create/partidas/', '#lang-select', LANG_SHORT],
+    ['/create/homework/?quiz=7', '#lang-select', LANG_SHORT],
     ['/host/', '#host-lang-select', LANG_NAMES],
     ['/host/game/?id=test&pin=12345', '#lang-select', LANG_NAMES],
     ['/solo/', '#lang-select', LANG_SHORT],
