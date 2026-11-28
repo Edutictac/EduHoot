@@ -18,6 +18,9 @@ fitxers corresponents, i els originals es van eliminar.
 
 ## [Sense publicar]
 
+### Afegit
+- **Stage redirigix a producció** (`src/server/stageGate.js`): qui entra a stage va a producció (302), tret de qui entra una vegada amb `/?dev=<clau>` (cookie de 90 dies) o envia `X-Stage-Dev-Key`. Interruptor 🔓/🔒 a la biblioteca, al costat del ⚙️ (només admin i només en stage): genera i guarda la clau, sense tocar el VPS; també `GET`/`POST /api/admin/settings/stage-redirect`. `STAGE_DEV_KEY` fixa la clau i `STAGE_REDIRECT=off` l'apaga. Stage no s'indexa (`X-Robots-Tag` i `robots.txt`). La comprovació de salut de Docker usa ara `/api/version`.
+
 ### Canviat
 - **Portada, bloc final**: el titular «Lliure, gratuït i teu» passa a 8 frases que canvien en cada recàrrega (com el titular de dalt), sense la paraula «gratuït», que podia fer pensar en suport gratuït: «Programari lliure, fet per i per a la comunitat», «Lliure, obert i teu», «Teu per a usar, estudiar i millorar», etc., en els 10 idiomes. La clau `cta_h2` desapareix de `promo.js` (ara `cta_h2_1`…`cta_h2_8`).
 

@@ -5,6 +5,7 @@ const express = require('express');
 const socketIO = require('socket.io');
 const helmet = require('helmet');
 const { cspOptions } = require('./csp');
+const { stageGate, stageNoIndex } = require('./stageGate');
 
 const { LiveGames } = require('./utils/liveGames');
 const { Players } = require('./utils/players');
@@ -201,6 +202,13 @@ const CHIP_PAGES = {
   '/admin/stats': 'admin-stats.html',
   '/admin/logs': 'admin-logs.html'
 };
+
+// Stage: no s'indexa i, amb STAGE_DEV_KEY, només hi entren els desenvolupadors (la resta va a producció).
+app.use(stageNoIndex());
+app.use(stageGate(process.env, async () => {
+  const doc = await require('./data/repositories').getSettingsCollection().then(c => c.findOne({ _id: 'ui' }));
+  return doc ? { enabled: doc.stageRedirectEnabled, key: doc.stageDevKey } : {};
+}));
 
 // Body parsers (bump limit to allow quizzes con recursos más pesados)
 app.use(helmet({

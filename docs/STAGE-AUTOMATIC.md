@@ -3,7 +3,7 @@
 L'entorn de preproducció és https://eduhoot-stage.edutictac.es. Té la seua
 pròpia base de dades i el seu propi proveïdor d'Authentik: el que s'hi faça no
 afecta producció. L'accés web és públic i no demana cap contrasenya del VPS.
-Els cercadors poden indexar-lo.
+Els cercadors no l'indexen.
 
 ## Com es publica
 
@@ -58,6 +58,29 @@ Safari d'iPhone/iPad) i mireu la consola: un bloqueig apareix com
 bloquejat, `CSP_REPORT_ONLY=true` en el `stage.env` la deixa en mode
 informe (només avisa) sense tocar el codi, mentre s'afig l'origen a
 `csp.js`.
+
+## Redirecció a producció (només qui desenvolupa entra)
+
+Quan està activa, qui entra a stage va a producció (302, mateix camí). Per
+entrar cal obrir una vegada `https://eduhoot-stage.edutictac.es/?dev=<clau>`:
+guarda una cookie de 90 dies i lleva el paràmetre. Les eines poden enviar
+`X-Stage-Dev-Key: <clau>`.
+
+- **Sense tocar el VPS:** un admin de stage prem el botó 🔓/🔒 de la biblioteca
+  (al costat del ⚙️; només en stage). En activar-lo es genera una clau, es
+  guarda i qui el prem rep la cookie; el títol del botó mostra l'enllaç per als
+  altres desenvolupadors. Per defecte, stage queda obert.
+  També: `GET`/`POST /api/admin/settings/stage-redirect` (`{"enabled":true}`).
+- **Amb el VPS:** `STAGE_DEV_KEY` (mínim 12 caràcters) en `eduhoot-stage.env`
+  fixa la clau i activa la redirecció des de l'arrancada (l'admin la pot apagar).
+  `STAGE_REDIRECT=off` l'apaga per a tothom i preval; `STAGE_REDIRECT_URL`
+  canvia el destí (per defecte `https://eduhoot.edutictac.es`).
+- Sempre accessibles: `/api/version` i `/robots.txt` (la comprovació de salut
+  de Docker usa `/api/version`, no `/`).
+- Stage no s'indexa: `X-Robots-Tag: noindex, nofollow` i `robots.txt` amb
+  `Disallow: /`. Si el vhost de nginx servix el seu propi `robots.txt`, cal
+  llevar-lo.
+- Codi: `src/server/stageGate.js`; proves: `test/unit/stageGate.test.js`.
 
 ## Accés: docents i alumnat
 

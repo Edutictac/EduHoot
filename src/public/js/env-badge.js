@@ -254,6 +254,44 @@
         else window.addEventListener('eduhoot:user', function(ev){ start(ev.detail); }, { once: true });
     }
 
+    // Només en Stage i només l'admin: 🔒 = els de fora van a producció; 🔓 = Stage obert.
+    // En activar-lo, qui el prem rep la cookie d'entrada; el títol mostra l'enllaç per als altres.
+    function setupStageRedirectAdmin(){
+        var btn = document.getElementById('stage-redirect-toggle');
+        if(!btn) return;
+        var start = function(user){
+            if(!user || user.role !== 'admin') return;
+            var paint = function(st){
+                btn.setAttribute('aria-pressed', st.active ? 'true' : 'false');
+                btn.classList.toggle('is-off', !st.active);
+                btn.textContent = st.active ? '🔒' : '🔓';
+                var tip = st.forcedOff ? 'STAGE_REDIRECT=off' : (st.enterPath ? location.origin + st.enterPath : '');
+                btn.setAttribute('title', tip);
+                btn.setAttribute('aria-label', tip || (st.active ? 'on' : 'off'));
+            };
+            fetch('/api/admin/settings/stage-redirect', { credentials: 'include' }).then(function(res){
+                return res.ok ? res.json() : null;
+            }).then(function(st){
+                if(!st) return;
+                paint(st);
+                btn.classList.remove('hidden');
+                btn.addEventListener('click', function(){
+                    if(st.forcedOff) return;
+                    fetch('/api/admin/settings/stage-redirect', {
+                        method: 'POST',
+                        credentials: 'include',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ enabled: !st.active })
+                    }).then(function(res){ return res.ok ? res.json() : null; })
+                        .then(function(next){ if(next){ st = next; paint(st); } })
+                        .catch(function(){});
+                });
+            }).catch(function(){});
+        };
+        if(window.eduhootCurrentUser !== undefined) start(window.eduhootCurrentUser);
+        else window.addEventListener('eduhoot:user', function(ev){ start(ev.detail); }, { once: true });
+    }
+
     function init(){
         fetch('/api/env').then(function(res){
             return res.ok ? res.json() : null;
@@ -272,6 +310,7 @@
                     tryStageBtn.classList.add('hidden');
                 }
                 setupStageNoticeAdmin(stageNotice);
+                if(data.env === 'staging') setupStageRedirectAdmin();
             }
             var cfg = data && ENVS[data.env];
             if(!cfg) return;

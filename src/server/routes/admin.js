@@ -5,6 +5,7 @@ const { ObjectId } = require('mongodb');
 const { getGamesCollection, getEphemeralCollection, getLogsCollection, getSettingsCollection } = require('../data/repositories');
 const { getDb, LOGS_COLLECTION, DEFAULT_LOGS_CAPPED_SIZE_BYTES } = require('../data/db');
 const { logger, setLevel, LOG_LEVELS, DEFAULT_LEVEL } = require('../logger');
+const { redirectState, effectiveKey, newKey, cookieHeader, isSecure } = require('../stageGate');
 
 const bulkUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
 
@@ -593,6 +594,52 @@ module.exports = function createAdminRouter({
     } catch (err) {
       console.error('admin-settings-stage-notice POST error', err);
       return res.status(500).json({ error: 'No s\'ha pogut actualitzar l\'avís.' });
+    }
+  });
+
+  // Redirecció de Stage cap a producció (veure server/stageGate.js): interruptor en calent.
+  // Sense STAGE_DEV_KEY en l'entorn, en activar-la es genera una clau i es guarda (stageDevKey);
+  // qui la activa rep la cookie d'entrada. STAGE_REDIRECT=off la desactiva i preval.
+  const stageRedirectView = (setting) => {
+    const state = redirectState(process.env, setting);
+    const key = effectiveKey(process.env, setting);
+    return { ...state, enterPath: state.active && key ? '/?dev=' + key : '' };
+  };
+
+  router.get('/api/admin/settings/stage-redirect', requireRole('admin'), async (req, res) => {
+    try {
+      if (process.env.NODE_ENV !== 'staging') return res.status(404).json({ error: 'Només en Stage.' });
+      const settings = await getSettingsCollection();
+      const doc = await settings.findOne({ _id: 'ui' });
+      return res.json(stageRedirectView(doc ? { enabled: doc.stageRedirectEnabled, key: doc.stageDevKey } : {}));
+    } catch (err) {
+      console.error('admin-settings-stage-redirect GET error', err);
+      return res.status(500).json({ error: 'No s\'ha pogut llegir la redirecció.' });
+    }
+  });
+
+  router.post('/api/admin/settings/stage-redirect', requireRole('admin'), async (req, res) => {
+    try {
+      if (process.env.NODE_ENV !== 'staging') return res.status(404).json({ error: 'Només en Stage.' });
+      const { enabled } = req.body || {};
+      if (typeof enabled !== 'boolean') {
+        return res.status(400).json({ error: 'Cal indicar enabled: true o false.' });
+      }
+      const settings = await getSettingsCollection();
+      const doc = await settings.findOne({ _id: 'ui' });
+      const setting = { enabled, key: doc && doc.stageDevKey };
+      if (enabled && !effectiveKey(process.env, setting)) setting.key = newKey();
+      const $set = { stageRedirectEnabled: enabled };
+      if (setting.key && setting.key !== (doc && doc.stageDevKey)) $set.stageDevKey = setting.key;
+      await settings.updateOne({ _id: 'ui' }, { $set }, { upsert: true });
+      // Qui activa la redirecció no s'ha de quedar fora: rep la cookie d'entrada.
+      const key = effectiveKey(process.env, setting);
+      if (enabled && key) res.set('Set-Cookie', cookieHeader(key, isSecure(req)));
+      logger.info('Redirecció de Stage actualitzada', { tag: 'admin-settings', stageRedirectEnabled: enabled });
+      return res.json(stageRedirectView(setting));
+    } catch (err) {
+      console.error('admin-settings-stage-redirect POST error', err);
+      return res.status(500).json({ error: 'No s\'ha pogut actualitzar la redirecció.' });
     }
   });
 
