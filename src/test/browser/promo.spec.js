@@ -309,3 +309,49 @@ test('los enlaces del pie van en el mismo orden que los botones bajo el titular'
     expect(hero).toEqual(['/inicio/', '/join.html', '/solo/', '/multiplayer/', '/create/']);
     expect(await hrefs('.foot-nav a')).toEqual(hero);
 });
+
+test.describe('titular del bloque final («Libre, abierto y tuyo»…)', () => {
+    test('hay 8 frases por idioma, ninguna promete «gratuito»', async ({ page }) => {
+        await page.goto('/?lang=es');
+        const stats = await page.evaluate(() => {
+            const T = window.EduhootPromoTexts, out = {};
+            for (const lang of Object.keys(T)) {
+                const phrases = Array.from({ length: 8 }, (_, i) => T[lang]['cta_h2_' + (i + 1)]);
+                out[lang] = { count: phrases.filter(Boolean).length, distinct: new Set(phrases).size, old: T[lang].cta_h2 !== undefined, all: phrases.join(' | ') };
+            }
+            return out;
+        });
+        for (const [lang, s] of Object.entries(stats)) {
+            expect(s.count, lang).toBe(8);
+            expect(s.distinct, lang).toBe(8);
+            expect(s.old, `${lang}: la clave antigua ya no se usa`).toBe(false);
+            expect(s.all, lang).not.toMatch(/gratu|gratis|free of charge|kostenlos/i);
+        }
+    });
+
+    test('en cada recarga sale una frase distinta de la anterior', async ({ page }) => {
+        await page.goto('/?lang=es');
+        const read = () => page.locator('#cta-title').evaluate(el => ({ key: el.getAttribute('data-i18n'), text: el.textContent.trim() }));
+        let prev = await read();
+        expect(prev.key).toMatch(/^cta_h2_[1-8]$/);
+        const seen = new Set([prev.key]);
+        for (let i = 0; i < 8; i++) {
+            await page.reload();
+            const cur = await read();
+            expect(cur.key).not.toBe(prev.key);
+            expect(cur.text.length).toBeGreaterThan(10);
+            seen.add(cur.key);
+            prev = cur;
+        }
+        expect(seen.size).toBeGreaterThan(3);
+    });
+
+    test('la frase se traduce al cambiar de idioma sin cambiar de frase', async ({ page }) => {
+        await page.goto('/?lang=es');
+        const key = await page.locator('#cta-title').getAttribute('data-i18n');
+        const es = (await page.locator('#cta-title').textContent()).trim();
+        await page.locator('#promo-lang select.lang-more').selectOption('de');
+        await expect(page.locator('#cta-title')).toHaveAttribute('data-i18n', key);
+        await expect(page.locator('#cta-title')).not.toHaveText(es);
+    });
+});

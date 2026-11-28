@@ -18,6 +18,9 @@ fitxers corresponents, i els originals es van eliminar.
 
 ## [Sense publicar]
 
+### Canviat
+- **Portada, bloc final**: el titular «Lliure, gratuït i teu» passa a 8 frases que canvien en cada recàrrega (com el titular de dalt), sense la paraula «gratuït», que podia fer pensar en suport gratuït: «Programari lliure, fet per i per a la comunitat», «Lliure, obert i teu», «Teu per a usar, estudiar i millorar», etc., en els 10 idiomes. La clau `cta_h2` desapareix de `promo.js` (ara `cta_h2_1`…`cta_h2_8`).
+
 ## [2.0.1] - 2026-11-28
 
 ### Afegit
