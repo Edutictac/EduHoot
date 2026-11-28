@@ -789,6 +789,19 @@ la numeració 1-32 de dalt.
   - **Accessibilitat**: el volum i el silenci han de seguir funcionant igual amb el
     catàleg nou.
 
+- **W14 — Veure les preguntes i les respostes d'un qüestionari (mode lectura).**
+  Ara, per a revisar el contingut d'un quiz cal obrir l'editor (que permet
+  canviar-lo) o jugar-lo. La proposta és una vista de **només lectura**, des de
+  la biblioteca, amb totes les preguntes i les seues respostes (marcant les
+  correctes), sense risc de modificar res. Coses a tindre en compte:
+  - **Qui la veu**: el propietari i l'administració, i qualsevol persona amb
+    accés al quiz (un quiz públic, igual que ja es pot jugar); els privats
+    segueixen les regles d'accés actuals.
+  - **Tipus de pregunta**: totes (opció múltiple, vertader/fals, resposta
+    lliura, correspondència, ordenar, amb imatge o vídeo).
+  - **Relació amb altres propostes**: l'exportació a PDF, DOCX i ODT ja ofereix
+    una versió imprimible; esta vista seria la forma de consultar-ho en pantalla.
+
 ## Nota sobre drets d'autor
 
 Cap de les 32 propostes té drets d'autor: les mecàniques i regles de joc
