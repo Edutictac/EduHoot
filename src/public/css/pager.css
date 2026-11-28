@@ -58,3 +58,11 @@ select.page-select{
 }
 select.page-select option{ color: #14101f; background: #fff; }
 @media (prefers-reduced-motion: reduce){ .pagination-fixed{ transition: none; } }
+
+/* Con un quiz ya elegido (solo, flashcards, multijugador) el catálogo se oculta y el paginador también. */
+body.playing #public-pagination,
+body.playing #public-pagination-fixed,
+body.preparing #public-pagination,
+body.preparing #public-pagination-fixed,
+html.quiz-from-url #public-pagination,
+html.quiz-from-url #public-pagination-fixed{ display: none !important; }
