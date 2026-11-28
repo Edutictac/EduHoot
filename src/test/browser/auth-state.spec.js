@@ -149,6 +149,8 @@ for (const panel of ['/admin-stats.html', '/admin-logs.html']) {
         await page.goto(SITE + panel);
         await expect.poll(() => state.starts.length).toBe(1);
         expect(state.starts[0]).toBe(panel);
+        // Esperem que acabe la navegació cap a Authentik abans del goto següent.
+        await page.waitForURL('**/api/auth/authentik/start**');
         await page.goto(SITE + panel);
         await page.waitForTimeout(500);
         expect(state.starts.length).toBe(1);
