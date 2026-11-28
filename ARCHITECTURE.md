@@ -1232,7 +1232,7 @@ seguretat i concurrència:
   (issue #15).
 
 Pendent: entrada amb identitat de Commons i enviar-li la puntuació (vore
-`HOMEWORK_PLAN.md`, fora del repositori).
+`HOMEWORK_HOWTO.md`, fora del repositori).
 
 ## Flashcards: comprovació de respostes
 
