@@ -19,7 +19,11 @@
         <link href="/css/pager.css" rel="stylesheet">
 </head>
   <body>
-    <a class="back-link" href="/" data-i18n="back">← Inicio</a>
+    <!-- «Biblioteca» solo aparece si se llegó desde la biblioteca (?from=library). -->
+    <nav class="back-links">
+      <a class="back-link" href="/" data-i18n="back">← Inicio</a>
+      <a id="back-library" class="back-link hidden" href="/create/" data-i18n="backLibrary">Biblioteca</a>
+    </nav>
     <edutictac-account class="site-account site-account--top" data-home-only data-base="https://commons.edutictac.es"></edutictac-account>
 
     <header class="hero">

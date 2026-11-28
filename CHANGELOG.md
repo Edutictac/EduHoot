@@ -65,6 +65,7 @@ fitxers corresponents, i els originals es van eliminar.
 - **Autoritme**: els botons tenen els colors, l'ombra i l'efecte en passar el ratolí dels del lobby.
 - **Solo**: la pantalla inicial reparteix els controls verticalment, com les flashcards, i les etiquetes són «Ver pregunta en cuenta atrás», «Segundos para ver el resultado» i «Segundos por cada pregunta».
 - **Icona**: el logo d'EduHoot és el favicon de totes les pàgines.
+- **Navegació**: l'editor de qüestionaris, Mis partidas i Mis deberes tenen també «Inici»; multijugador té «Biblioteca» (només si s'hi arriba des de la biblioteca, com solo); el panell d'estadístiques i els logs tenen «Inici» i «Biblioteca». L'amfitrió i l'alumnat en partida queden com estaven.
 
 ### Corregit
 - **Seguretat: «Mostrar respostes» desactivat**: el servidor enviava a l'alumnat la llista de jugadors amb l'historial de respostes (què van enviar i si van encertar), amb la qual es podia deduir la solució. Ara s'hi treu l'historial (`studentPlayersOf`) a `questionOver` i en reconnectar. L'amfitrió continua rebent-ho tot.

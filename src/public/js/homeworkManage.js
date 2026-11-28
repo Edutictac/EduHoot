@@ -4,7 +4,7 @@ var lang = EduhootLang.init({ preferKey: 'lang' });
 var params = new URLSearchParams(window.location.search);
 
 var i18n = {
-    es: { title: 'Mis deberes', langLabel: 'Idioma', back: 'Biblioteca', loading: 'Cargando…', needLogin: 'Inicia sesión para gestionar deberes.', goLogin: 'Ir a iniciar sesión',
+    es: { title: 'Mis deberes', langLabel: 'Idioma', back: 'Biblioteca', backHome: 'Inicio', loading: 'Cargando…', needLogin: 'Inicia sesión para gestionar deberes.', goLogin: 'Ir a iniciar sesión',
         newTitle: 'Nuevo deber', quizLabel: 'Quiz', fTitle: 'Título', fDeadline: 'Fecha límite', fAttempts: 'Intentos por alumno', attempts1: '1 (un solo intento)', attemptsUnlimited: 'Ilimitados', fScoring: 'Puntuación con varios intentos', scoringBest: 'Cuenta el mejor intento', scoringAverage: 'Cuenta la media de los intentos', scoringFirst: 'Cuenta el primer intento', scoringLast: 'Cuenta el último intento', colAvg: 'Puntuación media', colFirst: 'Primer intento', colLast: 'Último intento', myHomeworkLink: 'Mis deberes',
         fTime: 'Tiempo por pregunta', timeQuiz: 'El de cada pregunta', fShowAnswers: 'Mostrar la respuesta correcta tras contestar', fShuffle: 'Barajar las respuestas', create: 'Crear deber',
         createdTitle: 'Deber creado', createdText: 'Comparte este enlace con tu alumnado. Entran con un nombre y reciben un código para continuar desde otro dispositivo.', code: 'Código', copyLink: 'Copiar enlace', copied: '¡Copiado!',
@@ -13,7 +13,7 @@ var i18n = {
         downloadCsv: 'Descargar CSV', refresh: 'Actualizar', noStudents: 'Todavía no ha entrado nadie.', colName: 'Alumno', colState: 'Estado', colAttempts: 'Intentos', colBest: 'Mejor puntuación', colCorrect: 'Aciertos', byQuestion: 'Por pregunta', colQuestion: 'Pregunta', colOk: 'Aciertos',
         state_finished: 'Terminado', 'state_in-progress': 'En curso', 'state_not-started': 'Sin empezar', state_expired: 'Sin terminar (plazo vencido)',
         err_deadline_too_soon: 'La fecha límite debe ser al menos 1 minuto posterior a ahora.', err_deadline_too_far: 'La fecha límite no puede superar los 30 días.', err_bad_attempts: 'Número de intentos no válido.', err_no_questions: 'Este quiz no tiene preguntas válidas.', err_quiz_not_found: 'No se encuentra el quiz.', err_generic: 'No se ha podido completar la acción.', err_bad_deadline: 'Fecha límite no válida.' },
-    ca: { title: 'Els meus deures', langLabel: 'Idioma', back: "Biblioteca", loading: 'Carregant…', needLogin: 'Inicia sessió per a gestionar deures.', goLogin: 'Anar a iniciar sessió',
+    ca: { title: 'Els meus deures', langLabel: 'Idioma', back: "Biblioteca", backHome: 'Inici', loading: 'Carregant…', needLogin: 'Inicia sessió per a gestionar deures.', goLogin: 'Anar a iniciar sessió',
         newTitle: 'Nou deure', quizLabel: 'Quiz', fTitle: 'Títol', fDeadline: 'Data límit', fAttempts: 'Intents per alumne', attempts1: '1 (un sol intent)', attemptsUnlimited: 'Il·limitats', fScoring: 'Puntuació amb diversos intents', scoringBest: 'Compta el millor intent', scoringAverage: 'Compta la mitjana dels intents', scoringFirst: 'Compta el primer intent', scoringLast: 'Compta l\'últim intent', colAvg: 'Puntuació mitjana', colFirst: 'Primer intent', colLast: 'Últim intent', myHomeworkLink: 'Els meus deures',
         fTime: 'Temps per pregunta', timeQuiz: 'El de cada pregunta', fShowAnswers: 'Mostrar la resposta correcta després de contestar', fShuffle: 'Barrejar les respostes', create: 'Crear deure',
         createdTitle: 'Deure creat', createdText: 'Comparteix este enllaç amb el teu alumnat. Entren amb un nom i reben un codi per a continuar des d\'un altre dispositiu.', code: 'Codi', copyLink: 'Copiar enllaç', copied: 'Copiat!',
@@ -22,7 +22,7 @@ var i18n = {
         downloadCsv: 'Descarregar CSV', refresh: 'Actualitzar', noStudents: 'Encara no ha entrat ningú.', colName: 'Alumne', colState: 'Estat', colAttempts: 'Intents', colBest: 'Millor puntuació', colCorrect: 'Encerts', byQuestion: 'Per pregunta', colQuestion: 'Pregunta', colOk: 'Encerts',
         state_finished: 'Acabat', 'state_in-progress': 'En curs', 'state_not-started': 'Sense començar', state_expired: 'Sense acabar (termini vençut)',
         err_deadline_too_soon: 'La data límit ha de ser com a mínim 1 minut posterior a ara.', err_deadline_too_far: 'La data límit no pot superar els 30 dies.', err_bad_attempts: 'Nombre d\'intents no vàlid.', err_no_questions: 'Este quiz no té preguntes vàlides.', err_quiz_not_found: 'No es troba el quiz.', err_generic: 'No s\'ha pogut completar l\'acció.', err_bad_deadline: 'Data límit no vàlida.' },
-    en: { title: 'My homework', langLabel: 'Language', back: 'Library', loading: 'Loading…', needLogin: 'Sign in to manage homework.', goLogin: 'Go to sign in',
+    en: { title: 'My homework', langLabel: 'Language', back: 'Library', backHome: 'Home', loading: 'Loading…', needLogin: 'Sign in to manage homework.', goLogin: 'Go to sign in',
         newTitle: 'New homework', quizLabel: 'Quiz', fTitle: 'Title', fDeadline: 'Deadline', fAttempts: 'Attempts per student', attempts1: '1 (single attempt)', attemptsUnlimited: 'Unlimited', fScoring: 'Scoring with several attempts', scoringBest: 'Best attempt counts', scoringAverage: 'Average of the attempts counts', scoringFirst: 'First attempt counts', scoringLast: 'Last attempt counts', colAvg: 'Average score', colFirst: 'First attempt', colLast: 'Last attempt', myHomeworkLink: 'My homework',
         fTime: 'Time per question', timeQuiz: 'Each question\'s own', fShowAnswers: 'Show the correct answer after answering', fShuffle: 'Shuffle the answers', create: 'Create homework',
         createdTitle: 'Homework created', createdText: 'Share this link with your students. They join with a name and get a code to continue from another device.', code: 'Code', copyLink: 'Copy link', copied: 'Copied!',
@@ -34,7 +34,7 @@ var i18n = {
     de: {
         title: 'Meine Hausaufgaben',
         langLabel: 'Sprache',
-        back: 'Bibliothek',
+        back: 'Bibliothek', backHome: 'Startseite',
         loading: 'Wird geladen…',
         needLogin: 'Melde dich an, um Hausaufgaben zu verwalten.',
         goLogin: 'Zur Anmeldung',
@@ -105,7 +105,7 @@ var i18n = {
     it: {
         title: 'I miei compiti',
         langLabel: 'Lingua',
-        back: 'Libreria',
+        back: 'Libreria', backHome: 'Home',
         loading: 'Caricamento…',
         needLogin: 'Accedi per gestire i compiti.',
         goLogin: 'Vai all\'accesso',
@@ -176,7 +176,7 @@ var i18n = {
     pt: {
         title: 'Os meus trabalhos de casa',
         langLabel: 'Idioma',
-        back: 'Biblioteca',
+        back: 'Biblioteca', backHome: 'Início',
         loading: 'A carregar…',
         needLogin: 'Inicie sessão para gerir os trabalhos de casa.',
         goLogin: 'Ir para o início de sessão',
@@ -247,7 +247,7 @@ var i18n = {
     bg: {
         title: 'Моите домашни',
         langLabel: 'Език',
-        back: 'Библиотека',
+        back: 'Библиотека', backHome: 'Начало',
         loading: 'Зареждане…',
         needLogin: 'Влез, за да управляваш домашните.',
         goLogin: 'Към влизането',
@@ -318,7 +318,7 @@ var i18n = {
     ar: {
         title: 'واجباتي',
         langLabel: 'اللغة',
-        back: 'المكتبة',
+        back: 'المكتبة', backHome: 'الرئيسية',
         loading: 'جارٍ التحميل…',
         needLogin: 'سجّل الدخول لإدارة الواجبات.',
         goLogin: 'الذهاب إلى تسجيل الدخول',
@@ -389,7 +389,7 @@ var i18n = {
     fr: {
         title: 'Mes devoirs',
         langLabel: 'Langue',
-        back: 'Bibliothèque',
+        back: 'Bibliothèque', backHome: 'Accueil',
         loading: 'Chargement…',
         needLogin: 'Connecte-toi pour gérer les devoirs.',
         goLogin: 'Aller à la connexion',

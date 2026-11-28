@@ -38,7 +38,7 @@ body{
   color: var(--muted);
 }
 /* Enllaç entre els dos panells (estadístiques ↔ logs). */
-.admin-nav{ margin: 0 0 16px; }
+.admin-nav{ margin: 0 0 16px; display: flex; flex-wrap: wrap; gap: 8px; }
 .admin-nav a{
   display: inline-flex;
   align-items: center;

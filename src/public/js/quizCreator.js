@@ -43,7 +43,7 @@ function rememberClaimableQuizId(id){
 
 var i18n = {
     es: {
-        back: 'Biblioteca',
+        back: 'Biblioteca', backHome: 'Inicio',
         title: 'Creador de quizzes',
         subtitle: 'Diseña las preguntas y guarda tu juego para lanzarlo cuando quieras.',
         langLabel: 'Idioma',
@@ -138,7 +138,7 @@ var i18n = {
         fixedActionsLabel: 'Acciones del quiz',
     },
     en: {
-        back: 'Library',
+        back: 'Library', backHome: 'Home',
         title: 'Quiz builder',
         subtitle: 'Design questions and save your game to launch whenever you want.',
         langLabel: 'Language',
@@ -233,7 +233,7 @@ var i18n = {
         fixedActionsLabel: 'Quiz actions',
     },
     de: {
-        back: 'Bibliothek',
+        back: 'Bibliothek', backHome: 'Startseite',
         title: 'Quiz-Editor',
         subtitle: 'Entwirf Fragen und speichere dein Spiel, um es jederzeit zu starten.',
         langLabel: 'Sprache',
@@ -328,7 +328,7 @@ var i18n = {
         fixedActionsLabel: 'Quiz-Aktionen'
     },
     it: {
-        back: 'Libreria',
+        back: 'Libreria', backHome: 'Home',
         title: 'Editor di quiz',
         subtitle: 'Crea le domande e salva la tua partita per avviarla quando vuoi.',
         langLabel: 'Lingua',
@@ -423,7 +423,7 @@ var i18n = {
         fixedActionsLabel: 'Azioni del quiz'
     },
     pt: {
-        back: 'Biblioteca',
+        back: 'Biblioteca', backHome: 'Início',
         title: 'Editor de questionários',
         subtitle: 'Crie perguntas e guarde o seu jogo para o iniciar quando quiser.',
         langLabel: 'Idioma',
@@ -518,7 +518,7 @@ var i18n = {
         fixedActionsLabel: 'Ações do questionário'
     },
     bg: {
-        back: 'Библиотека',
+        back: 'Библиотека', backHome: 'Начало',
         title: 'Създател на куизове',
         subtitle: 'Създай въпроси и запази играта си, за да я стартираш когато поискаш.',
         langLabel: 'Език',
@@ -613,7 +613,7 @@ var i18n = {
         fixedActionsLabel: 'Действия с куиза'
     },
     ar: {
-        back: 'المكتبة',
+        back: 'المكتبة', backHome: 'الرئيسية',
         title: 'محرّر الاختبارات',
         subtitle: 'صمّم الأسئلة واحفظ لعبتك لتطلقها متى شئت.',
         langLabel: 'اللغة',
@@ -708,7 +708,7 @@ var i18n = {
         fixedActionsLabel: 'إجراءات الاختبار'
     },
     fr: {
-        back: 'Bibliothèque',
+        back: 'Bibliothèque', backHome: 'Accueil',
         title: 'Créateur de quiz',
         subtitle: 'Conçois des questions et enregistre ta partie pour la lancer quand tu veux.',
         langLabel: 'Langue',
@@ -803,7 +803,7 @@ var i18n = {
         fixedActionsLabel: 'Actions du quiz'
     },
     ca: {
-        back: "Biblioteca",
+        back: "Biblioteca", backHome: 'Inici',
         title: 'Creador de quizzes',
         subtitle: 'Dissenya les preguntes i desa el joc per llançar-lo quan vulguis.',
         langLabel: 'Idioma',
