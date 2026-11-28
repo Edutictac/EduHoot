@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="ca-valencia">
+<head>
+<meta charset="utf-8">
+<title>EduHoot — cartell</title>
+<link rel="stylesheet" href="/home/eduardo/EduHoot/src/public/css/fonts.css">
+<style>
+@page { size: A4 portrait; margin: 0; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 210mm; height: 297mm; }
+body {
+  font-family: 'Raleway', system-ui, sans-serif;
+  color: #f7f9ff;
+  background:
+    radial-gradient(90mm 90mm at 100% 0%, rgba(255,179,71,.22), transparent 70%),
+    radial-gradient(100mm 100mm at 0% 78%, rgba(59,111,216,.30), transparent 70%),
+    linear-gradient(160deg, #0f162a 0%, #1a2662 55%, #1f3d71 100%);
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  position: relative; overflow: hidden;
+}
+.glow { position: absolute; border-radius: 50%; filter: blur(60px); opacity: .35; }
+.g1 { width: 120mm; height: 120mm; background: #ffb347; top: -50mm; right: -40mm; opacity: .22; }
+.g2 { width: 110mm; height: 110mm; background: #3b6fd8; bottom: 40mm; left: -50mm; }
+.page { position: relative; height: 297mm; padding: 11mm 16mm 9mm; display: flex; flex-direction: column; }
+.top { display: flex; align-items: center; justify-content: space-between; }
+.brand { display: flex; align-items: center; gap: 4mm; font-weight: 800; font-size: 9.5mm; letter-spacing: .3px; }
+.brand img { width: 14mm; height: 14mm; }
+.eyebrow { font-weight: 700; font-size: 4mm; letter-spacing: .12em; text-transform: uppercase;
+  color: #1b1b1b; background: linear-gradient(135deg, #ffee70, #ffb347); padding: 2mm 5mm; border-radius: 99px; }
+h1 { margin-top: 10mm; font-size: 14.6mm; white-space: nowrap; line-height: 1.04; font-weight: 800; letter-spacing: -.01em; }
+h1 span { color: #ffd45c; }
+.lead { margin-top: 5mm; font-size: 5.1mm; line-height: 1.45; color: rgba(247,249,255,.88); max-width: 168mm; }
+.cards { margin-top: 6mm; display: flex; justify-content: center; gap: 5mm; padding: 3mm 0; }
+.card { position: relative; isolation: isolate; overflow: hidden; width: 39mm; height: 42mm; border-radius: 4mm; padding: 3.6mm;
+  display: flex; flex-direction: column; justify-content: space-between; border: .35mm solid #fff;
+  background: rgba(255,255,255,.06); box-shadow: 1.3mm 1.8mm 0 rgba(0,0,0,.30); }
+.card::before { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(160deg, var(--c), rgba(15,23,42,.8)); opacity: .55; }
+.card b { font-size: 4.3mm; line-height: 1.22; color: #fdbc4b; font-weight: 800; }
+.card i { font-style: normal; font-size: 5.4mm; font-weight: 800; }
+.tag { white-space: nowrap; align-self: flex-start; background: rgba(255,255,255,.14); border-radius: 99px; padding: 1.3mm 2.6mm; font-size: 2.7mm; letter-spacing: 0; font-weight: 700; }
+.c1 { --c: #45a3e5; transform: rotate(-5deg); }
+.c2 { --c: #66bf39; margin-top: 4mm; }
+.c3 { --c: #f35; transform: rotate(4deg); }
+.c4 { --c: #864cbf; margin-top: 4mm; }
+.cols { margin-bottom: 6mm; margin-top: 6mm; display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; }
+.col { background: rgba(15,22,42,.62); border: .3mm solid rgba(255,255,255,.14); border-radius: 5mm; padding: 6mm 6mm 5mm; }
+.col h2 { font-size: 6mm; font-weight: 800; color: #ffe670; margin-bottom: 3.5mm; }
+.col li { list-style: none; position: relative; padding-left: 6.5mm; margin: 2mm 0; font-size: 4.2mm; line-height: 1.32; }
+.col li::before { content: "✓"; position: absolute; left: 0; top: 0; font-weight: 800; color: #ffb347; }
+.cta { margin-top: auto; min-height: 66mm; margin-bottom: 0; display: grid; grid-template-columns: 52mm 1fr; gap: 9mm; align-items: center;
+  background: rgba(15,22,42,.78); border: .3mm solid rgba(255,255,255,.2); border-radius: 7mm; padding: 6mm 8mm; }
+.qr { background: #fff; border-radius: 4mm; padding: 6mm; width: 52mm; height: 52mm; }
+.qr img { width: 100%; height: 100%; display: block; }
+.cta h3 { font-size: 10mm; font-weight: 800; line-height: 1.05; }
+.cta .url { display: inline-block; margin-top: 4mm; font-size: 7.6mm; font-weight: 800; color: #1b1b1b;
+  background: linear-gradient(135deg, #ffee70, #ffb347); padding: 2.4mm 5mm; border-radius: 3.5mm; }
+.cta p { margin-top: 4mm; font-size: 4.2mm; line-height: 1.4; color: rgba(247,249,255,.82); }
+.foot { margin-top: 4mm; display: flex; justify-content: space-between; font-size: 3.5mm; color: rgba(247,249,255,.65); }
+.ic { width: 3.6mm; height: 3.6mm; vertical-align: -.7mm; margin-right: 1mm; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="top">
+    <div class="brand"><img src="/home/eduardo/EduHoot/src/public/icons/logo.svg" alt=""> EduHoot</div>
+    <div class="eyebrow">Aprendre jugant</div>
+  </div>
+
+  <h1>Que l'aula no es quede<br><span>sense ganes</span></h1>
+  <p class="lead">Un qüestionari, un PIN i tota la classe jugant. Sense comptes per a l'alumnat i sense publicitat.</p>
+
+  <div class="cards">
+    <div class="card c1"><span class="tag"><svg class="ic" viewBox="0 0 16 16"><rect width="16" height="16" rx="3.6" fill="#66bf39"/><path d="M4 8.4l2.7 2.7L12 5.6" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Opció múltiple</span><b>Capital de França?</b><i>París</i></div>
+    <div class="card c2"><span class="tag"><svg class="ic" viewBox="0 0 16 16"><rect width="16" height="16" rx="3.6" fill="#45a3e5"/><path d="M8 3v10M5.2 5.6L8 2.9l2.8 2.7M5.2 10.4L8 13.1l2.8-2.7" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg> Ordenar</span><b>Ordena de menor a major</b><i>1 · 2 · 3 · 4</i></div>
+    <div class="card c3"><span class="tag"><svg class="ic" viewBox="0 0 16 16"><rect width="16" height="16" rx="3.6" fill="#f35"/><path d="M5.6 6.2a2.4 2.4 0 1 1 3.6 2c-.8.5-1.2.9-1.2 1.8" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/><circle cx="8" cy="12.3" r="1" fill="#fff"/></svg> Veritat / Fals</span><b>La Terra és plana</b><i>✕ Fals</i></div>
+    <div class="card c4"><span class="tag"><svg class="ic" viewBox="0 0 16 16"><rect width="16" height="16" rx="3.6" fill="#864cbf"/><g fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round"><rect x="2.8" y="5.6" width="6.4" height="4.2" rx="2.1" transform="rotate(-30 6 7.7)"/><rect x="6.8" y="6.2" width="6.4" height="4.2" rx="2.1" transform="rotate(-30 10 8.3)"/></g></svg> Emparellar</span><b>Uneix cada país amb la capital</b><i>⇄</i></div>
+  </div>
+
+  <div class="cols">
+    <div class="col">
+      <h2>Professorat, anima't!</h2>
+      <ul>
+        <li>Crea un qüestionari en minuts</li>
+        <li>Importa de Moodle o CSV</li>
+        <li>Sis tipus de pregunta, amb vídeo</li>
+        <li>Deures amb enllaç i resultats</li>
+        <li>Generador de preguntes amb IA</li>
+      </ul>
+    </div>
+    <div class="col">
+      <h2>Alumnat, a participar!</h2>
+      <ul>
+        <li>Entra amb PIN o QR, sense compte</li>
+        <li>Juga en directe amb tota la classe</li>
+        <li>Practica sol amb targetes</li>
+        <li>Rànquing i podi per a celebrar-ho</li>
+        <li>Des del mòbil, tauleta o ordinador</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="cta" style="margin-top:auto">
+    <div class="qr"><img src="qr.svg" alt="QR d'EduHoot"></div>
+    <div>
+      <h3>Escaneja i entra</h3>
+      <span class="url">eduhoot.edutictac.es</span>
+      <p>Programari lliure, fet per i per a la comunitat. Codi obert sota AGPL-3.0.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Un servei d'EduTicTac</span><span>EduHoot · Aprendre jugant</span></div>
+</div>
+</body>
+</html>
