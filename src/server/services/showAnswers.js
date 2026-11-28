@@ -14,4 +14,16 @@ function studentMetaOf(game, meta) {
   return copy;
 }
 
-module.exports = { showCorrectAnswersOf, studentMetaOf };
+// Lista de jugadores para el alumnado: el historial de respuestas (con «isCorrect» y lo enviado por cada
+// jugador) delataría la solución, así que se retira si «Mostrar respuestas» está desactivado.
+function studentPlayersOf(game, list) {
+  if (showCorrectAnswersOf(game) || !Array.isArray(list)) return list;
+  return list.map((p) => {
+    if (!p || !p.gameData || !('answerHistory' in p.gameData)) return p;
+    const gameData = { ...p.gameData };
+    delete gameData.answerHistory;
+    return { ...p, gameData };
+  });
+}
+
+module.exports = { showCorrectAnswersOf, studentMetaOf, studentPlayersOf };

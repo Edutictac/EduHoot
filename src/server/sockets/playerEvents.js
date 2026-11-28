@@ -1,4 +1,4 @@
-const { studentMetaOf } = require('../services/showAnswers');
+const { studentMetaOf, studentPlayersOf } = require('../services/showAnswers');
 const { getQuestionMeta, normalizeSubmission, orderDisplayOf } = require('../questionUtils');
 const { logger, quizFields } = require('../logger');
 
@@ -260,7 +260,7 @@ module.exports = function createPlayerEvents({
             const meta = getQuestionMeta(current);
             meta.showScores = game.gameData.options ? game.gameData.options.showScoresBetween !== false : true;
             const allPlayers = players.getPlayers(game.hostId);
-            socket.emit('questionOver', allPlayers, studentMetaOf(game, meta));
+            socket.emit('questionOver', studentPlayersOf(game, allPlayers), studentMetaOf(game, meta));
           }
         }
       } else {

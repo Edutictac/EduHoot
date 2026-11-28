@@ -84,7 +84,7 @@ body{ background: linear-gradient(120deg, #22714c, #1b5f3e 50%, #15502f); }
 }
 
 /* Esborrar una partida: el botó es torna vermell mentre demana confirmació. */
-.pt-delete-btn.is-confirming{ background: #da4453; border-color: #da4453; color: #fff; }
+.pt-delete-btn.is-confirming{ background: #cc3f4f; border-color: #cc3f4f; color: #fff; }
 
 /* Separació entre botons d'icona: igual que a Mis deberes (8 px a les targetes, 6 px al detall). */
 .pt-game .hw-actions{ gap: 8px; }
