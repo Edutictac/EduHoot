@@ -605,7 +605,8 @@ Per a no confondre un entorn de desenvolupament o stage amb producció,
 principals (`index`, `join`, `create`, `create/quiz-creator`, `host`,
 `host/game`, `player`, `player/game`, `solo`, `multiplayer`,
 `admin-stats`, `admin-logs`) i consulta l'endpoint `GET /api/env` de `server.js`
-(retorna `{ env: process.env.NODE_ENV || '' }`).
+(retorna `{ env: process.env.NODE_ENV || '', stageNoticeVisible }`; vore l'avís de
+Stage més avall).
 
 - Si `NODE_ENV` és `development` o `staging`, afig un distintiu fix a
   dalt de la pàgina ("🛠️ Entorn: desenvolupament" / "🧪 Entorn: stage"),
@@ -654,6 +655,21 @@ principals (`index`, `join`, `create`, `create/quiz-creator`, `host`,
   `--page-gutter` és el marge lateral del recuadre (10 vw en `/create/` i
   la portada; en `/solo/`, 5 vw que creix fins al 15 vw en pantalles grans,
   perquè el panell ocupe el 70 % de l'ample).
+- **Portada (`/`)**: en dev i stage, el logo d'EduHoot (`#brand`) mostra o
+  amaga el distintiu amb un clic (o Intro/Espai), amb la mateixa preferència
+  que F9. En producció el logo no és clicable i només té l'animació de
+  passar el ratolí.
+- **Avís «Prova les novetats d'EduHoot»** (`#stage-notice` a `/create/`): es
+  mostra a tots els entorns. L'administració el pot amagar o mostrar per a
+  **tots els usuaris** amb el botó 🧪 (`#stage-notice-toggle`) que només ella
+  veu; al costat hi ha el ⚙️ (`#admin-link`) que du a `/admin`. El valor és
+  `stageNoticeVisible` (per defecte `true`) al document `{ _id: 'ui' }` de la
+  col·lecció `appSettings`; `GET /api/env` el torna i
+  `POST /api/admin/settings/stage-notice` (`{ visible: boolean }`, rol `admin`,
+  `routes/admin.js`) el canvia. `create-auth.js` publica l'usuari
+  (`window.eduhootCurrentUser` i l'esdeveniment `eduhoot:user`) perquè
+  `env-badge.js` sàpiga si és admin sense demanar `/api/auth/me` una altra
+  vegada.
 - Vore `docs/STAGE-AUTOMATIC.md` per a com es configura `NODE_ENV` i
   `AUTO_SEED_STAGE` al VPS de stage.
 

@@ -105,7 +105,7 @@ s'usa i li ofereix **Ja he començat: tinc el meu codi**.
 
 ### Gestionar els deures
 
-Al botó **Els meus deures** (dalt de la biblioteca) tens la llista amb l'estat
+Al botó **Deures** (dalt de la biblioteca) tens la llista amb l'estat
 (**Obert**, **Tancat** o **Vençut**), la data límit, els alumnes i els intents
 acabats. Per a cada deure:
 
@@ -134,7 +134,7 @@ En **Resultats** veus:
 
 ### Les meues partides
 
-Amb el botó **Mis partidas** (dalt de la biblioteca) veus les partides que has acabat amb el teu compte, durant 90 dies. Per a cada partida:
+Amb el botó **Partides** (dalt de la biblioteca) veus les partides que has acabat amb el teu compte, durant 90 dies. Per a cada partida:
 
 - **Resultats**: la classificació de l'alumnat i, per a cada pregunta, els encerts, els fallos, les parcials i les que no es van respondre.
 - **Descarregar CSV**: l'informe complet, com en una partida en directe.
@@ -164,7 +164,7 @@ mateix dispositiu i navegador, entra sense codi. Si ha canviat de dispositiu,
 haurà de començar de nou amb un nom diferent.
 
 **Puc canviar la data límit?**
-Sí, des de **Els meus deures**: **Reobrir** (amb una data nova) si ha vençut.
+Sí, des de **Deures**: **Reobrir** (amb una data nova) si ha vençut.
 
 **Què passa si l'alumne no acaba abans de la data límit?**
 Quan el deure es tanca, l'intent a mitges queda acabat amb els punts que
